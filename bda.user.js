@@ -5,6 +5,8 @@
 // @author       Jean-Charles Manoury
 // @grant none
 // @version 1.0
+// @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
 // a function that loads jQuery and calls a callback function when jQuery has finished loading
