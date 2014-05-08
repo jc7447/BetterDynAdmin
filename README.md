@@ -26,8 +26,9 @@ Installation instructions
 
 * Install Tampermonkey extension : https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
 * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
- * Accept installation 
- * Enjoy :)
+* Accept installation 
+* Enjoy :)
+
 ### Other browsers
 
 Not tested for now. But you can probably install it the same way as firefox or Google Chrome.
