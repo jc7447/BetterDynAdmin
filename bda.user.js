@@ -8,7 +8,6 @@
 // ==/UserScript==
 
 // a function that loads jQuery and calls a callback function when jQuery has finished loading
-
 function load(url, onLoad, onError) {
     e = document.createElement("script");
     e.setAttribute("src", url);
@@ -43,7 +42,7 @@ function loadAndExecute(url, functionOrCode) {
 
 if (document.getElementById("oracleATGbrand") != null)
 {
-  loadAndExecute("http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js", function (){
+  loadAndExecute("http://code.jquery.com/jquery-1.11.1.min.js", function (){
   var start = new Date().getTime();
   console.log("Start BDA script");
   function toggleShowLabel(contentDisplay,selector)
@@ -329,7 +328,7 @@ if (document.getElementById("oracleATGbrand") != null)
             xmlContent = xmlContent.substr(firstLineOffset);
         }
         xmlContent = sanitizeXml(xmlContent);
-        console.log(xmlContent);
+        //console.log(xmlContent);
         xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
         $xml = $( xmlDoc );
         $addItems = $xml.find("add-item");
@@ -627,7 +626,7 @@ if (document.getElementById("oracleATGbrand") != null)
     .css("background-color", "#CC0000")
     .css("padding", "3px")
     .css("display", "none")
-    .html("<p>Why do I need to save Better Dyn Admin data ? "
+    .html("<p>Why should I save Better Dyn Admin data ? "
     + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
     + "<br /><br /><strong> Remenber that you can also import your backup to a BDA in another domain !</strong> </p>"
     
@@ -985,39 +984,199 @@ if (document.getElementById("oracleATGbrand") != null)
   }
 
   //--- Page informations ------------------------------------------------------------------------
-    function hasResults(hasErrors)
-    {
-    //if (hasErrors)
-    //  return false;
-      return $(resultsSelector).size() > 0;
-    }
+  function hasResults(hasErrors)
+  {
+    return $(resultsSelector).size() > 0;
+  }
  
-    function hasErrors()
-    {
-      return $(errorsSelector1).size() > 0 || $(errorsSelector2).size() > 0;
-    }
+  function hasErrors()
+  {
+    return $(errorsSelector1).size() > 0 || $(errorsSelector2).size() > 0;
+  }
  
-    function hasWebStorage()
-    {
-      if(typeof(Storage)!=="undefined")
-        return true;
-      return false;
-     }
-     
-     function isRepositoryPage()
-     {
-       return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
-     }
+  function hasWebStorage()
+  {
+    if(typeof(Storage) !== "undefined")
+      return true;
+    return false;
+  }
+   
+  function isRepositoryPage()
+  {
+    return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
+  }
 
   function isComponentPage()
   {
-    return $("h1:contains('Directory Listing')").size() == 0 //Page is not a directory
-        && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
-        && document.URL.indexOf("?") == -1; // Page has no parameter
+      return $("h1:contains('Directory Listing')").size() == 0 //Page is not a directory
+          && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
+          && document.URL.indexOf("?") == -1; // Page has no parameter
   }
+  
+  //---- Repository page -------------------------------------------------------------------------
+  
+  function setupRepositoryPage()
+  {
+    // Move RQL editor to the top of the page
+    var actionSelect = "<select id='RQLAction'>"
+                       + "<option>print-item</option>"
+                       + "<option>query-items</option>"
+                       + "<option>remove-item</option>"
+                       + "<option>add-item</option>"
+                       + "<option>update-item</option>"
+                       + "</select>";
+  
+     $(descriptorTableSelector).attr("id", "descriptorTable");
+  
+     $("<div id='RQLEditor'></div>").insertBefore("h2:first");
+     if (hasErrors)
+      showRqlErrors();
+     if (hasResults)
+      showRQLResults();
+
+     $("form:eq(1)").appendTo("#RQLEditor");
+     $("form:eq(1)").attr("id", "RQLForm");
+     var $children = $("#RQLForm").children();
+     $("#RQLForm").empty().append($children);
+     $("textarea[name=xmltext]").attr("id", "xmltext");
+     $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
+   
+     $("#RQLToolbar").append("<div> Action : "+ actionSelect 
+                            + " <span id='editor'>" 
+                            + "<span id='itemIdField' style='display:none'>id : <input type='text' id='itemId' style='width:50px'/></span>"
+                            + "<span id='itemDescriptorField' style='display:none'> descriptor :  <select id='itemDescriptor'>" + getDescriptorOptions() + "</select></span>"
+                            + "</span>" 
+                            + getsubmitButton() + "</div>");
+     getPrintItemEditor();
+     $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
+     $("#xmltext").appendTo("#RQLText");
+     $("#RQLText").after("<div id='RQLStoredQueries' style='display:inline-block; vertical-align:top'><ul></ul></div>");
+    
+     $("#RQLStoredQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>")
+     showQueryList();
+     $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
+    
+     splitObj = getStoredSplitObj();
+     var itemByTab = defaultItemByTab;
+     var isChecked = false;
+     if (splitObj != null)
+      itemByTab = splitObj.splitValue;
+     if (splitObj != null)
+      isChecked = splitObj.activeSplit
+     $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue' style='width : 40px'> items. ");
+     var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
+     if (isChecked)
+      checkboxSplit += " checked ";
+     checkboxSplit += "/> don't split.";
+     $("#splitToolbar").append(checkboxSplit);
+    
+     $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
+    
+     $("#RQLAction").change(function() {
+        var action = $(this).val();
+        console.log("Action change : " + action);
+        if (action == "print-item")
+            getPrintItemEditor();
+        else if (action == "query-items")
+            getQueryItemsEditor();
+        else if (action == "remove-item")
+            getRemoveItemEditor();
+        else if (action == "add-item")
+            getAddItemEditor();
+        else if (action == "update-item")
+            getUpdateItemEditor();
+     });
+     
+     $("#RQLSubmit").click(function() {
+      submitRQLQuery(false);
+     });
+    
+     $("#RQLGo").click(function() {
+      submitRQLQuery(true);
+     });
+    
+    $("#RQLAdd").click(function() {
+      var query = getRQLQuery();
+      $("#xmltext").val( $("#xmltext").val()  + query);
+     });
+    
+     $("#saveQuery").click(function() {
+       if ($("#xmltext").val().trim() != "" && $("#queryLabel").val().trim() != "")
+       {
+         storeRQLQuery($("#queryLabel").val().trim(), $("#xmltext").val().trim());
+         showQueryList();
+       }
+     });
+    
+    $(".savedQuery").click(function() {
+      console.log("Click on : " + $(this).html());
+      printStoredQuery( $(this).html())
+    });
+    // Hide other sections
+    var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' style='font-size:80%'>Show less...</a>";
+    var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' style='font-size:80%'>Show more...</a>";
+ 
+    var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' style='font-size:80%'>Show more...</a>";
+    var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' style='font-size:80%'>Show more...</a>";
+    var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' style='font-size:80%'>Show more...</a>";
+
+    // Auto hide Repository View
+     $(repositoryViewSelector).append(repositoryView);
+    // toggleRepositoryView();
+    $("#showMoreRepositoryView").click(function (){
+       toggleRepositoryView();
+    });
+    // Auto hide Cache usage
+    $(cacheUsageSelector).append(cacheUsage);
+    toggleCacheUsage();
+    $("#showMoreCacheUsage").click(function (){
+      toggleCacheUsage();
+    });
+    // Auto hide Properties
+    $(propertiesSelector).append(properties);
+    toggleProperties();
+    $("#showMoreProperties").click(function (){
+      toggleProperties();
+    });
+    // Auto hide Events Sets
+    $(eventSetsSelector).append(eventSets);
+    toggleEventSets();
+    $("#showMoreEventsSets").click(function (){
+      toggleEventSets();
+    });
+    // Auto hide Methods
+    $(methodsSelector).append(methods);
+    toggleMethods();
+    $("#showMoreMethods").click(function (){
+      toggleMethods();
+    });
+  }
+
  
   console.log("Jquery installed !");
   console.log("isComponentPage : " + isComponentPage());
+
+  var descriptorTableSelector = "table:eq(0)";
+  var repositoryViewSelector = "h2:contains('Examine the Repository, Control Debugging')";
+  var cacheUsageSelector = "h2:contains('Cache usage statistics')";
+  var propertiesSelector = "h1:contains('Properties')";
+  var eventSetsSelector = "h1:contains('Event Sets')";
+  var methodsSelector = "h1:contains('Methods')";
+  var resultsSelector = "h2:contains('Results:')";
+  var errorsSelector1 = "p:contains('Errors:')";
+  var errorsSelector2 = "code:contains('*** Query:')";
+  
+  var defaultItemByTab = "10";
+  var hasWebStorage = hasWebStorage();
+  var hasErrors = hasErrors();
+  var hasResults = hasResults(hasErrors);
+ 
+  console.log("Page has results : " + hasResults + ". Page has errors : " + hasErrors);
+  // Setup repository page
+  if (isRepositoryPage())
+    setupRepositoryPage();
+  else
+    console.log("This is not a repository page");
 
   // Global stuff
   var arrowImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=";
@@ -1025,165 +1184,12 @@ if (document.getElementById("oracleATGbrand") != null)
   showComponentHsitory();
   createToolbar();
   createBackupPanel();  
-  if (isRepositoryPage())
-    {
-      var descriptorTableSelector = "table:eq(0)";
-      var repositoryViewSelector = "h2:contains('Examine the Repository, Control Debugging')";
-      var cacheUsageSelector = "h2:contains('Cache usage statistics')";
-      var propertiesSelector = "h1:contains('Properties')";
-      var eventSetsSelector = "h1:contains('Event Sets')";
-      var methodsSelector = "h1:contains('Methods')";
-      var resultsSelector = "h2:contains('Results:')";
-      var errorsSelector1 = "p:contains('Errors:')";
-      var errorsSelector2 = "code:contains('*** Query:')";
-      
-      var defaultItemByTab = "10";
-      var hasWebStorage = hasWebStorage();
-      var hasErrors = hasErrors();
-      var hasResults = hasResults(hasErrors);
-   
-        console.log("Page has results : " + hasResults + ". Page has errors : " + hasErrors);
-     
-        // Move RQL editor to the top of the page
-        var actionSelect = "<select id='RQLAction'>"
-                           + "<option>print-item</option>"
-                           + "<option>query-items</option>"
-                           + "<option>remove-item</option>"
-                           + "<option>add-item</option>"
-                           + "<option>update-item</option>"
-                           + "</select>";
-    
-        $(descriptorTableSelector).attr("id", "descriptorTable");
-    
-        $("<div id='RQLEditor'></div>").insertBefore("h2:first");
-      if (hasErrors)
-      showRqlErrors();
-        if (hasResults)
-            showRQLResults();
 
-        $("form:eq(1)").appendTo("#RQLEditor");
-        $("form:eq(1)").attr("id", "RQLForm");
-    var $children = $("#RQLForm").children();
-    $("#RQLForm").empty().append($children);
-        $("textarea[name=xmltext]").attr("id", "xmltext");
-        $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
-     
-        $("#RQLToolbar").append("<div> Action : "+ actionSelect 
-                + " <span id='editor'>" 
-                + "<span id='itemIdField' style='display:none'>id : <input type='text' id='itemId' style='width:50px'/></span>"
-                + "<span id='itemDescriptorField' style='display:none'> descriptor :  <select id='itemDescriptor'>" + getDescriptorOptions() + "</select></span>"
-                + "</span>" 
-                + getsubmitButton() + "</div>");
-    getPrintItemEditor();
-    $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
-    $("#xmltext").appendTo("#RQLText");
-    $("#RQLText").after("<div id='RQLStoredQueries' style='display:inline-block; vertical-align:top'><ul></ul></div>");
-    
-    $("#RQLStoredQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>")
-    showQueryList();
-    $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
-    
-    splitObj = getStoredSplitObj();
-    var itemByTab = defaultItemByTab;
-    var isChecked = false;
-    if (splitObj != null)
-      itemByTab = splitObj.splitValue;
-    if (splitObj != null)
-      isChecked = splitObj.activeSplit
-    $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue' style='width : 40px'> items. ");
-    var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
-    if (isChecked)
-      checkboxSplit += " checked ";
-    checkboxSplit += "/> don't split.";
-    $("#splitToolbar").append(checkboxSplit);
-    
-    $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
-    
-        $("#RQLAction").change(function() {
-         
-            var action = $(this).val();
-            console.log("Action change : " + action);
-            if (action == "print-item")
-                getPrintItemEditor();
-            else if (action == "query-items")
-                getQueryItemsEditor();
-            else if (action == "remove-item")
-                getRemoveItemEditor();
-            else if (action == "add-item")
-                getAddItemEditor();
-            else if (action == "update-item")
-                getUpdateItemEditor();
-        });
-     
-        $("#RQLSubmit").click(function() {
-           submitRQLQuery(false);
-        });
-    
-    $("#RQLGo").click(function() {
-           submitRQLQuery(true);
-        });
-    
-    $("#RQLAdd").click(function() {
-           var query = getRQLQuery();
-           $("#xmltext").val( $("#xmltext").val()  + query);
-        });
-    
-    $("#saveQuery").click(function() {
-      if ($("#xmltext").val().trim() != "" && $("#queryLabel").val().trim() != "")
-      {
-        storeRQLQuery($("#queryLabel").val().trim(), $("#xmltext").val().trim());
-        showQueryList();
-      }
-        });
-    
-    $(".savedQuery").click(function() {
-           console.log("Click on : " + $(this).html());
-       printStoredQuery( $(this).html())
-        });
-        // Hide other sections
-        var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' style='font-size:80%'>Show less...</a>";
-        var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' style='font-size:80%'>Show more...</a>";
-     
-        var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' style='font-size:80%'>Show more...</a>";
-        var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' style='font-size:80%'>Show more...</a>";
-        var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' style='font-size:80%'>Show more...</a>";
-
-        // Auto hide Repository View
-         $(repositoryViewSelector).append(repositoryView);
-        // toggleRepositoryView();
-        $("#showMoreRepositoryView").click(function (){
-           toggleRepositoryView();
-        });
-        // Auto hide Cache usage
-        $(cacheUsageSelector).append(cacheUsage);
-        toggleCacheUsage();
-        $("#showMoreCacheUsage").click(function (){
-          toggleCacheUsage();
-        });
-        // Auto hide Properties
-        $(propertiesSelector).append(properties);
-        toggleProperties();
-        $("#showMoreProperties").click(function (){
-          toggleProperties();
-        });
-        // Auto hide Events Sets
-        $(eventSetsSelector).append(eventSets);
-        toggleEventSets();
-        $("#showMoreEventsSets").click(function (){
-          toggleEventSets();
-        });
-        // Auto hide Methods
-        $(methodsSelector).append(methods);
-        toggleMethods();
-        $("#showMoreMethods").click(function (){
-          toggleMethods();
-        });
-    }
-  else
-        console.log("This is not a repository page");
-
+  // Collect history
   if (isComponentPage())
     collectHistory();
+   
+  // Monitor execution time
   var endTime = new Date();
   var time = endTime.getTime() - start;
   if (time > 1000)
