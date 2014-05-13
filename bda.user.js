@@ -164,21 +164,21 @@ if (document.getElementById("oracleATGbrand") != null)
   
     function getUpdateItemQuery()
     {
-        var descriptor = $("#itemDescriptor").val();
-    var id = $("#itemId").val();
-        var query = "<update-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" >\n";
-    query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
-    query += "</update-item>\n";
-        return query;
+      var descriptor = $("#itemDescriptor").val();
+      var id = $("#itemId").val();
+      var query = "<update-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" >\n";
+      query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
+      query += "</update-item>\n";
+      return query;
     }
  
-  function getQueryItemsQuery()
-  {
-        var descriptor = $("#itemDescriptor").val();
-        var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n\n";
-    query += "</query-items>\n";
-        return query;
-  }
+    function getQueryItemsQuery()
+    {
+      var descriptor = $("#itemDescriptor").val();
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n\n";
+      query += "</query-items>\n";
+      return query;
+    }
  
   function getRQLQuery()
   {
@@ -233,8 +233,69 @@ if (document.getElementById("oracleATGbrand") != null)
     return xmlStr;
   }
   
+  /**
+   * Avoid xml parse error, when a derived property contains HTML content with a comment.
+ * @param {Object} xmlContent
+   */
+  function dropCommentInsideComment(xmlContent)
+  {
+    var regexp = /(<\!--.*)<\!--.*-->(.*-->)/gi;
+    var res =  xmlContent.replace(regexp, function(str, p1, p2) {
+      console.log("p1 : " + p1);
+      console.log("p2 : " + p2);
+      return p1 + p2;
+    })
+    return res;
+  }
+  
   function sanitizeXml(xmlContent)
     {
+        var start = new Date().getTime();
+      var xmlStr = "";
+      xmlStr = dropCommentInsideComment(xmlContent);
+      
+      var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>).*-->/ig;
+      var res = xmlStr.match(regexp);
+
+      var xmlStr =  xmlStr.replace(regexp, function(str, p1, p2, offset, s){
+
+        //console.log("p1 : " + p1);
+        //console.log("p2 : " + p2);
+        var derived = false;
+        var rdonly = false;
+        var exportable = false;
+        
+        if (p1.indexOf("derived") != -1)
+            derived = true;
+        if (p1.indexOf("rdonly") != -1)
+            rdonly = true;
+        if (p1.indexOf("export") != -1)
+            exportable = true;
+        
+        //var lineRegexp = /\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>/ig
+        //var xmltag = "" + p1.match(lineRegexp);
+        var xmlDoc = $.parseXML("<xml>" + p2 + "</xml>");
+        var $xml = $(xmlDoc);
+        var newLine = $xml.find("set-property")
+                      .attr("derived", derived).attr("rdonly", rdonly).attr("exportable", exportable)
+                      .prop('outerHTML');
+       //console.log("newline : " + newLine);
+        return newLine;
+      });
+       var endTime = new Date();
+  var time = endTime.getTime() - start;
+  if (time > 1000)
+    console.log("time to sanitize : " + (time / 1000) + "sec");
+  else
+    console.log("time to sanitize : " + time + "ms");
+      return xmlStr;
+    }
+    
+   
+   /*
+     function sanitizeXml(xmlContent)
+    {
+        var start = new Date().getTime();
    var xmlStr = "";
       var lines = xmlContent.split("\n");
       for (var i = 0; i != lines.length; i++)
@@ -268,8 +329,15 @@ if (document.getElementById("oracleATGbrand") != null)
     else if (line.substr(0,1) == "<" && endsWith(line, ">"))
       xmlStr += line;
       }
+        var endTime = new Date();
+  var time = endTime.getTime() - start;
+  if (time > 1000)
+    console.log("time to sanitize : " + (time / 1000) + "sec");
+  else
+    console.log("time to sanitize : " + time + "ms");
       return xmlStr;
     }
+    */
    
   function renderTab(types, datas)
   {
@@ -293,7 +361,8 @@ if (document.getElementById("oracleATGbrand") != null)
 
       for (var a = 0; a < datas.length; a++)
       {
-        var propValue = datas[a][curProp.name];
+       // var propValue = escapeHTML(datas[a][curProp.name]);
+       var propValue = datas[a][curProp.name];
         if (propValue != null)
         {
           if (propValue.length > 25)
@@ -301,9 +370,10 @@ if (document.getElementById("oracleATGbrand") != null)
             var base_id = curProp.name + "_" + datas[a]["id"];
             var link_id = "link_" + base_id;
             var field_id = "text_" + base_id;
-            propValue = "<span id='"+base_id+"'>" + propValue.substr(0, 25) + "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' >...</a>"
-                  + "</span><input class='copyField' style='display:none;' type='text' value='"+propValue+"' id='"+field_id+"' />";
+            propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' ><span id='"+base_id+"'>" + escapeHTML(propValue.substr(0, 25)) + "...</a>"
+                  + "</span><textarea class='copyField' style='display:none;' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
           }
+          // 
           html += "<td>" + propValue + "</td>";
         }
         else
@@ -470,6 +540,11 @@ if (document.getElementById("oracleATGbrand") != null)
     return JSON.parse(localStorage.getItem('splitObj'));
   }
   
+  function escapeHTML(s) 
+  {
+    return String(s).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  
   //--- Stored queries functions ------------------------------------------------------------------------
   function getStoredRQLQueries()
   {
@@ -530,6 +605,10 @@ if (document.getElementById("oracleATGbrand") != null)
       html += "</ul>";
     }
     $("#RQLStoredQueries").html(html);
+    $(".savedQuery").click(function() {
+      console.log("Click on : " + $(this).html());
+      printStoredQuery( $(this).html())
+    });
   }
 
   function printStoredQuery(name)
@@ -597,7 +676,7 @@ if (document.getElementById("oracleATGbrand") != null)
     .css("background-color", "#CC0000")
     .css("padding", "3px")
     .html("<p>backup / restore data</p>"
-    + "<div class='backupArrow'><img src='" + arrowImg + "'></div>"
+    + "<div class='backupArrow'><img class='up' src='" + arrowImg + "'></div>"
     );
     
     $("#bdaBackup p")
@@ -614,6 +693,7 @@ if (document.getElementById("oracleATGbrand") != null)
     
     $("#bdaBackup").click(function() {
       $("#bdaBackupPanel").toggle();
+      rotateArrow($(".backupArrow img"));
     });
     
     $("<div id='bdaBackupPanel'></div>").appendTo("body")
@@ -865,7 +945,7 @@ if (document.getElementById("oracleATGbrand") != null)
           + "<div class='favTitle'>" +  shortName + "</div>"
           + "<div class='favName'>" + fav.componentName + "</div>"
           +"</a></div>"
-          + "<div class='favArrow' id='favArrow" + shortName + "'><img alt='arrow' src='" + arrowImg + "' /></div>"
+          + "<div class='favArrow' id='favArrow" + shortName + "'><img class='up' alt='arrow' src='" + arrowImg + "' /></div>"
           + "<div class='favMoreInfo' id='favMoreInfo" + shortName + "'>"
           + "<div class='favLogDebug'>"
           + " <form method='POST' action='" + fav.componentPath + "' id='logDebugForm" + fav.componentName + "'>"
@@ -876,7 +956,7 @@ if (document.getElementById("oracleATGbrand") != null)
           + "&nbsp; | &nbsp;"
           + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
           +"</div>"
-          + "<div class='favDelete' id='delete" + fav.componentName + "'>(X) Delete</div>"
+          + "<div class='favDelete' id='delete" + fav.componentName + "'><span style='font-weight:bold; font-size:13px;'>X</span> Delete</div>"
           + "</div>")
           .appendTo("#toolbar");
       // onclick='showMoreInfos(\"" + fav.componentName + "\")'
@@ -884,8 +964,11 @@ if (document.getElementById("oracleATGbrand") != null)
     
     $(".favArrow").click(function() {
       console.log("Click on arrow");
-      var idToExpand = "#" + this.id.replace("favArrow", "favMoreInfo");
+      var id = this.id;
+      var idToExpand = "#" + id.replace("favArrow", "favMoreInfo");
       $(idToExpand).toggle();
+      rotateArrow($("#" + id + " img"));
+  
     });
     
     $(".favDelete").click(function() {
@@ -1015,6 +1098,14 @@ if (document.getElementById("oracleATGbrand") != null)
           && document.URL.indexOf("?") == -1; // Page has no parameter
   }
   
+  function rotateArrow($arrow)
+  {
+     if ($arrow.hasClass("up"))
+      $arrow.attr("src", arrowImgRotate).attr("class", "down");
+     else
+      $arrow.attr("src", arrowImg).attr("class", "up");  
+  }
+  
   //---- Repository page -------------------------------------------------------------------------
   
   function setupRepositoryPage()
@@ -1110,10 +1201,6 @@ if (document.getElementById("oracleATGbrand") != null)
        }
      });
     
-    $(".savedQuery").click(function() {
-      console.log("Click on : " + $(this).html());
-      printStoredQuery( $(this).html())
-    });
     // Hide other sections
     var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' style='font-size:80%'>Show less...</a>";
     var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' style='font-size:80%'>Show more...</a>";
@@ -1182,6 +1269,7 @@ if (document.getElementById("oracleATGbrand") != null)
 
   // Global stuff
   var arrowImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=";
+  var arrowImgRotate = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC"
   $("a").css("text-decoration", "none");
   showComponentHsitory();
   createToolbar();
