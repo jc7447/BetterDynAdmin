@@ -232,35 +232,17 @@ if (document.getElementById("oracleATGbrand") != null)
     }
     return xmlStr;
   }
-  
-  /**
-   * Avoid xml parse error, when a derived property contains HTML content with a comment.
- * @param {Object} xmlContent
-   */
-  function dropCommentInsideComment(xmlContent)
-  {
-    var regexp = /(<\!--.*)<\!--.*-->(.*-->)/gi;
-    var res =  xmlContent.replace(regexp, function(str, p1, p2) {
-      console.log("p1 : " + p1);
-      console.log("p2 : " + p2);
-      return p1 + p2;
-    })
-    return res;
-  }
-  
+
   function sanitizeXml(xmlContent)
-    {
-        var start = new Date().getTime();
-      var xmlStr = "";
-      xmlStr = dropCommentInsideComment(xmlContent);
-      
+  {
+      var start = new Date().getTime();
+      var xmlStr = xmlContent;
+
       var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>).*-->/ig;
       var res = xmlStr.match(regexp);
 
       var xmlStr =  xmlStr.replace(regexp, function(str, p1, p2, offset, s){
 
-        //console.log("p1 : " + p1);
-        //console.log("p2 : " + p2);
         var derived = false;
         var rdonly = false;
         var exportable = false;
@@ -271,24 +253,19 @@ if (document.getElementById("oracleATGbrand") != null)
             rdonly = true;
         if (p1.indexOf("export") != -1)
             exportable = true;
-        
-        //var lineRegexp = /\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>/ig
-        //var xmltag = "" + p1.match(lineRegexp);
+  
         var xmlDoc = $.parseXML("<xml>" + p2 + "</xml>");
         var $xml = $(xmlDoc);
         var newLine = $xml.find("set-property")
                       .attr("derived", derived).attr("rdonly", rdonly).attr("exportable", exportable)
                       .prop('outerHTML');
        //console.log("newline : " + newLine);
-        return newLine;
+         return newLine;
       });
        var endTime = new Date();
-  var time = endTime.getTime() - start;
-  if (time > 1000)
-    console.log("time to sanitize : " + (time / 1000) + "sec");
-  else
-    console.log("time to sanitize : " + time + "ms");
-      return xmlStr;
+       var time = endTime.getTime() - start;
+       console.log("time to sanitize : " + time + "ms");
+       return xmlStr;
     }
     
    
@@ -484,9 +461,9 @@ if (document.getElementById("oracleATGbrand") != null)
         });
 
     applyCssToTab();
-        $(".copyLink").click(function() {
-            showTextField($(this).attr("id").replace("link_", ""));
-        });
+    $(".copyLink").click(function() {
+        showTextField($(this).attr("id").replace("link_", ""));
+    });
        // console.log(datas);
        // console.log(types);
     }
@@ -504,7 +481,8 @@ if (document.getElementById("oracleATGbrand") != null)
                        .css("color", "white")
                        .css("vertical-align", "middle");
 
-        $(".copyLink").css("text-decoration", "none");
+        $(".copyLink").css("text-decoration", "none")
+                      .css("color", "#00214a");
         $(".copyField").css("width", "200px");
         $(".dataTable td, .dataTable th").css("padding", "3px");
         $(".dataTable th").css("min-width", "160px").css("text-align", "left");
@@ -917,21 +895,29 @@ if (document.getElementById("oracleATGbrand") != null)
   {
     var favs = getStoredComponents();
   
-    $("<div id='toolbarHeader'></div>")
+  
+    $("<div id='toolbarContainer'></div>")
     //.html("<a href='javascript:void(0)'>Hide toolbar</a>")
-    .css("margin-top", "10px")
-    .css("font-size", "90%")
+    .css("height", "75px")
     .insertAfter("#oracleATGbrand");
 
     $("<div id='toolbar'></div>")
     //.css("height", "150px")
     .css("padding", "5px")
-    .insertAfter("#toolbarHeader");
-    
-    $("#toolbarHeader").click(function() {
-      $("#toolbar").slideToggle();
-    });
-    
+   /* .css("position", "fixed")
+    .css("background-color", "white")*/
+    .appendTo("#toolbarContainer");
+
+    /*
+    $(window).scroll(function(e) {
+      var windowTop = $(window).scrollTop(); 
+      if (windowTop > 41)
+        $("#toolbar").css("top", "0px");
+      else
+        $("#toolbar").css("top", "41px");
+     });
+    */
+   
     for(var i = 0; i != favs.length; i++)
     {
       var fav = favs[i];
@@ -1292,4 +1278,3 @@ else
 {
   console.log("BDA script not starting");
 }
-
