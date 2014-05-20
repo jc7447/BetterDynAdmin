@@ -563,29 +563,64 @@ if (document.getElementById("oracleATGbrand") != null)
     }
   }
   
+  function deleteRQLQuery(index)
+  {
+    var queries = getStoredRQLQueries();
+    if (queries.length >  index)
+    {
+      queries.splice(index, 1);
+      localStorage.setItem('RQLQueries', JSON.stringify(queries));
+    } 
+  }
+  
+  function reloadQueryList()
+  {
+    $("#RQLStoredQueries").empty();
+    showQueryList();
+  }
+  
   function showQueryList()
   {
     //console.log("Enter showQueryList");
     if (hasWebStorage)
     {
       var rqlQueries = getStoredRQLQueries();
-      var html = "<h3>Stored queries :</h3><ul>";
+      
       if (rqlQueries != null)
       {
+        var html = "";
+        if (rqlQueries.length > 0)
+          html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span><ul style='margin :  0; padding-left :15px'>";
         for (var i = 0; i != rqlQueries.length; i++)
         {
           var storeQuery = rqlQueries[i];
-          html += "<li>";
-          html += "<a href='javascript:void(0)' class='savedQuery'>" + storeQuery.name + "</a>";
+          html += "<li class='savedQuery'>";
+          html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + trashImg + "' height='12' width='12' /></span>";
           html += "</li>";
         }
+        html += "</ul>";
       }
-      html += "</ul>";
     }
     $("#RQLStoredQueries").html(html);
     $(".savedQuery").click(function() {
-      console.log("Click on : " + $(this).html());
-      printStoredQuery( $(this).html())
+      printStoredQuery( $(this).find("a").html())
+    });
+    
+    $(".savedQuery").hover( function() {
+        $(this).find("span.deleteQuery").toggle();
+      }, function() {
+        $(this).find("span.deleteQuery").toggle();
+      })
+      
+    $(".deleteQuery")
+    .css("display", "none")
+    .css("margin-top", "5px")
+    .css("margin-left", "10px")
+    .click(function() {
+      var index = this.id.replace("deleteQuery", "");
+      console.log("Delete query #" + index);
+      deleteRQLQuery(index);
+      reloadQueryList();
     });
   }
 
@@ -898,7 +933,7 @@ if (document.getElementById("oracleATGbrand") != null)
   
     $("<div id='toolbarContainer'></div>")
     //.html("<a href='javascript:void(0)'>Hide toolbar</a>")
-    .css("height", "75px")
+    //.css("height", "75px")
     .insertAfter("#oracleATGbrand");
 
     $("<div id='toolbar'></div>")
@@ -1240,8 +1275,10 @@ if (document.getElementById("oracleATGbrand") != null)
   var resultsSelector = "h2:contains('Results:')";
   var errorsSelector1 = "p:contains('Errors:')";
   var errorsSelector2 = "code:contains('*** Query:')";
-  
-  var defaultItemByTab = "10";
+  var arrowImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=";
+  var arrowImgRotate = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC"
+  var trashImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC";
+    var defaultItemByTab = "10";
   var hasWebStorage = hasWebStorage();
   var hasErrors = hasErrors();
   var hasResults = hasResults(hasErrors);
@@ -1254,8 +1291,7 @@ if (document.getElementById("oracleATGbrand") != null)
     console.log("This is not a repository page");
 
   // Global stuff
-  var arrowImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=";
-  var arrowImgRotate = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC"
+
   $("a").css("text-decoration", "none");
   showComponentHsitory();
   createToolbar();
