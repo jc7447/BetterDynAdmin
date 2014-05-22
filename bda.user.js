@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0
+// @version 1.0.1
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -233,6 +233,7 @@ if (document.getElementById("oracleATGbrand") != null)
     return xmlStr;
   }
 
+      
   function sanitizeXml(xmlContent)
   {
       var start = new Date().getTime();
@@ -320,6 +321,8 @@ if (document.getElementById("oracleATGbrand") != null)
   {
     var html = "";
     html += "<table class='dataTable'>";
+      console.log(datas);
+        console.log(types);
     for (var i = 0; i != types.length; i++)
     {
       var curProp = types[i];
@@ -386,7 +389,8 @@ if (document.getElementById("oracleATGbrand") != null)
         var nbTypes = 0;
         $addItems.each(function () {
             var curItemDesc = $(this).attr("item-descriptor");
-            types[curItemDesc] = new Array();
+            if (types[curItemDesc] == null)
+               types[curItemDesc] = new Array();
             if (datas[curItemDesc] == null)
             {
                 datas[curItemDesc] = new Array();
@@ -1314,3 +1318,4 @@ else
 {
   console.log("BDA script not starting");
 }
+
