@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.1
+// @version 1.0.2
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -268,54 +268,6 @@ if (document.getElementById("oracleATGbrand") != null)
        console.log("time to sanitize : " + time + "ms");
        return xmlStr;
     }
-    
-   
-   /*
-     function sanitizeXml(xmlContent)
-    {
-        var start = new Date().getTime();
-   var xmlStr = "";
-      var lines = xmlContent.split("\n");
-      for (var i = 0; i != lines.length; i++)
-      {
-    var line = lines[i].trim();
-        if (line.substr(0,4) == "<!--")
-        {
-            //console.log("Comment : " + line);
-            // pattern : " derived   ", " rdonly   ", " rdonly  derived   ", " export is false   "
-            var derived = false;
-            var rdonly = false;
-            var exportable = false;
-            var lineRegexp = new RegExp(/\<set\-property.*\>\<\!\[CDATA\[.*\]\]\>\<\/set\-property\>/ig);
-            var rawComment = line.replace(lineRegexp, "");
-            //console.log("raw comment : " + rawComment);
-            if (rawComment.indexOf("derived") != -1)
-                derived = true;
-            if (rawComment.indexOf("rdonly") != -1)
-                rdonly = true;
-            if (rawComment.indexOf("export") != -1)
-                exportable = true;
-            //console.log("derived : " + derived + ", rdonly : " + rdonly + ", exportable : " + exportable);
-            var xmltag = line.match(lineRegexp);
-            //console.log("xmltag : " + xmltag);
-            xmlDoc = $.parseXML("<xml>" + xmltag + "</xml>");
-            $xml = $(xmlDoc);
-            var newLine = $xml.find("set-property").attr("derived", derived).attr("rdonly", rdonly).attr("exportable", exportable);
-            //console.log(newLine.prop('outerHTML'));
-            xmlStr += newLine.prop('outerHTML');
-        }
-    else if (line.substr(0,1) == "<" && endsWith(line, ">"))
-      xmlStr += line;
-      }
-        var endTime = new Date();
-  var time = endTime.getTime() - start;
-  if (time > 1000)
-    console.log("time to sanitize : " + (time / 1000) + "sec");
-  else
-    console.log("time to sanitize : " + time + "ms");
-      return xmlStr;
-    }
-    */
    
   function renderTab(types, datas)
   {
@@ -385,6 +337,7 @@ if (document.getElementById("oracleATGbrand") != null)
         $xml = $( xmlDoc );
         $addItems = $xml.find("add-item");
         var types = new Array();
+        var typesNames = new Array();
         var datas = new Array();
         var nbTypes = 0;
         $addItems.each(function () {
@@ -401,20 +354,32 @@ if (document.getElementById("oracleATGbrand") != null)
                 curData[$(this).attr("name")] = $(this).text();
                 var type = new Object();
                 type.name = $(this).attr("name");
-                type.rdonly = $(this).attr("rdonly");
-                type.derived = $(this).attr("derived");
-                type.exportable = $(this).attr("exportable");
-                types[curItemDesc].push(type);
+                if ($.inArray(type.name, typesNames) == -1 ) 
+                {
+                  type.rdonly = $(this).attr("rdonly");
+                  type.derived = $(this).attr("derived");
+                  type.exportable = $(this).attr("exportable");
+                  types[curItemDesc].push(type);
+                  typesNames.push(type.name);
+                }
             });
           
             types[curItemDesc].sort();
-            var typeDescriptor = new Object();
-            typeDescriptor.name = "descriptor";
-            var typeId = new Object();
-            typeId.name = "id";
-            types[curItemDesc].unshift(typeDescriptor, typeId);
+            if ($.inArray("descriptor", typesNames) == -1) 
+            {
+              var typeDescriptor = new Object();
+              typeDescriptor.name = "descriptor";
+              types[curItemDesc].unshift(typeDescriptor);
+              typesNames.push("descriptor");
+            }
+            if ($.inArray("id", typesNames) == -1) 
+            {
+              var typeId = new Object();
+              typeId.name = "id";
+              types[curItemDesc].unshift(typeId);
+              typesNames.push("id");
+            }
             curData["descriptor"] = curItemDesc;
-
             curData["id"] = $(this).attr("id");
             datas[curItemDesc].push(curData);
         });
