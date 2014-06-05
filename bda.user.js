@@ -20,7 +20,7 @@ function load(url, onLoad, onError) {
     document.body.appendChild(e);
 
     return e;
-}
+} 
 
 function execute(functionOrCode) {
     if (typeof functionOrCode === "function") {
