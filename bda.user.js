@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.2
+// @version 1.0.4
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -399,7 +399,7 @@ if (document.getElementById("oracleATGbrand") != null)
       splitValue = 0;
     else
       splitValue = parseInt(splitObj.splitValue);
-        for(var itemDesc in datas) 
+    for(var itemDesc in datas) 
     {
       if (splitValue == 0)
         splitValue = datas[itemDesc].length;
@@ -408,7 +408,7 @@ if (document.getElementById("oracleATGbrand") != null)
         html += renderTab(types[itemDesc], datas[itemDesc]);
       else
       {
-        while ((splitValue * nbTab) <=  datas[itemDesc].length)
+        while ((splitValue * nbTab) <  datas[itemDesc].length)
         {
           var start = splitValue * nbTab;
           var end = start + splitValue;
@@ -418,8 +418,8 @@ if (document.getElementById("oracleATGbrand") != null)
           html += renderTab(types[itemDesc], subDatas);
           nbTab++;
         }
-      }
-    }
+       }
+     }
         $("#RQLResults").append(html);
         $("#RQLResults").prepend("<div class='prop_attr' style='background-color : red;'>R</div> : read-only "
                                  + "<div class='prop_attr' style='background-color : green;'>D</div> : derived "
@@ -983,30 +983,32 @@ if (document.getElementById("oracleATGbrand") != null)
     
     if (isComponentPage())
     {
-      var url = document.URL;
-      var componentPath = url.substr(url.indexOf('/dyn'), url.length);
-      if (!isComponentAlreadyStored(componentPath))
-      {
-        $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
-        .css("font-size", "30px")
-        .css("border", "1px dashed #CCCCCC")
-        .css("height", "54px")
-        .css("width", "50px")
-        .css("text-align", "center")
-        .css("float", "left")
-        .css("margin", "4px")
-        .css("line-height", "48px")
-        .appendTo("#toolbar");
+    var url = document.URL;
+    var componentPath = url.substr(url.indexOf('/dyn'), url.length);
+    if (!isComponentAlreadyStored(componentPath))
+    {
+      $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
+      .css("font-size", "30px")
+      .css("border", "1px dashed #CCCCCC")
+      .css("height", "54px")
+      .css("width", "50px")
+      .css("text-align", "center")
+      .css("float", "left")
+      .css("margin", "4px")
+      .css("line-height", "48px")
+      .appendTo("#toolbar");
 
-        $("#addComponent")
-        .css("color", "#DDDDDD")
-        .css("text-decoration", "none")
-        .click(function() {
-           console.log("Add component");
-           storeComponent(componentPath);
-           reloadToolbar();
-        });
-      }
+      $("#addComponent")
+      .css("color", "#DDDDDD")
+      .css("text-decoration", "none");
+      $(".newFav")
+      .css("cursor", "pointer")
+      .click(function() {
+         console.log("Add component");
+         storeComponent(componentPath);
+         reloadToolbar();
+      });
+    }
     }
 
     $(".fav")
