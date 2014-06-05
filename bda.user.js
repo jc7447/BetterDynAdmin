@@ -337,13 +337,16 @@ if (document.getElementById("oracleATGbrand") != null)
         $xml = $( xmlDoc );
         $addItems = $xml.find("add-item");
         var types = new Array();
-        var typesNames = new Array();
+        
         var datas = new Array();
         var nbTypes = 0;
-        $addItems.each(function () {
+        var typesNames = new Array();
+        $addItems.each(function () {    
             var curItemDesc = $(this).attr("item-descriptor");
             if (types[curItemDesc] == null)
                types[curItemDesc] = new Array();
+            if (typesNames[curItemDesc] == null)
+               typesNames[curItemDesc] = new Array();
             if (datas[curItemDesc] == null)
             {
                 datas[curItemDesc] = new Array();
@@ -354,30 +357,30 @@ if (document.getElementById("oracleATGbrand") != null)
                 curData[$(this).attr("name")] = $(this).text();
                 var type = new Object();
                 type.name = $(this).attr("name");
-                if ($.inArray(type.name, typesNames) == -1 ) 
+                if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
                 {
                   type.rdonly = $(this).attr("rdonly");
                   type.derived = $(this).attr("derived");
                   type.exportable = $(this).attr("exportable");
                   types[curItemDesc].push(type);
-                  typesNames.push(type.name);
+                  typesNames[curItemDesc].push(type.name);
                 }
             });
           
             types[curItemDesc].sort();
-            if ($.inArray("descriptor", typesNames) == -1) 
+            if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) 
             {
               var typeDescriptor = new Object();
               typeDescriptor.name = "descriptor";
               types[curItemDesc].unshift(typeDescriptor);
-              typesNames.push("descriptor");
+              typesNames[curItemDesc].push("descriptor");
             }
-            if ($.inArray("id", typesNames) == -1) 
+            if ($.inArray("id", typesNames[curItemDesc]) == -1) 
             {
               var typeId = new Object();
               typeId.name = "id";
               types[curItemDesc].unshift(typeId);
-              typesNames.push("id");
+              typesNames[curItemDesc].push("id");
             }
             curData["descriptor"] = curItemDesc;
             curData["id"] = $(this).attr("id");
@@ -1283,4 +1286,5 @@ else
 {
   console.log("BDA script not starting");
 }
+
 
