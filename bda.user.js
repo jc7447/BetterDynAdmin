@@ -5,569 +5,803 @@
 // @author       Jean-Charles Manoury
 // @grant none
 // @version 1.0.4
+// @require http://code.jquery.com/jquery-1.11.1.min.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
 // a function that loads jQuery and calls a callback function when jQuery has finished loading
-function load(url, onLoad, onError) {
-    e = document.createElement("script");
-    e.setAttribute("src", url);
-
-    if (onLoad != null) { e.addEventListener("load", onLoad); }
-    if (onError != null) { e.addEventListener("error", onError); }
-
-    document.body.appendChild(e);
-
-    return e;
-} 
-
-function execute(functionOrCode) {
-    if (typeof functionOrCode === "function") {
-        code = "(" + functionOrCode + ")();";
-    } else {
-        code = functionOrCode;
-    }
-
-    e = document.createElement("script");
-    e.textContent = code;
-
-    document.body.appendChild(e);
-
-    return e;
-}
-
-function loadAndExecute(url, functionOrCode) {
-    load(url, function() { execute(functionOrCode); });
-}
 
 
-if (document.getElementById("oracleATGbrand") != null)
-{
-  loadAndExecute("http://code.jquery.com/jquery-1.11.1.min.js", function (){
-  var start = new Date().getTime();
-  console.log("Start BDA script");
-  function toggleShowLabel(contentDisplay,selector)
-  {
-    if (contentDisplay == "none")
-      $(selector).html("Show more...");
-    else
-      $(selector).html("Show less...");
-  }
-  
-    function toggleCacheUsage() {
-       $(cacheUsageSelector).next().toggle();
-       $(cacheUsageSelector).next().next().toggle();
-     toggleShowLabel($(cacheUsageSelector).next().css("display"), "#showMoreCacheUsage");
-    }
- 
-    function toggleRepositoryView() {
-        $(repositoryViewSelector).next().toggle();
-        $(repositoryViewSelector).next().next().toggle();
-    toggleShowLabel($(repositoryViewSelector).next().css("display"), "#showMoreRepositoryView");
-    }
- 
-    function toggleProperties() {
-        $(propertiesSelector).next().toggle();
-    toggleShowLabel($(propertiesSelector).next().css("display"), "#showMoreProperties");
-    }
- 
-    function toggleEventSets() {
-        $(eventSetsSelector).next().toggle();
-    toggleShowLabel($(eventSetsSelector).next().css("display"), "#showMoreEventsSets");
-   }
- 
-    function toggleMethods() {
-        $(methodsSelector).next().toggle();
-    toggleShowLabel($(methodsSelector).next().css("display"), "#showMoreMethods");
-    }
-  
-  function toggleRawXml() {
-    $("#rawXml").toggle();
-    if ($("#rawXml").css("display") == "none")
-      $("#rawXmlLink").html("show raw XML");
-    else
-      $("#rawXmlLink").html("hide raw XML");
-  }
-    function getDescriptorOptions()
+var BDA = {
+    descriptorTableSelector : "table:eq(0)",
+    repositoryViewSelector : "h2:contains('Examine the Repository, Control Debugging')",
+    cacheUsageSelector : "h2:contains('Cache usage statistics')",
+    propertiesSelector : "h1:contains('Properties')",
+    eventSetsSelector : "h1:contains('Event Sets')",
+    methodsSelector : "h1:contains('Methods')",
+    resultsSelector : "h2:contains('Results:')",
+    errorsSelector1 : "p:contains('Errors:')",
+    errorsSelector2 : "code:contains('*** Query:')",
+    arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
+    arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
+    trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
+    css : "<style type='text/css'>\
+            a{text-decoration : none}\
+    		#RQLResults{ margin-top : 10px; }\
+    		.dataTable {font-size : 80%; margin : 5px; border : 1px solid #CCCCCC}\
+    		.prop_attr {display: inline-block; margin : 2px; padding : 1px; color : white; vertical-align :middle;}\
+    		.copyLink{text-decoration:none; color:#00214a;}\
+            .copyField{width:200px;}\
+            .dataTable td, .dataTable th{padding : 3px;}\
+            .dataTable th{min-width : 160px; text-align : left; }\
+    		</style>",
+    defaultItemByTab : "10",
+    hasWebStorage : false,
+    hasErrors : false,
+    hasResults : false,
+
+    init : function(){
+        var start = new Date().getTime();
+        console.log("Start BDA script");
+        console.log("Jquery installed !");
+        this.hasErrors = this.hasErrors();
+        this.hasResults = this.hasResults(this.hasErrors);
+        console.log("isComponentPage : " + this.isComponentPage());
+        console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
+        // apply css
+        $("head").append(this.css);
+        
+        // Setup repository page
+        if (this.isRepositoryPage())
+        	this.setupRepositoryPage();
+        else
+          console.log("This is not a repository page");
+
+        // Global stuff
+
+        //$("a").css("text-decoration", "none");
+        
+        this.showComponentHsitory();
+        this.createToolbar();
+        this.createBackupPanel();
+        this.createBugReportPanel();
+
+        // Collect history
+        
+        if (this.isComponentPage())
+        	this.collectHistory();
+        
+        // Monitor execution time
+        var endTime = new Date();
+        var time = endTime.getTime() - start;
+        if (time > 1000)
+            console.log("BDA takes : " + (time / 1000) + "sec");
+        else
+            console.log("BDA takes : " + time + "ms");
+    },
+    
+
+    //--- Page informations ------------------------------------------------------------------------
+    hasResults : function (hasErrors)
+    {
+        return $(this.resultsSelector).size() > 0;
+    },
+    
+    hasErrors : function ()
+    {
+        return $(this.errorsSelector1).size() > 0 || $(this.errorsSelector2).size() > 0;
+    },
+    
+    hasWebStorage : function ()
+    {
+        if(typeof(Storage) !== "undefined")
+            return true;
+        return false;
+    },
+    
+    isRepositoryPage : function ()
+    {
+        return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
+    },
+    
+    isComponentPage : function ()
+    {
+        return $("h1:contains('Directory Listing')").size() == 0 //Page is not a directory
+        && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
+        && document.URL.indexOf("?") == -1; // Page has no parameter
+    },
+    
+    rotateArrow : function ($arrow)
+    {
+        if ($arrow.hasClass("up"))
+            $arrow.attr("src", this.arrowImgRotate).attr("class", "down");
+        else
+            $arrow.attr("src", this.arrowImg).attr("class", "up");  
+    },
+    
+    //---- Repository page -------------------------------------------------------------------------
+    
+        toggleShowLabel : function (contentDisplay,selector)
+    {
+        if (contentDisplay == "none")
+            $(selector).html("Show more...");
+        else
+            $(selector).html("Show less...");
+    },
+    
+    toggleCacheUsage: function () 
+    {
+    	$cacheUsage = $(this.cacheUsageSelector);
+    	$cacheUsage.next().toggle().next().toggle();
+       // $(this.cacheUsageSelector).next().next().toggle();
+        this.toggleShowLabel($cacheUsage.next().css("display"), "#showMoreCacheUsage");
+    },
+    
+    toggleRepositoryView : function () 
+    {
+        $(this.repositoryViewSelector).next().toggle().next().toggle();
+        //$(this.repositoryViewSelector).next().next().toggle();
+        this.toggleShowLabel($(this.repositoryViewSelector).next().css("display"), "#showMoreRepositoryView");
+    },
+    
+    toggleProperties : function () 
+    {
+        $(this.propertiesSelector).next().toggle();
+        this.toggleShowLabel($(this.propertiesSelector).next().css("display"), "#showMoreProperties");
+    },
+    
+    toggleEventSets : function () 
+    {
+        $(this.eventSetsSelector).next().toggle();
+        this.toggleShowLabel($(this.eventSetsSelector).next().css("display"), "#showMoreEventsSets");
+    },
+    
+    toggleMethods : function () 
+    {
+        $(this.methodsSelector).next().toggle();
+        this.toggleShowLabel($(this.methodsSelector).next().css("display"), "#showMoreMethods");
+    },
+    
+    toggleRawXml : function () 
+    {
+        $("#rawXml").toggle();
+        if ($("#rawXml").css("display") == "none")
+            $("#rawXmlLink").html("show raw XML");
+        else
+            $("#rawXmlLink").html("hide raw XML");
+    },
+    
+    
+    getDescriptorOptions: function ()
     {
         var descriptorOptions = "";
         $("#descriptorTable tr th:first-child:not([colspan])")
         .sort(function(a, b){
-             return $(a).text().toLowerCase() > $(b).text().toLowerCase() ? 1 : -1;
-       }).each(function() {
-
+            return $(a).text().toLowerCase() > $(b).text().toLowerCase() ? 1 : -1;
+        }).each(function() {
+            
             descriptorOptions += "<option>" + $(this).html().trim() + "</option>\n";
         });
         return descriptorOptions;
-    }
- 
-
-    function getsubmitButton()
+    },
+    
+    getsubmitButton : function ()
     {
-      return "<button type='button' id='RQLAdd'>Add</button>" 
-       + "<button type='button' id='RQLGo'>Go</button>";
-    }
- 
-    function getPrintItemEditor()
+        return "<button type='button' id='RQLAdd'>Add</button>" 
+        + "<button type='button' id='RQLGo'>Go</button>";
+    },
+    
+    getPrintItemEditor : function ()
     {
-      $("#itemIdField").show();
-      $("#itemDescriptorField").show();
-    }
- 
-    function getAddItemEditor()
+        $("#itemIdField").show();
+        $("#itemDescriptorField").show();
+    },
+    
+    getAddItemEditor: function()
     {
         $("#itemIdField").hide();
-    $("#itemDescriptorField").show();
-    }
- 
-    function getRemoveItemEditor()
+        $("#itemDescriptorField").show();
+    },
+    
+    getRemoveItemEditor : function ()
     {
-    getPrintItemEditor();
-    }
- 
-    function getUpdateItemEditor()
+        this.getPrintItemEditor();
+    },
+    
+    getUpdateItemEditor : function ()
     {
-       getPrintItemEditor();
-    }
- 
-    function getQueryItemsEditor()
+        this.getPrintItemEditor();
+    },
+    
+    getQueryItemsEditor : function ()
     {
-      $("#itemIdField").hide();
-      $("#itemDescriptorField").show();
-    }
-
-    function getPrintItemQuery()
+        $("#itemIdField").hide();
+        $("#itemDescriptorField").show();
+    },
+    
+    getPrintItemQuery : function ()
     {
-      var id = $("#itemId").val();
-      var descriptor = $("#itemDescriptor").val();
-      var query = "<print-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
-      return query;
-    }
-  
-    function getRemoveItemQuery()
+        var id = $("#itemId").val();
+        var descriptor = $("#itemDescriptor").val();
+        var query = "<print-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
+        return query;
+    },
+    
+    getRemoveItemQuery : function ()
     {
-      var id = $("#itemId").val();
-      var descriptor = $("#itemDescriptor").val();
-      var query = "<remove-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
-      return query;
-    }
- 
-    function getAddItemQuery()
+        var id = $("#itemId").val();
+        var descriptor = $("#itemDescriptor").val();
+        var query = "<remove-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
+        return query;
+    },
+    
+    getAddItemQuery : function ()
     {
-      var descriptor = $("#itemDescriptor").val();
-      var query = "<add-item item-descriptor=\"" + descriptor + "\" >\n";
-      query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
-      query += "</add-item>\n";
-      return query;
-    }
-  
-    function getUpdateItemQuery()
+        var descriptor = $("#itemDescriptor").val();
+        var query = "<add-item item-descriptor=\"" + descriptor + "\" >\n";
+        query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
+        query += "</add-item>\n";
+        return query;
+    },
+    
+    getUpdateItemQuery : function ()
     {
-      var descriptor = $("#itemDescriptor").val();
-      var id = $("#itemId").val();
-      var query = "<update-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" >\n";
-      query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
-      query += "</update-item>\n";
-      return query;
-    }
- 
-    function getQueryItemsQuery()
+        var descriptor = $("#itemDescriptor").val();
+        var id = $("#itemId").val();
+        var query = "<update-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" >\n";
+        query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
+        query += "</update-item>\n";
+        return query;
+    },
+    
+    getQueryItemsQuery : function ()
     {
-      var descriptor = $("#itemDescriptor").val();
-      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n\n";
-      query += "</query-items>\n";
-      return query;
-    }
- 
-  function getRQLQuery()
-  {
-     var query = "";
-     var action = $("#RQLAction").val();
-     console.log("getRQLQuery : " + action);
-     if (action == "print-item")
-         query = getPrintItemQuery();
-     else if (action == "query-items")
-         query = getQueryItemsQuery();
-     else if (action == "remove-item")
-         query = getRemoveItemQuery();
-     else if (action == "add-item")
-         query = getAddItemQuery();
-     else if (action == "update-item")
-         query = getUpdateItemQuery();
-     return query;
-  }
-  
-  function submitRQLQuery(addText) 
-  {
-    if(addText)
+        var descriptor = $("#itemDescriptor").val();
+        var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n\n";
+        query += "</query-items>\n";
+        return query;
+    },
+    
+    getRQLQuery : function ()
     {
-      var query = getRQLQuery();
-      $("#xmltext").val( $("#xmltext").val()  + query);
-    }
-    storeSplitValue();
-    $("#RQLForm").submit();
-  }
-
-  function showTextField(baseId)
-  {
-    $("#" + baseId).toggle();
-    $("#text_" + baseId).toggle();
-  }
- 
-  function endsWith(str, suffix) 
-  {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-  }
-  
-  function purgeXml(xmlContent)
-  {
-    var xmlStr = "";
-    var lines = xmlContent.split("\n");
-    for (var i = 0; i != lines.length; i++)
+        var query = "";
+        var action = $("#RQLAction").val();
+        console.log("getRQLQuery : " + action);
+        if (action == "print-item")
+          query = this.getPrintItemQuery();
+        else if (action == "query-items")
+          query = this.getQueryItemsQuery();
+        else if (action == "remove-item")
+          query = this.getRemoveItemQuery();
+        else if (action == "add-item")
+          query = this.getAddItemQuery();
+        else if (action == "update-item")
+          query = this.getUpdateItemQuery();
+        return query;
+    },
+    
+    submitRQLQuery : function (addText) 
     {
-      var line = lines[i].trim();
-      if (!(line.substr(0,1) == "<" && endsWith(line, ">")))
-        xmlStr += line + "\n";
-    }
-    return xmlStr;
-  }
-
-      
-  function sanitizeXml(xmlContent)
-  {
-      var start = new Date().getTime();
-      var xmlStr = xmlContent;
-
-      var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>).*-->/ig;
-      var res = xmlStr.match(regexp);
-
-      var xmlStr =  xmlStr.replace(regexp, function(str, p1, p2, offset, s){
-
-        var derived = false;
-        var rdonly = false;
-        var exportable = false;
+        if(addText)
+        {
+            var query = this.getRQLQuery();
+            $("#xmltext").val( $("#xmltext").val()  + query);
+        }
+        this.storeSplitValue();
+        $("#RQLForm").submit();
+    },
+    
+    showTextField : function (baseId)
+    {
+        $("#" + baseId).toggle();
+        $("#text_" + baseId).toggle();
+    },
+    
+    endsWith : function (str, suffix) 
+    {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    },
+    
+    purgeXml : function (xmlContent)
+    {
+        var xmlStr = "";
+        var lines = xmlContent.split("\n");
+        for (var i = 0; i != lines.length; i++)
+        {
+            var line = lines[i].trim();
+            if (!(line.substr(0,1) == "<" && this.endsWith(line, ">")))
+                xmlStr += line + "\n";
+        }
+        return xmlStr;
+    },
+    
+    sanitizeXml : function (xmlContent)
+    {
+        var start = new Date().getTime();
         
-        if (p1.indexOf("derived") != -1)
-            derived = true;
-        if (p1.indexOf("rdonly") != -1)
-            rdonly = true;
-        if (p1.indexOf("export") != -1)
-            exportable = true;
-  
-        var xmlDoc = $.parseXML("<xml>" + p2 + "</xml>");
-        var $xml = $(xmlDoc);
-        var newLine = $xml.find("set-property")
-                      .attr("derived", derived).attr("rdonly", rdonly).attr("exportable", exportable)
-                      .prop('outerHTML');
-       //console.log("newline : " + newLine);
-         return newLine;
-      });
-       var endTime = new Date();
-       var time = endTime.getTime() - start;
-       console.log("time to sanitize : " + time + "ms");
-       return xmlStr;
-    }
-   
-  function renderTab(types, datas)
-  {
-    var html = "";
-    html += "<table class='dataTable'>";
-      console.log(datas);
-        console.log(types);
-    for (var i = 0; i != types.length; i++)
+        var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>).*-->/ig;
+        
+        var xmlStr =  xmlContent.replace(regexp, function(str, p1, p2, offset, s){
+            var attributes = "set-property ";
+            
+            if (p1.indexOf("derived") != -1)
+            	attributes += "derived=\"true\" ";
+            if (p1.indexOf("rdonly") != -1)
+            	attributes += "rdonly=\"true\" ";
+            if (p1.indexOf("export") != -1)
+            	attributes += "export=\"true\" ";
+
+            var newLine = p2.replace("set-property", attributes);
+            return newLine;
+            
+        });
+        var endTime = new Date();
+        var time = endTime.getTime() - start;
+        console.log("time to sanitize : " + time + "ms");
+        return xmlStr;
+    },
+    
+    renderTab : function (types, datas)
     {
-      var curProp = types[i];
-      if (i % 2 == 0)
-        html += "<tr class='even'>";
-      else
-        html += "<tr class='odd'>";
-      html += "<th>" + curProp.name + "<span style='font-size : 80%'>";
-      if (curProp.rdonly == "true")
-        html += "<div class='prop_attr' style='background-color : red;'>R</div>";
-      if (curProp.derived  == "true")
-        html += "<div class='prop_attr' style='background-color : green;'>D</div>";
-      if (curProp.exportable  == "true")
-        html += "<div class='prop_attr' style='background-color : blue;'>E</div>";
-      html += "</span></th>";
-
-      for (var a = 0; a < datas.length; a++)
-      {
-       // var propValue = escapeHTML(datas[a][curProp.name]);
-       var propValue = datas[a][curProp.name];
-        if (propValue != null)
+        var html = "";
+        html += "<table class='dataTable'>";
+        for (var i = 0; i != types.length; i++)
         {
-          if (propValue.length > 25)
-          {
-            var base_id = curProp.name + "_" + datas[a]["id"];
-            var link_id = "link_" + base_id;
-            var field_id = "text_" + base_id;
-            propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' ><span id='"+base_id+"'>" + escapeHTML(propValue.substr(0, 25)) + "...</a>"
-                  + "</span><textarea class='copyField' style='display:none;' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
-          }
-          // 
-          html += "<td>" + propValue + "</td>";
+            var curProp = types[i];
+            if (i % 2 == 0)
+                html += "<tr class='even'>";
+            else
+                html += "<tr class='odd'>";
+            html += "<th>" + curProp.name + "<span style='font-size : 80%'>";
+            if (curProp.rdonly == "true")
+                html += "<div class='prop_attr' style='background-color : red;'>R</div>";
+            if (curProp.derived  == "true")
+                html += "<div class='prop_attr' style='background-color : green;'>D</div>";
+            if (curProp.exportable  == "true")
+                html += "<div class='prop_attr' style='background-color : blue;'>E</div>";
+            html += "</span></th>";
+            
+            for (var a = 0; a < datas.length; a++)
+            {
+                // var propValue = escapeHTML(datas[a][curProp.name]);
+                var propValue = datas[a][curProp.name];
+                if (propValue != null)
+                {
+                    if (propValue.length > 25)
+                    {
+                        var base_id = curProp.name + "_" + datas[a]["id"];
+                        var link_id = "link_" + base_id;
+                        var field_id = "text_" + base_id;
+                        propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' ><span id='"+base_id+"'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
+                        + "</span><textarea class='copyField' style='display:none;' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
+                    }
+                    // 
+                    html += "<td>" + propValue + "</td>";
+                }
+                else
+                {
+                    html += "<td>&nbsp;</td>";
+                    //console.log("propValue not found : " + curProp.name + ", descriptor : " + itemDesc);
+                }
+            }
+            html += "</tr>";
         }
-        else
-        {
-          html += "<td>&nbsp;</td>";
-          //console.log("propValue not found : " + curProp.name + ", descriptor : " + itemDesc);
-        }
-      }
-      html += "</tr>";
-    }
-    html += "</table>";
-    return html;
-  }
-
-  function showRQLResults()
+        html += "</table>";
+        return html;
+    },
+    
+    showRQLResults : function ()
     {
-      console.log("Start showRQLResults");
-
+        console.log("Start showRQLResults");
+        
         $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
-        var xmlContent = $(resultsSelector).next().text().trim();
+        var xmlContent = $(this.resultsSelector).next().text().trim();
         if (xmlContent.indexOf("--") != -1 )
         {
             var firstLineOffset = xmlContent.indexOf("\n");
             xmlContent = xmlContent.substr(firstLineOffset);
         }
-        xmlContent = sanitizeXml(xmlContent);
+        xmlContent = this.sanitizeXml(xmlContent);
         //console.log(xmlContent);
         xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
         $xml = $( xmlDoc );
         $addItems = $xml.find("add-item");
-        var types = new Array();
+        var types = [];
         
-        var datas = new Array();
+        var datas = [];
         var nbTypes = 0;
-        var typesNames = new Array();
-        $addItems.each(function () {    
+        var typesNames = [];
+        $addItems.each(function () {
             var curItemDesc = $(this).attr("item-descriptor");
             if (types[curItemDesc] == null)
-               types[curItemDesc] = new Array();
+                types[curItemDesc] = [];
             if (typesNames[curItemDesc] == null)
-               typesNames[curItemDesc] = new Array();
+                typesNames[curItemDesc] = [];
             if (datas[curItemDesc] == null)
             {
-                datas[curItemDesc] = new Array();
+                datas[curItemDesc] = [];
                 nbTypes++;
             }
-            curData = new Array();
+            curData = [];
             $(this).find("set-property").each(function (index) {
                 curData[$(this).attr("name")] = $(this).text();
-                var type = new Object();
+                var type = {};
                 type.name = $(this).attr("name");
                 if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
                 {
-                  type.rdonly = $(this).attr("rdonly");
-                  type.derived = $(this).attr("derived");
-                  type.exportable = $(this).attr("exportable");
-                  types[curItemDesc].push(type);
-                  typesNames[curItemDesc].push(type.name);
+                    type.rdonly = $(this).attr("rdonly");
+                    type.derived = $(this).attr("derived");
+                    type.exportable = $(this).attr("exportable");
+                    types[curItemDesc].push(type);
+                    typesNames[curItemDesc].push(type.name);
                 }
             });
-          
+            
             types[curItemDesc].sort();
             if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) 
             {
-              var typeDescriptor = new Object();
-              typeDescriptor.name = "descriptor";
-              types[curItemDesc].unshift(typeDescriptor);
-              typesNames[curItemDesc].push("descriptor");
+                var typeDescriptor = {};
+                typeDescriptor.name = "descriptor";
+                types[curItemDesc].unshift(typeDescriptor);
+                typesNames[curItemDesc].push("descriptor");
             }
             if ($.inArray("id", typesNames[curItemDesc]) == -1) 
             {
-              var typeId = new Object();
-              typeId.name = "id";
-              types[curItemDesc].unshift(typeId);
-              typesNames[curItemDesc].push("id");
+                var typeId = {};
+                typeId.name = "id";
+                types[curItemDesc].unshift(typeId);
+                typesNames[curItemDesc].push("id");
             }
             curData["descriptor"] = curItemDesc;
             curData["id"] = $(this).attr("id");
             datas[curItemDesc].push(curData);
         });
-      
-    var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
-    html += "<p id='rawXml' style='display:none;'></p>";
+        
+        var startRenderingtab = new Date().getTime();
+        var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
+        html += "<p id='rawXml' style='display:none;'></p>";
         html += "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
-
-    var splitValue;
-    var splitObj = getStoredSplitObj();
-    console.log(splitObj);
-    //console.log(">>> activeSplit : " + splitObj.activeSplit);
-    if (splitObj == null || splitObj.activeSplit == true)
-      splitValue = 0;
-    else
-      splitValue = parseInt(splitObj.splitValue);
-    for(var itemDesc in datas) 
-    {
-      if (splitValue == 0)
-        splitValue = datas[itemDesc].length;
-      var nbTab = 0;
-      if (datas[itemDesc].length <= splitValue)
-        html += renderTab(types[itemDesc], datas[itemDesc]);
-      else
-      {
-        while ((splitValue * nbTab) <  datas[itemDesc].length)
+        
+        var splitValue;
+        var splitObj = this.getStoredSplitObj();
+        console.log(splitObj);
+        //console.log(">>> activeSplit : " + splitObj.activeSplit);
+        if (splitObj == null || splitObj.activeSplit == true)
+            splitValue = 0;
+        else
+            splitValue = parseInt(splitObj.splitValue);
+        for(var itemDesc in datas) 
         {
-          var start = splitValue * nbTab;
-          var end = start + splitValue;
-          if (end > datas[itemDesc].length)
-            end = datas[itemDesc].length;
-          var subDatas = datas[itemDesc].slice(start, end);
-          html += renderTab(types[itemDesc], subDatas);
-          nbTab++;
+            if (splitValue == 0)
+                splitValue = datas[itemDesc].length;
+            var nbTab = 0;
+            if (datas[itemDesc].length <= splitValue)
+                html += this.renderTab(types[itemDesc], datas[itemDesc]);
+            else
+            {
+                while ((splitValue * nbTab) <  datas[itemDesc].length)
+                {
+                    var start = splitValue * nbTab;
+                    var end = start + splitValue;
+                    if (end > datas[itemDesc].length)
+                        end = datas[itemDesc].length;
+                    var subDatas = datas[itemDesc].slice(start, end);
+                    html += this.renderTab(types[itemDesc], subDatas);
+                    nbTab++;
+                }
+            }
         }
-       }
-     }
         $("#RQLResults").append(html);
         $("#RQLResults").prepend("<div class='prop_attr' style='background-color : red;'>R</div> : read-only "
                                  + "<div class='prop_attr' style='background-color : green;'>D</div> : derived "
                                  + "<div class='prop_attr' style='background-color : blue;'>E</div> : export is false");
-    
-    // Move raw xml
-    $(resultsSelector).next().appendTo("#rawXml");
-    $(resultsSelector).remove();
-    $("#rawXmlLink").click(function() {
-           toggleRawXml();
+
+        var endRenderingTab = new Date();
+        var time = endRenderingTab.getTime() - startRenderingtab;
+        console.log("time to render tab : " + time + "ms");
+        // Move raw xml
+        $(this.resultsSelector).next().appendTo("#rawXml");
+        $(this.resultsSelector).remove();
+        $("#rawXmlLink").click(function() {
+            BDA.toggleRawXml();
         });
+        
+        
+        $(".copyLink").click(function() {
+            BDA.showTextField($(this).attr("id").replace("link_", ""));
+        });
+        // console.log(datas);
+        // console.log(types);
+    },
 
-    applyCssToTab();
-    $(".copyLink").click(function() {
-        showTextField($(this).attr("id").replace("link_", ""));
-    });
-       // console.log(datas);
-       // console.log(types);
-    }
- 
-  function applyCssToTab()
-  {
-        $("#RQLResults").css("margin-top", "10px");
-        $(".dataTable").css("font-size", "80%")
-                       .css("margin", "5px")
-                       .css("border", "1px solid #CCCCCC");
-
-        $(".prop_attr").css("display", "inline-block")
-                       .css("margin", "2px")
-                       .css("padding", "1px")
-                       .css("color", "white")
-                       .css("vertical-align", "middle");
-
-        $(".copyLink").css("text-decoration", "none")
-                      .css("color", "#00214a");
-        $(".copyField").css("width", "200px");
-        $(".dataTable td, .dataTable th").css("padding", "3px");
-        $(".dataTable th").css("min-width", "160px").css("text-align", "left");
-  }
- 
-  function showRqlErrors()
-  {
-    var error = "";
-    if ($(errorsSelector1).size() > 0)
+    showRqlErrors : function ()
     {
-      console.log("Case of error  : 1");
-      error = $(errorsSelector1).next().text();
-      $(resultsSelector).next().remove();
-      $(resultsSelector).remove();
-      $(errorsSelector1).next().remove();
-      $(errorsSelector1).remove();
-    }
-    else
+        var error = "";
+        if ($(this.errorsSelector1).size() > 0)
+        {
+            console.log("Case of error  : 1");
+            error = $(this.errorsSelector1).next().text();
+            $(this.resultsSelector).next().remove();
+            $(this.resultsSelector).remove();
+            $(this.errorsSelector1).next().remove();
+            $(this.errorsSelector1).remove();
+        }
+        else
+        {
+            console.log("Case of error  : 2");
+            error = $(this.errorsSelector2).text();
+        }
+        error = this.purgeXml(error);
+        $("<pre id='RQLErrors'></pre>").insertBefore("#RQLEditor");
+        $("#RQLErrors").text(error).css("color", "red").css("margin-top", "20px");
+    },
+    
+    getStoredSplitObj : function ()
     {
-      console.log("Case of error  : 2");
-      error = $(errorsSelector2).text();
-    }
-    error = purgeXml(error);
-    $("<pre id='RQLErrors'></pre>").insertBefore("#RQLEditor");
-    $("#RQLErrors").text(error).css("color", "red").css("margin-top", "20px");
-  }
-  
-  function getStoredSplitObj()
-  {
-    if(!hasWebStorage)
+        if(!this.hasWebStorage)
             return null;
-    console.log("SplitObj =>" + localStorage.getItem('splitObj'));
-    return JSON.parse(localStorage.getItem('splitObj'));
-  }
-  
-  function escapeHTML(s) 
+        console.log("SplitObj =>" + localStorage.getItem('splitObj'));
+        return JSON.parse(localStorage.getItem('splitObj'));
+    },
+    
+    escapeHTML : function (s) 
+    {
+        return String(s).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    },
+    
+    setupRepositoryPage : function ()
+    {
+        // Move RQL editor to the top of the page
+        var actionSelect = "<select id='RQLAction'>"
+        + "<option>print-item</option>"
+        + "<option>query-items</option>"
+        + "<option>remove-item</option>"
+        + "<option>add-item</option>"
+        + "<option>update-item</option>"
+        + "</select>";
+        
+        $(this.descriptorTableSelector).attr("id", "descriptorTable");
+        
+        $("<div id='RQLEditor'></div>").insertBefore("h2:first");
+        
+        if (this.hasErrors)
+            this.showRqlErrors();
+        if (this.hasResults)
+            this.showRQLResults();
+        
+        $("form:eq(1)").appendTo("#RQLEditor");
+        $("form:eq(1)").attr("id", "RQLForm");
+        var $children = $("#RQLForm").children();
+        $("#RQLForm").empty().append($children);
+        $("textarea[name=xmltext]").attr("id", "xmltext");
+        $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
+        
+        $("#RQLToolbar").append("<div> Action : "+ actionSelect 
+                                + " <span id='editor'>" 
+                                + "<span id='itemIdField' >id : <input type='text' id='itemId' style='width:50px'/></span>"
+                                + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor'>" + this.getDescriptorOptions() + "</select></span>"
+                                + "</span>" 
+                                + this.getsubmitButton() + "</div>");
+        //this.getPrintItemEditor();
+        $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
+        $("#xmltext").appendTo("#RQLText");
+        $("#RQLText").after("<div id='RQLStoredQueries' style='display:inline-block; vertical-align:top'><ul></ul></div>");
+        
+        $("#RQLStoredQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>");
+        this.showQueryList();
+        $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
+        
+        splitObj = this.getStoredSplitObj();
+        var itemByTab = this.defaultItemByTab;
+        var isChecked = false;
+        if (splitObj != null)
+            itemByTab = splitObj.splitValue;
+        if (splitObj != null)
+            isChecked = splitObj.activeSplit;
+            $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue' style='width : 40px'> items. ");
+        var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
+        if (isChecked)
+            checkboxSplit += " checked ";
+        checkboxSplit += "/> don't split.";
+        $("#splitToolbar").append(checkboxSplit);
+        
+        $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
+        
+        $("#RQLAction").change(function() {
+            var action = $(this).val();
+            console.log("Action change : " + action);
+            if (action == "print-item")
+              BDA.getPrintItemEditor();
+            else if (action == "query-items")
+              BDA.getQueryItemsEditor();
+            else if (action == "remove-item")
+              BDA.getRemoveItemEditor();
+            else if (action == "add-item")
+              BDA.getAddItemEditor();
+            else if (action == "update-item")
+              BDA.getUpdateItemEditor();
+         });
+        
+        $("#RQLSubmit").click(function() {
+            BDA.submitRQLQuery(false);
+        });
+        
+        $("#RQLGo").click(function() {
+            BDA.submitRQLQuery(true);
+        });
+        
+        $("#RQLAdd").click(function() {
+            var query = BDA.getRQLQuery();
+            $("#xmltext").val( $("#xmltext").val()  + query);
+        });
+        
+        $("#saveQuery").click(function() {
+            if ($("#xmltext").val().trim() != "" && $("#queryLabel").val().trim() != "")
+            {
+              BDA.storeRQLQuery($("#queryLabel").val().trim(), $("#xmltext").val().trim());
+              BDA.showQueryList();
+            }
+        });
+        
+        // Hide other sections
+        var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' style='font-size:80%'>Show less...</a>";
+        var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' style='font-size:80%'>Show more...</a>";
+        
+        var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' style='font-size:80%'>Show more...</a>";
+        var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' style='font-size:80%'>Show more...</a>";
+        var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' style='font-size:80%'>Show more...</a>";
+        
+        // Auto hide Repository View
+        $(this.repositoryViewSelector).append(repositoryView);
+        // toggleRepositoryView();
+        $("#showMoreRepositoryView").click(function (){
+            BDA.toggleRepositoryView();
+        });
+        // Auto hide Cache usage
+        $(this.cacheUsageSelector).append(cacheUsage);
+        this.toggleCacheUsage();
+        $("#showMoreCacheUsage").click(function (){
+            BDA.toggleCacheUsage();
+        });
+        // Auto hide Properties
+        $(this.propertiesSelector).append(properties);
+        this.toggleProperties();
+        $("#showMoreProperties").click(function (){
+            BDA.toggleProperties();
+        });
+        // Auto hide Events Sets
+        $(this.eventSetsSelector).append(eventSets);
+        this.toggleEventSets();
+        $("#showMoreEventsSets").click(function (){
+            BDA.toggleEventSets();
+        });
+        // Auto hide Methods
+        $(this.methodsSelector).append(methods);
+        this.toggleMethods();
+        $("#showMoreMethods").click(function (){
+            BDA.toggleMethods();
+        });
+    },
+    
+        
+    showQueryList : function ()
+    {
+        //console.log("Enter showQueryList");
+    	var html = "";
+        if (this.hasWebStorage)
+        {
+            var rqlQueries = this.getStoredRQLQueries();
+            if (rqlQueries != null)
+            {
+                if (rqlQueries.length > 0)
+                    html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span><ul style='margin :  0; padding-left :15px'>";
+                for (var i = 0; i != rqlQueries.length; i++)
+                {
+                    var storeQuery = rqlQueries[i];
+                    html += "<li class='savedQuery'>";
+                    html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + this.trashImg + "' height='12' width='12' /></span>";
+                    html += "</li>";
+                }
+                html += "</ul>";
+            }
+        }
+        $("#RQLStoredQueries").html(html);
+        $(".savedQuery").click(function() {
+            printStoredQuery( $(this).find("a").html());
+        });
+        
+        $(".savedQuery").hover( function() {
+            $(this).find("span.deleteQuery").toggle();
+        }, function() {
+            $(this).find("span.deleteQuery").toggle();
+        });
+        
+        $(".deleteQuery")
+        .css("display", "none")
+        .css("margin-top", "5px")
+        .css("margin-left", "10px")
+        .click(function() {
+            var index = this.id.replace("deleteQuery", "");
+            console.log("Delete query #" + index);
+            deleteRQLQuery(index);
+            reloadQueryList();
+        });
+    },
+      //--- Stored queries functions ------------------------------------------------------------------------
+    
+  getStoredRQLQueries : function ()
   {
-    return String(s).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-  
-  //--- Stored queries functions ------------------------------------------------------------------------
-  function getStoredRQLQueries()
-  {
-        if(!hasWebStorage)
-            return new Array();
+    if(!this.hasWebStorage)
+      return [];
     var rqlQueries;
     var rqlQueriesStr = localStorage.getItem('RQLQueries');
     if (rqlQueriesStr != null && rqlQueriesStr != "")
       rqlQueries = JSON.parse(rqlQueriesStr);
     else
-      rqlQueries = new Array();
+      rqlQueries = [];
     //console.log("Stored rql queries: " + rqlQueries);
     return rqlQueries;
-  }
+  },
 
-  function storeSplitValue()
+  storeSplitValue : function ()
   {
-    if(!hasWebStorage)
+    if(!this.hasWebStorage)
             return;
-    var splitObj = new Object();
+    var splitObj = {};
     splitObj.splitValue = $("#splitValue").val();
     splitObj.activeSplit = $("#noSplit").is(':checked');
     localStorage.setItem('splitObj', JSON.stringify(splitObj));
-  }
+  },
   
-  function storeRQLQuery(name, query)
+   storeRQLQuery : function (name, query)
   {
-    if(hasWebStorage)
+    if(this.hasWebStorage)
     {
       console.log("Try to store : " + name + ", query : " + query);
-      var storeQuery = new Object();
+      var storeQuery = {};
       storeQuery.name = name;
       storeQuery.query = query;
-      rqlQueries = getStoredRQLQueries();
+      rqlQueries = this.getStoredRQLQueries();
       rqlQueries.push(storeQuery);
       console.log(rqlQueries);
       localStorage.setItem('RQLQueries', JSON.stringify(rqlQueries));
     }
-  }
+  },
   
-  function deleteRQLQuery(index)
+  deleteRQLQuery : function (index)
   {
-    var queries = getStoredRQLQueries();
+    var queries = this.getStoredRQLQueries();
     if (queries.length >  index)
     {
       queries.splice(index, 1);
       localStorage.setItem('RQLQueries', JSON.stringify(queries));
     } 
-  }
+  },
   
-  function reloadQueryList()
+   reloadQueryList : function ()
   {
     $("#RQLStoredQueries").empty();
-    showQueryList();
-  }
+    this.showQueryList();
+  },
   
-  function showQueryList()
+  showQueryList : function ()
   {
     //console.log("Enter showQueryList");
-    if (hasWebStorage)
+    var html = "";
+    if (this.hasWebStorage)
     {
-      var rqlQueries = getStoredRQLQueries();
+      var rqlQueries = this.getStoredRQLQueries();
       
       if (rqlQueries != null)
       {
-        var html = "";
         if (rqlQueries.length > 0)
           html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span><ul style='margin :  0; padding-left :15px'>";
         for (var i = 0; i != rqlQueries.length; i++)
         {
           var storeQuery = rqlQueries[i];
           html += "<li class='savedQuery'>";
-          html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + trashImg + "' height='12' width='12' /></span>";
+          html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + this.trashImg + "' height='12' width='12' /></span>";
           html += "</li>";
         }
         html += "</ul>";
@@ -575,14 +809,14 @@ if (document.getElementById("oracleATGbrand") != null)
     }
     $("#RQLStoredQueries").html(html);
     $(".savedQuery").click(function() {
-      printStoredQuery( $(this).find("a").html())
+      BDA.printStoredQuery( $(this).find("a").html());
     });
     
     $(".savedQuery").hover( function() {
         $(this).find("span.deleteQuery").toggle();
       }, function() {
         $(this).find("span.deleteQuery").toggle();
-      })
+      });
       
     $(".deleteQuery")
     .css("display", "none")
@@ -591,14 +825,14 @@ if (document.getElementById("oracleATGbrand") != null)
     .click(function() {
       var index = this.id.replace("deleteQuery", "");
       console.log("Delete query #" + index);
-      deleteRQLQuery(index);
-      reloadQueryList();
+      BDA.deleteRQLQuery(index);
+      BDA.reloadQueryList();
     });
-  }
+  },
 
-  function printStoredQuery(name)
+   printStoredQuery : function (name)
   {
-    var rqlQueries = getStoredRQLQueries();
+    var rqlQueries = this.getStoredRQLQueries();
     if (rqlQueries != null)
     {
       for (var i = 0; i != rqlQueries.length; i++)
@@ -607,11 +841,11 @@ if (document.getElementById("oracleATGbrand") != null)
           $("#xmltext").val(rqlQueries[i].query);
       }
     }
-  }
-  //--- History functions ------------------------------------------------------------------------
-  function collectHistory()
+  },
+      //--- History functions ------------------------------------------------------------------------
+    collectHistory : function ()
   {
-    if (!hasWebStorage)
+    if (!this.hasWebStorage)
       return ;
     if (document.URL.indexOf("?") >= 0)
       return ;
@@ -629,9 +863,9 @@ if (document.getElementById("oracleATGbrand") != null)
         componentHistory = componentHistory.slice(0, 9);
       localStorage.setItem('componentHistory', JSON.stringify(componentHistory));
     }
-  }
+  },
   
-  function showComponentHsitory()
+   showComponentHsitory : function ()
   {
      $("<div id='history'></div>").insertAfter("#oracleATGbrand");
      var componentHistory =  JSON.parse(localStorage.getItem('componentHistory')) || [];
@@ -644,11 +878,17 @@ if (document.getElementById("oracleATGbrand") != null)
       html += "<a href='" + comp + "'>" + comp.substr(comp.lastIndexOf("/") + 1, comp.length) + "</a>";
      }
      $("#history").css("clear", "both").html(html);
-  }
+  },
+
+  //--- Bug report panel
   
-  //--- backup panel functions ------------------------------------------------------------------------
+  createBugReportPanel : function() 
+  {
+  },
+    
+   //--- backup panel functions ------------------------------------------------------------------------
   
-  function createBackupPanel()
+  createBackupPanel : function ()
   {
     $("<div id='bdaBackup'></div>").appendTo("body")
     .css("position", "absolute")
@@ -661,7 +901,7 @@ if (document.getElementById("oracleATGbrand") != null)
     .css("background-color", "#CC0000")
     .css("padding", "3px")
     .html("<p>backup / restore data</p>"
-    + "<div class='backupArrow'><img class='up' src='" + arrowImg + "'></div>"
+    + "<div class='backupArrow'><img class='up' src='" + this.arrowImg + "'></div>"
     );
     
     $("#bdaBackup p")
@@ -678,7 +918,7 @@ if (document.getElementById("oracleATGbrand") != null)
     
     $("#bdaBackup").click(function() {
       $("#bdaBackupPanel").toggle();
-      rotateArrow($(".backupArrow img"));
+      BDA.rotateArrow($(".backupArrow img"));
     });
     
     $("<div id='bdaBackupPanel'></div>").appendTo("body")
@@ -703,26 +943,26 @@ if (document.getElementById("oracleATGbrand") != null)
     );
 
     var dataObj = {};
-    dataObj.components = getStoredComponents();
-    dataObj.queries = getStoredRQLQueries();
+    dataObj.components = this.getStoredComponents();
+    dataObj.queries = this.getStoredRQLQueries();
     var dataStr = JSON.stringify(dataObj);
     $("#bdaData")
     .css("width", "100%");
 
     $("#bdaDataBackup").click(function (){
-      copyToClipboard(dataStr);
+      BDA.copyToClipboard(dataStr);
     });
     
     $("#bdaDataRestore").click(function (){
       if (window.confirm("Sure ?"))
       {
         var data = $("#bdaData").val().trim();
-        restoreData(data);
+        BDA.restoreData(data);
       }
     });
-  }
+  },
   
-  function restoreData(data)
+  restoreData : function (data)
   {
     try 
     {
@@ -733,18 +973,18 @@ if (document.getElementById("oracleATGbrand") != null)
     catch (e) {
       console.error("Parsing error:", e);
     }
-  }
+  },
   
-  function copyToClipboard(text) 
+  copyToClipboard : function (text) 
   {
     window.prompt("Copy to clipboard: Ctrl+C, Enter", text);
-  }
+  },
   
   //--- Toolbar functions ------------------------------------------------------------------------
   
-  function getStoredComponents()
+  getStoredComponents : function ()
   {
-    if(!hasWebStorage)
+    if(!this.hasWebStorage)
         return [];
     var storedComp;
     var storedCompStr = localStorage.getItem('Components');
@@ -754,12 +994,12 @@ if (document.getElementById("oracleATGbrand") != null)
       storedComp = [];
 
     return storedComp;
-  }
+  },
   
-  function deleteComponent(componentToDelete)
+  deleteComponent : function (componentToDelete)
   {
     console.log("Delete component : " + componentToDelete);
-    var components = getStoredComponents();
+    var components = this.getStoredComponents();
     for(var i = 0; i != components.length; i++)
     {
       if (components[i].componentName == componentToDelete)
@@ -770,26 +1010,26 @@ if (document.getElementById("oracleATGbrand") != null)
     }
     console.log(components);
     localStorage.setItem('Components', JSON.stringify(components));
-    reloadToolbar();
-  }
+    this.reloadToolbar();
+  },
   
-  function storeComponent(component)
+  storeComponent : function (component)
   {
-    if(hasWebStorage)
+    if(this.hasWebStorage)
     {
       console.log("Try to store : " + component);
-      var compObj = new Object();
+      var compObj = {};
       compObj.componentPath = component;
-      compObj.componentName = getComponentNameFromPath(component);
-      compObj.colors = stringToColour(compObj.componentName);
-      storedComp = getStoredComponents();
+      compObj.componentName = this.getComponentNameFromPath(component);
+      compObj.colors = this.stringToColour(compObj.componentName);
+      storedComp = this.getStoredComponents();
       storedComp.push(compObj);
       console.log(storedComp);
       localStorage.setItem('Components', JSON.stringify(storedComp));
     }
-  }
+  },
   
-  function getComponentNameFromPath(component)
+  getComponentNameFromPath : function (component)
   {
     if (component[component.length - 1] == '/')
       component = component.substr(0, (component.length - 1));
@@ -797,9 +1037,9 @@ if (document.getElementById("oracleATGbrand") != null)
     
     var tab = component.split("/");
     return tab[tab.length - 1];
-  }
+  },
   
-  function getComponentShortName(componentName)
+  getComponentShortName : function (componentName)
   {
     var shortName = "";
     for(var i = 0; i != componentName.length; i++)
@@ -810,9 +1050,9 @@ if (document.getElementById("oracleATGbrand") != null)
     }
     // TODO : return 3 first letter if shortName is empty
     return shortName;
-  }
+  },
   
-  function getBorderColor(colors)
+  getBorderColor : function (colors)
   {
     var borderColor = [];
     for (var i = 0; i != colors.length; i++)
@@ -823,10 +1063,10 @@ if (document.getElementById("oracleATGbrand") != null)
       borderColor.push(colorValue);
     }
     //console.log("border color : " + borderColor);
-    return colorToCss(borderColor);
-  }
+    return this.colorToCss(borderColor);
+  },
   
-  function colorToCss(colors)
+  colorToCss : function (colors)
   {
     var cssVal =  "rgb(" ;
     for (var i = 0; i < colors.length; i++)
@@ -838,24 +1078,18 @@ if (document.getElementById("oracleATGbrand") != null)
     cssVal += ")";
     //console.log("cssVal : " + cssVal);
     return cssVal;
-  }
+  },
   
-  function verifyColor(colors)
+  verifyColor : function (colors)
   {
-    var sum = 0;
-    var toCut = 0;
-
-    //console.log("Before verif : " + colors);
-    //console.log("sum : " + sum);
-    //console.log("toCut : " + toCut);
     for (var i = 0; i < colors.length; i++)
       if (colors[i] > 210)
         colors[i] = 210;
     //console.log("After verif : " + colors)
     return colors;
-  }
+  },
   
-  function stringToColour(str) 
+   stringToColour : function (str) 
   {
     var colors = [];
     var hash = 0;
@@ -864,43 +1098,43 @@ if (document.getElementById("oracleATGbrand") != null)
     //var colour = '#';
     for (var i = 0; i < 3; i++) {
       var value = (hash >> (i * 8)) & 0xFF;
-      var hexVal = ('00' + value.toString(16)).substr(-2)
+      var hexVal = ('00' + value.toString(16)).substr(-2);
       colors.push(parseInt(hexVal, 16));
     }
-    return verifyColor(colors);
-  }
+    return this.verifyColor(colors);
+  },
   
-  function showMoreInfos(component)
+  showMoreInfos : function (component)
   {
     console.log("Show more info " + component);
     $("#favMoreInfo" + component).toggle();
-  }
+  },
   
-  function deleteToolbar()
+  deleteToolbar : function ()
   {
     $("#toolbar").remove();
     $("#toolbarHeader").remove();
-  }
+  },
   
-  function reloadToolbar()
+   reloadToolbar: function ()
   {
-    deleteToolbar();
-    createToolbar();
-  }
+    this.deleteToolbar();
+    this.createToolbar();
+  },
   
-  function isComponentAlreadyStored(componentPath)
+   isComponentAlreadyStored : function(componentPath)
   {
-    var components = getStoredComponents();
+    var components = this.getStoredComponents();
     for (var i = 0; i < components.length; i++) {
       if (components[i].componentPath == componentPath)
         return true;
     }
     return false;
-  }
+  },
   
-  function createToolbar()
+  createToolbar :function ()
   {
-    var favs = getStoredComponents();
+    var favs = this.getStoredComponents();
   
   
     $("<div id='toolbarContainer'></div>")
@@ -928,17 +1162,17 @@ if (document.getElementById("oracleATGbrand") != null)
     for(var i = 0; i != favs.length; i++)
     {
       var fav = favs[i];
-      var colors = stringToColour(fav.componentName);
-      var shortName = getComponentShortName(fav.componentName);
+      var colors = this.stringToColour(fav.componentName);
+      var shortName = this.getComponentShortName(fav.componentName);
       $("<div class='fav'></div>")
-      .css("background-color", colorToCss(colors))
-      .css("border", "1px solid " + getBorderColor(colors))
+      .css("background-color", this.colorToCss(colors))
+      .css("border", "1px solid " + this.getBorderColor(colors))
       .html("<div class='favLink'>"
           + "<a href='" + fav.componentPath + "' title='" + fav.componentName + "' >"
           + "<div class='favTitle'>" +  shortName + "</div>"
           + "<div class='favName'>" + fav.componentName + "</div>"
           +"</a></div>"
-          + "<div class='favArrow' id='favArrow" + shortName + "'><img class='up' alt='arrow' src='" + arrowImg + "' /></div>"
+          + "<div class='favArrow' id='favArrow" + shortName + "'><img class='up' alt='arrow' src='" + this.arrowImg + "' /></div>"
           + "<div class='favMoreInfo' id='favMoreInfo" + shortName + "'>"
           + "<div class='favLogDebug'>"
           + " <form method='POST' action='" + fav.componentPath + "' id='logDebugForm" + fav.componentName + "'>"
@@ -960,14 +1194,14 @@ if (document.getElementById("oracleATGbrand") != null)
       var id = this.id;
       var idToExpand = "#" + id.replace("favArrow", "favMoreInfo");
       $(idToExpand).toggle();
-      rotateArrow($("#" + id + " img"));
+      BDA.rotateArrow($("#" + id + " img"));
   
     });
     
     $(".favDelete").click(function() {
       console.log("Click on delete");
       var componentToDelete = this.id.replace("delete", "");
-      deleteComponent(componentToDelete);
+      BDA.deleteComponent(componentToDelete);
     });
     
       $(".logdebug").click(function() {
@@ -981,11 +1215,11 @@ if (document.getElementById("oracleATGbrand") != null)
     });
 
     
-    if (isComponentPage())
+    if (this.isComponentPage())
     {
     var url = document.URL;
     var componentPath = url.substr(url.indexOf('/dyn'), url.length);
-    if (!isComponentAlreadyStored(componentPath))
+    if (!this.isComponentAlreadyStored(componentPath))
     {
       $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
       .css("font-size", "30px")
@@ -1005,8 +1239,8 @@ if (document.getElementById("oracleATGbrand") != null)
       .css("cursor", "pointer")
       .click(function() {
          console.log("Add component");
-         storeComponent(componentPath);
-         reloadToolbar();
+         BDA.storeComponent(componentPath);
+         BDA.reloadToolbar();
       });
     }
     }
@@ -1063,230 +1297,16 @@ if (document.getElementById("oracleATGbrand") != null)
 
   }
 
-  //--- Page informations ------------------------------------------------------------------------
-  function hasResults(hasErrors)
-  {
-    return $(resultsSelector).size() > 0;
-  }
- 
-  function hasErrors()
-  {
-    return $(errorsSelector1).size() > 0 || $(errorsSelector2).size() > 0;
-  }
- 
-  function hasWebStorage()
-  {
-    if(typeof(Storage) !== "undefined")
-      return true;
-    return false;
-  }
-   
-  function isRepositoryPage()
-  {
-    return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
-  }
-
-  function isComponentPage()
-  {
-      return $("h1:contains('Directory Listing')").size() == 0 //Page is not a directory
-          && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
-          && document.URL.indexOf("?") == -1; // Page has no parameter
-  }
-  
-  function rotateArrow($arrow)
-  {
-     if ($arrow.hasClass("up"))
-      $arrow.attr("src", arrowImgRotate).attr("class", "down");
-     else
-      $arrow.attr("src", arrowImg).attr("class", "up");  
-  }
-  
-  //---- Repository page -------------------------------------------------------------------------
-  
-  function setupRepositoryPage()
-  {
-    // Move RQL editor to the top of the page
-    var actionSelect = "<select id='RQLAction'>"
-                       + "<option>print-item</option>"
-                       + "<option>query-items</option>"
-                       + "<option>remove-item</option>"
-                       + "<option>add-item</option>"
-                       + "<option>update-item</option>"
-                       + "</select>";
-  
-     $(descriptorTableSelector).attr("id", "descriptorTable");
-  
-     $("<div id='RQLEditor'></div>").insertBefore("h2:first");
-     if (hasErrors)
-      showRqlErrors();
-     if (hasResults)
-      showRQLResults();
-
-     $("form:eq(1)").appendTo("#RQLEditor");
-     $("form:eq(1)").attr("id", "RQLForm");
-     var $children = $("#RQLForm").children();
-     $("#RQLForm").empty().append($children);
-     $("textarea[name=xmltext]").attr("id", "xmltext");
-     $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
-   
-     $("#RQLToolbar").append("<div> Action : "+ actionSelect 
-                            + " <span id='editor'>" 
-                            + "<span id='itemIdField' style='display:none'>id : <input type='text' id='itemId' style='width:50px'/></span>"
-                            + "<span id='itemDescriptorField' style='display:none'> descriptor :  <select id='itemDescriptor'>" + getDescriptorOptions() + "</select></span>"
-                            + "</span>" 
-                            + getsubmitButton() + "</div>");
-     getPrintItemEditor();
-     $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
-     $("#xmltext").appendTo("#RQLText");
-     $("#RQLText").after("<div id='RQLStoredQueries' style='display:inline-block; vertical-align:top'><ul></ul></div>");
     
-     $("#RQLStoredQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>")
-     showQueryList();
-     $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
-    
-     splitObj = getStoredSplitObj();
-     var itemByTab = defaultItemByTab;
-     var isChecked = false;
-     if (splitObj != null)
-      itemByTab = splitObj.splitValue;
-     if (splitObj != null)
-      isChecked = splitObj.activeSplit
-     $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue' style='width : 40px'> items. ");
-     var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
-     if (isChecked)
-      checkboxSplit += " checked ";
-     checkboxSplit += "/> don't split.";
-     $("#splitToolbar").append(checkboxSplit);
-    
-     $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
-    
-     $("#RQLAction").change(function() {
-        var action = $(this).val();
-        console.log("Action change : " + action);
-        if (action == "print-item")
-            getPrintItemEditor();
-        else if (action == "query-items")
-            getQueryItemsEditor();
-        else if (action == "remove-item")
-            getRemoveItemEditor();
-        else if (action == "add-item")
-            getAddItemEditor();
-        else if (action == "update-item")
-            getUpdateItemEditor();
-     });
-     
-     $("#RQLSubmit").click(function() {
-      submitRQLQuery(false);
-     });
-    
-     $("#RQLGo").click(function() {
-      submitRQLQuery(true);
-     });
-    
-    $("#RQLAdd").click(function() {
-      var query = getRQLQuery();
-      $("#xmltext").val( $("#xmltext").val()  + query);
-     });
-    
-     $("#saveQuery").click(function() {
-       if ($("#xmltext").val().trim() != "" && $("#queryLabel").val().trim() != "")
-       {
-         storeRQLQuery($("#queryLabel").val().trim(), $("#xmltext").val().trim());
-         showQueryList();
-       }
-     });
-    
-    // Hide other sections
-    var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' style='font-size:80%'>Show less...</a>";
-    var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' style='font-size:80%'>Show more...</a>";
- 
-    var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' style='font-size:80%'>Show more...</a>";
-    var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' style='font-size:80%'>Show more...</a>";
-    var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' style='font-size:80%'>Show more...</a>";
+};
 
-    // Auto hide Repository View
-     $(repositoryViewSelector).append(repositoryView);
-    // toggleRepositoryView();
-    $("#showMoreRepositoryView").click(function (){
-       toggleRepositoryView();
-    });
-    // Auto hide Cache usage
-    $(cacheUsageSelector).append(cacheUsage);
-    toggleCacheUsage();
-    $("#showMoreCacheUsage").click(function (){
-      toggleCacheUsage();
-    });
-    // Auto hide Properties
-    $(propertiesSelector).append(properties);
-    toggleProperties();
-    $("#showMoreProperties").click(function (){
-      toggleProperties();
-    });
-    // Auto hide Events Sets
-    $(eventSetsSelector).append(eventSets);
-    toggleEventSets();
-    $("#showMoreEventsSets").click(function (){
-      toggleEventSets();
-    });
-    // Auto hide Methods
-    $(methodsSelector).append(methods);
-    toggleMethods();
-    $("#showMoreMethods").click(function (){
-      toggleMethods();
-    });
-  }
 
- 
-  console.log("Jquery installed !");
-  console.log("isComponentPage : " + isComponentPage());
-
-  var descriptorTableSelector = "table:eq(0)";
-  var repositoryViewSelector = "h2:contains('Examine the Repository, Control Debugging')";
-  var cacheUsageSelector = "h2:contains('Cache usage statistics')";
-  var propertiesSelector = "h1:contains('Properties')";
-  var eventSetsSelector = "h1:contains('Event Sets')";
-  var methodsSelector = "h1:contains('Methods')";
-  var resultsSelector = "h2:contains('Results:')";
-  var errorsSelector1 = "p:contains('Errors:')";
-  var errorsSelector2 = "code:contains('*** Query:')";
-  var arrowImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=";
-  var arrowImgRotate = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC"
-  var trashImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC";
-    var defaultItemByTab = "10";
-  var hasWebStorage = hasWebStorage();
-  var hasErrors = hasErrors();
-  var hasResults = hasResults(hasErrors);
- 
-  console.log("Page has results : " + hasResults + ". Page has errors : " + hasErrors);
-  // Setup repository page
-  if (isRepositoryPage())
-    setupRepositoryPage();
-  else
-    console.log("This is not a repository page");
-
-  // Global stuff
-
-  $("a").css("text-decoration", "none");
-  showComponentHsitory();
-  createToolbar();
-  createBackupPanel();  
-
-  // Collect history
-  if (isComponentPage())
-    collectHistory();
-   
-  // Monitor execution time
-  var endTime = new Date();
-  var time = endTime.getTime() - start;
-  if (time > 1000)
-    console.log("BDA takes : " + (time / 1000) + "sec");
-  else
-    console.log("BDA takes : " + time + "ms");
-});
+if (document.getElementById("oracleATGbrand") != null)
+{
+    console.log("Is dyn admin page");
+   BDA.init();
 }
 else
 {
-  console.log("BDA script not starting");
+    console.log("BDA script not starting");
 }
-
-
