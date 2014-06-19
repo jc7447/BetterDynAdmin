@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.4
+// @version 1.0.5
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -28,14 +28,14 @@ var BDA = {
     trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
     css : "<style type='text/css'>\
             a{text-decoration : none}\
-    		#RQLResults{ margin-top : 10px; }\
-    		.dataTable {font-size : 80%; margin : 5px; border : 1px solid #CCCCCC}\
-    		.prop_attr {display: inline-block; margin : 2px; padding : 1px; color : white; vertical-align :middle;}\
-    		.copyLink{text-decoration:none; color:#00214a;}\
+        #RQLResults{ margin-top : 10px; }\
+        .dataTable {font-size : 80%; margin : 5px; border : 1px solid #CCCCCC}\
+        .prop_attr {display: inline-block; margin : 2px; padding : 1px; color : white; vertical-align :middle;}\
+        .copyLink{text-decoration:none; color:#00214a;}\
             .copyField{width:200px;}\
             .dataTable td, .dataTable th{padding : 3px;}\
             .dataTable th{min-width : 160px; text-align : left; }\
-    		</style>",
+        </style>",
     defaultItemByTab : "10",
     hasWebStorage : false,
     hasErrors : false,
@@ -54,7 +54,7 @@ var BDA = {
         
         // Setup repository page
         if (this.isRepositoryPage())
-        	this.setupRepositoryPage();
+          this.setupRepositoryPage();
         else
           console.log("This is not a repository page");
 
@@ -70,7 +70,7 @@ var BDA = {
         // Collect history
         
         if (this.isComponentPage())
-        	this.collectHistory();
+          this.collectHistory();
         
         // Monitor execution time
         var endTime = new Date();
@@ -132,8 +132,8 @@ var BDA = {
     
     toggleCacheUsage: function () 
     {
-    	$cacheUsage = $(this.cacheUsageSelector);
-    	$cacheUsage.next().toggle().next().toggle();
+      $cacheUsage = $(this.cacheUsageSelector);
+      $cacheUsage.next().toggle().next().toggle();
        // $(this.cacheUsageSelector).next().next().toggle();
         this.toggleShowLabel($cacheUsage.next().css("display"), "#showMoreCacheUsage");
     },
@@ -326,11 +326,11 @@ var BDA = {
             var attributes = "set-property ";
             
             if (p1.indexOf("derived") != -1)
-            	attributes += "derived=\"true\" ";
+              attributes += "derived=\"true\" ";
             if (p1.indexOf("rdonly") != -1)
-            	attributes += "rdonly=\"true\" ";
+              attributes += "rdonly=\"true\" ";
             if (p1.indexOf("export") != -1)
-            	attributes += "export=\"true\" ";
+              attributes += "export=\"true\" ";
 
             var newLine = p2.replace("set-property", attributes);
             return newLine;
@@ -688,7 +688,7 @@ var BDA = {
     showQueryList : function ()
     {
         //console.log("Enter showQueryList");
-    	var html = "";
+      var html = "";
         if (this.hasWebStorage)
         {
             var rqlQueries = this.getStoredRQLQueries();
@@ -884,6 +884,68 @@ var BDA = {
   
   createBugReportPanel : function() 
   {
+    var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
+    var labelIndex = Math.floor((Math.random() * labels.length)); 
+    
+      $("<div id='bdaBug'></div>").appendTo("body")
+      .css("position", "absolute")
+      .css("top", "0px")
+      .css("right", "30px")
+      .css("font-size", "11px")
+      .css("color", "white")
+      .css("border", "1px solid #00486c")
+      .css("border-top", "none")
+      .css("background-color", "#007bb8")
+      .css("padding", "3px")
+      .html("<p>" + labels[labelIndex] + "</p>"
+      + "<div class='bugArrow'><img class='up' src='" + this.arrowImg + "'></div>"
+      );
+    
+      $("#bdaBug p")
+      .css("margin", "0");
+      
+      $(".bugArrow")
+      .css("text-align", "center")
+      .css("cursor", "pointer")
+      .css("padding-top", "2px");
+      
+      $(".bugArrow img")
+      .css("width", "15px")
+      .css("height", "8px");
+      
+      $("<div id='bdaBugPanel'></div>").appendTo("body")
+      .css("position", "absolute")
+      .css("top", "30px")
+      .css("right", "30px")
+      .css("width", "250px")
+      .css("font-size", "11px")
+      .css("color", "white")
+      .css("border", "1px solid #00486c")
+      .css("border-top", "none")
+      .css("background-color", "#007bb8")
+      .css("padding", "3px")
+      .css("display", "none")
+     
+      .html("<p>How can I help and stay tuned ? "
+      + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
+      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues?milestone=1&state=open'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+      + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues/milestones'>incoming milestones</a>."
+      + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
+      );
+      
+      $("#bdaBugPanel a").css("text-decoration", "underline").css("color", "white");
+      
+      $("#bdaBug").click(function() {
+        $("#bdaBugPanel").toggle();
+        BDA.rotateArrow($(".bugArrow img"));
+        if ($("#bdaBackupPanel").css("display") != "none")
+        {
+          $("#bdaBackupPanel").toggle();
+          BDA.rotateArrow($(".backupArrow img"));
+        }
+      });
+      
+      
   },
     
    //--- backup panel functions ------------------------------------------------------------------------
@@ -893,14 +955,14 @@ var BDA = {
     $("<div id='bdaBackup'></div>").appendTo("body")
     .css("position", "absolute")
     .css("top", "0px")
-    .css("right", "30px")
+    .css("right", "153px")
     .css("font-size", "11px")
     .css("color", "white")
     .css("border", "1px solid #8F0000")
     .css("border-top", "none")
     .css("background-color", "#CC0000")
     .css("padding", "3px")
-    .html("<p>backup / restore data</p>"
+    .html("<p>Backup / restore data</p>"
     + "<div class='backupArrow'><img class='up' src='" + this.arrowImg + "'></div>"
     );
     
@@ -919,6 +981,11 @@ var BDA = {
     $("#bdaBackup").click(function() {
       $("#bdaBackupPanel").toggle();
       BDA.rotateArrow($(".backupArrow img"));
+      if ($("#bdaBugPanel").css("display") != "none")
+      {
+        $("#bdaBugPanel").toggle();
+        BDA.rotateArrow($(".bugArrow img"));
+      }
     });
     
     $("<div id='bdaBackupPanel'></div>").appendTo("body")
