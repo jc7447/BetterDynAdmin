@@ -1,7 +1,7 @@
 Better Dynamo Administration
 ===
 
-Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Administration experience. It takes 3 minutes to install and will help you tou save plenty of time.
+Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Administration experience. It takes 3 minutes to install and will help you to save plenty of time.
 
 Features
 ------
@@ -43,7 +43,7 @@ Features
 </table>
 
 
-* Backup and restore capabilities
+* Backup and restore capabilities of toolbar and editor data
 
 
 Installation
