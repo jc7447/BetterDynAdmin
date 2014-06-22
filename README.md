@@ -8,7 +8,6 @@ Features
 
 * Basic xml tags editor in repositories pages, avoiding you to type your "print-item" request every time. :)
 
-
 <table>
 <tr>
 <th>With BDA </th>
@@ -26,16 +25,20 @@ Features
 
 * Toolbar to easily navigate through components & your component navigation history
 
-**Without BDA**
-
-![Toolbar without BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_off.png)
-
-
-**With BDA**
-
-![Editor with BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_on.png)
-
-
+<table>
+<tr>
+<th>With BDA </th>
+<th>Without BDA</th>
+</tr>
+<tr>
+<td>
+    <img width="400" src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_off.png">
+</td>
+<td>
+    <img width="400"  src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_on.png">
+</td>
+</tr>
+</table>
 
 * Backup and restore capabilities
 
