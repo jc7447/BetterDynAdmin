@@ -1,7 +1,7 @@
 Better Dynamo Administration
 ===
 
-Better Dynamo Administration (BDA) provides a user script which enhance ATG Dynamo Administration experience.
+Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Administration experience. It takes 3 minutes to install and will help you tou save plenty of time.
 
 Features
 ------
@@ -10,8 +10,8 @@ Features
 
 <table>
 <tr>
-<th>With BDA </th>
-<th>Without BDA</th>
+<th>Without BDA </th>
+<th>With BDA</th>
 </tr>
 <tr>
 <td>
@@ -27,8 +27,8 @@ Features
 
 <table>
 <tr>
-<th>With BDA </th>
-<th>Without BDA</th>
+<th>Without BDA </th>
+<th>With BDA</th>
 </tr>
 <tr>
 <td>
@@ -39,6 +39,7 @@ Features
 </td>
 </tr>
 </table>
+<span style="font-size : 80%">click on images for more details</span>
 
 * Backup and restore capabilities
 
@@ -52,6 +53,8 @@ Installation
  * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
  * Accept installation 
  * Enjoy :)
+ 
+If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of greasemonkey.
 
 ### Google Chrome
 
