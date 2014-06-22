@@ -6,13 +6,35 @@ Better Dynamo Administration (BDA) provides a user script which enhance ATG Dyna
 Features
 ------
 
-* Basic RQL editor in repositories pages (avoiding you to type your "print-item" request every time. :))
-* Toolbar to easily navigate through components
-* Component navigation history
+* Basic xml tags editor in repositories pages, avoiding you to type your "print-item" request every time. :)
+
+**Without BDA**
+
+![Editor without BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_off.png)
+
+
+**With BDA**
+
+![Editor with BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_on.png)
+
+
+* Toolbar to easily navigate through components & your component navigation history
+
+**Without BDA**
+
+![Toolbar without BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_off.png)
+
+
+**With BDA**
+
+![Editor with BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_on.png)
+
+
+
 * Backup and restore capabilities
 
 
-Installation instructions
+Installation
 ---
 
 ### Firefox
@@ -28,10 +50,6 @@ Installation instructions
 * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 * Accept installation 
 * Enjoy :)
-
-### Other browsers
-
-Not tested for now. But you can probably install it the same way as firefox or Google Chrome.
 
 
 Disclaimer
