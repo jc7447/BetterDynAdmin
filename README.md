@@ -6,6 +6,8 @@ Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Adm
 Features
 ------
 
+*Click on images for more details*
+
 * Basic xml tags editor in repositories pages, avoiding you to type your "print-item" request every time. :)
 
 <table>
@@ -39,7 +41,7 @@ Features
 </td>
 </tr>
 </table>
-<span style="font-size : 80%">click on images for more details</span>
+
 
 * Backup and restore capabilities
 
