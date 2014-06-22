@@ -8,14 +8,10 @@ Features
 
 * Basic xml tags editor in repositories pages, avoiding you to type your "print-item" request every time. :)
 
-**Without BDA**
-
+With BDA | Without BDA
+------------ | -------------
 ![Editor without BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_off.png)
-
-
-**With BDA**
-
-![Editor with BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_on.png)
+ | ![Editor with BDA](https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_on.png)
 
 
 * Toolbar to easily navigate through components & your component navigation history
