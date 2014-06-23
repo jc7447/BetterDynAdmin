@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.5
+// @version 1.0.6
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -1367,8 +1367,17 @@ var BDA = {
     
 };
 
+function isOldDynAdmin()
+{
+   for(var els = document.getElementsByTagName ('img'), i = els.length; i--;)
+    {
+       if (els[i].alt === "Dynamo Component Browser")
+         return true;
+    }
+    return false;
+}
 
-if (document.getElementById("oracleATGbrand") != null)
+if (document.getElementById("oracleATGbrand") != null || isOldDynAdmin())
 {
     console.log("Is dyn admin page");
    BDA.init();
@@ -1377,3 +1386,4 @@ else
 {
     console.log("BDA script not starting");
 }
+
