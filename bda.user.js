@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.6
+// @version 1.0.7
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -23,6 +23,8 @@ var BDA = {
     resultsSelector : "h2:contains('Results:')",
     errorsSelector1 : "p:contains('Errors:')",
     errorsSelector2 : "code:contains('*** Query:')",
+    logoSelector : "div:eq(0)",
+    oldDynamoSelector : "img[alt='Dynamo Component Browser']",
     arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
     arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
     trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
@@ -40,14 +42,17 @@ var BDA = {
     hasWebStorage : false,
     hasErrors : false,
     hasResults : false,
+    isOldDynamo : false,
 
     init : function(){
         var start = new Date().getTime();
         console.log("Start BDA script");
-        console.log("Jquery installed !");
         this.hasErrors = this.hasErrors();
         this.hasResults = this.hasResults(this.hasErrors);
-        console.log("isComponentPage : " + this.isComponentPage());
+        this.isOldDynamo = this.isOldDynamo();
+        if (this.isOldDynamo)
+          this.logoSelector = this.oldDynamoSelector;
+        console.log("isComponentPage : " + this.isComponentPage() + " IsOldDynamo : " + this.isOldDynamo);
         console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
         // apply css
         $("head").append(this.css);
@@ -58,10 +63,6 @@ var BDA = {
         else
           console.log("This is not a repository page");
 
-        // Global stuff
-
-        //$("a").css("text-decoration", "none");
-        
         this.showComponentHsitory();
         this.createToolbar();
         this.createBackupPanel();
@@ -83,6 +84,11 @@ var BDA = {
     
 
     //--- Page informations ------------------------------------------------------------------------
+    isOldDynamo : function ()
+    {
+      return $(this.oldDynamoSelector).size() > 0; 
+    },
+    
     hasResults : function (hasErrors)
     {
         return $(this.resultsSelector).size() > 0;
@@ -867,7 +873,7 @@ var BDA = {
   
    showComponentHsitory : function ()
   {
-     $("<div id='history'></div>").insertAfter("#oracleATGbrand");
+     $("<div id='history'></div>").insertAfter(this.logoSelector);
      var componentHistory =  JSON.parse(localStorage.getItem('componentHistory')) || [];
      var html = "Component history : ";
      for (var i = 0; i != componentHistory.length; i++)
@@ -1207,7 +1213,7 @@ var BDA = {
     $("<div id='toolbarContainer'></div>")
     //.html("<a href='javascript:void(0)'>Hide toolbar</a>")
     //.css("height", "75px")
-    .insertAfter("#oracleATGbrand");
+    .insertAfter(this.logoSelector);
 
     $("<div id='toolbar'></div>")
     //.css("height", "150px")
@@ -1290,7 +1296,7 @@ var BDA = {
     {
       $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
       .css("font-size", "30px")
-      .css("border", "1px dashed #CCCCCC")
+      .css("border", "1px dashed #AAAAAA")
       .css("height", "54px")
       .css("width", "50px")
       .css("text-align", "center")
@@ -1300,7 +1306,7 @@ var BDA = {
       .appendTo("#toolbar");
 
       $("#addComponent")
-      .css("color", "#DDDDDD")
+      .css("color", "#AAAAAA")
       .css("text-decoration", "none");
       $(".newFav")
       .css("cursor", "pointer")
@@ -1386,4 +1392,3 @@ else
 {
     console.log("BDA script not starting");
 }
-
