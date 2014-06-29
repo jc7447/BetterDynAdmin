@@ -17,10 +17,10 @@ Features
 </tr>
 <tr>
 <td>
-    <img width="400" src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_off.png">
+    <img width="320" src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_off.png">
 </td>
 <td>
-    <img width="400"  src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_on.png">
+    <img width="320" src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_editor_on.png">
 </td>
 </tr>
 </table>
@@ -34,10 +34,10 @@ Features
 </tr>
 <tr>
 <td>
-    <img width="400" src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_off.png">
+    <img width="320" src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_off.png">
 </td>
 <td>
-    <img width="400"  src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_on.png">
+    <img width="320"  src="https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/resources/bda_toolbar_on.png">
 </td>
 </tr>
 </table>
