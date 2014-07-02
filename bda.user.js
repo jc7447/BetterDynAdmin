@@ -6,6 +6,7 @@
 // @grant none
 // @version 1.0.7
 // @require http://code.jquery.com/jquery-1.11.1.min.js
+// @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -30,19 +31,62 @@ var BDA = {
     trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
     css : "<style type='text/css'>\
             a{text-decoration : none}\
-        #RQLResults{ margin-top : 10px; }\
-        .dataTable {font-size : 80%; margin : 5px; border : 1px solid #CCCCCC}\
-        .prop_attr {display: inline-block; margin : 2px; padding : 1px; color : white; vertical-align :middle;}\
-        .copyLink{text-decoration:none; color:#00214a;}\
+            #RQLResults{ margin-top : 10px; }\
+            .dataTable {font-size : 80%; margin : 5px; border : 1px solid #CCCCCC}\
+            .prop_attr {display: inline-block; margin : 2px; padding : 1px; color : white; vertical-align :middle;}\
+            .copyLink{text-decoration:none; color:#00214a;}\
             .copyField{width:200px;}\
             .dataTable td, .dataTable th{padding : 3px;}\
             .dataTable th{min-width : 160px; text-align : left; }\
+            #itemId {width:75px}\
+            table.tablesorter {\
+              /*background-color: #CDCDCD;*/\
+              margin:10px 0pt 15px;\
+              font-size: 14px;\
+              width: 100%;\
+              text-align: left;\
+              border-collapse : collapse;\
+            }\
+            table.tablesorter thead tr th, table.tablesorter tfoot tr th {\
+              background-color: #e6EEEE;\
+              padding: 4px;\
+            }\
+            table.tablesorter thead tr .header {\
+              background-image: url('data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==');\
+              background-repeat: no-repeat;\
+              background-position: center right;\
+              cursor: pointer;\
+            }\
+            table.tablesorter tbody td {\
+              color: #3D3D3D;\
+              padding: 4px;\
+              /*background-color: #FFF;*/\
+              vertical-align: top;\
+              border: 1px solid #CCCCCC;\
+            }\
+            .tablesorter tbody tr:nth-child(odd) {\
+             background-color: #F0F0F6;\
+            }\
+            table.tablesorter tbody tr.odd td {\
+              background-color:#F0F0F6;\
+            }\
+            table.tablesorter thead tr .headerSortUp {\
+              background-image:  url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7');\
+            }\
+            table.tablesorter thead tr .headerSortDown {\
+              background-image: url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7');\
+            }\
+            table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {\
+            background-color: #8dbdd8;\
+            }\
         </style>",
     defaultItemByTab : "10",
     hasWebStorage : false,
     hasErrors : false,
     hasResults : false,
     isOldDynamo : false,
+    isPerfMonitorPage : false,
+    isPerfMonitorTimePage : false,
 
     init : function(){
         var start = new Date().getTime();
@@ -50,26 +94,36 @@ var BDA = {
         this.hasErrors = this.hasErrors();
         this.hasResults = this.hasResults(this.hasErrors);
         this.isOldDynamo = this.isOldDynamo();
+        this.isPerfMonitorPage = this.isPerfMonitorPage();
+        this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
+        console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
         if (this.isOldDynamo)
           this.logoSelector = this.oldDynamoSelector;
+        console.log("Path : " + $(location).attr('pathname'));
         console.log("isComponentPage : " + this.isComponentPage() + " IsOldDynamo : " + this.isOldDynamo);
         console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
         // apply css
         $("head").append(this.css);
-        
+        $.tablesorter.defaults.sortInitialOrder = 'desc';
         // Setup repository page
         if (this.isRepositoryPage())
           this.setupRepositoryPage();
         else
           console.log("This is not a repository page");
 
+        // Setup performance monitor page
+        if (this.isPerfMonitorPage)
+          this.setupPerfMonitorPage();
+        // Setup performance monitor time page
+        if (this.isPerfMonitorTimePage)
+          this.setupPerfMonitorTimePage();
+        
         this.showComponentHsitory();
         this.createToolbar();
         this.createBackupPanel();
         this.createBugReportPanel();
 
         // Collect history
-        
         if (this.isComponentPage())
           this.collectHistory();
         
@@ -84,6 +138,16 @@ var BDA = {
     
 
     //--- Page informations ------------------------------------------------------------------------
+    isPerfMonitorPage : function()
+    {
+      return $(location).attr('pathname').indexOf("performance-monitor.jhtml") != -1;
+    },
+    
+    isPerfMonitorTimePage : function()
+    {
+      return $(location).attr('pathname').indexOf("performance-data-time.jhtml") != -1;
+    },
+    
     isOldDynamo : function ()
     {
       return $(this.oldDynamoSelector).size() > 0; 
@@ -140,14 +204,12 @@ var BDA = {
     {
       $cacheUsage = $(this.cacheUsageSelector);
       $cacheUsage.next().toggle().next().toggle();
-       // $(this.cacheUsageSelector).next().next().toggle();
         this.toggleShowLabel($cacheUsage.next().css("display"), "#showMoreCacheUsage");
     },
     
     toggleRepositoryView : function () 
     {
         $(this.repositoryViewSelector).next().toggle().next().toggle();
-        //$(this.repositoryViewSelector).next().next().toggle();
         this.toggleShowLabel($(this.repositoryViewSelector).next().css("display"), "#showMoreRepositoryView");
     },
     
@@ -195,7 +257,7 @@ var BDA = {
     getsubmitButton : function ()
     {
         return "<button type='button' id='RQLAdd'>Add</button>" 
-        + "<button type='button' id='RQLGo'>Go</button>";
+        + "<button type='button' id='RQLGo'>Add & Enter</button>";
     },
     
     getPrintItemEditor : function ()
@@ -228,7 +290,7 @@ var BDA = {
     
     getPrintItemQuery : function ()
     {
-        var id = $("#itemId").val();
+        var id = $("#itemId").val().trim();
         var descriptor = $("#itemDescriptor").val();
         var query = "<print-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
         return query;
@@ -236,7 +298,7 @@ var BDA = {
     
     getRemoveItemQuery : function ()
     {
-        var id = $("#itemId").val();
+        var id = $("#itemId").val().trim();
         var descriptor = $("#itemDescriptor").val();
         var query = "<remove-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
         return query;
@@ -254,7 +316,7 @@ var BDA = {
     getUpdateItemQuery : function ()
     {
         var descriptor = $("#itemDescriptor").val();
-        var id = $("#itemId").val();
+        var id = $("#itemId").val().trim();
         var query = "<update-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" >\n";
         query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
         query += "</update-item>\n";
@@ -370,7 +432,6 @@ var BDA = {
             
             for (var a = 0; a < datas.length; a++)
             {
-                // var propValue = escapeHTML(datas[a][curProp.name]);
                 var propValue = datas[a][curProp.name];
                 if (propValue != null)
                 {
@@ -471,8 +532,6 @@ var BDA = {
         
         var splitValue;
         var splitObj = this.getStoredSplitObj();
-        console.log(splitObj);
-        //console.log(">>> activeSplit : " + splitObj.activeSplit);
         if (splitObj == null || splitObj.activeSplit == true)
             splitValue = 0;
         else
@@ -517,8 +576,6 @@ var BDA = {
         $(".copyLink").click(function() {
             BDA.showTextField($(this).attr("id").replace("link_", ""));
         });
-        // console.log(datas);
-        // console.log(types);
     },
 
     showRqlErrors : function ()
@@ -585,7 +642,7 @@ var BDA = {
         
         $("#RQLToolbar").append("<div> Action : "+ actionSelect 
                                 + " <span id='editor'>" 
-                                + "<span id='itemIdField' >id : <input type='text' id='itemId' style='width:50px'/></span>"
+                                + "<span id='itemIdField' >id : <input type='text' id='itemId' /></span>"
                                 + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor'>" + this.getDescriptorOptions() + "</select></span>"
                                 + "</span>" 
                                 + this.getsubmitButton() + "</div>");
@@ -693,7 +750,6 @@ var BDA = {
         
     showQueryList : function ()
     {
-        //console.log("Enter showQueryList");
       var html = "";
         if (this.hasWebStorage)
         {
@@ -746,7 +802,6 @@ var BDA = {
       rqlQueries = JSON.parse(rqlQueriesStr);
     else
       rqlQueries = [];
-    //console.log("Stored rql queries: " + rqlQueries);
     return rqlQueries;
   },
 
@@ -793,7 +848,6 @@ var BDA = {
   
   showQueryList : function ()
   {
-    //console.log("Enter showQueryList");
     var html = "";
     if (this.hasWebStorage)
     {
@@ -934,7 +988,7 @@ var BDA = {
      
       .html("<p>How can I help and stay tuned ? "
       + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
-      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues?milestone=1&state=open'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues?labels=&milestone=&page=1&state=open'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
       + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues/milestones'>incoming milestones</a>."
       + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
       );
@@ -1015,15 +1069,15 @@ var BDA = {
     + "<button id='bdaDataRestore'>Restore</button>"
     );
 
-    var dataObj = {};
-    dataObj.components = this.getStoredComponents();
-    dataObj.queries = this.getStoredRQLQueries();
-    var dataStr = JSON.stringify(dataObj);
+    //var dataStr = JSON.stringify(dataObj);
     $("#bdaData")
     .css("width", "100%");
 
     $("#bdaDataBackup").click(function (){
-      BDA.copyToClipboard(dataStr);
+      var dataObj = {};
+      dataObj.components = BDA.getStoredComponents();
+      dataObj.queries = BDA.getStoredRQLQueries();
+      BDA.copyToClipboard(JSON.stringify(dataObj));
     });
     
     $("#bdaDataRestore").click(function (){
@@ -1042,6 +1096,9 @@ var BDA = {
       var dataObj = JSON.parse(data);
       localStorage.setItem('Components', JSON.stringify(dataObj.components));
       localStorage.setItem('RQLQueries', JSON.stringify(dataObj.queries));
+      this.reloadToolbar();
+      if (this.isRepositoryPage())
+        this.reloadQueryList();
     } 
     catch (e) {
       console.error("Parsing error:", e);
@@ -1050,7 +1107,7 @@ var BDA = {
   
   copyToClipboard : function (text) 
   {
-    window.prompt("Copy to clipboard: Ctrl+C, Enter", text);
+    window.prompt("Copy the data below : Ctrl+C + Enter and save it into a file !", text);
   },
   
   //--- Toolbar functions ------------------------------------------------------------------------
@@ -1135,7 +1192,6 @@ var BDA = {
         colorValue = 0;
       borderColor.push(colorValue);
     }
-    //console.log("border color : " + borderColor);
     return this.colorToCss(borderColor);
   },
   
@@ -1149,7 +1205,6 @@ var BDA = {
       cssVal += colors[i];
     }
     cssVal += ")";
-    //console.log("cssVal : " + cssVal);
     return cssVal;
   },
   
@@ -1158,7 +1213,6 @@ var BDA = {
     for (var i = 0; i < colors.length; i++)
       if (colors[i] > 210)
         colors[i] = 210;
-    //console.log("After verif : " + colors)
     return colors;
   },
   
@@ -1168,7 +1222,6 @@ var BDA = {
     var hash = 0;
     for (var i = 0; i < str.length; i++)
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    //var colour = '#';
     for (var i = 0; i < 3; i++) {
       var value = (hash >> (i * 8)) & 0xFF;
       var hexVal = ('00' + value.toString(16)).substr(-2);
@@ -1208,30 +1261,14 @@ var BDA = {
   createToolbar :function ()
   {
     var favs = this.getStoredComponents();
-  
-  
+
     $("<div id='toolbarContainer'></div>")
-    //.html("<a href='javascript:void(0)'>Hide toolbar</a>")
-    //.css("height", "75px")
     .insertAfter(this.logoSelector);
 
     $("<div id='toolbar'></div>")
-    //.css("height", "150px")
     .css("padding", "5px")
-   /* .css("position", "fixed")
-    .css("background-color", "white")*/
     .appendTo("#toolbarContainer");
 
-    /*
-    $(window).scroll(function(e) {
-      var windowTop = $(window).scrollTop(); 
-      if (windowTop > 41)
-        $("#toolbar").css("top", "0px");
-      else
-        $("#toolbar").css("top", "41px");
-     });
-    */
-   
     for(var i = 0; i != favs.length; i++)
     {
       var fav = favs[i];
@@ -1259,7 +1296,6 @@ var BDA = {
           + "<div class='favDelete' id='delete" + fav.componentName + "'><span style='font-weight:bold; font-size:13px;'>X</span> Delete</div>"
           + "</div>")
           .appendTo("#toolbar");
-      // onclick='showMoreInfos(\"" + fav.componentName + "\")'
     }
     
     $(".favArrow").click(function() {
@@ -1284,7 +1320,6 @@ var BDA = {
       console.log("component : " + componentName + ", logDebugState : " + logDebugState);
       $("#logDebugForm" + componentName + " input[name=newValue]").val(logDebugState);
       $("#logDebugForm" + componentName).submit();
-      //deleteComponent(componentToDelete);
     });
 
     
@@ -1368,6 +1403,33 @@ var BDA = {
     .css("margin-bottom", "2px")
     .css("margin-top", "2px");
 
+  },
+  
+  setupPerfMonitorPage : function()
+  {
+    this.setupSortingTabPerfMonitor($("table:eq(1)"));
+  },
+  
+  setupPerfMonitorTimePage : function()
+  {
+    this.setupSortingTabPerfMonitor($("table:eq(0)"));
+  },
+  
+  setupSortingTabPerfMonitor : function($tabSelector)
+  {
+    $tabSelector.addClass("tablesorter")
+    .removeAttr("border")
+    .removeAttr("cellpadding");
+    $tabSelector.prepend("<thead class='thead' />");
+    // Put first tr into a thead tag
+    $tabSelector.find("tr:eq(0)").appendTo(".thead");
+    // Replace td by th
+    $('.thead td').each(function() {
+      var $this = $(this);
+      console.log($this.text());
+      $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
+  });
+    $tabSelector.tablesorter(); 
   }
 
     
