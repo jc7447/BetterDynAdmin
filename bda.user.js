@@ -4,15 +4,12 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.7
+// @version 1.0.8
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
-
-// a function that loads jQuery and calls a callback function when jQuery has finished loading
-
 
 var BDA = {
     descriptorTableSelector : "table:eq(0)",
@@ -604,7 +601,6 @@ var BDA = {
     {
         if(!this.hasWebStorage)
             return null;
-        console.log("SplitObj =>" + localStorage.getItem('splitObj'));
         return JSON.parse(localStorage.getItem('splitObj'));
     },
     
@@ -1447,7 +1443,6 @@ function isOldDynAdmin()
 
 if (document.getElementById("oracleATGbrand") != null || isOldDynAdmin())
 {
-    console.log("Is dyn admin page");
    BDA.init();
 }
 else
