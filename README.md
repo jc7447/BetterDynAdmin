@@ -43,6 +43,8 @@ Features
 </table>
 
 
+* Performance monitor table sortable by column and more handsome
+
 * Backup and restore capabilities of toolbar and editor data
 
 
@@ -58,7 +60,7 @@ Installation
  * Accept installation 
  * Enjoy :)
  
-If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of greasemonkey.
+If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of Greasemonkey.
 
 ### Google Chrome
 
