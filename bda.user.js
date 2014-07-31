@@ -37,7 +37,7 @@ var BDA = {
             .dataTable th{min-width : 160px; text-align : left; }\
             #itemId {width:75px}\
             table.tablesorter {\
-              /*background-color: #CDCDCD;*/\
+              border: 1px solid #CCCCCC;\
               margin:10px 0pt 15px;\
               font-size: 14px;\
               width: 100%;\
@@ -52,6 +52,7 @@ var BDA = {
               background-image: url('data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==');\
               background-repeat: no-repeat;\
               background-position: center right;\
+        border: 1px solid #CCCCCC;\
               cursor: pointer;\
             }\
             table.tablesorter tbody td {\
@@ -285,19 +286,31 @@ var BDA = {
         $("#itemDescriptorField").show();
     },
     
+    getMultiId : function()
+    {
+      var ids = $("#itemId").val().trim();
+      if (ids.indexOf(",") != -1)
+        return ids.split(",");
+      return [ids];
+    },
+    
     getPrintItemQuery : function ()
     {
-        var id = $("#itemId").val().trim();
+        var ids = this.getMultiId();
         var descriptor = $("#itemDescriptor").val();
-        var query = "<print-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
+        var query = "";
+        for (var i = 0; i != ids.length; i++)
+          query += "<print-item id=\"" + ids[i] + "\" item-descriptor=\"" + descriptor + "\" />\n";
         return query;
     },
     
     getRemoveItemQuery : function ()
     {
-        var id = $("#itemId").val().trim();
+        var ids = this.getMultiId();
         var descriptor = $("#itemDescriptor").val();
-        var query = "<remove-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" />\n";
+        var query = "";
+        for (var i = 0; i != ids.length; i++)
+          query += "<remove-item id=\"" + ids[i] + "\" item-descriptor=\"" + descriptor + "\" />\n";
         return query;
     },
     
@@ -313,10 +326,14 @@ var BDA = {
     getUpdateItemQuery : function ()
     {
         var descriptor = $("#itemDescriptor").val();
-        var id = $("#itemId").val().trim();
-        var query = "<update-item id=\"" + id + "\" item-descriptor=\"" + descriptor + "\" >\n";
-        query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
-        query += "</update-item>\n";
+        var ids = this.getMultiId();
+        var query = "";
+        for (var i = 0; i != ids.length; i++)
+        {
+          query += "<update-item id=\"" + ids[i] + "\" item-descriptor=\"" + descriptor + "\" >\n";
+          query += "  <set-property name=\"\"><![CDATA\[]]></set-property>\n";
+          query += "</update-item>\n";
+        }
         return query;
     },
     
@@ -1422,13 +1439,10 @@ var BDA = {
     // Replace td by th
     $('.thead td').each(function() {
       var $this = $(this);
-      console.log($this.text());
       $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
   });
     $tabSelector.tablesorter(); 
   }
-
-    
 };
 
 function isOldDynAdmin()
@@ -1443,7 +1457,14 @@ function isOldDynAdmin()
 
 if (document.getElementById("oracleATGbrand") != null || isOldDynAdmin())
 {
+  try 
+  {
    BDA.init();
+  }
+  catch(err)
+  {
+    console.log(err);
+  }
 }
 else
 {
