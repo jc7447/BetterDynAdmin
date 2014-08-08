@@ -42,11 +42,11 @@ Features
 </tr>
 </table>
 
+* XML syntax highlight for repository definition page and XML tags editor
 
 * Performance monitor table sortable by column and more handsome
 
 * Backup and restore capabilities of toolbar and editor data
-
 
 * Lot more inconming, check the milestone !
 
