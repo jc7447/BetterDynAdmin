@@ -410,7 +410,7 @@ var BDA = {
         return query;
     },
     
-    submitRQLQuery : function (addText) 
+    submitRQLQuery : function (addText)
     {
         if(addText)
         {
@@ -418,8 +418,15 @@ var BDA = {
             //$("#xmltext").val( $("#xmltext").val()  + query);
             this.setQueryEditorValue(this.getQueryEditorValue() + query);
         }
+        this.sanitizeQuery();
         this.storeSplitValue();
         $("#RQLForm").submit();
+    },
+    
+    sanitizeQuery : function()
+    {
+      var query = this.getQueryEditorValue();
+      this.setQueryEditorValue(query.replace(/repository\=\".+\"/gi, "")); 
     },
     
     setQueryEditorValue :function(value) 
