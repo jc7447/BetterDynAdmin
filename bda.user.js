@@ -4,9 +4,11 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.0.8
+// @version 1.1
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
+// @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
+// @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/xml.js
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -35,7 +37,7 @@ var BDA = {
             .copyField{width:200px;}\
             .dataTable td, .dataTable th{padding : 3px;}\
             .dataTable th{min-width : 160px; text-align : left; }\
-            #itemId {width:75px}\
+            #itemId {width:125px}\
             table.tablesorter {\
               border: 1px solid #CCCCCC;\
               margin:10px 0pt 15px;\
@@ -52,7 +54,7 @@ var BDA = {
               background-image: url('data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==');\
               background-repeat: no-repeat;\
               background-position: center right;\
-        border: 1px solid #CCCCCC;\
+              border: 1px solid #CCCCCC;\
               cursor: pointer;\
             }\
             table.tablesorter tbody td {\
@@ -77,7 +79,28 @@ var BDA = {
             table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {\
             background-color: #8dbdd8;\
             }\
+            #descriptorTable {\
+              border-collapse : collapse;\
+            }\
+            #descriptorTable td, #descriptorTable th {\
+              padding: 2px;\
+            }\
+          #RQLText .CodeMirror {\
+            border: 1px solid #aaa;\
+            height : 250px;\
+            width : 600px;\
+            cursor : text; \
+          }\
+         .xmlDefinition .CodeMirror {\
+            border: 1px solid #eee;\
+            height: auto;\
+          }\
+          .xmlDefinition .CodeMirror-scroll {\
+            overflow-y: hidden;\
+            overflow-x: auto;\
+          }\
         </style>",
+    externalCss : ["https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css"],
     defaultItemByTab : "10",
     hasWebStorage : false,
     hasErrors : false,
@@ -85,15 +108,20 @@ var BDA = {
     isOldDynamo : false,
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
+    isRepositoryDefinitionFilePage : false,
+    xmlDefinitionMaxSize : 100000,
+    queryEditor : null,
 
     init : function(){
         var start = new Date().getTime();
         console.log("Start BDA script");
+        this.loadExternalCss();
         this.hasErrors = this.hasErrors();
         this.hasResults = this.hasResults(this.hasErrors);
         this.isOldDynamo = this.isOldDynamo();
         this.isPerfMonitorPage = this.isPerfMonitorPage();
         this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
+        this.isRepositoryDefinitionFilePage = this.isRepositoryDefinitionFilePage();
         console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
         if (this.isOldDynamo)
           this.logoSelector = this.oldDynamoSelector;
@@ -106,6 +134,8 @@ var BDA = {
         // Setup repository page
         if (this.isRepositoryPage())
           this.setupRepositoryPage();
+        else if (this.isRepositoryDefinitionFilePage)
+          this.setupRepositoryDefinitionFilePage();
         else
           console.log("This is not a repository page");
 
@@ -134,7 +164,19 @@ var BDA = {
             console.log("BDA takes : " + time + "ms");
     },
     
-
+    loadExternalCss : function(url) 
+    {
+      for (var i = 0; i != this.externalCss.length; i++)
+      {
+       $("<link />")
+        .attr("type", 'text/css')
+        .attr("rel", 'stylesheet')
+        .attr("media", 'screen')
+        .attr("href", this.externalCss[i])
+        .appendTo($("head"));
+      }
+    },
+    
     //--- Page informations ------------------------------------------------------------------------
     isPerfMonitorPage : function()
     {
@@ -171,6 +213,11 @@ var BDA = {
     isRepositoryPage : function ()
     {
         return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
+    },
+    
+    isRepositoryDefinitionFilePage : function()
+    {
+      return document.URL.indexOf("propertyName=definitionFiles") != -1;
     },
     
     isComponentPage : function ()
@@ -368,10 +415,21 @@ var BDA = {
         if(addText)
         {
             var query = this.getRQLQuery();
-            $("#xmltext").val( $("#xmltext").val()  + query);
+            //$("#xmltext").val( $("#xmltext").val()  + query);
+            this.setQueryEditorValue(this.getQueryEditorValue() + query);
         }
         this.storeSplitValue();
         $("#RQLForm").submit();
+    },
+    
+    setQueryEditorValue :function(value) 
+    {
+      this.queryEditor.getDoc().setValue(value);
+    },
+    
+    getQueryEditorValue : function()
+    {
+      return this.queryEditor.getDoc().getValue();
     },
     
     showTextField : function (baseId)
@@ -626,6 +684,51 @@ var BDA = {
         return String(s).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     },
     
+    setupRepositoryDefinitionFilePage : function()
+    {
+      var xmlSize = 0;
+      $("pre").each(function(index) {
+        xmlSize += $(this).html().length;
+      });
+      console.log("Xml size : " + xmlSize);
+      if (xmlSize < this.xmlDefinitionMaxSize)
+      {
+        this.hightlightAndIndentXml($("pre"));
+      }
+      else
+      {
+        $("<p />")
+        .html("The definition file is big, to avoid slowing down the page, XML highlight and indentation have been disabled. <br> <button id='xmlHiglightBtn'>Highlight and indent now</button> <small>(takes few seconds)</small>")
+        .insertAfter($("h3:contains('Value')"));
+        
+        $("#xmlHiglightBtn").click(function() {
+          BDA.hightlightAndIndentXml($("pre"));
+        });
+      }
+    },
+
+    hightlightAndIndentXml : function($elm)
+    {
+      $elm.each(function(index) {
+        var $code = $(this).html();
+        var $unescaped = $('<div/>').html($code).text();
+        $(this).empty();
+        $("<div />").attr("id", "xmlDefinition" + index).addClass("xmlDefinition").insertBefore($(this));
+
+        var xmlDefEditor = CodeMirror(document.getElementById("xmlDefinition" + index), {
+            value: $unescaped,
+            mode: 'xml',
+            lineNumbers: false,
+            lineWrapping : false,
+            readOnly: true,
+        });
+        xmlDefEditor.operation(function() {
+          for (var i = 0; i < xmlDefEditor.lineCount(); ++i)
+            xmlDefEditor.indentLine(i, "smart");
+        });
+      });
+    },
+    
     setupRepositoryPage : function ()
     {
         // Move RQL editor to the top of the page
@@ -653,9 +756,10 @@ var BDA = {
         $("textarea[name=xmltext]").attr("id", "xmltext");
         $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
         
+        
         $("#RQLToolbar").append("<div> Action : "+ actionSelect 
                                 + " <span id='editor'>" 
-                                + "<span id='itemIdField' >id : <input type='text' id='itemId' /></span>"
+                                + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
                                 + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor'>" + this.getDescriptorOptions() + "</select></span>"
                                 + "</span>" 
                                 + this.getsubmitButton() + "</div>");
@@ -683,6 +787,7 @@ var BDA = {
         $("#splitToolbar").append(checkboxSplit);
         
         $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
+        this.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {lineNumbers: false});
         
         $("#RQLAction").change(function() {
             var action = $(this).val();
@@ -709,13 +814,14 @@ var BDA = {
         
         $("#RQLAdd").click(function() {
             var query = BDA.getRQLQuery();
-            $("#xmltext").val( $("#xmltext").val()  + query);
+            BDA.setQueryEditorValue(BDA.getQueryEditorValue() + query);
+           // $("#xmltext").val( $("#xmltext").val()  + query);
         });
         
         $("#saveQuery").click(function() {
-            if ($("#xmltext").val().trim() != "" && $("#queryLabel").val().trim() != "")
+            if (BDA.getQueryEditorValue().trim() != "" && $("#queryLabel").val().trim() != "")
             {
-              BDA.storeRQLQuery($("#queryLabel").val().trim(), $("#xmltext").val().trim());
+              BDA.storeRQLQuery($("#queryLabel").val().trim(), BDA.getQueryEditorValue().trim());
               BDA.showQueryList();
             }
         });
@@ -911,7 +1017,7 @@ var BDA = {
       for (var i = 0; i != rqlQueries.length; i++)
       {
         if (rqlQueries[i].name == name)
-          $("#xmltext").val(rqlQueries[i].query);
+          this.setQueryEditorValue(rqlQueries[i].query + "\n");
       }
     }
   },
@@ -1001,7 +1107,7 @@ var BDA = {
      
       .html("<p>How can I help and stay tuned ? "
       + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
-      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues?labels=&milestone=&page=1&state=open'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
       + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues/milestones'>incoming milestones</a>."
       + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
       );
