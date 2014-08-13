@@ -1557,16 +1557,17 @@ var BDA = {
     $tabSelector.tablesorter(); 
   }
 };
-
 function isOldDynAdmin()
 {
+    var alts = ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler"];
    for(var els = document.getElementsByTagName ('img'), i = els.length; i--;)
     {
-       if (els[i].alt === "Dynamo Component Browser")
+       if (alts.indexOf(els[i].alt) != -1)
          return true;
     }
     return false;
 }
+
 
 if (document.getElementById("oracleATGbrand") != null || isOldDynAdmin())
 {
