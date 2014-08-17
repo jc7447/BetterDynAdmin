@@ -108,8 +108,8 @@ var BDA = {
     isOldDynamo : false,
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
-    isRepositoryDefinitionFilePage : false,
-    xmlDefinitionMaxSize : 100000,
+    isXMLDefinitionFilePage : false,
+    xmlDefinitionMaxSize : 200000,
     queryEditor : null,
 
     init : function(){
@@ -121,7 +121,7 @@ var BDA = {
         this.isOldDynamo = this.isOldDynamo();
         this.isPerfMonitorPage = this.isPerfMonitorPage();
         this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
-        this.isRepositoryDefinitionFilePage = this.isRepositoryDefinitionFilePage();
+        this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePage();
         console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
         if (this.isOldDynamo)
           this.logoSelector = this.oldDynamoSelector;
@@ -134,7 +134,7 @@ var BDA = {
         // Setup repository page
         if (this.isRepositoryPage())
           this.setupRepositoryPage();
-        else if (this.isRepositoryDefinitionFilePage)
+        else if (this.isXMLDefinitionFilePage)
           this.setupRepositoryDefinitionFilePage();
         else
           console.log("This is not a repository page");
@@ -215,9 +215,10 @@ var BDA = {
         return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
     },
     
-    isRepositoryDefinitionFilePage : function()
+    isXMLDefinitionFilePage : function()
     {
-      return document.URL.indexOf("propertyName=definitionFiles") != -1;
+      return $("td:contains('class atg.xml.XMLFile')").size() > 0
+      		|| $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
     },
     
     isComponentPage : function ()
@@ -1557,6 +1558,7 @@ var BDA = {
     $tabSelector.tablesorter(); 
   }
 };
+
 function isOldDynAdmin()
 {
     var alts = ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler"];
@@ -1567,7 +1569,6 @@ function isOldDynAdmin()
     }
     return false;
 }
-
 
 if (document.getElementById("oracleATGbrand") != null || isOldDynAdmin())
 {
