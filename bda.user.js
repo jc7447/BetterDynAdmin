@@ -4,7 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @grant none
-// @version 1.1
+// @version 1.1.1
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
@@ -1585,3 +1585,5 @@ else
 {
     console.log("BDA script not starting");
 }
+
+
