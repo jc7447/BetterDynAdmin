@@ -14,6 +14,7 @@
 // ==/UserScript==
 
 var BDA = {
+	componentBrowserPageSelector : "h1:contains('Component Browser')",
     descriptorTableSelector : "table:eq(0)",
     repositoryViewSelector : "h2:contains('Examine the Repository, Control Debugging')",
     cacheUsageSelector : "h2:contains('Cache usage statistics')",
@@ -23,7 +24,7 @@ var BDA = {
     resultsSelector : "h2:contains('Results:')",
     errorsSelector1 : "p:contains('Errors:')",
     errorsSelector2 : "code:contains('*** Query:')",
-    logoSelector : "div:eq(0)",
+    logoSelector : "div#oracleATGbrand",
     oldDynamoSelector : "img[alt='Dynamo Component Browser']",
     arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
     arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
@@ -79,11 +80,15 @@ var BDA = {
             table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {\
             background-color: #8dbdd8;\
             }\
-            #descriptorTable {\
-              border-collapse : collapse;\
+            .descriptor {\
+              margin : 5px 10px 5px 5px; \
             }\
-            #descriptorTable td, #descriptorTable th {\
-              padding: 2px;\
+            .descriptorTable {\
+              float: left;\
+              margin-right : 10px;\
+              margin-bottom : 10px;\
+              border : 1px solid #ccc;\
+              white-space: nowrap;\
             }\
           #RQLText .CodeMirror {\
             border: 1px solid #aaa;\
@@ -99,6 +104,17 @@ var BDA = {
             overflow-y: hidden;\
             overflow-x: auto;\
           }\
+          .btn-desc{\
+            display : inline-block;\
+            background-color:#f9f9f9;\
+            color:#666666;\
+            border:1px solid #dcdcdc;\
+            padding : 2px;\
+            font-size : 12px;\
+          }\
+          .red {\
+           color : #880000;\
+          }\
         </style>",
     externalCss : ["https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css"],
     defaultItemByTab : "10",
@@ -111,6 +127,7 @@ var BDA = {
     isXMLDefinitionFilePage : false,
     xmlDefinitionMaxSize : 200000,
     queryEditor : null,
+    descriptorList : null,
 
     init : function(){
         var start = new Date().getTime();
@@ -150,7 +167,8 @@ var BDA = {
         this.createToolbar();
         this.createBackupPanel();
         this.createBugReportPanel();
-
+        this.removeAdminLink();
+        
         // Collect history
         if (this.isComponentPage())
           this.collectHistory();
@@ -162,6 +180,16 @@ var BDA = {
             console.log("BDA takes : " + (time / 1000) + "sec");
         else
             console.log("BDA takes : " + time + "ms");
+    },
+    
+    removeAdminLink : function()
+    {
+    	$componentBrowserH1 = $(this.componentBrowserPageSelector);
+    	if ($componentBrowserH1.size() > 0)
+    	{
+    		$componentBrowserH1.prev().remove();
+    		$(this.logoSelector).wrap("<a href='/dyn/admin' />");
+    	}
     },
     
     loadExternalCss : function(url) 
@@ -286,17 +314,28 @@ var BDA = {
             $("#rawXmlLink").html("hide raw XML");
     },
     
-    
-    getDescriptorOptions: function ()
+    getDescriptorList : function()
     {
-        var descriptorOptions = "";
+    	if (this.descriptorList != null)
+    		return this.descriptorList;
+    	descriptors = [];
         $("#descriptorTable tr th:first-child:not([colspan])")
         .sort(function(a, b){
             return $(a).text().toLowerCase() > $(b).text().toLowerCase() ? 1 : -1;
         }).each(function() {
             
-            descriptorOptions += "<option>" + $(this).html().trim() + "</option>\n";
+        	descriptors.push($(this).html().trim());
         });
+        this.descriptorList = descriptors;
+        return descriptors;
+    },
+    
+    getDescriptorOptions: function ()
+    {
+        var descriptorOptions = "";
+        var descriptors = this.getDescriptorList();
+        for (var i = 0; i != descriptors.length; i++)
+        	descriptorOptions += "<option>" + descriptors[i] + "</option>\n";
         return descriptorOptions;
     },
     
@@ -797,6 +836,8 @@ var BDA = {
         $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
         this.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {lineNumbers: false});
         
+        this.setupItemDescriptorTable();
+        
         $("#RQLAction").change(function() {
             var action = $(this).val();
             console.log("Action change : " + action);
@@ -874,7 +915,60 @@ var BDA = {
         });
     },
     
-        
+    setupItemDescriptorTable : function ()
+    {
+    	var descriptors = this.getDescriptorList();
+    	// ?action=seetmpl&itemdesc=foreignCatalog#showProperties
+    	// ?action=seeitems&itemdesc=foreignCatalog#seeItems
+    	// ?action=seenamed&itemdesc=foreignCatalog#namedQuery
+    	// ?action=setiddbg&itemdesc=foreignCatalog#listItemDescriptors
+    	// ?action=dbgprops&itemdesc=foreignCatalog#debugProperties
+    	var componentPath = window.location.pathname;
+    	var splitValue = 20;
+    	var html = "<p>" + descriptors.length + " descriptors available.</p>";
+    	html += "<div>";
+    	for (var i = 0; i != descriptors.length; i++)
+    	{
+    	  if (i == 0 || i % splitValue == 0)
+    	  {
+    		html += "<table class='descriptorTable'>";
+    	    html += "<th>Descriptor</th>";
+    	    html += "<th>View</th>";
+    	   	html += "<th>Debug</th>";
+    	  }
+          if (i % 2 == 0)
+              html += "<tr class='even'>";
+          else
+              html += "<tr class='odd'>";
+          var isDebugEnable = false;
+          if ($("a[href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors']").size() > 0)
+        	  isDebugEnable = true;
+    	  html += "<td class='descriptor'>" + descriptors[i] + "</td>";
+    	  html += "<td><a class='btn-desc' href='" + componentPath + "?action=seetmpl&itemdesc=" + descriptors[i] + "#showProperties'>Properties</a>";
+    	  html += "&nbsp;<a class='btn-desc' class='btn-desc' href='" + componentPath + "?action=seenamed&itemdesc=" + descriptors[i] + "#namedQuery'>Named queries</a></td>";
+    	  
+    	  html += "<td>";
+    	  if (isDebugEnable)
+    	    html += "<a class='btn-desc red' href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Disable</a>";
+    	  else
+    	  {
+    		html += "<a class='btn-desc' href='" + componentPath + "?action=setiddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Enable</a>";
+    	  	html += "&nbsp;<a class='btn-desc' href='" + componentPath + "?action=dbgprops&itemdesc=" + descriptors[i] + "#debugProperties'>Edit</a>";
+    	  }
+    	  html += "</td>";
+    	  html += "</tr>";
+    	  if (i != 0 && ((i + 1) % splitValue == 0 || i + 1 == descriptors.length))
+    		  html += "</table>";
+    	}
+    	html += "</div>";
+    	html += "<div style='clear:both' />";
+    	
+    	$("#descriptorTable").remove();
+    	$(html).insertAfter("a[name='listItemDescriptors']");
+    	
+    	
+    },
+    
     showQueryList : function ()
     {
       var html = "";
@@ -1115,8 +1209,8 @@ var BDA = {
      
       .html("<p>How can I help and stay tuned ? "
       + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
-      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
-      + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues/milestones'>incoming milestones</a>."
+      + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+      + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
       + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
       );
       
@@ -1585,5 +1679,6 @@ else
 {
     console.log("BDA script not starting");
 }
+
 
 
