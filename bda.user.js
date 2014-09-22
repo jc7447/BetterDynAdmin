@@ -14,7 +14,7 @@
 // ==/UserScript==
 
 var BDA = {
-	componentBrowserPageSelector : "h1:contains('Component Browser')",
+  componentBrowserPageSelector : "h1:contains('Component Browser')",
     descriptorTableSelector : "table:eq(0)",
     repositoryViewSelector : "h2:contains('Examine the Repository, Control Debugging')",
     cacheUsageSelector : "h2:contains('Cache usage statistics')",
@@ -184,12 +184,12 @@ var BDA = {
     
     removeAdminLink : function()
     {
-    	$componentBrowserH1 = $(this.componentBrowserPageSelector);
-    	if ($componentBrowserH1.size() > 0)
-    	{
-    		$componentBrowserH1.prev().remove();
-    		$(this.logoSelector).wrap("<a href='/dyn/admin' />");
-    	}
+      $componentBrowserH1 = $(this.componentBrowserPageSelector);
+      if ($componentBrowserH1.size() > 0)
+      {
+        $componentBrowserH1.prev().remove();
+        $(this.logoSelector).wrap("<a href='/dyn/admin' />");
+      }
     },
     
     loadExternalCss : function(url) 
@@ -246,7 +246,7 @@ var BDA = {
     isXMLDefinitionFilePage : function()
     {
       return $("td:contains('class atg.xml.XMLFile')").size() > 0
-      		|| $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
+          || $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
     },
     
     isComponentPage : function ()
@@ -316,15 +316,15 @@ var BDA = {
     
     getDescriptorList : function()
     {
-    	if (this.descriptorList != null)
-    		return this.descriptorList;
-    	descriptors = [];
+      if (this.descriptorList != null)
+        return this.descriptorList;
+      descriptors = [];
         $("#descriptorTable tr th:first-child:not([colspan])")
         .sort(function(a, b){
             return $(a).text().toLowerCase() > $(b).text().toLowerCase() ? 1 : -1;
         }).each(function() {
             
-        	descriptors.push($(this).html().trim());
+          descriptors.push($(this).html().trim());
         });
         this.descriptorList = descriptors;
         return descriptors;
@@ -335,7 +335,7 @@ var BDA = {
         var descriptorOptions = "";
         var descriptors = this.getDescriptorList();
         for (var i = 0; i != descriptors.length; i++)
-        	descriptorOptions += "<option>" + descriptors[i] + "</option>\n";
+          descriptorOptions += "<option>" + descriptors[i] + "</option>\n";
         return descriptorOptions;
     },
     
@@ -810,11 +810,13 @@ var BDA = {
                                 + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor'>" + this.getDescriptorOptions() + "</select></span>"
                                 + "</span>" 
                                 + this.getsubmitButton() + "</div>");
-        //this.getPrintItemEditor();
+
         $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
         $("#xmltext").appendTo("#RQLText");
-        $("#RQLText").after("<div id='RQLStoredQueries' style='display:inline-block; vertical-align:top'><ul></ul></div>");
+        $("#RQLText").after("<div id='RQLDescProperty' style='display:inline-block; vertical-align:top'></div>");
         
+        $("#RQLDescProperty").after("<div id='RQLStoredQueries'></div>");
+
         $("#RQLStoredQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>");
         this.showQueryList();
         $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
@@ -864,7 +866,7 @@ var BDA = {
         $("#RQLAdd").click(function() {
             var query = BDA.getRQLQuery();
             BDA.setQueryEditorValue(BDA.getQueryEditorValue() + query);
-           // $("#xmltext").val( $("#xmltext").val()  + query);
+           // BDA.showItemPropertyList($("#itemDescriptor").val());
         });
         
         $("#saveQuery").click(function() {
@@ -915,58 +917,74 @@ var BDA = {
         });
     },
     
+    showItemPropertyList : function(item)
+    {
+      console.log("showItemPropertyList");
+      //https://com01-eram.betapgc.com/dyn/admin/nucleus/atg/commerce/catalog/ProductCatalog/?action=seetmpl&itemdesc=categoryAlias#showProperties
+      var componentPath = window.location.pathname;
+      var url = componentPath + "?action=seetmpl&itemdesc=" + item + "#showProperties";
+      console.log(url);
+      $.get(url, function(data) {
+       // console.log(data);
+         $pTable = $(data).find("a[name='showProperties']").next();
+         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
+         $pTable.css("font-size", "80%");
+         $("#RQLDescProperty").empty().append($pTable);
+      });
+    },
+    
     setupItemDescriptorTable : function ()
     {
-    	var descriptors = this.getDescriptorList();
-    	// ?action=seetmpl&itemdesc=foreignCatalog#showProperties
-    	// ?action=seeitems&itemdesc=foreignCatalog#seeItems
-    	// ?action=seenamed&itemdesc=foreignCatalog#namedQuery
-    	// ?action=setiddbg&itemdesc=foreignCatalog#listItemDescriptors
-    	// ?action=dbgprops&itemdesc=foreignCatalog#debugProperties
-    	var componentPath = window.location.pathname;
-    	var splitValue = 20;
-    	var html = "<p>" + descriptors.length + " descriptors available.</p>";
-    	html += "<div>";
-    	for (var i = 0; i != descriptors.length; i++)
-    	{
-    	  if (i == 0 || i % splitValue == 0)
-    	  {
-    		html += "<table class='descriptorTable'>";
-    	    html += "<th>Descriptor</th>";
-    	    html += "<th>View</th>";
-    	   	html += "<th>Debug</th>";
-    	  }
+      var descriptors = this.getDescriptorList();
+      // ?action=seetmpl&itemdesc=foreignCatalog#showProperties
+      // ?action=seeitems&itemdesc=foreignCatalog#seeItems
+      // ?action=seenamed&itemdesc=foreignCatalog#namedQuery
+      // ?action=setiddbg&itemdesc=foreignCatalog#listItemDescriptors
+      // ?action=dbgprops&itemdesc=foreignCatalog#debugProperties
+      var componentPath = window.location.pathname;
+      var splitValue = 20;
+      var html = "<p>" + descriptors.length + " descriptors available.</p>";
+      html += "<div>";
+      for (var i = 0; i != descriptors.length; i++)
+      {
+        if (i == 0 || i % splitValue == 0)
+        {
+        html += "<table class='descriptorTable'>";
+          html += "<th>Descriptor</th>";
+          html += "<th>View</th>";
+           html += "<th>Debug</th>";
+        }
           if (i % 2 == 0)
               html += "<tr class='even'>";
           else
               html += "<tr class='odd'>";
           var isDebugEnable = false;
           if ($("a[href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors']").size() > 0)
-        	  isDebugEnable = true;
-    	  html += "<td class='descriptor'>" + descriptors[i] + "</td>";
-    	  html += "<td><a class='btn-desc' href='" + componentPath + "?action=seetmpl&itemdesc=" + descriptors[i] + "#showProperties'>Properties</a>";
-    	  html += "&nbsp;<a class='btn-desc' class='btn-desc' href='" + componentPath + "?action=seenamed&itemdesc=" + descriptors[i] + "#namedQuery'>Named queries</a></td>";
-    	  
-    	  html += "<td>";
-    	  if (isDebugEnable)
-    	    html += "<a class='btn-desc red' href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Disable</a>";
-    	  else
-    	  {
-    		html += "<a class='btn-desc' href='" + componentPath + "?action=setiddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Enable</a>";
-    	  	html += "&nbsp;<a class='btn-desc' href='" + componentPath + "?action=dbgprops&itemdesc=" + descriptors[i] + "#debugProperties'>Edit</a>";
-    	  }
-    	  html += "</td>";
-    	  html += "</tr>";
-    	  if (i != 0 && ((i + 1) % splitValue == 0 || i + 1 == descriptors.length))
-    		  html += "</table>";
-    	}
-    	html += "</div>";
-    	html += "<div style='clear:both' />";
-    	
-    	$("#descriptorTable").remove();
-    	$(html).insertAfter("a[name='listItemDescriptors']");
-    	
-    	
+            isDebugEnable = true;
+        html += "<td class='descriptor'>" + descriptors[i] + "</td>";
+        html += "<td><a class='btn-desc' href='" + componentPath + "?action=seetmpl&itemdesc=" + descriptors[i] + "#showProperties'>Properties</a>";
+        html += "&nbsp;<a class='btn-desc' class='btn-desc' href='" + componentPath + "?action=seenamed&itemdesc=" + descriptors[i] + "#namedQuery'>Named queries</a></td>";
+        
+        html += "<td>";
+        if (isDebugEnable)
+          html += "<a class='btn-desc red' href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Disable</a>";
+        else
+        {
+        html += "<a class='btn-desc' href='" + componentPath + "?action=setiddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Enable</a>";
+          html += "&nbsp;<a class='btn-desc' href='" + componentPath + "?action=dbgprops&itemdesc=" + descriptors[i] + "#debugProperties'>Edit</a>";
+        }
+        html += "</td>";
+        html += "</tr>";
+        if (i != 0 && ((i + 1) % splitValue == 0 || i + 1 == descriptors.length))
+          html += "</table>";
+      }
+      html += "</div>";
+      html += "<div style='clear:both' />";
+      
+      $("#descriptorTable").remove();
+      $(html).insertAfter("a[name='listItemDescriptors']");
+      
+      
     },
     
     showQueryList : function ()
@@ -978,15 +996,15 @@ var BDA = {
             if (rqlQueries != null)
             {
                 if (rqlQueries.length > 0)
-                    html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span><ul style='margin :  0; padding-left :15px'>";
+                    html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span>";
                 for (var i = 0; i != rqlQueries.length; i++)
                 {
                     var storeQuery = rqlQueries[i];
-                    html += "<li class='savedQuery'>";
+                    html += "<span class='savedQuery'>";
                     html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + this.trashImg + "' height='12' width='12' /></span>";
-                    html += "</li>";
+                    html += "</span>";
                 }
-                html += "</ul>";
+                //html += "</ul>";
             }
         }
         $("#RQLStoredQueries").html(html);
@@ -1067,6 +1085,7 @@ var BDA = {
     this.showQueryList();
   },
   
+  /*
   showQueryList : function ()
   {
     var html = "";
@@ -1097,7 +1116,7 @@ var BDA = {
         $(this).find("span.deleteQuery").toggle();
       }, function() {
         $(this).find("span.deleteQuery").toggle();
-      });
+    });
       
     $(".deleteQuery")
     .css("display", "none")
@@ -1110,7 +1129,7 @@ var BDA = {
       BDA.reloadQueryList();
     });
   },
-
+*/
    printStoredQuery : function (name)
   {
     var rqlQueries = this.getStoredRQLQueries();
