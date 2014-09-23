@@ -3,12 +3,15 @@
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
-// @grant none
+// @grant GM_getResourceText
+// @grant GM_addStyle
 // @version 1.1.1
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/xml.js
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
+// @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @updateUrl    https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -29,94 +32,6 @@ var BDA = {
     arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
     arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
     trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
-    css : "<style type='text/css'>\
-            a{text-decoration : none}\
-            #RQLResults{ margin-top : 10px; }\
-            .dataTable {font-size : 80%; margin : 5px; border : 1px solid #CCCCCC}\
-            .prop_attr {display: inline-block; margin : 2px; padding : 1px; color : white; vertical-align :middle;}\
-            .copyLink{text-decoration:none; color:#00214a;}\
-            .copyField{width:200px;}\
-            .dataTable td, .dataTable th{padding : 3px;}\
-            .dataTable th{min-width : 160px; text-align : left; }\
-            #itemId {width:125px}\
-            table.tablesorter {\
-              border: 1px solid #CCCCCC;\
-              margin:10px 0pt 15px;\
-              font-size: 14px;\
-              width: 100%;\
-              text-align: left;\
-              border-collapse : collapse;\
-            }\
-            table.tablesorter thead tr th, table.tablesorter tfoot tr th {\
-              background-color: #e6EEEE;\
-              padding: 4px;\
-            }\
-            table.tablesorter thead tr .header {\
-              background-image: url('data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==');\
-              background-repeat: no-repeat;\
-              background-position: center right;\
-              border: 1px solid #CCCCCC;\
-              cursor: pointer;\
-            }\
-            table.tablesorter tbody td {\
-              color: #3D3D3D;\
-              padding: 4px;\
-              /*background-color: #FFF;*/\
-              vertical-align: top;\
-              border: 1px solid #CCCCCC;\
-            }\
-            .tablesorter tbody tr:nth-child(odd) {\
-             background-color: #F0F0F6;\
-            }\
-            table.tablesorter tbody tr.odd td {\
-              background-color:#F0F0F6;\
-            }\
-            table.tablesorter thead tr .headerSortUp {\
-              background-image:  url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7');\
-            }\
-            table.tablesorter thead tr .headerSortDown {\
-              background-image: url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7');\
-            }\
-            table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {\
-            background-color: #8dbdd8;\
-            }\
-            .descriptor {\
-              margin : 5px 10px 5px 5px; \
-            }\
-            .descriptorTable {\
-              float: left;\
-              margin-right : 10px;\
-              margin-bottom : 10px;\
-              border : 1px solid #ccc;\
-              white-space: nowrap;\
-            }\
-          #RQLText .CodeMirror {\
-            border: 1px solid #aaa;\
-            height : 250px;\
-            width : 600px;\
-            cursor : text; \
-          }\
-         .xmlDefinition .CodeMirror {\
-            border: 1px solid #eee;\
-            height: auto;\
-          }\
-          .xmlDefinition .CodeMirror-scroll {\
-            overflow-y: hidden;\
-            overflow-x: auto;\
-          }\
-          .btn-desc{\
-            display : inline-block;\
-            background-color:#f9f9f9;\
-            color:#666666;\
-            border:1px solid #dcdcdc;\
-            padding : 2px;\
-            font-size : 12px;\
-          }\
-          .red {\
-           color : #880000;\
-          }\
-        </style>",
-    externalCss : ["https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css"],
     defaultItemByTab : "10",
     hasWebStorage : false,
     hasErrors : false,
@@ -145,8 +60,7 @@ var BDA = {
         console.log("Path : " + $(location).attr('pathname'));
         console.log("isComponentPage : " + this.isComponentPage() + " IsOldDynamo : " + this.isOldDynamo);
         console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
-        // apply css
-        $("head").append(this.css);
+
         $.tablesorter.defaults.sortInitialOrder = 'desc';
         // Setup repository page
         if (this.isRepositoryPage())
@@ -184,7 +98,7 @@ var BDA = {
     
     removeAdminLink : function()
     {
-      $componentBrowserH1 = $(this.componentBrowserPageSelector);
+      var $componentBrowserH1 = $(this.componentBrowserPageSelector);
       if ($componentBrowserH1.size() > 0)
       {
         $componentBrowserH1.prev().remove();
@@ -194,15 +108,10 @@ var BDA = {
     
     loadExternalCss : function(url) 
     {
-      for (var i = 0; i != this.externalCss.length; i++)
-      {
-       $("<link />")
-        .attr("type", 'text/css')
-        .attr("rel", 'stylesheet')
-        .attr("media", 'screen')
-        .attr("href", this.externalCss[i])
-        .appendTo($("head"));
-      }
+      var bdaCSS = GM_getResourceText("bdaCSS");
+      GM_addStyle(bdaCSS);
+      var cmCSS = GM_getResourceText("cmCSS");
+      GM_addStyle(cmCSS);
     },
     
     //--- Page informations ------------------------------------------------------------------------
@@ -276,7 +185,7 @@ var BDA = {
     
     toggleCacheUsage: function () 
     {
-      $cacheUsage = $(this.cacheUsageSelector);
+      var $cacheUsage = $(this.cacheUsageSelector);
       $cacheUsage.next().toggle().next().toggle();
         this.toggleShowLabel($cacheUsage.next().css("display"), "#showMoreCacheUsage");
     },
@@ -318,7 +227,7 @@ var BDA = {
     {
       if (this.descriptorList != null)
         return this.descriptorList;
-      descriptors = [];
+      var descriptors = [];
         $("#descriptorTable tr th:first-child:not([colspan])")
         .sort(function(a, b){
             return $(a).text().toLowerCase() > $(b).text().toLowerCase() ? 1 : -1;
@@ -590,9 +499,9 @@ var BDA = {
         }
         xmlContent = this.sanitizeXml(xmlContent);
         //console.log(xmlContent);
-        xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
-        $xml = $( xmlDoc );
-        $addItems = $xml.find("add-item");
+        var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
+        var $xml = $( xmlDoc );
+        var $addItems = $xml.find("add-item");
         var types = [];
         
         var datas = [];
@@ -609,7 +518,7 @@ var BDA = {
                 datas[curItemDesc] = [];
                 nbTypes++;
             }
-            curData = [];
+            var curData = [];
             $(this).find("set-property").each(function (index) {
                 curData[$(this).attr("name")] = $(this).text();
                 var type = {};
@@ -813,15 +722,15 @@ var BDA = {
 
         $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
         $("#xmltext").appendTo("#RQLText");
-        $("#RQLText").after("<div id='RQLDescProperty' style='display:inline-block; vertical-align:top'></div>");
+        $("#RQLText").after("<div id='storedQueries'></div>");
+        $("#RQLText").after("<div id='descProperties'></div>");
         
-        $("#RQLDescProperty").after("<div id='RQLStoredQueries'></div>");
 
-        $("#RQLStoredQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>");
+        $("#storedQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>");
         this.showQueryList();
         $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
         
-        splitObj = this.getStoredSplitObj();
+        var splitObj = this.getStoredSplitObj();
         var itemByTab = this.defaultItemByTab;
         var isChecked = false;
         if (splitObj != null)
@@ -866,7 +775,7 @@ var BDA = {
         $("#RQLAdd").click(function() {
             var query = BDA.getRQLQuery();
             BDA.setQueryEditorValue(BDA.getQueryEditorValue() + query);
-           // BDA.showItemPropertyList($("#itemDescriptor").val());
+            BDA.showItemPropertyList($("#itemDescriptor").val());
         });
         
         $("#saveQuery").click(function() {
@@ -920,27 +829,35 @@ var BDA = {
     showItemPropertyList : function(item)
     {
       console.log("showItemPropertyList");
-      //https://com01-eram.betapgc.com/dyn/admin/nucleus/atg/commerce/catalog/ProductCatalog/?action=seetmpl&itemdesc=categoryAlias#showProperties
       var componentPath = window.location.pathname;
       var url = componentPath + "?action=seetmpl&itemdesc=" + item + "#showProperties";
       console.log(url);
       $.get(url, function(data) {
        // console.log(data);
-         $pTable = $(data).find("a[name='showProperties']").next();
+         var $pTable = $(data).find("a[name='showProperties']").next();
          $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
-         $pTable.css("font-size", "80%");
-         $("#RQLDescProperty").empty().append($pTable);
+         $("#storedQueries").css("display", "none");
+         var $scrollDiv = $("<div class='scrollableTab'></div>").append($pTable);
+         $("#descProperties")
+         .empty()
+         .append($scrollDiv)
+         .append("<p class='showQueriesLabel'><a href='javascript:void(0)' id='showStoredQueries'>Show stored queries</a></p>")
+         .css("display", "inline-block");
+         
+         $("#showStoredQueries").click(function() {
+       	  console.log("show stored queries");
+       	  $("#descProperties").css("display", "none");
+       	  $("#storedQueries").css("display", "inline-block");
+         });
+         
       });
+      
+
     },
     
     setupItemDescriptorTable : function ()
     {
       var descriptors = this.getDescriptorList();
-      // ?action=seetmpl&itemdesc=foreignCatalog#showProperties
-      // ?action=seeitems&itemdesc=foreignCatalog#seeItems
-      // ?action=seenamed&itemdesc=foreignCatalog#namedQuery
-      // ?action=setiddbg&itemdesc=foreignCatalog#listItemDescriptors
-      // ?action=dbgprops&itemdesc=foreignCatalog#debugProperties
       var componentPath = window.location.pathname;
       var splitValue = 20;
       var html = "<p>" + descriptors.length + " descriptors available.</p>";
@@ -993,23 +910,27 @@ var BDA = {
         if (this.hasWebStorage)
         {
             var rqlQueries = this.getStoredRQLQueries();
-            if (rqlQueries != null)
+            if (rqlQueries != null && rqlQueries.length > 0)
             {
-                if (rqlQueries.length > 0)
-                    html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span>";
+                html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span>";
+                html += "<ul>"
                 for (var i = 0; i != rqlQueries.length; i++)
                 {
                     var storeQuery = rqlQueries[i];
-                    html += "<span class='savedQuery'>";
-                    html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + this.trashImg + "' height='12' width='12' /></span>";
+                    html += "<li class='savedQuery'>";
+                    html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>"
+                    html += "<span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'>";
+                    html += "<img src='" + this.trashImg + "' height='12' width='12' />";
                     html += "</span>";
+                    html += "</li>";
                 }
-                //html += "</ul>";
+                html += "</ul>";
             }
         }
-        $("#RQLStoredQueries").html(html);
+        $("#storedQueries").html(html);
         $(".savedQuery").click(function() {
-            printStoredQuery( $(this).find("a").html());
+        	console.log("click on query : " + $(this).find("a").html());
+            BDA.printStoredQuery( $(this).find("a").html());
         });
         
         $(".savedQuery").hover( function() {
@@ -1025,11 +946,11 @@ var BDA = {
         .click(function() {
             var index = this.id.replace("deleteQuery", "");
             console.log("Delete query #" + index);
-            deleteRQLQuery(index);
-            reloadQueryList();
+            BDA.deleteRQLQuery(index);
+            BDA.reloadQueryList();
         });
     },
-      //--- Stored queries functions ------------------------------------------------------------------------
+    //--- Stored queries functions ------------------------------------------------------------------------
     
   getStoredRQLQueries : function ()
   {
@@ -1062,7 +983,7 @@ var BDA = {
       var storeQuery = {};
       storeQuery.name = name;
       storeQuery.query = query;
-      rqlQueries = this.getStoredRQLQueries();
+      var rqlQueries = this.getStoredRQLQueries();
       rqlQueries.push(storeQuery);
       console.log(rqlQueries);
       localStorage.setItem('RQLQueries', JSON.stringify(rqlQueries));
@@ -1081,58 +1002,15 @@ var BDA = {
   
    reloadQueryList : function ()
   {
-    $("#RQLStoredQueries").empty();
+    $("#storedQueries").empty();
     this.showQueryList();
   },
-  
-  /*
-  showQueryList : function ()
-  {
-    var html = "";
-    if (this.hasWebStorage)
-    {
-      var rqlQueries = this.getStoredRQLQueries();
-      
-      if (rqlQueries != null)
-      {
-        if (rqlQueries.length > 0)
-          html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span><ul style='margin :  0; padding-left :15px'>";
-        for (var i = 0; i != rqlQueries.length; i++)
-        {
-          var storeQuery = rqlQueries[i];
-          html += "<li class='savedQuery'>";
-          html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a><span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'><img src='" + this.trashImg + "' height='12' width='12' /></span>";
-          html += "</li>";
-        }
-        html += "</ul>";
-      }
-    }
-    $("#RQLStoredQueries").html(html);
-    $(".savedQuery").click(function() {
-      BDA.printStoredQuery( $(this).find("a").html());
-    });
-    
-    $(".savedQuery").hover( function() {
-        $(this).find("span.deleteQuery").toggle();
-      }, function() {
-        $(this).find("span.deleteQuery").toggle();
-    });
-      
-    $(".deleteQuery")
-    .css("display", "none")
-    .css("margin-top", "5px")
-    .css("margin-left", "10px")
-    .click(function() {
-      var index = this.id.replace("deleteQuery", "");
-      console.log("Delete query #" + index);
-      BDA.deleteRQLQuery(index);
-      BDA.reloadQueryList();
-    });
-  },
-*/
+
    printStoredQuery : function (name)
   {
+	console.log("printStoredQuery : " + name);
     var rqlQueries = this.getStoredRQLQueries();
+    console.log(rqlQueries);
     if (rqlQueries != null)
     {
       for (var i = 0; i != rqlQueries.length; i++)
@@ -1392,7 +1270,7 @@ var BDA = {
       compObj.componentPath = component;
       compObj.componentName = this.getComponentNameFromPath(component);
       compObj.colors = this.stringToColour(compObj.componentName);
-      storedComp = this.getStoredComponents();
+      var storedComp = this.getStoredComponents();
       storedComp.push(compObj);
       console.log(storedComp);
       localStorage.setItem('Components', JSON.stringify(storedComp));
@@ -1698,6 +1576,4 @@ else
 {
     console.log("BDA script not starting");
 }
-
-
 
