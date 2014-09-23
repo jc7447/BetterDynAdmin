@@ -1,0 +1,172 @@
+a {
+	text-decoration: none
+}
+
+#RQLResults {
+	margin-top: 10px;
+}
+
+.dataTable {
+	font-size: 80%;
+	margin: 5px;
+	border: 1px solid #CCCCCC
+}
+
+.prop_attr {
+	display: inline-block;
+	margin: 2px;
+	padding: 1px;
+	color: white;
+	vertical-align: middle;
+}
+
+.copyLink {
+	text-decoration: none;
+	color: #00214a;
+}
+
+.copyField {
+	width: 200px;
+}
+
+.dataTable td, .dataTable th {
+	padding: 3px;
+}
+
+.dataTable th {
+	min-width: 160px;
+	text-align: left;
+}
+
+#itemId {
+	width: 125px
+}
+
+table.tablesorter {
+	border: 1px solid #CCCCCC;
+	margin: 10px 0pt 15px;
+	font-size: 14px;
+	width: 100%;
+	text-align: left;
+	border-collapse: collapse;
+}
+
+table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+	background-color: #e6EEEE;
+	padding: 4px;
+}
+
+table.tablesorter thead tr .header {
+	background-image:
+		url('data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==');
+	background-repeat: no-repeat;
+	background-position: center right;
+	border: 1px solid #CCCCCC;
+	cursor: pointer;
+}
+
+table.tablesorter tbody td {
+	color: #3D3D3D;
+	padding: 4px;
+	/*background-color: #FFF;*/
+	vertical-align: top;
+	border: 1px solid #CCCCCC;
+}
+
+.tablesorter tbody tr:nth-child(odd) {
+	background-color: #F0F0F6;
+}
+
+table.tablesorter tbody tr.odd td {
+	background-color: #F0F0F6;
+}
+
+table.tablesorter thead tr .headerSortUp {
+	background-image:
+		url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7');
+}
+
+table.tablesorter thead tr .headerSortDown {
+	background-image:
+		url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7');
+}
+
+table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp
+	{
+	background-color: #8dbdd8;
+}
+
+.descriptor {
+	margin: 5px 10px 5px 5px;
+}
+
+.descriptorTable {
+	float: left;
+	margin-right: 10px;
+	margin-bottom: 10px;
+	border: 1px solid #ccc;
+	white-space: nowrap;
+}
+
+#RQLText .CodeMirror {
+	border: 1px solid #aaa;
+	height: 250px;
+	width: 600px;
+	cursor: text;
+}
+
+.xmlDefinition .CodeMirror {
+	border: 1px solid #eee;
+	height: auto;
+}
+
+.xmlDefinition .CodeMirror-scroll {
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
+.btn-desc {
+	display: inline-block;
+	background-color: #f9f9f9;
+	color: #666666;
+	border: 1px solid #dcdcdc;
+	padding: 2px;
+	font-size: 12px;
+}
+
+.red {
+	color: #880000;
+}
+
+#descProperties {
+	display: none;
+	vertical-align: top;
+	margin-left: 5px;
+}
+
+#descProperties tbody tr:nth-child(odd) {
+	background-color: #F0F0F6;
+}
+
+#descProperties table {
+	font-size: 80%;
+	border: none;
+}
+
+.showQueriesLabel {
+	font-size: 80%;
+	margin: 0px;
+	padding: 5px 0px 0px 0px;
+}
+
+.scrollableTab {
+	max-width: 600px;
+	max-height: 230px;
+	overflow-x: auto;
+	border: 1px solid #CCC;
+}
+
+#storedQueries {
+	display: inline-block;
+	vertical-align: top;
+}
