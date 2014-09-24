@@ -364,7 +364,6 @@ var BDA = {
         if(addText)
         {
             var query = this.getRQLQuery();
-            //$("#xmltext").val( $("#xmltext").val()  + query);
             this.setQueryEditorValue(this.getQueryEditorValue() + query);
         }
         this.sanitizeQuery();
@@ -449,13 +448,13 @@ var BDA = {
                 html += "<tr class='even'>";
             else
                 html += "<tr class='odd'>";
-            html += "<th>" + curProp.name + "<span style='font-size : 80%'>";
+            html += "<th>" + curProp.name + "<span class='prop_name'>";
             if (curProp.rdonly == "true")
-                html += "<div class='prop_attr' style='background-color : red;'>R</div>";
+                html += "<div class='prop_attr prop_attr_red'>R</div>";
             if (curProp.derived  == "true")
-                html += "<div class='prop_attr' style='background-color : green;'>D</div>";
+                html += "<div class='prop_attr prop_attr_green'>D</div>";
             if (curProp.exportable  == "true")
-                html += "<div class='prop_attr' style='background-color : blue;'>E</div>";
+                html += "<div class='prop_attr prop_attr_blue'>E</div>";
             html += "</span></th>";
             
             for (var a = 0; a < datas.length; a++)
@@ -469,7 +468,7 @@ var BDA = {
                         var link_id = "link_" + base_id;
                         var field_id = "text_" + base_id;
                         propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' ><span id='"+base_id+"'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
-                        + "</span><textarea class='copyField' style='display:none;' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
+                        + "</span><textarea class='copyField' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
                     }
                     // 
                     html += "<td>" + propValue + "</td>";
@@ -555,7 +554,7 @@ var BDA = {
         
         var startRenderingtab = new Date().getTime();
         var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
-        html += "<p id='rawXml' style='display:none;'></p>";
+        html += "<p id='rawXml'></p>";
         html += "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
         
         var splitValue;
@@ -586,9 +585,9 @@ var BDA = {
             }
         }
         $("#RQLResults").append(html);
-        $("#RQLResults").prepend("<div class='prop_attr' style='background-color : red;'>R</div> : read-only "
-                                 + "<div class='prop_attr' style='background-color : green;'>D</div> : derived "
-                                 + "<div class='prop_attr' style='background-color : blue;'>E</div> : export is false");
+        $("#RQLResults").prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only "
+                                 + "<div class='prop_attr prop_attr_green'>D</div> : derived "
+                                 + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
 
         var endRenderingTab = new Date();
         var time = endRenderingTab.getTime() - startRenderingtab;
@@ -625,7 +624,7 @@ var BDA = {
         }
         error = this.purgeXml(error);
         $("<pre id='RQLErrors'></pre>").insertBefore("#RQLEditor");
-        $("#RQLErrors").text(error).css("color", "red").css("margin-top", "20px");
+        $("#RQLErrors").text(error);
     },
     
     getStoredSplitObj : function ()
@@ -720,7 +719,7 @@ var BDA = {
                                 + "</span>" 
                                 + this.getsubmitButton() + "</div>");
 
-        $("#RQLToolbar").after("<div id='RQLText' style='display:inline-block'></div>");
+        $("#RQLToolbar").after("<div id='RQLText'></div>");
         $("#xmltext").appendTo("#RQLText");
         $("#RQLText").after("<div id='storedQueries'></div>");
         $("#RQLText").after("<div id='descProperties'></div>");
@@ -728,7 +727,7 @@ var BDA = {
 
         $("#storedQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>");
         this.showQueryList();
-        $("#RQLSave").css("margin", "5px").after( "<div id='splitToolbar'></div>" );
+        $("#RQLSave").after( "<div id='splitToolbar'></div>" );
         
         var splitObj = this.getStoredSplitObj();
         var itemByTab = this.defaultItemByTab;
@@ -737,7 +736,7 @@ var BDA = {
             itemByTab = splitObj.splitValue;
         if (splitObj != null)
             isChecked = splitObj.activeSplit;
-            $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue' style='width : 40px'> items. ");
+            $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. ");
         var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
         if (isChecked)
             checkboxSplit += " checked ";
@@ -787,12 +786,12 @@ var BDA = {
         });
         
         // Hide other sections
-        var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' style='font-size:80%'>Show less...</a>";
-        var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' style='font-size:80%'>Show more...</a>";
+        var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' class='showMore'>Show less...</a>";
+        var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' class='showMore'>Show more...</a>";
         
-        var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' style='font-size:80%'>Show more...</a>";
-        var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' style='font-size:80%'>Show more...</a>";
-        var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' style='font-size:80%'>Show more...</a>";
+        var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' class='showMore'>Show more...</a>";
+        var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' class='showMore'>Show more...</a>";
+        var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' class='showMore'>Show more...</a>";
         
         // Auto hide Repository View
         $(this.repositoryViewSelector).append(repositoryView);
@@ -912,14 +911,14 @@ var BDA = {
             var rqlQueries = this.getStoredRQLQueries();
             if (rqlQueries != null && rqlQueries.length > 0)
             {
-                html += "<span style='font-size : 13px; font-weight : bold'>Stored queries :</span>";
+                html += "<span class='storedQueriesTitle'>Stored queries :</span>";
                 html += "<ul>"
                 for (var i = 0; i != rqlQueries.length; i++)
                 {
                     var storeQuery = rqlQueries[i];
                     html += "<li class='savedQuery'>";
                     html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>"
-                    html += "<span id='deleteQuery" + i + "'class='deleteQuery' style='cursor : pointer'>";
+                    html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
                     html += "<img src='" + this.trashImg + "' height='12' width='12' />";
                     html += "</span>";
                     html += "</li>";
@@ -940,9 +939,6 @@ var BDA = {
         });
         
         $(".deleteQuery")
-        .css("display", "none")
-        .css("margin-top", "5px")
-        .css("margin-left", "10px")
         .click(function() {
             var index = this.id.replace("deleteQuery", "");
             console.log("Delete query #" + index);
@@ -1055,7 +1051,7 @@ var BDA = {
       var comp = componentHistory[i];
       html += "<a href='" + comp + "'>" + comp.substr(comp.lastIndexOf("/") + 1, comp.length) + "</a>";
      }
-     $("#history").css("clear", "both").html(html);
+     $("#history").html(html);
   },
 
   //--- Bug report panel
@@ -1066,52 +1062,17 @@ var BDA = {
     var labelIndex = Math.floor((Math.random() * labels.length)); 
     
       $("<div id='bdaBug'></div>").appendTo("body")
-      .css("position", "absolute")
-      .css("top", "0px")
-      .css("right", "30px")
-      .css("font-size", "11px")
-      .css("color", "white")
-      .css("border", "1px solid #00486c")
-      .css("border-top", "none")
-      .css("background-color", "#007bb8")
-      .css("padding", "3px")
       .html("<p>" + labels[labelIndex] + "</p>"
       + "<div class='bugArrow'><img class='up' src='" + this.arrowImg + "'></div>"
       );
-    
-      $("#bdaBug p")
-      .css("margin", "0");
-      
-      $(".bugArrow")
-      .css("text-align", "center")
-      .css("cursor", "pointer")
-      .css("padding-top", "2px");
-      
-      $(".bugArrow img")
-      .css("width", "15px")
-      .css("height", "8px");
       
       $("<div id='bdaBugPanel'></div>").appendTo("body")
-      .css("position", "absolute")
-      .css("top", "30px")
-      .css("right", "30px")
-      .css("width", "250px")
-      .css("font-size", "11px")
-      .css("color", "white")
-      .css("border", "1px solid #00486c")
-      .css("border-top", "none")
-      .css("background-color", "#007bb8")
-      .css("padding", "3px")
-      .css("display", "none")
-     
       .html("<p>How can I help and stay tuned ? "
       + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
       + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
       + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
       + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
       );
-      
-      $("#bdaBugPanel a").css("text-decoration", "underline").css("color", "white");
       
       $("#bdaBug").click(function() {
         $("#bdaBugPanel").toggle();
@@ -1131,31 +1092,11 @@ var BDA = {
   createBackupPanel : function ()
   {
     $("<div id='bdaBackup'></div>").appendTo("body")
-    .css("position", "absolute")
-    .css("top", "0px")
-    .css("right", "153px")
-    .css("font-size", "11px")
-    .css("color", "white")
-    .css("border", "1px solid #8F0000")
-    .css("border-top", "none")
-    .css("background-color", "#CC0000")
-    .css("padding", "3px")
+
     .html("<p>Backup / restore data</p>"
     + "<div class='backupArrow'><img class='up' src='" + this.arrowImg + "'></div>"
     );
-    
-    $("#bdaBackup p")
-    .css("margin", "0");
-    
-    $(".backupArrow")
-    .css("text-align", "center")
-    .css("cursor", "pointer")
-    .css("padding-top", "2px");
-    
-    $(".backupArrow img")
-    .css("width", "15px")
-    .css("height", "8px");
-    
+
     $("#bdaBackup").click(function() {
       $("#bdaBackupPanel").toggle();
       BDA.rotateArrow($(".backupArrow img"));
@@ -1167,17 +1108,7 @@ var BDA = {
     });
     
     $("<div id='bdaBackupPanel'></div>").appendTo("body")
-    .css("position", "absolute")
-    .css("top", "30px")
-    .css("right", "30px")
-    .css("width", "250px")
-    .css("font-size", "11px")
-    .css("color", "white")
-    .css("border", "1px solid #8F0000")
-    .css("border-top", "none")
-    .css("background-color", "#CC0000")
-    .css("padding", "3px")
-    .css("display", "none")
+
     .html("<p>Why should I save Better Dyn Admin data ? "
     + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
     + "<br /><br /><strong> Remenber that you can also import your backup to a BDA in another domain !</strong> </p>"
@@ -1186,10 +1117,6 @@ var BDA = {
     + "<button id='bdaDataBackup'>Backup</button>"
     + "<button id='bdaDataRestore'>Restore</button>"
     );
-
-    //var dataStr = JSON.stringify(dataObj);
-    $("#bdaData")
-    .css("width", "100%");
 
     $("#bdaDataBackup").click(function (){
       var dataObj = {};
@@ -1380,12 +1307,8 @@ var BDA = {
   {
     var favs = this.getStoredComponents();
 
-    $("<div id='toolbarContainer'></div>")
-    .insertAfter(this.logoSelector);
-
-    $("<div id='toolbar'></div>")
-    .css("padding", "5px")
-    .appendTo("#toolbarContainer");
+    $("<div id='toolbarContainer'></div>").insertAfter(this.logoSelector);
+    $("<div id='toolbar'></div>").appendTo("#toolbarContainer");
 
     for(var i = 0; i != favs.length; i++)
     {
@@ -1411,7 +1334,7 @@ var BDA = {
           + "&nbsp; | &nbsp;"
           + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
           +"</div>"
-          + "<div class='favDelete' id='delete" + fav.componentName + "'><span style='font-weight:bold; font-size:13px;'>X</span> Delete</div>"
+          + "<div class='favDelete' id='delete" + fav.componentName + "'><span class='del-cross'>X</span> Delete</div>"
           + "</div>")
           .appendTo("#toolbar");
     }
@@ -1443,84 +1366,19 @@ var BDA = {
     
     if (this.isComponentPage())
     {
-    var url = document.URL;
-    var componentPath = url.substr(url.indexOf('/dyn'), url.length);
-    if (!this.isComponentAlreadyStored(componentPath))
-    {
-      $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
-      .css("font-size", "30px")
-      .css("border", "1px dashed #AAAAAA")
-      .css("height", "54px")
-      .css("width", "50px")
-      .css("text-align", "center")
-      .css("float", "left")
-      .css("margin", "4px")
-      .css("line-height", "48px")
-      .appendTo("#toolbar");
-
-      $("#addComponent")
-      .css("color", "#AAAAAA")
-      .css("text-decoration", "none");
-      $(".newFav")
-      .css("cursor", "pointer")
-      .click(function() {
-         console.log("Add component");
-         BDA.storeComponent(componentPath);
-         BDA.reloadToolbar();
-      });
-    }
-    }
-
-    $(".fav")
-    .css("min-height", "50px")
-    .css("min-width", "75px")
-    .css("margin", "4px")
-    .css("padding", "2px")
-    .css("color", "white")
-    .css("float", "left");
-    
-    $(".favLink")
-    .css("text-align", "center")
-    .css("line-height", "21px")  ;
-    
-    $(".favLink a, .logdebug").css("color", "white").css("text-decoration", "none");
-    
-    $(".favName")
-    .css("display", "inline-block")
-    .css("vertical-align", "bottom")
-    .css("font-size", "11px");
-    
-    $(".favArrow")
-    .css("text-align", "center")
-    .css("cursor", "pointer")
-    .css("padding-top", "2px");
-    
-    $(".favArrow img")
-    .css("width", "15px")
-    .css("height", "8px");
-    
-    $(".favTitle")
-    .css("font-size", "14px")
-    .css("font-weight", "bold")
-    .css("margin-bottom", "15px;")
-    .css("text-align", "center");
-    
-    $(".favMoreInfo")
-    .css("font-size", "11px")
-    .css("display", "none")
-    .css("padding", "0")
-    .css("text-align", "left");
-    
-    $(".favDelete")
-    .css("cursor", "pointer");
-    
-    $(".favLogDebug form")
-    .css("margin", "0");
-    
-    $(".favLogDebug")
-    .css("margin-bottom", "2px")
-    .css("margin-top", "2px");
-
+	  var url = document.URL;
+	  var componentPath = url.substr(url.indexOf('/dyn'), url.length);
+	  if (!this.isComponentAlreadyStored(componentPath))
+	  {
+	    $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
+	    .appendTo("#toolbar");
+	    $(".newFav").click(function() {
+	       console.log("Add component");
+	       BDA.storeComponent(componentPath);
+	       BDA.reloadToolbar();
+	     });
+	   }
+     }
   },
   
   setupPerfMonitorPage : function()

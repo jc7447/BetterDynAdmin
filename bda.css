@@ -6,10 +6,18 @@ a {
 	margin-top: 10px;
 }
 
+#rawXml {
+	display: none;
+}
+
 .dataTable {
 	font-size: 80%;
 	margin: 5px;
 	border: 1px solid #CCCCCC
+}
+
+.prop_name {
+	font-size: 80%;
 }
 
 .prop_attr {
@@ -20,6 +28,18 @@ a {
 	vertical-align: middle;
 }
 
+.prop_attr_red {
+	background-color: red;
+}
+
+.prop_attr_blue {
+	background-color: blue;
+}
+
+.prop_attr_green {
+	background-color: green;
+}
+
 .copyLink {
 	text-decoration: none;
 	color: #00214a;
@@ -27,6 +47,7 @@ a {
 
 .copyField {
 	width: 200px;
+	display: none;
 }
 
 .dataTable td, .dataTable th {
@@ -115,6 +136,10 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 	cursor: text;
 }
 
+#RQLText {
+	display: inline-block;
+}
+
 .xmlDefinition .CodeMirror {
 	border: 1px solid #eee;
 	height: auto;
@@ -136,6 +161,19 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 
 .red {
 	color: #880000;
+}
+
+#splitValue {
+	width: 40px;
+}
+
+.showMore {
+	font-size: 80%;
+}
+
+.storedQueriesTitle {
+	font-size: 13px;
+	font-weight: bold;
 }
 
 #descProperties {
@@ -169,4 +207,189 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 #storedQueries {
 	display: inline-block;
 	vertical-align: top;
+}
+
+#RQLErrors {
+	color: red;
+	margin-top: 20px;
+}
+
+#RQLSave {
+	margin: 5px;
+}
+
+.deleteQuery {
+	display: none;
+	margin-top: 5px;
+	margin-left: 10px;
+	cursor: pointer;
+}
+
+#bdaBug {
+	position: absolute;
+	top: 0px;
+	right: 30px;
+	font-size: 11px;
+	color: white;
+	border: 1px solid #00486c;
+	border-top: none;
+	background-color: #007bb8;
+	padding: 3px;
+}
+
+#bdaBug p, #bdaBackup p {
+	margin: 0;
+}
+
+.bugArrow, .backupArrow {
+	text-align: center;
+	cursor: pointer;
+	padding-top: 2px;
+}
+
+.bugArrow img, .backupArrow img {
+	width: 15px;
+	height: 8px;
+}
+
+#bdaBugPanel {
+	position: absolute;
+	top: 30px;
+	right: 30px;
+	width: 250px;
+	font-size: 11px;
+	color: white;
+	border: 1px solid #00486c;
+	border-top: none;
+	background-color: #007bb8;
+	padding: 3px;
+	display: none;
+}
+
+#bdaBugPanel a {
+	text-decoration: underline;
+	color: white;
+}
+
+#history {
+	clear: both;
+}
+
+#bdaBackup {
+	position: absolute;
+	top: 0px;
+	right: 153px;
+	font-size: 11px;
+	color: white;
+	border: 1px solid #8F0000;
+	border-top: none;
+	background-color: #CC0000;
+	padding: 3px;
+}
+
+#bdaData {
+	width: 100%;
+}
+
+#bdaBackupPanel {
+	position: absolute;
+	top: 30px;
+	right: 30px;
+	width: 250px;
+	font-size: 11px;
+	color: white;
+	border: 1px solid #8F0000;
+	border-top: none;
+	background-color: #CC0000;
+	padding: 3px;
+	display: none;
+}
+
+#toolbar {
+	padding: 5px;
+}
+
+.newFav {
+	font-size: 30px;
+	border: 1px dashed #AAAAAA;
+	height: 54px;
+	width: 50px;
+	text-align: center;
+	float: left;
+	margin: 4px;
+	line-height: 48px;
+	cursor: pointer;
+}
+
+#addComponent {
+	color: #AAAAAA;
+	text-decoration: none;
+}
+
+.fav {
+	min-height: 50px;
+	min-width: 75px;
+	margin: 4px;
+	padding: 2px;
+	color: white;
+	float: left;
+}
+
+.favLink {
+	text-align: center;
+	line-height: 16px;
+}
+
+.favLink a, .logdebug {
+	color: white;
+	text-decoration: none;
+}
+
+.favName {
+	display: inline-block;
+	vertical-align: bottom;
+	font-size: 11px;
+}
+
+.favArrow {
+	text-align: center;
+	cursor: pointer;
+	padding-top: 2px;
+}
+
+.favArrow img {
+	width: 15px;
+	height: 8px;
+}
+
+.favTitle {
+	font-size: 14px;
+	font-weight: bold;
+	margin-bottom: 5px;;
+	text-align: center;
+}
+
+.favMoreInfo {
+	font-size: 11px;
+	display: none;
+	padding: 0;
+	text-align: left;
+}
+
+.favDelete {
+	cursor: pointer;
+}
+
+.favLogDebug form {
+	margin: 0;
+}
+
+.favLogDebug {
+	margin-bottom: 2px;
+	margin-top: 2px;
+}
+
+.del-cross {
+	font-weight: bold;
+	font-size: 13px;
 }
