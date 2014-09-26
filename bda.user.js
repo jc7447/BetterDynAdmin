@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.2
+// @version 1.2.1
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
@@ -13,7 +13,7 @@
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @updateUrl    http://jc7447.dyndns.org:81/bda/bda.user.js
-// @downloadUrl  http://jc7447.dyndns.org:81/bda/bda.user.js
+// @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
 var BDA = {
