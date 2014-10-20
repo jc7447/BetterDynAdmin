@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.2.1
+// @version 1.2.2
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
@@ -296,7 +296,7 @@ var BDA = {
         var descriptor = $("#itemDescriptor").val();
         var query = "";
         for (var i = 0; i != ids.length; i++)
-          query += "<print-item id=\"" + ids[i] + "\" item-descriptor=\"" + descriptor + "\" />\n";
+          query += "<print-item id=\"" + ids[i].trim() + "\" item-descriptor=\"" + descriptor + "\" />\n";
         return query;
     },
     
@@ -306,7 +306,7 @@ var BDA = {
         var descriptor = $("#itemDescriptor").val();
         var query = "";
         for (var i = 0; i != ids.length; i++)
-          query += "<remove-item id=\"" + ids[i] + "\" item-descriptor=\"" + descriptor + "\" />\n";
+          query += "<remove-item id=\"" + ids[i].trim() + "\" item-descriptor=\"" + descriptor + "\" />\n";
         return query;
     },
     
@@ -341,6 +341,24 @@ var BDA = {
         return query;
     },
     
+    getAllItemQuery : function ()
+    {
+      var descriptor = $("#itemDescriptor").val();
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n";
+      query += "ALL\n"
+      query += "</query-items>\n";
+      return query;
+    },
+    
+    getLast10ItemQuery : function ()
+    {
+      var descriptor = $("#itemDescriptor").val();
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n";
+      query += "ALL ORDER BY ID DESC RANGE 0+10\n"
+      query += "</query-items>\n";
+      return query;
+    },
+    
     getRQLQuery : function ()
     {
         var query = "";
@@ -356,6 +374,10 @@ var BDA = {
           query = this.getAddItemQuery();
         else if (action == "update-item")
           query = this.getUpdateItemQuery();
+        else if (action == "all")
+          query = this.getAllItemQuery();
+        else if (action == "last_10")
+          query = this.getLast10ItemQuery();
         return query;
     },
     
@@ -688,11 +710,17 @@ var BDA = {
     {
         // Move RQL editor to the top of the page
         var actionSelect = "<select id='RQLAction'>"
+        + " <optgroup label='Empty queries'>"
         + "<option>print-item</option>"
         + "<option>query-items</option>"
         + "<option>remove-item</option>"
         + "<option>add-item</option>"
         + "<option>update-item</option>"
+        + "</optgroup>"
+        + " <optgroup label='Predefined queries'>"
+        + "<option value='all'>query-items ALL</option>"
+        + "<option value='last_10'>query-items last 10</option>"
+        + "</optgroup>"
         + "</select>";
         
         $(this.descriptorTableSelector).attr("id", "descriptorTable");
@@ -761,6 +789,10 @@ var BDA = {
               BDA.getAddItemEditor();
             else if (action == "update-item")
               BDA.getUpdateItemEditor();
+            else if (action == "all")
+              BDA.getQueryItemsEditor();
+            else if (action == "last_10")
+              BDA.getQueryItemsEditor();
          });
         
         $("#RQLSubmit").click(function() {
@@ -844,9 +876,9 @@ var BDA = {
          .css("display", "inline-block");
          
          $("#showStoredQueries").click(function() {
-       	  console.log("show stored queries");
-       	  $("#descProperties").css("display", "none");
-       	  $("#storedQueries").css("display", "inline-block");
+          console.log("show stored queries");
+          $("#descProperties").css("display", "none");
+          $("#storedQueries").css("display", "inline-block");
          });
          
       });
@@ -928,7 +960,7 @@ var BDA = {
         }
         $("#storedQueries").html(html);
         $(".savedQuery").click(function() {
-        	console.log("click on query : " + $(this).find("a").html());
+          console.log("click on query : " + $(this).find("a").html());
             BDA.printStoredQuery( $(this).find("a").html());
         });
         
@@ -1004,7 +1036,7 @@ var BDA = {
 
    printStoredQuery : function (name)
   {
-	console.log("printStoredQuery : " + name);
+  console.log("printStoredQuery : " + name);
     var rqlQueries = this.getStoredRQLQueries();
     console.log(rqlQueries);
     if (rqlQueries != null)
@@ -1366,18 +1398,18 @@ var BDA = {
     
     if (this.isComponentPage())
     {
-	  var url = document.URL;
-	  var componentPath = url.substr(url.indexOf('/dyn'), url.length);
-	  if (!this.isComponentAlreadyStored(componentPath))
-	  {
-	    $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
-	    .appendTo("#toolbar");
-	    $(".newFav").click(function() {
-	       console.log("Add component");
-	       BDA.storeComponent(componentPath);
-	       BDA.reloadToolbar();
-	     });
-	   }
+    var url = document.URL;
+    var componentPath = url.substr(url.indexOf('/dyn'), url.length);
+    if (!this.isComponentAlreadyStored(componentPath))
+    {
+      $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
+      .appendTo("#toolbar");
+      $(".newFav").click(function() {
+         console.log("Add component");
+         BDA.storeComponent(componentPath);
+         BDA.reloadToolbar();
+       });
+     }
      }
   },
   
