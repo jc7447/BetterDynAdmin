@@ -390,6 +390,8 @@ var BDA = {
         }
         this.sanitizeQuery();
         this.storeSplitValue();
+        // set anchor to the result div
+        location.hash = '#RQLResults';
         $("#RQLForm").submit();
     },
     
@@ -727,7 +729,7 @@ var BDA = {
         + " <optgroup label='Predefined queries'>"
         + "<option value='all'>query-items ALL</option>"
         + "<option value='last_10'>query-items last 10</option>"
-    + "</optgroup>"
+        + "</optgroup>"
         + "</select>";
         
         $(this.descriptorTableSelector).attr("id", "descriptorTable");
@@ -937,8 +939,6 @@ var BDA = {
       
       $("#descriptorTable").remove();
       $(html).insertAfter("a[name='listItemDescriptors']");
-      
-      
     },
     
     showQueryList : function ()
@@ -1451,8 +1451,8 @@ var BDA = {
   {
     $("<div id='itemTree' />").insertAfter("#RQLEditor");
     $("#itemTree").append("<h2>Get Item Tree</h2>");
-    $("#itemTree").append("<p>This tool will recursively retrieve items and print the result as XML. \
-                          <br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItem, priceInfo... of the given order\
+    $("#itemTree").append("<p>This tool will recursively retrieve items and print the result with the chosen output. \
+                          <br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order\
                           <br><b> Be carefull when using this tool on a live instance ! Set a low max items value.</b></p>");
     
     $("#itemTree").append("<div id='itemTreeForm'>\
@@ -1633,7 +1633,6 @@ var BDA = {
       {
         var xmlDoc = jQuery.parseXML(itemTree[id]);
         var $itemXml = $(xmlDoc).find("add-item");
-        console.log($itemXml);
         res += '<remove-item id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor") + '" />\n';
       }
       $("#itemTreeResult").append("<pre />");
