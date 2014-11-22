@@ -507,120 +507,127 @@ var BDA = {
         return html;
     },
     
+    showXMLAsTab : function(xmlContent, $outputDiv)
+    {
+      var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
+      var $xml = $( xmlDoc );
+      var $addItems = $xml.find("add-item");
+      var types = [];
+      
+      var datas = [];
+      var nbTypes = 0;
+      var typesNames = [];
+      $addItems.each(function () {
+          var curItemDesc = $(this).attr("item-descriptor");
+          if (types[curItemDesc] == null)
+              types[curItemDesc] = [];
+          if (typesNames[curItemDesc] == null)
+              typesNames[curItemDesc] = [];
+          if (datas[curItemDesc] == null)
+          {
+              datas[curItemDesc] = [];
+              nbTypes++;
+          }
+          var curData = [];
+          $(this).find("set-property").each(function (index) {
+              curData[$(this).attr("name")] = $(this).text();
+              var type = {};
+              type.name = $(this).attr("name");
+              if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
+              {
+                  type.rdonly = $(this).attr("rdonly");
+                  type.derived = $(this).attr("derived");
+                  type.exportable = $(this).attr("exportable");
+                  types[curItemDesc].push(type);
+                  typesNames[curItemDesc].push(type.name);
+              }
+          });
+          
+          types[curItemDesc].sort();
+          if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) 
+          {
+              var typeDescriptor = {};
+              typeDescriptor.name = "descriptor";
+              types[curItemDesc].unshift(typeDescriptor);
+              typesNames[curItemDesc].push("descriptor");
+          }
+          if ($.inArray("id", typesNames[curItemDesc]) == -1) 
+          {
+              var typeId = {};
+              typeId.name = "id";
+              types[curItemDesc].unshift(typeId);
+              typesNames[curItemDesc].push("id");
+          }
+          curData["descriptor"] = curItemDesc;
+          curData["id"] = $(this).attr("id");
+          datas[curItemDesc].push(curData);
+      });
+      
+      var startRenderingtab = new Date().getTime();
+      var html = "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
+      
+      var splitValue;
+      var splitObj = this.getStoredSplitObj();
+      if (splitObj == null || splitObj.activeSplit == true)
+          splitValue = 0;
+      else
+          splitValue = parseInt(splitObj.splitValue);
+      for(var itemDesc in datas) 
+      {
+          if (splitValue == 0)
+              splitValue = datas[itemDesc].length;
+          var nbTab = 0;
+          if (datas[itemDesc].length <= splitValue)
+              html += this.renderTab(types[itemDesc], datas[itemDesc]);
+          else
+          {
+              while ((splitValue * nbTab) <  datas[itemDesc].length)
+              {
+                  var start = splitValue * nbTab;
+                  var end = start + splitValue;
+                  if (end > datas[itemDesc].length)
+                      end = datas[itemDesc].length;
+                  var subDatas = datas[itemDesc].slice(start, end);
+                  html += this.renderTab(types[itemDesc], subDatas);
+                  nbTab++;
+              }
+          }
+      }
+      $outputDiv.append(html);
+      $outputDiv.prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only "
+                        + "<div class='prop_attr prop_attr_green'>D</div> : derived "
+                        + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
+
+      var endRenderingTab = new Date();
+      var time = endRenderingTab.getTime() - startRenderingtab;
+      console.log("time to render tab : " + time + "ms");
+
+    },
+    
     showRQLResults : function ()
     {
         console.log("Start showRQLResults");
         
-        $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
+        var $outputDiv = $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
+        // Add 'show raw xml' link
+        var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
+        html += "<p id='rawXml'></p>";
+        $outputDiv.append(html);
+        
         var xmlContent = $(this.resultsSelector).next().text().trim();
         if (xmlContent.indexOf("--") != -1 )
         {
-            var firstLineOffset = xmlContent.indexOf("\n");
-            xmlContent = xmlContent.substr(firstLineOffset);
+          var firstLineOffset = xmlContent.indexOf("\n");
+          xmlContent = xmlContent.substr(firstLineOffset);
         }
-        xmlContent = this.sanitizeXml(xmlContent);
-        //console.log(xmlContent);
-        var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
-        var $xml = $( xmlDoc );
-        var $addItems = $xml.find("add-item");
-        var types = [];
-        
-        var datas = [];
-        var nbTypes = 0;
-        var typesNames = [];
-        $addItems.each(function () {
-            var curItemDesc = $(this).attr("item-descriptor");
-            if (types[curItemDesc] == null)
-                types[curItemDesc] = [];
-            if (typesNames[curItemDesc] == null)
-                typesNames[curItemDesc] = [];
-            if (datas[curItemDesc] == null)
-            {
-                datas[curItemDesc] = [];
-                nbTypes++;
-            }
-            var curData = [];
-            $(this).find("set-property").each(function (index) {
-                curData[$(this).attr("name")] = $(this).text();
-                var type = {};
-                type.name = $(this).attr("name");
-                if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
-                {
-                    type.rdonly = $(this).attr("rdonly");
-                    type.derived = $(this).attr("derived");
-                    type.exportable = $(this).attr("exportable");
-                    types[curItemDesc].push(type);
-                    typesNames[curItemDesc].push(type.name);
-                }
-            });
-            
-            types[curItemDesc].sort();
-            if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) 
-            {
-                var typeDescriptor = {};
-                typeDescriptor.name = "descriptor";
-                types[curItemDesc].unshift(typeDescriptor);
-                typesNames[curItemDesc].push("descriptor");
-            }
-            if ($.inArray("id", typesNames[curItemDesc]) == -1) 
-            {
-                var typeId = {};
-                typeId.name = "id";
-                types[curItemDesc].unshift(typeId);
-                typesNames[curItemDesc].push("id");
-            }
-            curData["descriptor"] = curItemDesc;
-            curData["id"] = $(this).attr("id");
-            datas[curItemDesc].push(curData);
-        });
-        
-        var startRenderingtab = new Date().getTime();
-        var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
-        html += "<p id='rawXml'></p>";
-        html += "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
-        
-        var splitValue;
-        var splitObj = this.getStoredSplitObj();
-        if (splitObj == null || splitObj.activeSplit == true)
-            splitValue = 0;
-        else
-            splitValue = parseInt(splitObj.splitValue);
-        for(var itemDesc in datas) 
-        {
-            if (splitValue == 0)
-                splitValue = datas[itemDesc].length;
-            var nbTab = 0;
-            if (datas[itemDesc].length <= splitValue)
-                html += this.renderTab(types[itemDesc], datas[itemDesc]);
-            else
-            {
-                while ((splitValue * nbTab) <  datas[itemDesc].length)
-                {
-                    var start = splitValue * nbTab;
-                    var end = start + splitValue;
-                    if (end > datas[itemDesc].length)
-                        end = datas[itemDesc].length;
-                    var subDatas = datas[itemDesc].slice(start, end);
-                    html += this.renderTab(types[itemDesc], subDatas);
-                    nbTab++;
-                }
-            }
-        }
-        $("#RQLResults").append(html);
-        $("#RQLResults").prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only "
-                                 + "<div class='prop_attr prop_attr_green'>D</div> : derived "
-                                 + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
-
-        var endRenderingTab = new Date();
-        var time = endRenderingTab.getTime() - startRenderingtab;
-        console.log("time to render tab : " + time + "ms");
+        xmlContent = this.sanitizeXml(xmlContent);  
+        this.showXMLAsTab(xmlContent, $outputDiv);
         // Move raw xml
         $(this.resultsSelector).next().appendTo("#rawXml");
         $(this.resultsSelector).remove();
         $("#rawXmlLink").click(function() {
             BDA.toggleRawXml();
         });
-        
         
         $(".copyLink").click(function() {
             BDA.showTextField($(this).attr("id").replace("link_", ""));
@@ -720,7 +727,7 @@ var BDA = {
         + " <optgroup label='Predefined queries'>"
         + "<option value='all'>query-items ALL</option>"
         + "<option value='last_10'>query-items last 10</option>"
-		+ "</optgroup>"
+    + "</optgroup>"
         + "</select>";
         
         $(this.descriptorTableSelector).attr("id", "descriptorTable");
@@ -1452,15 +1459,18 @@ var BDA = {
                           id : <input type='text' id='itemTreeId' /> &nbsp;\
                           descriptor :  <select id='itemTreeDesc'>" + this.getDescriptorOptions() + "</select>&nbsp;\
                           max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;\
+                          output format :  <select id='itemTreeOutput'><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option><option value='HTMLtab'>HTML tab</option></select>&nbsp;\
                           <button id='itemTreeBtn'>Enter</button>\
                           </div>");
+    $("#itemTree").append("<div id='itemTreeCount' />");
     $("#itemTree").append("<div id='itemTreeResult' />");
     $("#itemTreeBtn").click(function() {
       var descriptor = $("#itemTreeDesc").val();
       var id = $("#itemTreeId").val().trim();
       var maxItem = parseInt($("#itemTreeMax").val());
+      var outputType = $("#itemTreeOutput").val();
       console.log("max item : " + maxItem);
-      BDA.getItemTree(id, descriptor, maxItem);
+      BDA.getItemTree(id, descriptor, maxItem, outputType);
     });
     
   },
@@ -1472,7 +1482,13 @@ var BDA = {
     jQuery.ajax({
       url:     url,
       success: function(result) {
-        rawXmlDef = $(result).find("pre").html().replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+        rawXmlDef = $(result).find("pre")
+        .html()
+        .trim()
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace("&nbsp;", "")
+        .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
       },
       async:   false
     });
@@ -1491,7 +1507,7 @@ var BDA = {
         console.log("max Item ("+maxItem+") reached, stopping recursion");
         return;
     }
-    console.log("get sub items for : " + item.id + ", desc : " + item.desc);
+    //console.log("get sub items for : " + item.id + ", desc : " + item.desc);
     $.ajax({
       type: "POST",
       url: document.URL,
@@ -1514,7 +1530,7 @@ var BDA = {
     var $itemXml = $(xmlDoc);
     //console.log("Add item to item tree : " + rawItemXml);
     itemTree[item.id] =  rawItemXml;
-    $("#itemTreeResult").html("<p>" + nbItem + " items already retrieved</p>");
+    $("#itemTreeCount").html("<p>" + nbItem + " items already retrieved</p>");
       
     var descriptor = $itemXml.find("add-item").attr("item-descriptor");
     var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
@@ -1522,7 +1538,7 @@ var BDA = {
     while(superType != undefined)
     {
       $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
-      console.log("Add super type : " + $parentDesc.attr("name"));
+     // console.log("Add super type : " + $parentDesc.attr("name"));
       $itemDesc = $itemDesc.add($parentDesc);
       superType = $parentDesc.attr("super-type");
     }
@@ -1531,7 +1547,7 @@ var BDA = {
     .each(function(index, elm) {
         var $elm = $(elm);
         var subProperty = $elm.attr("name");
-        console.log(subProperty);
+        //console.log(subProperty);
         var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
         if ($elm.attr("repository") == undefined && subId != "")
         {
@@ -1549,7 +1565,7 @@ var BDA = {
     .each(function(index, elm) {
         var $elm = $(elm);
         var subProperty = $elm.attr("name");
-        console.log(subProperty);
+       // console.log(subProperty);
         var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
 
         if ($elm.attr("repository") == undefined && subId != "")
@@ -1582,21 +1598,48 @@ var BDA = {
     return subItems;
   },
   
-  getItemTree : function(id, descriptor, maxItem)
+  getItemTree : function(id, descriptor, maxItem, outputType)
   {
     console.log("getItemTree - start");
     var $xmlDef = BDA.getRepositoryXmlDef();
     console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
-   
+   // reset divs
+    $("#itemTreeResult").empty();
+    $("#itemTreeCount").empty();
+    
+    // get tree
     var itemTree = {};
     BDA.getSubItems({'id' : id, 'desc' : descriptor}, $xmlDef, itemTree, maxItem);
-    $("#itemTreeResult").html("<p>" + Object.keys(itemTree).length + " items retrieved</p>");
+    $("#itemTreeCount").html("<p>" + Object.keys(itemTree).length + " items retrieved</p>");
+
+    // print result
     var res = "";
-    for(id in itemTree)
-      res += itemTree[id] + "\n\n";
-    res += "";
-    $("#itemTreeResult").append("<pre />");
-    $("#itemTreeResult pre").text(res);
+    if(outputType == "addItem")
+    {
+      for(id in itemTree)
+        res += itemTree[id] + "\n\n";
+      $("#itemTreeResult").append("<pre />");
+      $("#itemTreeResult pre").text(res);
+    }
+    else if (outputType == "HTMLtab")
+    {
+       for(id in itemTree)
+         res += itemTree[id];
+       BDA.showXMLAsTab(res, $("#itemTreeResult"));
+    }
+    else if (outputType == "removeItem")
+    {
+      for(id in itemTree)
+      {
+        var xmlDoc = jQuery.parseXML(itemTree[id]);
+        var $itemXml = $(xmlDoc).find("add-item");
+        console.log($itemXml);
+        res += '<remove-item id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor") + '" />\n';
+      }
+      $("#itemTreeResult").append("<pre />");
+      $("#itemTreeResult pre").text(res);
+    }
+
   }
 };
 
