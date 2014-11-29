@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.3
+// @version 1.4
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
