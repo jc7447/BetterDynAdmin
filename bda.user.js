@@ -512,13 +512,21 @@ var BDA = {
     showXMLAsTab : function(xmlContent, $outputDiv)
     {
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
-      var $xml = $( xmlDoc );
+      
+      var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
       var types = [];
-      
       var datas = [];
       var nbTypes = 0;
       var typesNames = [];
+      
+      var log = $("<xml>" + xmlContent  + "</xml>")
+      .children()
+      .remove()
+      .end()
+      .text()
+      .trim();
+
       $addItems.each(function () {
           var curItemDesc = $(this).attr("item-descriptor");
           if (types[curItemDesc] == null)
@@ -567,7 +575,6 @@ var BDA = {
       
       var startRenderingtab = new Date().getTime();
       var html = "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
-      
       var splitValue;
       var splitObj = this.getStoredSplitObj();
       if (splitObj == null || splitObj.activeSplit == true)
@@ -603,27 +610,35 @@ var BDA = {
       var endRenderingTab = new Date();
       var time = endRenderingTab.getTime() - startRenderingtab;
       console.log("time to render tab : " + time + "ms");
-
+      return log;
+    },
+    
+    showRQLLog : function (log, error)
+    {
+      console.log("Execution log : " + log);
+      if (log != null && log.length > 0)
+      {
+        $("<h3>Execution log</h3><div id='RQLLog'></div>").insertAfter("#RQLResults");
+        var cleanLog = log.replace(/\n{2,}/g, '\n').replace(/------ /g, "").trim();
+        console.log(cleanLog);
+        $("#RQLLog").html(cleanLog);
+      }
+      if(error)
+        $("#RQLLog").addClass("error");
     },
     
     showRQLResults : function ()
     {
         console.log("Start showRQLResults");
-        
-        var $outputDiv = $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
         // Add 'show raw xml' link
         var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
         html += "<p id='rawXml'></p>";
-        $outputDiv.append(html);
+        $("#RQLResults").append(html);
         
         var xmlContent = $(this.resultsSelector).next().text().trim();
-        if (xmlContent.indexOf("--") != -1 )
-        {
-          var firstLineOffset = xmlContent.indexOf("\n");
-          xmlContent = xmlContent.substr(firstLineOffset);
-        }
-        xmlContent = this.sanitizeXml(xmlContent);  
-        this.showXMLAsTab(xmlContent, $outputDiv);
+        xmlContent = this.sanitizeXml(xmlContent);
+        var log = this.showXMLAsTab(xmlContent, $("#RQLResults"));
+        this.showRQLLog(log, false);
         // Move raw xml
         $(this.resultsSelector).next().appendTo("#rawXml");
         $(this.resultsSelector).remove();
@@ -654,8 +669,7 @@ var BDA = {
             error = $(this.errorsSelector2).text();
         }
         error = this.purgeXml(error);
-        $("<pre id='RQLErrors'></pre>").insertBefore("#RQLEditor");
-        $("#RQLErrors").text(error);
+        this.showRQLLog(error, true);
     },
     
     getStoredSplitObj : function ()
@@ -717,6 +731,11 @@ var BDA = {
     
     setupRepositoryPage : function ()
     {
+      /*
+      $("<div id='repoToolbar' />").insertAfter("h1:eq(1)");
+      $("#repoToolbar").append("<button type='button'  href='?shouldInvokeMethod=invalidateCaches'>Invalidate Caches</button>");
+      $("#repoToolbar").append("<button type='button'  href='?shouldInvokeMethod=restart'>Restart</button>");
+      */
         // Move RQL editor to the top of the page
         var actionSelect = "<select id='RQLAction'>"
         + " <optgroup label='Empty queries'>"
@@ -735,10 +754,10 @@ var BDA = {
         $(this.descriptorTableSelector).attr("id", "descriptorTable");
         
         $("<div id='RQLEditor'></div>").insertBefore("h2:first");
-        
+        $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
         if (this.hasErrors)
             this.showRqlErrors();
-        if (this.hasResults)
+        if (this.hasResults && !this.hasErrors)
             this.showRQLResults();
         
         $("form:eq(1)").appendTo("#RQLEditor");
@@ -1060,6 +1079,8 @@ var BDA = {
     if (!this.hasWebStorage)
       return ;
     if (document.URL.indexOf("?") >= 0)
+      return ;
+    if (document.URL.indexOf("#") >= 0)
       return ;
     var url = document.URL;
     var componentPath = url.substr(url.indexOf('/dyn'), url.length);
@@ -1504,7 +1525,7 @@ var BDA = {
     console.log("maxItem : " + maxItem + ", nbItem : " + nbItem);
     if(nbItem >= maxItem)
     {
-        console.log("max Item ("+maxItem+") reached, stopping recursion");
+       // console.log("max Item ("+maxItem+") reached, stopping recursion");
         return;
     }
     //console.log("get sub items for : " + item.id + ", desc : " + item.desc);
@@ -1601,6 +1622,7 @@ var BDA = {
   getItemTree : function(id, descriptor, maxItem, outputType)
   {
     console.log("getItemTree - start");
+    var startGettingTree = new Date().getTime();
     var $xmlDef = BDA.getRepositoryXmlDef();
     console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
    // reset divs
@@ -1612,6 +1634,10 @@ var BDA = {
     BDA.getSubItems({'id' : id, 'desc' : descriptor}, $xmlDef, itemTree, maxItem);
     $("#itemTreeCount").html("<p>" + Object.keys(itemTree).length + " items retrieved</p>");
 
+    var endGettingTree = new Date();
+    var time = endGettingTree.getTime() - startGettingTree;
+    console.log("time to get item tree : " + time + "ms");
+    
     // print result
     var res = "";
     if(outputType == "addItem")

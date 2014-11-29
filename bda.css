@@ -10,10 +10,21 @@ a {
 	text-decoration: none
 }
 
+
 #RQLResults {
 	margin-top: 10px;
 }
 
+#RQLLog {
+	overflow-x: scroll;
+  overflow-x: hidden;
+	max-height: 100px;
+	padding : 5px;
+	border: 1px dashed #CCC;
+	 width:800px;
+	 white-space: pre-wrap;
+	 font-family: monospace;
+}
 #rawXml {
 	display: none;
 }
@@ -140,7 +151,7 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 #RQLText .CodeMirror {
 	border: 1px solid #aaa;
 	height: 250px;
-	width: 600px;
+	width:800px;
 	cursor: text;
 }
 
@@ -166,6 +177,25 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 	padding: 2px;
 	font-size: 12px;
 }
+
+.btn-toolbar {
+  display: inline-block;
+  background-color: #f9f9f9;
+  color: #444;
+  border: 1px solid #dcdcdc;
+  padding: 5px;
+  font-size: 14px;
+  margin-right : 20px;
+}
+
+#repoToolbar
+{
+	margin-bottom: 20px;
+}
+
+.btn-toolbar:hover {
+  color : black;
+	}
 
 .red {
 	color: #880000;
@@ -217,9 +247,8 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 	vertical-align: top;
 }
 
-#RQLErrors {
+.error {
 	color: red;
-	margin-top: 20px;
 }
 
 #RQLSave {
