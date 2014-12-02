@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.4
+// @version 1.4.1
 // @require http://code.jquery.com/jquery-1.11.1.min.js
 // @require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
@@ -1498,7 +1498,8 @@ var BDA = {
   
   getRepositoryXmlDef : function()
   {
-    var url = document.URL + "?propertyName=definitionFiles";
+    var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=definitionFiles";
+      console.log(url);
     var rawXmlDef = "";
     jQuery.ajax({
       url:     url,
@@ -1694,3 +1695,4 @@ else
 {
     console.log("BDA script not starting");
 }
+
