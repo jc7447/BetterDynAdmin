@@ -10,6 +10,10 @@
 //@require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
 //@require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
 //@require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/xml.js
+//@require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
+//@require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js
+//@resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
+//@resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css
 //@resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 //@resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 //@updateUrl   https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -40,7 +44,7 @@ var BDA = {
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
     isXMLDefinitionFilePage : false,
-    xmlDefinitionMaxSize : 200000,
+    xmlDefinitionMaxSize : 2000000, // 2 MB
     queryEditor : null,
     descriptorList : null,
 
@@ -112,6 +116,10 @@ var BDA = {
       GM_addStyle(bdaCSS);
       var cmCSS = GM_getResourceText("cmCSS");
       GM_addStyle(cmCSS);
+      var hlCSS = GM_getResourceText("hlCSS");
+      GM_addStyle(hlCSS);
+      var hljsThemeCSS = GM_getResourceText("hljsThemeCSS");
+      GM_addStyle(hljsThemeCSS);
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -705,7 +713,7 @@ var BDA = {
       console.log("Xml size : " + xmlSize);
       if (xmlSize < this.xmlDefinitionMaxSize)
       {
-        this.hightlightAndIndentXml($("pre"));
+        this.highlightAndIndentXml($("pre"));
       }
       else
       {
@@ -714,31 +722,38 @@ var BDA = {
         .insertAfter($("h3:contains('Value')"));
 
         $("#xmlHiglightBtn").click(function() {
-          BDA.hightlightAndIndentXml($("pre"));
+          BDA.highlightAndIndentXml($("pre"));
         });
       }
     },
 
-    hightlightAndIndentXml : function($elm)
+    highlightAndIndentXml : function($elm)
     {
+      var dateStart = new Date().getTime();
+      console.log("Start highlightAndIndentXml");
       $elm.each(function(index) {
-        var $code = $(this).html();
-        var $unescaped = $('<div/>').html($code).text();
-        $(this).empty();
-        $("<div />").attr("id", "xmlDefinition" + index).addClass("xmlDefinition").insertBefore($(this));
-
-        var xmlDefEditor = CodeMirror(document.getElementById("xmlDefinition" + index), {
-          value: $unescaped,
-          mode: 'xml',
-          lineNumbers: false,
-          lineWrapping : false,
-          readOnly: true,
-        });
-        xmlDefEditor.operation(function() {
-          for (var i = 0; i < xmlDefEditor.lineCount(); ++i)
-            xmlDefEditor.indentLine(i, "smart");
-        });
+        var escapeXML = $(this).html();
+        var unescapeXML = $('<div/>').html(escapeXML).text();
+        // vkbeautify needs unescape XML to works
+        unescapeXML = vkbeautify.xml(unescapeXML, 2);
+        var dateIndent = new Date();
+        console.log("time to indent : " + (dateIndent.getTime() - dateStart) + "ms");
+        $(this)
+        // remove previous XML content
+        .empty()
+        // add code tags
+        .append("<code class='xml'></code>")
+        .find("code")
+        // set escape XML content, because highlight.js needs escape XML to works
+        .text(unescapeXML);
       });
+      // Run highlight.js on each XML block
+      $('pre code').each(function(i, block) {
+        hljs.highlightBlock(block);
+      });
+      var dateEnd = new Date();
+      var time = dateEnd.getTime() - dateStart;
+      console.log("time to highlight and indent : " + time + "ms");
     },
 
     setupRepositoryPage : function ()
@@ -1747,4 +1762,3 @@ else
 {
   console.log("BDA script not starting");
 }
-
