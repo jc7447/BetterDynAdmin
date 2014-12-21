@@ -8,15 +8,15 @@ Change logs
 
 ### 1.5
 
-* #20 : Integration of findclass.jhtml : see "Find Class" link beside the class path in component pages (installation instructions of findclass.jhtml below)
-* #21 : Toggle position (show more/less...) are stored
+* [#20](/../../issues/20) : Integration of findclass.jhtml : see "Find Class" link beside the class path in component pages (installation instructions of findclass.jhtml below)
+* [#21](/../../issues/21) : Toggle position (show more/less...) are stored
 * Faster highlight and indent of XML
 
 ### 1.4
 
-* #17 : Display execution log on repository page
-* #19 : New output format for the item tree tool : add-item, remove-item, HTML tabs
-* #18 : Scrollbar is always set in the right place when executing XML tags
+* [#17](/../../issues/17) : Display execution log on repository page
+* [#19](/../../issues/19) : New output format for the item tree tool : add-item, remove-item, HTML tabs
+* [#18](/../../issues/18) : Scrollbar is always set in the right place when executing XML tags
 
 ### 1.3
 
@@ -24,9 +24,9 @@ Change logs
 
 ### 1.2
 
-* #15 : Quick view of descriptor properties in repository tags editor 
-* #14 : New item descriptor table in repository page
-* #12 : Add syntax highlighting to xml definition files (pipelines, messagingManager ...)
+* [#15](/../../issues/15)  : Quick view of descriptor properties in repository tags editor 
+* [#14](/../../issues/14)  : New item descriptor table in repository page
+* [#12](/../../issues/12)  : Add syntax highlighting to xml definition files (pipelines, messagingManager ...)
 
 ### 1.1
 
