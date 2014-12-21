@@ -10,6 +10,7 @@ Change logs
 
 * [#20](/../../issues/20) : Integration of findclass.jhtml : see "Find Class" link beside the class path in component pages (installation instructions of findclass.jhtml below)
 * [#21](/../../issues/21) : Toggle position (show more/less...) are stored
+* Add syntax highlighting to xml query result
 * Faster highlight and indent of XML
 
 ### 1.4
