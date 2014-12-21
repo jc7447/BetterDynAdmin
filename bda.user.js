@@ -1,24 +1,24 @@
-//==UserScript==
-//@name         Better Dynamo Administration
-//@namespace    BetterDynAdmin
-//@include      */dyn/admin/*
-//@author       Jean-Charles Manoury
-//@grant GM_getResourceText
-//@grant GM_addStyle
-//@version 1.4.1
-//@require http://code.jquery.com/jquery-1.11.1.min.js
-//@require https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.min.js
-//@require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/codemirror.js
-//@require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/codemirror/xml.js
-//@require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
-//@require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js
-//@resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
-//@resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css
-//@resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
-//@resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
-//@updateUrl   https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
-//@downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
-//==/UserScript==
+// ==UserScript==
+// @name         Better Dynamo Administration
+// @namespace    BetterDynAdmin
+// @include      */dyn/admin/*
+// @author       Jean-Charles Manoury
+// @grant GM_getResourceText
+// @grant GM_addStyle
+// @version 1.4.1
+// @require https://code.jquery.com/jquery-1.11.1.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
+// @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
+// @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
+// @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
+// @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css
+// @updateUrl   https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// ==/UserScript==
 
 var BDA = {
     componentBrowserPageSelector : "h1:contains('Component Browser')",
@@ -44,7 +44,7 @@ var BDA = {
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
     isXMLDefinitionFilePage : false,
-    xmlDefinitionMaxSize : 2000000, // 2 MB
+    xmlDefinitionMaxSize : 100000, // 100 Ko
     queryEditor : null,
     descriptorList : null,
 
@@ -86,6 +86,7 @@ var BDA = {
       this.createBackupPanel();
       this.createBugReportPanel();
       this.removeAdminLink();
+      this.setupFindClassLink();
 
       // Collect history
       if (this.isComponentPage())
@@ -662,8 +663,28 @@ var BDA = {
       // Move raw xml
       $(this.resultsSelector).next().appendTo("#rawXml");
       $(this.resultsSelector).remove();
+     
       $("#rawXmlLink").click(function() {
         BDA.toggleRawXml();
+        var xmlSize = $(this).html().length;
+        console.log("rax XML size : " + xmlSize);
+        if (xmlSize < this.xmlDefinitionMaxSize)
+        {
+          $('#rawXml').each(function(i, block) {
+            hljs.highlightBlock(block);
+          });
+        }
+        else
+        {
+          $("<p />")
+          .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. <br> <button id='xmlHiglightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
+          .insertAfter($("#rawXmlLink"));
+          $("#xmlHiglightBtn").click(function() {
+            $('#rawXml').each(function(i, block) {
+              hljs.highlightBlock(block);
+            });
+          });
+        }
       });
 
       $(".copyLink").click(function() {
@@ -832,7 +853,7 @@ var BDA = {
       this.setupItemTreeForm();
       this.setupItemDescriptorTable();
       this.setupPropertiesTables();
-
+      
       $("#RQLAction").change(function() {
         var action = $(this).val();
         console.log("Action change : " + action);
@@ -971,6 +992,14 @@ var BDA = {
       });
     },
 
+    setupFindClassLink : function()
+    {
+      var $classLink = $("h1:eq(1)").next();
+      var className = $classLink.text();
+      $("<span style='margin-left : 25px'><a href='/dyn/admin/atg/dynamo/admin/en/findclass.jhtml?className="+className+"&debug=true'>Find Class</a></span>")
+      .insertAfter($classLink);
+    },
+    
     setupPropertiesTables : function()
     {
       if ($("a[name=showProperties]").size() > 0)
