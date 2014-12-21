@@ -6,6 +6,12 @@ Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Adm
 Change logs
 ------
 
+### 1.5
+
+* #20 : Integration of findclass.jhtml : see "Find Class" link beside the class path in component pages (installation instructions of findclass.jhtml below)
+* #21 : Toggle position (show more/less...) are stored
+* Faster highlight and indent of XML
+
 ### 1.4
 
 * #17 : Display execution log on repository page
