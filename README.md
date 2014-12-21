@@ -30,9 +30,9 @@ Change logs
 
 ### 1.1
 
-* #11  : Syntax coloring in repository definition file page
-* #10 : Syntax coloring in xml tags editor 
-* #9 : Handle multi id in the editor id field 
+* [#11](/../../issues/11)  : Syntax coloring in repository definition file page
+* [#10](/../../issues/10) : Syntax coloring in xml tags editor 
+* [#09](/../../issues/09) : Handle multi id in the editor id field 
 
 Main features
 ------
