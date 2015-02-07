@@ -107,7 +107,9 @@ var BDA = {
       if ($componentBrowserH1.size() > 0)
       {
         $componentBrowserH1.prev().remove();
-        $(this.logoSelector).wrap("<a href='/dyn/admin' />");
+        $(this.logoSelector).click(function (){
+          window.location.href = "/dyn/admin";
+        });
       }
     },
 
@@ -667,7 +669,7 @@ var BDA = {
       $("#rawXmlLink").click(function() {
         BDA.toggleRawXml();
         var xmlSize = $(this).html().length;
-        console.log("rax XML size : " + xmlSize);
+        console.log("raw XML size : " + xmlSize);
         if (xmlSize < this.xmlDefinitionMaxSize)
         {
           $('#rawXml').each(function(i, block) {
@@ -676,14 +678,18 @@ var BDA = {
         }
         else
         {
-          $("<p />")
-          .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. <br> <button id='xmlHiglightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
-          .insertAfter($("#rawXmlLink"));
-          $("#xmlHiglightBtn").click(function() {
-            $('#rawXml').each(function(i, block) {
-              hljs.highlightBlock(block);
+          // Check if button already exists
+          if ($("#xmlHighlight").size() == 0)
+          {
+            $("<p id='xmlHighlight' />")
+            .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. <br> <button id='xmlHighlightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
+            .prependTo($("#rawXml"));
+            $("#xmlHighlightBtn").click(function() {
+              $('#rawXml pre').each(function(i, block) {
+                hljs.highlightBlock(block);
+              });
             });
-          });
+          }
         }
       });
 
@@ -739,10 +745,10 @@ var BDA = {
       else
       {
         $("<p />")
-        .html("The definition file is big, to avoid slowing down the page, XML highlight and indentation have been disabled. <br> <button id='xmlHiglightBtn'>Highlight and indent now</button> <small>(takes few seconds)</small>")
+        .html("The definition file is big, to avoid slowing down the page, XML highlight and indentation have been disabled. <br> <button id='xmlHighlightBtn'>Highlight and indent now</button> <small>(takes few seconds)</small>")
         .insertAfter($("h3:contains('Value')"));
 
-        $("#xmlHiglightBtn").click(function() {
+        $("#xmlHighlightBtn").click(function() {
           BDA.highlightAndIndentXml($("pre"));
         });
       }
@@ -994,7 +1000,7 @@ var BDA = {
 
     setupFindClassLink : function()
     {
-      var classLink = null;
+      var $classLink = null;
       if (this.isOldDynamo)
         $classLink = $("h1:eq(0)").next();
       else

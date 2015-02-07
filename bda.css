@@ -27,6 +27,8 @@ a {
 }
 #rawXml {
 	display: none;
+	margin : 0px;
+	padding : 0px;
 }
 
 .dataTable {
@@ -429,4 +431,20 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 .del-cross {
 	font-weight: bold;
 	font-size: 13px;
+}
+
+#oracleATGbrand
+{
+	width: 120px;
+	cursor: pointer;
+}
+
+#xmlHighlight
+{
+	margin-bottom: 0px;
+}
+
+#rawXml pre
+{
+	margin : 0;
 }
