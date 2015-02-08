@@ -448,3 +448,29 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 {
 	margin : 0;
 }
+
+#sqltext
+{
+	display: block;
+}
+#curDataSourceName
+{
+	font-weight: bold;
+}
+
+#sqlResult {
+	border-collapse: collapse;
+	width: 100%;
+	border : 1px solid #ccc;
+}
+
+#sqlResult td, #sqlResult th {
+  text-align: center;
+  border-right: 1px solid #ccc;
+  background: none;
+}
+
+#sqlResult tbody tr:nth-child(odd) {
+  background-color: #F0F0F6;
+}
+

@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.5
+// @version 1.5.5
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -44,9 +44,12 @@ var BDA = {
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
     isXMLDefinitionFilePage : false,
+    isExecuteQueryPage : false,
     xmlDefinitionMaxSize : 100000, // 100 Ko
     queryEditor : null,
     descriptorList : null,
+    connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
+    dataSourceDir : "/atg/dynamo/service/jdbc/",
 
     init : function(){
       var start = new Date().getTime();
@@ -58,6 +61,7 @@ var BDA = {
       this.isPerfMonitorPage = this.isPerfMonitorPage();
       this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
       this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePage();
+      this.isExecuteQueryPage = this.isExecuteQueryPage()
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo)
         this.logoSelector = this.oldDynamoSelector;
@@ -80,7 +84,10 @@ var BDA = {
       // Setup performance monitor time page
       if (this.isPerfMonitorTimePage)
         this.setupPerfMonitorTimePage();
-
+      // Setup JDBC browser execute query
+      if (this.isExecuteQueryPage)
+        this.setupExecuteQueryPage();
+      
       this.showComponentHsitory();
       this.createToolbar();
       this.createBackupPanel();
@@ -136,6 +143,9 @@ var BDA = {
       return $(location).attr('pathname').indexOf("performance-data-time.jhtml") != -1;
     },
 
+    isExecuteQueryPage : function(){
+      return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
+    },
     isOldDynamo : function ()
     {
       return $(this.oldDynamoSelector).size() > 0; 
@@ -966,7 +976,7 @@ var BDA = {
       var toggleState = 1;
       if(cssState == "none")
         toggleState = 0;
-      toggleObj = BDA.getToggleObj();
+      var toggleObj = BDA.getToggleObj();
       toggleObj[toggle] = toggleState;
       localStorage.setItem('toggleObj', JSON.stringify(toggleObj));
     },
@@ -1572,6 +1582,68 @@ var BDA = {
       $tabSelector.tablesorter(); 
     },
 
+    setupExecuteQueryPage : function()
+    {
+      $("<div  id='switchDataSource'/>")
+      .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + this.getCurrentDataSource() + " </span></p>")
+      .append("<p>Switch data source to : <select id='newDataSource'>" + this.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter</button></p>")
+      .insertAfter($("h1:contains('Execute Query')"));
+      $("textarea").prop("id", "sqltext");
+      if ($("table").size() > 0)
+        $("table").prop("id", "sqlResult");
+      
+      $("#switchDataSourceBtn").click(function(){
+        var selectedDataSource = $("#newDataSource").val();
+        $.ajax({
+          type: "POST",
+          url : "/dyn/admin/nucleus" + BDA.connectionPoolPointerComp,
+          data : {"newValue" : BDA.dataSourceDir + selectedDataSource, "propertyName" : "connectionPool"},
+          async : false
+        });
+        window.location.reload();
+      });
+    },
+    
+    getAvailableDataSource : function()
+    {
+      var datasources = [];
+      var url = "/dyn/admin/nucleus" + this.dataSourceDir; 
+      $.ajax({
+        url : url,
+        success : function(data) {
+          $(data)
+          .find("h3 a")
+          .each(function(index, value) {
+            var strValue = $(value).text();
+            if (strValue != null && strValue != "DataSourceInfoCache" && strValue.indexOf("DataSource") != -1)
+              datasources += "<option>" + strValue + "</option>";
+          });
+        },
+        async : false
+      });
+      return datasources;
+    },
+    
+    getCurrentDataSource : function()
+    {
+      var datasource;
+      var url = "/dyn/admin/nucleus" + this.connectionPoolPointerComp; 
+      $.ajax({
+         "url" : url, 
+         "success" : function(data) {
+          datasource = $(data)
+          .find("a:contains('connectionPoolName')")
+          .parent()
+          .next()
+          .find("span")
+          .text();
+          console.log(datasource);
+        },
+        "async" : false
+      });
+      return datasource;
+    },
+    
     //--- Item Tree functions ------------------------------------------------------------------------
 
     setupItemTreeForm : function()
@@ -1665,7 +1737,7 @@ var BDA = {
       var superType = $itemDesc.attr("super-type");
       while(superType != undefined)
       {
-        $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
+        var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
         // console.log("Add super type : " + $parentDesc.attr("name"));
         $itemDesc = $itemDesc.add($parentDesc);
         superType = $parentDesc.attr("super-type");
