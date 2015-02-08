@@ -920,7 +920,8 @@ var BDA = {
       
       // Auto hide Repository View
       $(this.repositoryViewSelector).append(repositoryView);
-      if (toggleObj["showMoreRepositoryView"] != 1)
+
+      if (toggleObj.hasOwnProperty("showMoreRepositoryView") && toggleObj["showMoreRepositoryView"] == 0)
         this.toggleRepositoryView();
       $("#showMoreRepositoryView").click(function (){
         BDA.toggleRepositoryView();
