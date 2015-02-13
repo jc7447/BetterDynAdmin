@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.5.5
+// @version 1.5.6
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -519,6 +519,9 @@ var BDA = {
           var propValue = datas[a][curProp.name];
           if (propValue != null)
           {
+            // Remove "_"
+            if(curProp.name == "descriptor")
+              propValue = propValue.substr(1);   
             if (propValue.length > 25)
             {
               var base_id = curProp.name + "_" + datas[a]["id"];
@@ -545,13 +548,14 @@ var BDA = {
     showXMLAsTab : function(xmlContent, $outputDiv)
     {
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
-
+console.log(xmlContent);
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
-      var types = [];
+       console.log($addItems.size());
+      var types = {};
       var datas = [];
       var nbTypes = 0;
-      var typesNames = [];
+      var typesNames = {};
 
       var log = $("<xml>" + xmlContent  + "</xml>")
       .children()
@@ -561,7 +565,7 @@ var BDA = {
       .trim();
 
       $addItems.each(function () {
-        var curItemDesc = $(this).attr("item-descriptor");
+        var curItemDesc = "_" + $(this).attr("item-descriptor");
         if (types[curItemDesc] == null)
           types[curItemDesc] = [];
         if (typesNames[curItemDesc] == null)
@@ -572,20 +576,25 @@ var BDA = {
           nbTypes++;
         }
         var curData = [];
+        console.log(this);
         $(this).find("set-property").each(function (index) {
-          curData[$(this).attr("name")] = $(this).text();
+          console.log(this);
+          var $curProp = $(this)
+          curData[$curProp.attr("name")] = $curProp.text();
           var type = {};
-          type.name = $(this).attr("name");
+          type.name = $curProp.attr("name");
+            console.log("type.name :" + type.name + " curItemDesc:" + curItemDesc);
+            console.log(typesNames[curItemDesc]);
           if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
           {
-            type.rdonly = $(this).attr("rdonly");
-            type.derived = $(this).attr("derived");
-            type.exportable = $(this).attr("exportable");
+            type.rdonly = $curProp.attr("rdonly");
+            type.derived = $curProp.attr("derived");
+            type.exportable = $curProp.attr("exportable");
             types[curItemDesc].push(type);
+              console.log(typesNames[curItemDesc]);
             typesNames[curItemDesc].push(type.name);
           }
         });
-
         types[curItemDesc].sort();
         if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) 
         {
@@ -677,9 +686,10 @@ var BDA = {
      
       $("#rawXmlLink").click(function() {
         BDA.toggleRawXml();
-        var xmlSize = $(this).html().length;
+        var xmlSize = $("#rawXml pre").html().length;
         console.log("raw XML size : " + xmlSize);
-        if (xmlSize < this.xmlDefinitionMaxSize)
+        console.log("XML max size : " + BDA.xmlDefinitionMaxSize);  
+        if (xmlSize < BDA.xmlDefinitionMaxSize)
         {
           $('#rawXml').each(function(i, block) {
             hljs.highlightBlock(block);
