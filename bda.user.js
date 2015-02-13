@@ -605,7 +605,6 @@ var BDA = {
         curData["id"] = $(this).attr("id");
         datas[curItemDesc].push(curData);
       });
-
       var startRenderingtab = new Date().getTime();
       var html = "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
@@ -1874,3 +1873,4 @@ else
 {
   console.log("BDA script not starting");
 }
+
