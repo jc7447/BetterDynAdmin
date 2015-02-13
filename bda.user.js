@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.5.6
+// @version 1.5.7
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -32,7 +32,7 @@ var BDA = {
     errorsSelector1 : "p:contains('Errors:')",
     errorsSelector2 : "code:contains('*** Query:')",
     logoSelector : "div#oracleATGbrand",
-    oldDynamoSelector : "img[alt='Dynamo Component Browser'],img[alt='Dynamo Configuration']",
+    oldDynamoAltSelector : ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler", "Dynamo Configuration", "JDBC Browser"],
     arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
     arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
     trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
@@ -50,6 +50,7 @@ var BDA = {
     descriptorList : null,
     connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
     dataSourceDir : "/atg/dynamo/service/jdbc/",
+    dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
 
     init : function(){
       var start = new Date().getTime();
@@ -63,8 +64,11 @@ var BDA = {
       this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePage();
       this.isExecuteQueryPage = this.isExecuteQueryPage()
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
-      if (this.isOldDynamo)
+      if (this.isOldDynamo) {
         this.logoSelector = this.oldDynamoSelector;
+        this.fixCss();
+      }
+       
       console.log("Path : " + $(location).attr('pathname'));
       console.log("isComponentPage : " + this.isComponentPage() + " IsOldDynamo : " + this.isOldDynamo);
       console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
@@ -92,13 +96,14 @@ var BDA = {
       this.createToolbar();
       this.createBackupPanel();
       this.createBugReportPanel();
-      this.removeAdminLink();
-      this.setupFindClassLink();
 
-      // Collect history
       if (this.isComponentPage())
+      {
+        // Setup find class link
+        this.setupFindClassLink();
+        // Collect history
         this.collectHistory();
-
+      }
       // Monitor execution time
       var endTime = new Date();
       var time = endTime.getTime() - start;
@@ -107,7 +112,7 @@ var BDA = {
       else
         console.log("BDA takes : " + time + "ms");
     },
-
+  
     removeAdminLink : function()
     {
       var $componentBrowserH1 = $(this.componentBrowserPageSelector);
@@ -143,14 +148,39 @@ var BDA = {
       return $(location).attr('pathname').indexOf("performance-data-time.jhtml") != -1;
     },
 
-    isExecuteQueryPage : function(){
+    isExecuteQueryPage : function()
+    {
       return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
     },
+  
     isOldDynamo : function ()
     {
-      return $(this.oldDynamoSelector).size() > 0; 
+      for(var els = document.getElementsByTagName ('img'), i = els.length; i--;)
+      {
+        if (BDA.oldDynamoAltSelector.indexOf(els[i].alt) != -1)
+          return true;
+      }
+      return false;
     },
 
+    // Load default dyn admin CSS if needed
+    fixCss : function()
+    {
+       console.log("fixCss");
+      if ($("link[href='" + this.dynAdminCssUri + "']").size() == 0)
+      {
+        console.log("Default dyn admin CSS is missing : " + this.dynAdminCssUri + ". Add it now.");
+        var $link = $("<link />")
+        .prop("href", this.dynAdminCssUri)
+        .prop("type", "text/css")
+        .prop("rel", "stylesheet");
+        if($('head').size > 0)
+          $('head').append($link);
+        else
+          $('body').append($link);
+      } 
+    },
+    
     hasResults : function (hasErrors)
     {
       return $(this.resultsSelector).size() > 0;
@@ -548,10 +578,8 @@ var BDA = {
     showXMLAsTab : function(xmlContent, $outputDiv)
     {
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
-console.log(xmlContent);
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
-       console.log($addItems.size());
       var types = {};
       var datas = [];
       var nbTypes = 0;
@@ -1857,18 +1885,7 @@ console.log(xmlContent);
     }
 };
 
-function isOldDynAdmin()
-{
-  var alts = ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler", "Dynamo Configuration"];
-  for(var els = document.getElementsByTagName ('img'), i = els.length; i--;)
-  {
-    if (alts.indexOf(els[i].alt) != -1)
-      return true;
-  }
-  return false;
-}
-
-if (document.getElementById("oracleATGbrand") != null || isOldDynAdmin())
+if (document.getElementById("oracleATGbrand") != null || BDA.isOldDynamo())
 {
   try 
   {
