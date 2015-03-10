@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.5.7
+// @version 1.5.8
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -65,7 +65,14 @@ var BDA = {
       this.isExecuteQueryPage = this.isExecuteQueryPage()
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
-        this.logoSelector = this.oldDynamoSelector;
+        this.logoSelector = "";
+	    for (i = 0; i != this.oldDynamoAltSelector.length; i++)
+        {
+          if(i != 0)
+           this.logoSelector += ",";
+          this.logoSelector += "img[alt='" + this.oldDynamoAltSelector[i] + "']";
+        }
+        console.log("OldDynamo logoSelector :" + this.logoSelector);
         this.fixCss();
       }
        
