@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.5.8
+// @version 1.5.9
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -618,15 +618,12 @@ var BDA = {
           curData[$curProp.attr("name")] = $curProp.text();
           var type = {};
           type.name = $curProp.attr("name");
-            console.log("type.name :" + type.name + " curItemDesc:" + curItemDesc);
-            console.log(typesNames[curItemDesc]);
           if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
           {
             type.rdonly = $curProp.attr("rdonly");
             type.derived = $curProp.attr("derived");
             type.exportable = $curProp.attr("exportable");
             types[curItemDesc].push(type);
-              console.log(typesNames[curItemDesc]);
             typesNames[curItemDesc].push(type.name);
           }
         });
