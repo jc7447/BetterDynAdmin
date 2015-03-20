@@ -611,9 +611,9 @@ var BDA = {
           nbTypes++;
         }
         var curData = [];
-        console.log(this);
+
         $(this).find("set-property").each(function (index) {
-          console.log(this);
+
           var $curProp = $(this)
           curData[$curProp.attr("name")] = $curProp.text();
           var type = {};
