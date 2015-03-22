@@ -3,13 +3,32 @@ Better Dynamo Administration
 
 Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Administration experience. It takes 3 minutes to install and will help you to save plenty of time.
 
+Installation
+---
+
+### Firefox
+
+ * Install Grease Monkey extension : https://addons.mozilla.org/fr/firefox/addon/greasemonkey/
+ * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+ * Accept installation 
+ * Enjoy :)
+ 
+If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of Greasemonkey.
+
+### Google Chrome
+
+* Install Tampermonkey extension : https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
+* Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+* Accept installation 
+* Enjoy :)
+
 Change logs
 ------
 
 ### 1.6
 
 * [#24](/../../issues/24) : JDBC browser : new datasource selector to easily switch datasource
-* [#22](/../../issues/22) : Repository page : add ability to output with "repository='...'" in the get item tool
+* [#22](/../../issues/22) : Repository page : add ability to output with "repository='...'" in the 'get item tree' tool
 * Repository page : new option to show full content of every properties values in HTML result tabs 
 * Several bug fix
 
@@ -90,25 +109,6 @@ Main features
 * Backup and restore capabilities of toolbar and editor data
 
 * Lot more inconming, check the milestone !
-
-Installation
----
-
-### Firefox
-
- * Install Grease Monkey extension : https://addons.mozilla.org/fr/firefox/addon/greasemonkey/
- * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
- * Accept installation 
- * Enjoy :)
- 
-If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of Greasemonkey.
-
-### Google Chrome
-
-* Install Tampermonkey extension : https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
-* Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
-* Accept installation 
-* Enjoy :)
 
 
 Disclaimer
