@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.5.9
+// @version 1.6
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -173,7 +173,6 @@ var BDA = {
     // Load default dyn admin CSS if needed
     fixCss : function()
     {
-       console.log("fixCss");
       if ($("link[href='" + this.dynAdminCssUri + "']").size() == 0)
       {
         console.log("Default dyn admin CSS is missing : " + this.dynAdminCssUri + ". Add it now.");
@@ -483,10 +482,16 @@ var BDA = {
 
     showTextField : function (baseId)
     {
+      baseId = this.sanitizeSelector(baseId);
       $("#" + baseId).toggle();
       $("#text_" + baseId).toggle();
     },
-
+    
+    // Escape '.', ':' in a jquery selector
+    sanitizeSelector : function( id ) {
+      return id.replace( /(:|\.|\[|\]|,)/g, "\\$1" );
+    },
+    
     endsWith : function (str, suffix) 
     {
       return str.indexOf(suffix, str.length - suffix.length) !== -1;
@@ -564,10 +569,10 @@ var BDA = {
               var base_id = curProp.name + "_" + datas[a]["id"];
               var link_id = "link_" + base_id;
               var field_id = "text_" + base_id;
-              propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' ><span id='"+base_id+"'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
+              propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' >"
+              + "<span id='"+base_id+"'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
               + "</span><textarea class='copyField' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
             }
-            // 
             html += "<td>" + propValue + "</td>";
           }
           else
@@ -647,7 +652,7 @@ var BDA = {
         datas[curItemDesc].push(curData);
       });
       var startRenderingtab = new Date().getTime();
-      var html = "<p>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
+      var html = "<p class='nbResults'>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
       var splitObj = this.getStoredSplitObj();
       if (splitObj == null || splitObj.activeSplit == true)
@@ -680,6 +685,20 @@ var BDA = {
           + "<div class='prop_attr prop_attr_green'>D</div> : derived "
           + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
 
+      if ($(".copyField").size() > 0)
+      {
+        // reuse $outputDiv in case we have several results set on the page (RQL query + get item tool)
+        $outputDiv.find("p.nbResults").append("<br><a href='javascript:void(0)' class='showFullTextLink'>Show full text</a>");
+        $outputDiv.find(".showFullTextLink").click(function() {
+          var dateStart = new Date().getTime();
+          console.log("Start showFullText");
+          $(".copyField").each(function() {
+            $(this).parent().html($(this).html());
+          });
+          var dateFullText = new Date();
+          console.log("time to show full text : " + (dateFullText.getTime() - dateStart) + "ms");
+        });
+      }
       var endRenderingTab = new Date();
       var time = endRenderingTab.getTime() - startRenderingtab;
       console.log("time to render tab : " + time + "ms");
@@ -693,7 +712,6 @@ var BDA = {
       {
         $("<h3>Execution log</h3><div id='RQLLog'></div>").insertAfter("#RQLResults");
         var cleanLog = log.replace(/\n{2,}/g, '\n').replace(/------ /g, "").trim();
-        console.log(cleanLog);
         $("#RQLLog").html(cleanLog);
       }
       if(error)
@@ -704,7 +722,9 @@ var BDA = {
     {
       console.log("Start showRQLResults");
       // Add 'show raw xml' link
-      var html = "<p><a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a></p>\n";
+      var html = "<p>"
+                + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>"
+                + "</p>\n";
       html += "<p id='rawXml'></p>";
       $("#RQLResults").append(html);
 
@@ -715,7 +735,7 @@ var BDA = {
       // Move raw xml
       $(this.resultsSelector).next().appendTo("#rawXml");
       $(this.resultsSelector).remove();
-     
+      
       $("#rawXmlLink").click(function() {
         BDA.toggleRawXml();
         var xmlSize = $("#rawXml pre").html().length;
@@ -1025,10 +1045,8 @@ var BDA = {
 
     showItemPropertyList : function(item)
     {
-      console.log("showItemPropertyList");
       var componentPath = window.location.pathname;
       var url = componentPath + "?action=seetmpl&itemdesc=" + item + "#showProperties";
-      console.log(url);
       $.get(url, function(data) {
         // console.log(data);
         var $pTable = $(data).find("a[name='showProperties']").next();
@@ -1042,7 +1060,6 @@ var BDA = {
         .css("display", "inline-block");
 
         $("#showStoredQueries").click(function() {
-          console.log("show stored queries");
           $("#descProperties").css("display", "none");
           $("#storedQueries").css("display", "inline-block");
         });
@@ -1444,6 +1461,11 @@ var BDA = {
       return shortName;
     },
 
+    getCurrentComponentPath : function()
+    {
+      return document.location.pathname.replace("/dyn/admin/nucleus", "");
+    },
+    
     getBorderColor : function (colors)
     {
       var borderColor = [];
@@ -1583,8 +1605,7 @@ var BDA = {
 
       if (this.isComponentPage())
       {
-        var url = document.URL;
-        var componentPath = url.substr(url.indexOf('/dyn'), url.length);
+        var componentPath = document.location.pathname;
         if (!this.isComponentAlreadyStored(componentPath))
         {
           $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
@@ -1699,8 +1720,9 @@ var BDA = {
       $("#itemTree").append("<div id='itemTreeForm'>\
           id : <input type='text' id='itemTreeId' /> &nbsp;\
           descriptor :  <select id='itemTreeDesc'>" + this.getDescriptorOptions() + "</select>&nbsp;\
-          max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;\
-          output format :  <select id='itemTreeOutput'><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option><option value='HTMLtab'>HTML tab</option></select>&nbsp;\
+          max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>\
+          output format :  <select id='itemTreeOutput'><option value='HTMLtab'>HTML tab</option><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option></select>&nbsp;\
+          <input type='checkbox' id='printRepositoryAttr' />Print attribute : <pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>\
           <button id='itemTreeBtn'>Enter</button>\
       </div>");
       $("#itemTree").append("<div id='itemTreeCount' />");
@@ -1710,8 +1732,9 @@ var BDA = {
         var id = $("#itemTreeId").val().trim();
         var maxItem = parseInt($("#itemTreeMax").val());
         var outputType = $("#itemTreeOutput").val();
+        var printRepoAttr = $("#printRepositoryAttr").is(':checked');
         console.log("max item : " + maxItem);
-        BDA.getItemTree(id, descriptor, maxItem, outputType);
+        BDA.getItemTree(id, descriptor, maxItem, outputType, printRepoAttr);
       });
 
     },
@@ -1840,11 +1863,12 @@ var BDA = {
       return subItems;
     },
 
-    getItemTree : function(id, descriptor, maxItem, outputType)
+    getItemTree : function(id, descriptor, maxItem, outputType, printRepoAttr)
     {
       console.log("getItemTree - start");
       var startGettingTree = new Date().getTime();
       var $xmlDef = BDA.getRepositoryXmlDef();
+
       console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
       // reset divs
       $("#itemTreeResult").empty();
@@ -1864,7 +1888,18 @@ var BDA = {
       if(outputType == "addItem")
       {
         for(id in itemTree)
-          res += itemTree[id] + "\n\n";
+        {
+          if (printRepoAttr)
+          {
+            var xmlDoc = jQuery.parseXML(itemTree[id]);
+            var $itemXml = $(xmlDoc).find("add-item");
+            $itemXml.attr("repository", BDA.getCurrentComponentPath());
+            res += $itemXml[0].outerHTML;
+          }
+          else
+            res += itemTree[id];
+          res += "\n\n";
+        }
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
       }
@@ -1880,7 +1915,10 @@ var BDA = {
         {
           var xmlDoc = jQuery.parseXML(itemTree[id]);
           var $itemXml = $(xmlDoc).find("add-item");
-          res += '<remove-item id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor") + '" />\n';
+          res += '<remove-item id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor");
+          if (printRepoAttr)
+            res += " repository='"+ BDA.getCurrentComponentPath() +"' ";
+          res += '/>\n';
         }
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
