@@ -6,6 +6,13 @@ Better Dynamo Administration (BDA) is a user script that improves ATG Dynamo Adm
 Change logs
 ------
 
+### 1.6
+
+* [#24](/../../issues/24) : JDBC browser : new datasource selector to easily switch datasource
+* [#22](/../../issues/22) : Repository page : add ability to output with "repository='...'" in the get item tool
+* Repository page : new option to show full content of every properties values in HTML result tabs 
+* Several bug fix
+
 ### 1.5
 
 * [#20](/../../issues/20) : Integration of findclass.jhtml : see "Find Class" link beside the class path in component pages (installation instructions of findclass.jhtml below)
