@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.6
+// @version 1.6.1
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -66,7 +66,7 @@ var BDA = {
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
         this.logoSelector = "";
-	    for (i = 0; i != this.oldDynamoAltSelector.length; i++)
+	    for (var i = 0; i != this.oldDynamoAltSelector.length; i++)
         {
           if(i != 0)
            this.logoSelector += ",";
@@ -697,6 +697,7 @@ var BDA = {
           });
           var dateFullText = new Date();
           console.log("time to show full text : " + (dateFullText.getTime() - dateStart) + "ms");
+          $(this).hide();
         });
       }
       var endRenderingTab = new Date();
@@ -958,7 +959,12 @@ var BDA = {
 
       $("#RQLAdd").click(function() {
         var query = BDA.getRQLQuery();
-        BDA.setQueryEditorValue(BDA.getQueryEditorValue() + query);
+        var editor = BDA.queryEditor;
+        var editorCursor = editor.getCursor();
+        if(editorCursor.ch != 0)
+          editor.setCursor(editor.getCursor().line + 1, 0);
+          
+        BDA.queryEditor.replaceSelection(query);
         BDA.showItemPropertyList($("#itemDescriptor").val());
       });
 
@@ -1045,10 +1051,10 @@ var BDA = {
 
     showItemPropertyList : function(item)
     {
+      console.log("showItemPropertyList");
       var componentPath = window.location.pathname;
       var url = componentPath + "?action=seetmpl&itemdesc=" + item + "#showProperties";
       $.get(url, function(data) {
-        // console.log(data);
         var $pTable = $(data).find("a[name='showProperties']").next();
         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
         $("#storedQueries").css("display", "none");
@@ -1060,6 +1066,7 @@ var BDA = {
         .css("display", "inline-block");
 
         $("#showStoredQueries").click(function() {
+          console.log("show stored queries");
           $("#descProperties").css("display", "none");
           $("#storedQueries").css("display", "inline-block");
         });
