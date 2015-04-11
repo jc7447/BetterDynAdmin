@@ -5,19 +5,20 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.6.1
+// @version 1.6.2
 // @require https://code.jquery.com/jquery-1.11.1.min.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.18.3/js/jquery.tablesorter.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
+// @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
 // @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css
-// @updateUrl   https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
-// @downloadUrl  https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
 var BDA = {
@@ -106,6 +107,8 @@ var BDA = {
 
       if (this.isComponentPage())
       {
+        // Change page title
+        this.setupPageTitle();
         // Setup find class link
         this.setupFindClassLink();
         // Collect history
@@ -142,6 +145,8 @@ var BDA = {
       GM_addStyle(hlCSS);
       var hljsThemeCSS = GM_getResourceText("hljsThemeCSS");
       GM_addStyle(hljsThemeCSS);
+      var tablesorterCSS = GM_getResourceText("tablesorterCSS");
+      GM_addStyle(tablesorterCSS);
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -1074,6 +1079,11 @@ var BDA = {
       });
     },
 
+    setupPageTitle : function()
+    {
+      $("title").text(this.getComponentNameFromPath(this.getCurrentComponentPath()));
+    },
+    
     setupFindClassLink : function()
     {
       var $classLink = null;
@@ -1447,8 +1457,10 @@ var BDA = {
 
     getComponentNameFromPath : function (component)
     {
+      // Strip last slash if exists
       if (component[component.length - 1] == '/')
         component = component.substr(0, (component.length - 1));
+      // String double slash
       component = component.replace("//", "/");
 
       var tab = component.split("/");
@@ -1649,7 +1661,13 @@ var BDA = {
         var $this = $(this);
         $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
       });
-      $tabSelector.tablesorter(); 
+      $tabSelector.tablesorter({
+                                'theme' : 'blue',  
+                                'widgets' : ["zebra"],
+                                'widgetOptions' : {
+                                  zebra : [ "normal-row", "alt-row" ]
+                                }
+      }); 
     },
 
     setupExecuteQueryPage : function()
