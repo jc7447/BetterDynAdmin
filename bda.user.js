@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.6.2
+// @version 1.6.3
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -519,7 +519,7 @@ var BDA = {
     {
       var start = new Date().getTime();
 
-      var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]+?\]\]\>\<\/set\-property\>).*-->/ig;
+      var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]*?\]\]\>\<\/set\-property\>).*-->/ig;
 
       var xmlStr =  xmlContent.replace(regexp, function(str, p1, p2, offset, s){
         var attributes = "set-property ";
