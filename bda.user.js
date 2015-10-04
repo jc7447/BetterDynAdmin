@@ -5,18 +5,18 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.6.3
+// @version 1.7
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
-// @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css
+// @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/default.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -45,6 +45,7 @@ var BDA = {
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
     isXMLDefinitionFilePage : false,
+    isServiceConfigurationPage : false,
     isExecuteQueryPage : false,
     xmlDefinitionMaxSize : 100000, // 100 Ko
     queryEditor : null,
@@ -63,11 +64,12 @@ var BDA = {
       this.isPerfMonitorPage = this.isPerfMonitorPage();
       this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
       this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePage();
+      this.isServiceConfigurationPage = this.isServiceConfigurationPage();
       this.isExecuteQueryPage = this.isExecuteQueryPage()
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
         this.logoSelector = "";
-	    for (var i = 0; i != this.oldDynamoAltSelector.length; i++)
+      for (var i = 0; i != this.oldDynamoAltSelector.length; i++)
         {
           if(i != 0)
            this.logoSelector += ",";
@@ -77,7 +79,7 @@ var BDA = {
         this.fixCss();
       }
        
-      console.log("Path : " + $(location).attr('pathname'));
+      console.log("Path : " + this.purgeSlashes($(location).attr('pathname')));
       console.log("isComponentPage : " + this.isComponentPage() + " IsOldDynamo : " + this.isOldDynamo);
       console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
 
@@ -87,9 +89,9 @@ var BDA = {
         this.setupRepositoryPage();
       else if (this.isXMLDefinitionFilePage)
         this.setupRepositoryDefinitionFilePage();
-      else
-        console.log("This is not a repository page");
-
+      else if (this.isServiceConfigurationPage)
+        this.setupServiceConfigurationPage();
+      
       // Setup performance monitor
       if (this.isPerfMonitorPage)
         this.setupPerfMonitorPage();
@@ -147,6 +149,9 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
+     // var jointCSS = GM_getResourceText("jointCSS");
+     // GM_addStyle(jointCSS);
+      
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -218,6 +223,11 @@ var BDA = {
     {
       return $("td:contains('class atg.xml.XMLFile')").size() > 0
       || $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
+    },
+    
+    isServiceConfigurationPage : function()
+    {
+      return location.search.indexOf("propertyName=serviceConfiguration") != -1;
     },
 
     isComponentPage : function ()
@@ -817,7 +827,9 @@ var BDA = {
       console.log("Xml size : " + xmlSize);
       if (xmlSize < this.xmlDefinitionMaxSize)
       {
+       // this.setupFlowchart($("pre"));
         this.highlightAndIndentXml($("pre"));
+        
       }
       else
       {
@@ -829,6 +841,93 @@ var BDA = {
           BDA.highlightAndIndentXml($("pre"));
         });
       }
+    },
+    
+    propertiesDef : function(hljs) {
+      console.log("propertiesDef");
+        return {
+          case_insensitive: true,
+          contains: [
+             {
+               className: 'comment',
+               begin: '#', end: '$'
+             },
+             {
+               className: 'setting',
+               begin: '^[a-z0-9\\[\\]_-]+[ \\t]*=[ \\t]*', end: '$',
+               contains: [
+                 {
+                   className: 'value',
+                   endsWithParent: true,
+                   keywords: 'on off true false yes no',
+                   contains: [hljs.QUOTE_STRING_MODE, hljs.NUMBER_MODE],
+                   relevance: 0
+                 }
+               ]
+             }
+          ]
+        };
+    },
+    
+    
+    setupServiceConfigurationPage : function()
+    {
+      console.log("setupServiceConfigurationPage");
+      hljs.registerLanguage("properties",
+          function(hljs) {
+        console.log(hljs);
+        return {
+          cI: true,
+          c: [
+             {
+               cN: 'comment',
+               b: '#', 
+               e: '$'
+             },
+             {
+               cN: 'setting',
+               b: /^[$a-z0-9\[\]_-]+\s*=\s*/,
+               e: '$',
+               c: [
+                   {
+                   cN: 'value',
+                   eW: !0,
+                   c: [
+                       {
+                         cN: 'number',
+                         b: '\\b\\d+(\\.\\d+)?',
+                         r: 10
+                       },
+                       {
+                         cN: 'string',
+                         b : /[./a-z0-9\[\]_-]+/,
+                         e: '$',
+                         /*
+                         c : [
+                               {
+                                 begin: /\\\\[\\s\\S]/, 
+                                 relevance: 0
+                                }
+                         ],*/
+                         r: 0
+                       }
+                      ],
+                   r: 0
+                 }
+               ]
+             }
+          ]
+        };
+      });
+      $('pre').each(function() {
+        var txt = $(this).html();
+        $(this).text("");
+        $("<code class='properties' />").appendTo($(this)).html(txt);
+        
+      });
+      $('pre code').each(function(i, block) {
+        hljs.highlightBlock(block);
+      });
     },
 
     highlightAndIndentXml : function($elm)
@@ -859,7 +958,7 @@ var BDA = {
       var time = dateEnd.getTime() - dateStart;
       console.log("time to highlight and indent : " + time + "ms");
     },
-
+    
     setupRepositoryPage : function ()
     {
       /*
@@ -1057,8 +1156,8 @@ var BDA = {
     showItemPropertyList : function(item)
     {
       console.log("showItemPropertyList");
-      var componentPath = window.location.pathname;
-      var url = componentPath + "?action=seetmpl&itemdesc=" + item + "#showProperties";
+      var componentURI = window.location.pathname;
+      var url = componentURI + "?action=seetmpl&itemdesc=" + item + "#showProperties";
       $.get(url, function(data) {
         var $pTable = $(data).find("a[name='showProperties']").next();
         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
@@ -1108,7 +1207,7 @@ var BDA = {
     setupItemDescriptorTable : function ()
     {
       var descriptors = this.getDescriptorList();
-      var componentPath = window.location.pathname;
+      var componentURI = window.location.pathname;
       var splitValue = 20;
       var html = "<p>" + descriptors.length + " descriptors available.</p>";
       html += "<div>";
@@ -1126,19 +1225,19 @@ var BDA = {
         else
           html += "<tr class='odd'>";
         var isDebugEnable = false;
-        if ($("a[href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors']").size() > 0)
+        if ($("a[href='" + componentURI + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors']").size() > 0)
           isDebugEnable = true;
         html += "<td class='descriptor'>" + descriptors[i] + "</td>";
-        html += "<td><a class='btn-desc' href='" + componentPath + "?action=seetmpl&itemdesc=" + descriptors[i] + "#showProperties'>Properties</a>";
-        html += "&nbsp;<a class='btn-desc' class='btn-desc' href='" + componentPath + "?action=seenamed&itemdesc=" + descriptors[i] + "#namedQuery'>Named queries</a></td>";
+        html += "<td><a class='btn-desc' href='" + componentURI + "?action=seetmpl&itemdesc=" + descriptors[i] + "#showProperties'>Properties</a>";
+        html += "&nbsp;<a class='btn-desc' class='btn-desc' href='" + componentURI + "?action=seenamed&itemdesc=" + descriptors[i] + "#namedQuery'>Named queries</a></td>";
 
         html += "<td>";
         if (isDebugEnable)
-          html += "<a class='btn-desc red' href='" + componentPath + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Disable</a>";
+          html += "<a class='btn-desc red' href='" + componentURI + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Disable</a>";
         else
         {
-          html += "<a class='btn-desc' href='" + componentPath + "?action=setiddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Enable</a>";
-          html += "&nbsp;<a class='btn-desc' href='" + componentPath + "?action=dbgprops&itemdesc=" + descriptors[i] + "#debugProperties'>Edit</a>";
+          html += "<a class='btn-desc' href='" + componentURI + "?action=setiddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors'>Enable</a>";
+          html += "&nbsp;<a class='btn-desc' href='" + componentURI + "?action=dbgprops&itemdesc=" + descriptors[i] + "#debugProperties'>Edit</a>";
         }
         html += "</td>";
         html += "</tr>";
@@ -1274,11 +1373,8 @@ var BDA = {
         return ;
       if (document.URL.indexOf("#") >= 0)
         return ;
-      var url = document.URL;
-      var componentPath = url.substr(url.indexOf('/dyn'), url.length);
-      if (componentPath[componentPath.length - 1] == '/')
-        componentPath = componentPath.substr(0, (componentPath.length - 1));
-      componentPath = componentPath.replace("//", "/");
+      
+      var componentPath = this.purgeSlashes(document.location.pathname);
       var componentHistory =  JSON.parse(localStorage.getItem('componentHistory')) || [];
       if ($.inArray(componentPath, componentHistory) == -1)
       {
@@ -1300,7 +1396,7 @@ var BDA = {
         if (i != 0)
           html += ", ";
         var comp = componentHistory[i];
-        html += "<a href='" + comp + "'>" + comp.substr(comp.lastIndexOf("/") + 1, comp.length) + "</a>";
+        html += "<a href='" + comp + "'>" + this.getComponentNameFromPath(comp) + "</a>";
       }
       $("#history").html(html);
     },
@@ -1410,6 +1506,7 @@ var BDA = {
 
     getStoredComponents : function ()
     {
+      console.log("getStoredComponents");
       if(!this.hasWebStorage)
         return [];
       var storedComp;
@@ -1419,9 +1516,33 @@ var BDA = {
       else
         storedComp = [];
 
+      if(storedComp.length > 0 && this.idsSet(storedComp))
+        storedComp = this.generateCompIds(storedComp);
       return storedComp;
     },
 
+    idsSet : function(storedComponents)
+    {
+      for(var i = 0; i != storedComponents.length; i++)
+      {
+        if (storedComponents[i].hasOwnProperty("id"))
+          return false;
+      }
+      return true;
+    },
+    
+    generateCompIds : function(storedComponents)
+    {
+      var curId = 0;
+      for(var i = 0; i != storedComponents.length; i++)
+      {
+        storedComponents[i].id = curId;
+        curId++;
+      }
+      localStorage.setItem('Components', JSON.stringify(storedComponents));
+      return storedComponents;
+    },
+    
     deleteComponent : function (componentToDelete)
     {
       console.log("Delete component : " + componentToDelete);
@@ -1449,22 +1570,29 @@ var BDA = {
         compObj.componentName = this.getComponentNameFromPath(component);
         compObj.colors = this.stringToColour(compObj.componentName);
         var storedComp = this.getStoredComponents();
+        if (storedComp.length > 0)
+          compObj.id = storedComp[storedComp.length - 1].id + 1;
+        console.log("id : " + compObj.id);
         storedComp.push(compObj);
-        console.log(storedComp);
+        
         localStorage.setItem('Components', JSON.stringify(storedComp));
       }
     },
 
-    getComponentNameFromPath : function (component)
+    getComponentNameFromPath : function (componentPath)
     {
-      // Strip last slash if exists
-      if (component[component.length - 1] == '/')
-        component = component.substr(0, (component.length - 1));
-      // String double slash
-      component = component.replace("//", "/");
-
-      var tab = component.split("/");
+      // Strip last slash if any
+      if (componentPath[componentPath.length - 1] == "/")
+        componentPath = componentPath.substr(0 , componentPath.length - 1);
+      
+      var tab = componentPath.split("/");
+      //console.log("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
       return tab[tab.length - 1];
+    },
+    
+    purgeSlashes : function(str)
+    {
+      return str.replace(/([^:]\/)\/+/g, "$1");
     },
 
     getComponentShortName : function (componentName)
@@ -1473,7 +1601,7 @@ var BDA = {
       for(var i = 0; i != componentName.length; i++)
       {
         var character = componentName[i];
-        if (character == character.toUpperCase())
+        if (character == character.toUpperCase() && character != ".")
           shortName += character;
       }
       // TODO : return 3 first letter if shortName is empty
@@ -1482,7 +1610,7 @@ var BDA = {
 
     getCurrentComponentPath : function()
     {
-      return document.location.pathname.replace("/dyn/admin/nucleus", "");
+      return this.purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
     },
     
     getBorderColor : function (colors)
@@ -1581,8 +1709,8 @@ var BDA = {
             + "<div class='favTitle'>" +  shortName + "</div>"
             + "<div class='favName'>" + fav.componentName + "</div>"
             +"</a></div>"
-            + "<div class='favArrow' id='favArrow" + shortName + "'><img class='up' alt='arrow' src='" + this.arrowImg + "' /></div>"
-            + "<div class='favMoreInfo' id='favMoreInfo" + shortName + "'>"
+            + "<div class='favArrow' id='favArrow" + fav.id + "'><img class='up' alt='arrow' src='" + this.arrowImg + "' /></div>"
+            + "<div class='favMoreInfo' id='favMoreInfo" + fav.id + "'>"
             + "<div class='favLogDebug'>"
             + " <form method='POST' action='" + fav.componentPath + "' id='logDebugForm" + fav.componentName + "'>"
             + "<input type='hidden' value='loggingDebug' name='propertyName'>"
@@ -1624,7 +1752,7 @@ var BDA = {
 
       if (this.isComponentPage())
       {
-        var componentPath = document.location.pathname;
+        var componentPath = this.purgeSlashes(document.location.pathname);
         if (!this.isComponentAlreadyStored(componentPath))
         {
           $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
@@ -1746,8 +1874,8 @@ var BDA = {
           id : <input type='text' id='itemTreeId' /> &nbsp;\
           descriptor :  <select id='itemTreeDesc'>" + this.getDescriptorOptions() + "</select>&nbsp;\
           max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>\
-          output format :  <select id='itemTreeOutput'><option value='HTMLtab'>HTML tab</option><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option></select>&nbsp;\
-          <input type='checkbox' id='printRepositoryAttr' />Print attribute : <pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>\
+          output format :  <select id='itemTreeOutput'><option value='HTMLtab'>HTML tab</option><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option><option value='printItem'>print-item XML</option></select>&nbsp;\
+          <input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label><pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>\
           <button id='itemTreeBtn'>Enter</button>\
       </div>");
       $("#itemTree").append("<div id='itemTreeCount' />");
@@ -1934,16 +2062,21 @@ var BDA = {
           res += itemTree[id];
         BDA.showXMLAsTab(res, $("#itemTreeResult"));
       }
-      else if (outputType == "removeItem")
+      else if (outputType == "removeItem" || outputType == "printItem")
       {
         for(id in itemTree)
         {
           var xmlDoc = jQuery.parseXML(itemTree[id]);
           var $itemXml = $(xmlDoc).find("add-item");
-          res += '<remove-item id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor");
+          res += "<";
+          if (outputType == "removeItem")
+            res += "remove-item";
+          else
+            res += "print-item";
+          res += ' id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor") + "\"";
           if (printRepoAttr)
-            res += " repository='"+ BDA.getCurrentComponentPath() +"' ";
-          res += '/>\n';
+            res += " repository='"+ BDA.getCurrentComponentPath() +"'";
+          res += ' />\n';
         }
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
