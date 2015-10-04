@@ -11,6 +11,7 @@ Installation
  * Install Grease Monkey extension : https://addons.mozilla.org/fr/firefox/addon/greasemonkey/
  * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
  * Accept installation 
+ * Copy ${DYNAMO_ROOT}/home/doc/findclass.jhtml to ${DYNAMO_ROOT}/DAS/admin/atg/dynamo/admin/en/
  * Enjoy :)
  
 If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of Greasemonkey.
@@ -19,11 +20,16 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 
 * Install Tampermonkey extension : https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
 * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+* Copy ${DYNAMO_ROOT}/home/doc/findclass.jhtml to ${DYNAMO_ROOT}/DAS/admin/atg/dynamo/admin/en/
 * Accept installation 
 * Enjoy :)
 
 Change logs
 ------
+### 1.7
+* Syntax highlight for properties files
+* New output format print-item for item tree
+* Fix issues with the toolbar
 
 ### 1.6
 
