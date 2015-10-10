@@ -436,4 +436,7 @@ table.tablesorter tr.alt-row:hover td {
     background-color: #eee;
 }
 
-
+.clickable:hover {
+	color : #d14;
+	text-decoration: underline;
+}

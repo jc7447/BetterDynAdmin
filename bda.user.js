@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.7
+// @version 1.7.1
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -37,6 +37,7 @@ var BDA = {
     arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
     arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
     trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
+    newTabImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAKCAYAAABi8KSDAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3woKDiUZjLepsgAAALxJREFUGNNt0L9KgnEUxvHP+/aCQ+AS5Ojk0hWUQ1DkJTh6AxG4uLg2CpWLtHUHjm1BLQ3eQ2uCNri0KOjrcoQX+R04wznne57zJ5O2Dp5QhueYFQmwjh6WAV3jBKsCTQyxDbjEP0a4wk3kdxk+cIp5Rf0Xf3jEO86wgS/cHq1yHxM+0Q/B7zyKWQVsYYIFXvCANaZ54sCfUL7AeRz3hnHqGyVeKxNrmEIRnXdoJBovg3GAnzFAOwEX6B6CPUr+IhjQde2sAAAAAElFTkSuQmCC",
     defaultItemByTab : "10",
     hasWebStorage : false,
     hasErrors : false,
@@ -934,6 +935,7 @@ var BDA = {
     {
       var dateStart = new Date().getTime();
       console.log("Start highlightAndIndentXml");
+      
       $elm.each(function(index) {
         var escapeXML = $(this).html();
         var unescapeXML = $('<div/>').html(escapeXML).text();
@@ -950,9 +952,17 @@ var BDA = {
         // set escape XML content, because highlight.js needs escape XML to works
         .text(unescapeXML);
       });
-      // Run highlight.js on each XML block
+      
       $('pre code').each(function(i, block) {
+        // Run highlight.js on each XML block
         hljs.highlightBlock(block);
+        // Make component path clickable
+        $(block).find("span.hljs-attribute:contains('jndi'), span.hljs-attribute:contains('repository')").each(function() {
+          var $value = $(this).next();
+          var url = "/dyn/admin/nucleus" + $value.text().replace(/\"/g, "");
+          $value.wrap("<a target='_blank' class='clickable' href='" + url + "' ></a>");
+          $value.append("<img src='" + BDA.newTabImg + "' />");
+        });
       });
       var dateEnd = new Date();
       var time = dateEnd.getTime() - dateStart;
