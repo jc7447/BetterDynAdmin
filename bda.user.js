@@ -5,18 +5,22 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.7.1
+// @version 1.7.5
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
+// @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.min.js
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
 // @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/default.min.css
+// @resource select2CSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.css
+// @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
+// @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -116,6 +120,8 @@ var BDA = {
         this.setupFindClassLink();
         // Collect history
         this.collectHistory();
+        // Make search field visible
+        $("#search").css("display", "inline");
       }
       // Monitor execution time
       var endTime = new Date();
@@ -140,8 +146,6 @@ var BDA = {
 
     loadExternalCss : function(url) 
     {
-      var bdaCSS = GM_getResourceText("bdaCSS");
-      GM_addStyle(bdaCSS);
       var cmCSS = GM_getResourceText("cmCSS");
       GM_addStyle(cmCSS);
       var hlCSS = GM_getResourceText("hlCSS");
@@ -150,9 +154,14 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-     // var jointCSS = GM_getResourceText("jointCSS");
-     // GM_addStyle(jointCSS);
-      
+     var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
+     GM_addStyle(fontAwsomeCSS);
+     var select2CSS = GM_getResourceText("select2CSS");
+     GM_addStyle(select2CSS);
+     var select2BootCSS = GM_getResourceText("select2BootCSS");
+     GM_addStyle(select2BootCSS);
+     var bdaCSS = GM_getResourceText("bdaCSS");
+     GM_addStyle(bdaCSS);
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -328,8 +337,9 @@ var BDA = {
     {
       var descriptorOptions = "";
       var descriptors = this.getDescriptorList();
+      descriptorOptions += "<option value=''>Select a descriptor...</option>"
       for (var i = 0; i != descriptors.length; i++)
-        descriptorOptions += "<option>" + descriptors[i] + "</option>\n";
+        descriptorOptions += "<option value='" + descriptors[i] + "'>" + descriptors[i] + "</option>\n";
       return descriptorOptions;
     },
 
@@ -977,13 +987,13 @@ var BDA = {
       $("#repoToolbar").append("<button type='button'  href='?shouldInvokeMethod=restart'>Restart</button>");
        */
       // Move RQL editor to the top of the page
-      var actionSelect = "<select id='RQLAction'>"
+      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>"
         + " <optgroup label='Empty queries'>"
-        + "<option>print-item</option>"
-        + "<option>query-items</option>"
-        + "<option>remove-item</option>"
-        + "<option>add-item</option>"
-        + "<option>update-item</option>"
+        + "<option value='print-item'>print-item</option>"
+        + "<option value='query-items'>query-items</option>"
+        + "<option value='remove-item'>remove-item</option>"
+        + "<option value='add-item'>add-item</option>"
+        + "<option value='update-item'>update-item</option>"
         + "</optgroup>"
         + " <optgroup label='Predefined queries'>"
         + "<option value='all'>query-items ALL</option>"
@@ -1007,24 +1017,47 @@ var BDA = {
       $("textarea[name=xmltext]").attr("id", "xmltext");
       $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
 
-
       $("#RQLToolbar").append("<div> Action : "+ actionSelect 
           + " <span id='editor'>" 
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
-          + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor'>" + this.getDescriptorOptions() + "</select></span>"
+          + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='js-example-placeholder-single'>" + this.getDescriptorOptions() + "</select></span>"
           + "</span>" 
           + this.getsubmitButton() + "</div>");
+
+      
+      $("#RQLAction").select2({
+        width : "style",
+        minimumResultsForSearch: -1
+      });
+      
+      $("#itemDescriptor").select2({
+        placeholder: "Select a descriptor",
+        allowClear: true,
+        width : "element",
+        matcher: function (params, data) {
+          // If there are no search terms, return all of the data
+          if ($.trim(params) === '') {
+            return data;
+          }
+          // `params.term` should be the term that is used for searching
+          // `data.text` is the text that is displayed for the data object
+          if (data.indexOf(params) == 0) {
+            var modifiedData = $.extend({}, data, true);
+            modifiedData.text += ' (matched)';
+            // You can return modified objects from here
+            // This includes matching the `children` how you want in nested data sets
+            return modifiedData;
+          }
+          return null;
+        }
+      });
 
       $("#RQLToolbar").after("<div id='RQLText'></div>");
       $("#xmltext").appendTo("#RQLText");
       $("#RQLText").after("<div id='storedQueries'></div>");
       $("#RQLText").after("<div id='descProperties'></div>");
-
-
-      $("#storedQueries").after("<div id='RQLSave'>label : <input type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save this query</button></div>");
-      this.showQueryList();
-      $("#RQLSave").after( "<div id='splitToolbar'></div>" );
-
+      $("#RQLForm input[type=submit]").remove();
+      
       var splitObj = this.getStoredSplitObj();
       var itemByTab = this.defaultItemByTab;
       var isChecked = false;
@@ -1032,16 +1065,23 @@ var BDA = {
         itemByTab = splitObj.splitValue;
       if (splitObj != null)
         isChecked = splitObj.activeSplit;
-      $("#splitToolbar").append("Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. ");
+
       var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
       if (isChecked)
         checkboxSplit += " checked ";
       checkboxSplit += "/> don't split.";
-      $("#splitToolbar").append(checkboxSplit);
-
-      $("#RQLForm input[type=submit]").attr("type", "button").attr("id", "RQLSubmit");
+      
+      $("#storedQueries").after("<div id='RQLSave'>"
+         + "<div style='display:inline-block;width:200px'><button id='clearQuery' type='button'>Clear <i class='fa fa-ban fa-x'></i></button></div>"
+         + "<div style='display:inline-block;width:530px'>Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. "
+         + checkboxSplit + "</div>"
+         + "<button type='submit' id='RQLSubmit'>Enter <i class='fa fa-play fa-x'></i></button>"
+         + "</div>"
+         + "<div><input placeholder='Name this query' type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save <i class='fa fa-save fa-x'></i></button></div>" 
+         );
+      
+      this.showQueryList();
       this.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {lineNumbers: false});
-
       this.setupItemTreeForm();
       this.setupItemDescriptorTable();
       this.setupPropertiesTables();
@@ -1090,6 +1130,10 @@ var BDA = {
         }
       });
 
+      $("#clearQuery").click(function() {
+        BDA.setQueryEditorValue("");
+      });
+      
       // Hide other sections
       var toggleObj = BDA.getToggleObj();
       
@@ -1812,7 +1856,7 @@ var BDA = {
     {
       $("<div  id='switchDataSource'/>")
       .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + this.getCurrentDataSource() + " </span></p>")
-      .append("<p>Switch data source to : <select id='newDataSource'>" + this.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter</button></p>")
+      .append("<p>Switch data source to : <select id='newDataSource'>" + this.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>")
       .insertAfter($("h1:contains('Execute Query')"));
       $("textarea").prop("id", "sqltext");
       if ($("table").size() > 0)
@@ -1878,7 +1922,7 @@ var BDA = {
       $("#itemTree").append("<h2>Get Item Tree</h2>");
       $("#itemTree").append("<p>This tool will recursively retrieve items and print the result with the chosen output. \
           <br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order\
-      <br><b> Be carefull when using this tool on a live instance ! Set a low max items value.</b></p>");
+      <br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
 
       $("#itemTree").append("<div id='itemTreeForm'>\
           id : <input type='text' id='itemTreeId' /> &nbsp;\
@@ -1886,7 +1930,7 @@ var BDA = {
           max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>\
           output format :  <select id='itemTreeOutput'><option value='HTMLtab'>HTML tab</option><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option><option value='printItem'>print-item XML</option></select>&nbsp;\
           <input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label><pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>\
-          <button id='itemTreeBtn'>Enter</button>\
+          <button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>\
       </div>");
       $("#itemTree").append("<div id='itemTreeCount' />");
       $("#itemTree").append("<div id='itemTreeResult' />");

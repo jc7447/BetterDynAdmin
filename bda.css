@@ -10,6 +10,39 @@ a {
 	text-decoration: none
 }
 
+#RQLToolbar {
+	margin-bottom: 10px;
+
+}
+.select2-container .select2-choices .select2-search-field input, .select2-container .select2-choice, .select2-container .select2-choices {
+	font-family: "Arial";
+	font-size: 13px;
+	color: black;
+}
+
+.select2-chosen, .select2-choice > span:first-child, .select2-container .select2-choices .select2-search-field input {
+    padding: 4px 6px;
+}
+
+#select2-drop {
+	font-size: 13px;
+}
+
+.select2-container .select2-choice {
+  height: 24px;
+}
+
+.select2-container .select2-choice .select2-arrow b, .select2-container .select2-choice div b {
+    background-position: 0 0;
+}
+
+.select2-results {
+	max-height: 220px;
+}
+
+#RQLAdd {
+	margin-left: 10px;
+}
 
 #RQLResults {
 	margin-top: 10px;
@@ -81,7 +114,8 @@ a {
 }
 
 #itemId {
-	width: 125px
+	width: 125px;
+	height: 26px;
 }
 
 .descriptor {
