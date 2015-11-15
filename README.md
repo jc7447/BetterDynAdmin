@@ -26,6 +26,12 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 
 Change logs
 ------
+
+### 1.8
+* Rework repository toolbar, new 'clear' button and new select input to filter repository descritpor, using [select2.js](https://github.com/select2/select2)
+* Queries are not stored by repository
+* New icon management system with [font-awsome](https://github.com/FortAwesome/Font-Awesome)
+
 ### 1.7
 * Syntax highlight for properties files
 * New output format print-item for item tree
@@ -63,7 +69,7 @@ Change logs
 
 ### 1.1
 
-* [#11](/../../issues/11)  : Syntax coloring in repository definition file page
+* [#11](/../../issues/11)  : Syntax coloring in repository definition file page with [highlight.js](https://github.com/isagalaev/highlight.js)
 * [#10](/../../issues/10) : Syntax coloring in xml tags editor 
 * [#09](/../../issues/09) : Handle multi id in the editor id field 
 
