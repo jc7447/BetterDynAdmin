@@ -5,7 +5,7 @@
 // @author       Jean-Charles Manoury
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.7.5
+// @version 1.8
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -38,10 +38,6 @@ var BDA = {
     errorsSelector2 : "code:contains('*** Query:')",
     logoSelector : "div#oracleATGbrand",
     oldDynamoAltSelector : ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler", "Dynamo Configuration", "JDBC Browser"],
-    arrowImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gQRFCID3FFd8wAAAK9JREFUOMvV1DsKAkEQhOEaPI4n8ToewHgDEVEwMTLdWFONNzUzMRDEBwZeQH4jsYVV9jHTYCUTfjNMdwWgK6kn6SGfdEIIQ0kSsMIvfeB9DWDjgA4+UIMXCdEMCF8/ANgmQEelLzXo69xFRMeVRs7g+wjopNa8G/zQAp02WjaDHxugs1abbvBTDXQepWYMfq6ALqJ2nMEvP9A8adEC1xJ06dLywM2ga3kGuAOF/i1PqydjYNA1AIEAAAAASUVORK5CYII=",
-    arrowImgRotate : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAQCAYAAAABOs/SAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAGYktHRAAAAAAAAPlDu38AAAAHdElNRQfeBBEUIgPcUV3zAAAAxklEQVRIS9WNOw8BQRSFZ+Mfi1qtEiHRqLRqoqPeVqdRSMQjiv0DMs6cPYjYsI+ZSXzJjTX3nu+Yv8Nam2Iy/Y0DCleYB1c9hwVF87zvjYvWYUDBLO8p5Kwb3noDwin13znplpnGQDShthxHZZitDQRj6qpxUJaOyiA4oqYeeznoKg0CQ8absZOLzp/gcMCYH7Zy0l2IW2L67tozG1V8gmWC6fEsDKmqXuDRTZfrsKxV+Sxt8zkOC9ebqLyDn5v7jkDLGLO8A+Q1Y4g6wU6pAAAAAElFTkSuQmCC",
-    trashImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA9klEQVQ4jaXTyy4EURgE4G/BLHkOl7WFZGKEjUhcHkwLEvEmLlsJia3BQ1iIMc3CCIs+LWd+PR2ikn9TXVU5p/r8/MQCCtziMU0f+1hs0H9jGocY4XPCjHCETjR3cNZijHMRQ46zjzfYxkvGldjFdcad1Ob57NhXmE18N4WUWE3cDC6T9qPupMhSt8LVuugFbiPTH1C1XRPDZJqEZQwy/T08hYIGSRixhOegHWogX7HeENBLhlxbxiuUWGu5wkoIeWC8xJ1gaCpxUyhxDu/+/htHqmcP9rLU3z6kIj/WFE5DQW1zrtqdMfxrmXLU69zHW5o7E9b5C+ORizSkrnamAAAAAElFTkSuQmCC",
-    newTabImg : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAKCAYAAABi8KSDAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3woKDiUZjLepsgAAALxJREFUGNNt0L9KgnEUxvHP+/aCQ+AS5Ojk0hWUQ1DkJTh6AxG4uLg2CpWLtHUHjm1BLQ3eQ2uCNri0KOjrcoQX+R04wznne57zJ5O2Dp5QhueYFQmwjh6WAV3jBKsCTQyxDbjEP0a4wk3kdxk+cIp5Rf0Xf3jEO86wgS/cHq1yHxM+0Q/B7zyKWQVsYYIFXvCANaZ54sCfUL7AeRz3hnHqGyVeKxNrmEIRnXdoJBovg3GAnzFAOwEX6B6CPUr+IhjQde2sAAAAAElFTkSuQmCC",
     defaultItemByTab : "10",
     hasWebStorage : false,
     hasErrors : false,
@@ -52,7 +48,7 @@ var BDA = {
     isXMLDefinitionFilePage : false,
     isServiceConfigurationPage : false,
     isExecuteQueryPage : false,
-    xmlDefinitionMaxSize : 100000, // 100 Ko
+    xmlDefinitionMaxSize : 150000, // 100 Ko
     queryEditor : null,
     descriptorList : null,
     connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
@@ -249,10 +245,10 @@ var BDA = {
 
     rotateArrow : function ($arrow)
     {
-      if ($arrow.hasClass("up"))
-        $arrow.attr("src", this.arrowImgRotate).attr("class", "down");
+      if ($arrow.hasClass("fa-arrow-down"))
+        $arrow.removeClass("fa-arrow-down").addClass("fa-arrow-up");
       else
-        $arrow.attr("src", this.arrowImg).attr("class", "up");  
+        $arrow.removeClass("fa-arrow-up").addClass("fa-arrow-down");
     },
 
     //---- Repository page -------------------------------------------------------------------------
@@ -346,7 +342,7 @@ var BDA = {
     getsubmitButton : function ()
     {
       return "<button type='button' id='RQLAdd'>Add</button>" 
-      + "<button type='button' id='RQLGo'>Add & Enter</button>";
+      + "<button type='button' id='RQLGo'>Add & Enter <i class='fa fa-play fa-x'></i></button>";
     },
 
     getPrintItemEditor : function ()
@@ -971,7 +967,7 @@ var BDA = {
           var $value = $(this).next();
           var url = "/dyn/admin/nucleus" + $value.text().replace(/\"/g, "");
           $value.wrap("<a target='_blank' class='clickable' href='" + url + "' ></a>");
-          $value.append("<img src='" + BDA.newTabImg + "' />");
+          $value.append("<i class='fa fa-external-link'></i>");
         });
       });
       var dateEnd = new Date();
@@ -1310,7 +1306,7 @@ var BDA = {
       var html = "";
       if (this.hasWebStorage)
       {
-        var rqlQueries = this.getStoredRQLQueries();
+        var rqlQueries = this.purgeRQLQuery(this.getStoredRQLQueries());
         if (rqlQueries != null && rqlQueries.length > 0)
         {
           html += "<span class='storedQueriesTitle'>Stored queries :</span>";
@@ -1321,7 +1317,7 @@ var BDA = {
               html += "<li class='savedQuery'>";
               html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>"
               html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
-              html += "<img src='" + this.trashImg + "' height='12' width='12' />";
+              html += "<i class='fa fa-trash-o'></i>";
               html += "</span>";
               html += "</li>";
             }
@@ -1381,6 +1377,7 @@ var BDA = {
         var storeQuery = {};
         storeQuery.name = name;
         storeQuery.query = query;
+        storeQuery.repo = BDA.getComponentNameFromPath(BDA.getCurrentComponentPath());
         var rqlQueries = this.getStoredRQLQueries();
         rqlQueries.push(storeQuery);
         console.log(rqlQueries);
@@ -1397,7 +1394,20 @@ var BDA = {
         localStorage.setItem('RQLQueries', JSON.stringify(queries));
       } 
     },
-
+    purgeRQLQuery : function (rqlQueries)
+    {
+      // Purge query 
+      var purgedRqlQueries = [];
+      for (var i = 0; i != rqlQueries.length; i++)
+      {
+        var query = rqlQueries[i];
+        if (!query.hasOwnProperty("repo") || query.repo == BDA.getComponentNameFromPath(BDA.getCurrentComponentPath())) {
+          purgedRqlQueries.push(rqlQueries[i]);
+        }
+      }
+      return purgedRqlQueries;
+    },
+    
     reloadQueryList : function ()
     {
       $("#storedQueries").empty();
@@ -1464,7 +1474,7 @@ var BDA = {
 
       $("<div id='bdaBug'></div>").appendTo("body")
       .html("<p>" + labels[labelIndex] + "</p>"
-          + "<div class='bugArrow'><img class='up' src='" + this.arrowImg + "'></div>"
+          + "<div class='bugArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
       $("<div id='bdaBugPanel'></div>").appendTo("body")
@@ -1476,12 +1486,12 @@ var BDA = {
       );
 
       $("#bdaBug").click(function() {
-        $("#bdaBugPanel").toggle();
-        BDA.rotateArrow($(".bugArrow img"));
+        $("#bdaBugPanel").slideToggle();
+        BDA.rotateArrow($(".bugArrow i"));
         if ($("#bdaBackupPanel").css("display") != "none")
         {
-          $("#bdaBackupPanel").toggle();
-          BDA.rotateArrow($(".backupArrow img"));
+          $("#bdaBackupPanel").slideToggle();
+          BDA.rotateArrow($(".backupArrow i"));
         }
       });
 
@@ -1495,16 +1505,16 @@ var BDA = {
       $("<div id='bdaBackup'></div>").appendTo("body")
 
       .html("<p>Backup / restore data</p>"
-          + "<div class='backupArrow'><img class='up' src='" + this.arrowImg + "'></div>"
+          + "<div class='backupArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
       $("#bdaBackup").click(function() {
-        $("#bdaBackupPanel").toggle();
-        BDA.rotateArrow($(".backupArrow img"));
+        $("#bdaBackupPanel").slideToggle();
+        BDA.rotateArrow($(".backupArrow i"));
         if ($("#bdaBugPanel").css("display") != "none")
         {
-          $("#bdaBugPanel").toggle();
-          BDA.rotateArrow($(".bugArrow img"));
+          $("#bdaBugPanel").slideToggle();
+          BDA.rotateArrow($(".bugArrow i"));
         }
       });
 
@@ -1560,7 +1570,6 @@ var BDA = {
 
     getStoredComponents : function ()
     {
-      console.log("getStoredComponents");
       if(!this.hasWebStorage)
         return [];
       var storedComp;
@@ -1763,7 +1772,7 @@ var BDA = {
             + "<div class='favTitle'>" +  shortName + "</div>"
             + "<div class='favName'>" + fav.componentName + "</div>"
             +"</a></div>"
-            + "<div class='favArrow' id='favArrow" + fav.id + "'><img class='up' alt='arrow' src='" + this.arrowImg + "' /></div>"
+            + "<div class='favArrow' id='favArrow" + fav.id + "'><i class=' up fa fa-arrow-down'></i></div>"
             + "<div class='favMoreInfo' id='favMoreInfo" + fav.id + "'>"
             + "<div class='favLogDebug'>"
             + " <form method='POST' action='" + fav.componentPath + "' id='logDebugForm" + fav.componentName + "'>"
@@ -1774,7 +1783,7 @@ var BDA = {
             + "&nbsp; | &nbsp;"
             + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
             +"</div>"
-            + "<div class='favDelete' id='delete" + fav.componentName + "'><span class='del-cross'>X</span> Delete</div>"
+            + "<div class='favDelete' id='delete" + fav.componentName + "'><i class='fa fa-trash-o'></i> Delete</div>"
             + "</div>")
             .appendTo("#toolbar");
       }
@@ -1783,8 +1792,8 @@ var BDA = {
         console.log("Click on arrow");
         var id = this.id;
         var idToExpand = "#" + id.replace("favArrow", "favMoreInfo");
-        $(idToExpand).toggle();
-        BDA.rotateArrow($("#" + id + " img"));
+        $(idToExpand).slideToggle();
+        BDA.rotateArrow($("#" + id + " i"));
 
       });
 
