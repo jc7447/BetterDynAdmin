@@ -125,7 +125,7 @@ Main features
 
 * Lot more inconming, check the milestone !
 
-Contributor
+Contributors
 ---
  * Jean-Charles Manoury ([@jc7447](https://github.com/jc7447))
  * Benjamin Descamps ([@onewingedfallen59](https://github.com/onewingedfallen59))
