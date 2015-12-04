@@ -6,7 +6,7 @@
 // @contributor  Benjamin Descamps
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.9
+// @version 1.9.1
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -44,12 +44,13 @@ var BDA = {
     hasErrors : false,
     hasResults : false,
     isOldDynamo : false,
+    isComponentPage : false,
     isPerfMonitorPage : false,
     isPerfMonitorTimePage : false,
     isXMLDefinitionFilePage : false,
     isServiceConfigurationPage : false,
     isExecuteQueryPage : false,
-    xmlDefinitionMaxSize : 150000, // 100 Ko
+    xmlDefinitionMaxSize : 150000, // 150 Ko
     queryEditor : null,
     descriptorList : null,
     connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
@@ -111,7 +112,7 @@ var BDA = {
       this.createBackupPanel();
       this.createBugReportPanel();
 
-      if (this.isComponentPage())
+      if (this.isComponentPage)
       {
         // Change page title
         this.setupPageTitle();
@@ -157,14 +158,14 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-     var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
-     GM_addStyle(fontAwsomeCSS);
-     var select2CSS = GM_getResourceText("select2CSS");
-     GM_addStyle(select2CSS);
-     var select2BootCSS = GM_getResourceText("select2BootCSS");
-     GM_addStyle(select2BootCSS);
-     var bdaCSS = GM_getResourceText("bdaCSS");
-     GM_addStyle(bdaCSS);
+      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
+      GM_addStyle(fontAwsomeCSS);
+      var select2CSS = GM_getResourceText("select2CSS");
+      GM_addStyle(select2CSS);
+      var select2BootCSS = GM_getResourceText("select2BootCSS");
+      GM_addStyle(select2BootCSS);
+      var bdaCSS = GM_getResourceText("bdaCSS");
+      GM_addStyle(bdaCSS);
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -1879,9 +1880,18 @@ var BDA = {
                 inputsHTML += inputs[input] + " <textarea name='" + inputs[input] + "'></textarea><br />";
             }
             var url = window.location.origin + '/rest/model' + componentPathName + actorChainIdValue;
-            tableActor.after("<div id='actorChainCall' border><br /><h3>Call actor</h3><br /><a href='#' onclick=\"window.prompt('Copy to clipboard: Ctrl+C, Enter', '" + url + 
-            "')\">click to copy url in clipboard</a>"  + "<br />post parameters are " + inputs + "<br /><form method='POST' action='/rest/model" + 
-            componentPathName + actorChainIdValue + "'>" + inputsHTML + "<input type='submit' value='send'></form></div>");
+            console.log(url);
+            var actorChainCallHtml = "<div id='actorChainCall' border>" 
+                + "<h3>Call actor</h3>" 
+                + "<a href='#' onclick=\"window.prompt('Copy to clipboard: Ctrl+C, Enter', '" + url + "')\">click to copy url in clipboard</a>";
+                if (inputs.length > 0)
+                  actorChainCallHtml += "<br />post parameters are " + inputs + "<br />" 
+                actorChainCallHtml += "<form method='POST' action='/rest/model" + componentPathName + actorChainIdValue + "'>"
+                + inputsHTML 
+                + "<button type='submit'>Call <i class='fa fa-play fa-x'></button>" 
+                + "</form></div>";
+                
+            tableActor.after(actorChainCallHtml);
     },
 
     setupPerfMonitorPage : function()
