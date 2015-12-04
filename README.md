@@ -27,6 +27,9 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 Change logs
 ------
 
+### 1.9
+* [#29](../../pull/29) Actor chains can be call directly through their component pages
+
 ### 1.8
 * Rework repository toolbar, new 'clear' button and new select input to filter repository descritpor, using [select2.js](https://github.com/select2/select2)
 * Queries are not stored by repository
@@ -122,6 +125,10 @@ Main features
 
 * Lot more inconming, check the milestone !
 
+Contributor
+---
+ * Jean-Charles Manoury ([@jc7447](https://github.com/jc7447))
+ * Benjamin Descamps ([@onewingedfallen59](https://github.com/onewingedfallen59))
 
 Disclaimer
 ---
