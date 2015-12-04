@@ -3,9 +3,10 @@
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
+// @contributor  Benjamin Descamps
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.8
+// @version 1.9
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -66,7 +67,9 @@ var BDA = {
       this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
       this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePage();
       this.isServiceConfigurationPage = this.isServiceConfigurationPage();
-      this.isExecuteQueryPage = this.isExecuteQueryPage()
+      this.isExecuteQueryPage = this.isExecuteQueryPage();
+      this.isComponentPage = this.isComponentPage();
+      this.isActorChainPage = this.isActorChainPage();
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
         this.logoSelector = "";
@@ -81,7 +84,7 @@ var BDA = {
       }
        
       console.log("Path : " + this.purgeSlashes($(location).attr('pathname')));
-      console.log("isComponentPage : " + this.isComponentPage() + " IsOldDynamo : " + this.isOldDynamo);
+      console.log("isComponentPage : " + this.isComponentPage + " IsOldDynamo : " + this.isOldDynamo);
       console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
 
       $.tablesorter.defaults.sortInitialOrder = 'desc';
@@ -118,6 +121,10 @@ var BDA = {
         this.collectHistory();
         // Make search field visible
         $("#search").css("display", "inline");
+      }
+      else if (this.isActorChainPage)
+      {
+          this.createActorCaller();
       }
       // Monitor execution time
       var endTime = new Date();
@@ -241,6 +248,11 @@ var BDA = {
       return $("h1:contains('Directory Listing')").size() == 0 //Page is not a directory
       && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
       && document.URL.indexOf("?") == -1; // Page has no parameter
+    },
+
+    isActorChainPage : function()
+    {
+        return $("h2:contains('Actor Chain:')").size() == 1 && document.URL.indexOf('chainId=') != -1;
     },
 
     rotateArrow : function ($arrow)
@@ -1813,7 +1825,7 @@ var BDA = {
       });
 
 
-      if (this.isComponentPage())
+      if (this.isComponentPage)
       {
         var componentPath = this.purgeSlashes(document.location.pathname);
         if (!this.isComponentAlreadyStored(componentPath))
@@ -1827,6 +1839,49 @@ var BDA = {
           });
         }
       }
+    },
+    
+    createActorCaller : function()
+    {
+            var componentPathName = this.getCurrentComponentPath();
+            var tableActor = $('table:first');
+            var tableActorHeaderRow = tableActor.find('tr:first');
+            var tableActorHeaderColumns = tableActorHeaderRow.find('th');
+            var tableActorHeaderColumnsCount = tableActorHeaderColumns.size();
+            var tableActorDataRow = tableActor.find('tr:eq(1)');
+            var tableActorDataRowCells = tableActorDataRow.find('td');
+            var actorChainIdValueLabel = tableActorDataRowCells.filter(function(index, element){return $(element).text() === "method"});
+            var actorChainIdValue = actorChainIdValueLabel.next('td').text();
+
+            var inputsHeader = tableActorHeaderColumns.filter(function(index, element){return $(element).text() === "Inputs"});
+            var inputsIndex = $(inputsHeader).index();
+            var tableInputs = $(tableActorDataRow.children().get(inputsIndex)).children().get(0);
+            var inputs = [];
+            if(tableInputs !== undefined)
+            {
+                var inputRows = $(tableInputs).find('tr');
+                var inputsSize = inputRows.size();
+                for(var i = 1; i < inputsSize; i++)
+                {
+                    var inputRow = $(inputRows.get(i));
+                    var name = $(inputRow.children().get(0));
+                    var value = $(inputRow.children().get(1));
+                    var isNucleus = value.text().indexOf("nucleus") != -1;
+                    if(!isNucleus)
+                    {
+                        inputs.push(name.text());
+                    }
+                }
+            }
+            var inputsHTML = "";
+            for(input in inputs)
+            {
+                inputsHTML += inputs[input] + " <textarea name='" + inputs[input] + "'></textarea><br />";
+            }
+            var url = window.location.origin + '/rest/model' + componentPathName + actorChainIdValue;
+            tableActor.after("<div id='actorChainCall' border><br /><h3>Call actor</h3><br /><a href='#' onclick=\"window.prompt('Copy to clipboard: Ctrl+C, Enter', '" + url + 
+            "')\">click to copy url in clipboard</a>"  + "<br />post parameters are " + inputs + "<br /><form method='POST' action='/rest/model" + 
+            componentPathName + actorChainIdValue + "'>" + inputsHTML + "<input type='submit' value='send'></form></div>");
     },
 
     setupPerfMonitorPage : function()
