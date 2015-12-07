@@ -475,3 +475,17 @@ table.tablesorter tr.alt-row:hover td {
 	color : #d14;
 	text-decoration: underline;
 }
+
+.popup_block{
+	display: none;
+	background: #fff;
+	padding: 20px;
+	border: 20px solid #ddd;
+	float: left;
+	font-size: 1.2em;
+	position: fixed;
+	top: 50%; left: 50%;
+	z-index: 99999;
+	box-shadow: 0px 0px 20px #000;
+	border-radius: 10px;
+}
