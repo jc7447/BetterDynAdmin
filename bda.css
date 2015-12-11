@@ -487,9 +487,11 @@ table.tablesorter tr.alt-row:hover td {
 	border: 20px solid #ddd;
 	float: left;
 	font-size: 1.2em;
-	position: fixed;
 	top: 20%; left: 50%;
-	z-index: 99999;
 	box-shadow: 0px 0px 20px #000;
 	border-radius: 10px;
+}
+
+.close {
+	float: right;
 }
