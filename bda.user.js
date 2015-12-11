@@ -6,7 +6,7 @@
 // @contributor  Benjamin Descamps
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.9.1
+// @version 1.10
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -1636,7 +1636,7 @@ var BDA = {
       this.reloadToolbar();
     },
 
-    storeComponent : function (component)
+    storeComponent : function (component, methods)
     {
       if(this.hasWebStorage)
       {
@@ -1649,6 +1649,16 @@ var BDA = {
         if (storedComp.length > 0)
           compObj.id = storedComp[storedComp.length - 1].id + 1;
         console.log("id : " + compObj.id);
+        
+        if(methods !== undefined)
+        {
+            compObj.methods = [];
+            for(var index in methods)
+            {
+                compObj.methods.push(methods[index]);
+            }
+        }
+        
         storedComp.push(compObj);
         
         localStorage.setItem('Components', JSON.stringify(storedComp));
@@ -1767,6 +1777,14 @@ var BDA = {
 
     createToolbar :function ()
     {
+        $("<div id='addComponentToolbarPopup' class='popup_block'>"
+        + "<a href='#' class='close'>X</a>"
+        + "<h2>Add component methods</h2>"
+        + "<p>Chose methods</p>"
+        + "<ul id='methods'></ul>"
+        + "<input type='button' id='submitComponent' value='add'>"
+        + "</div>").insertAfter(this.logoSelector)
+        
       var favs = this.getStoredComponents();
 
       $("<div id='toolbarContainer'></div>").insertAfter(this.logoSelector);
@@ -1777,6 +1795,11 @@ var BDA = {
         var fav = favs[i];
         var colors = this.stringToColour(fav.componentName);
         var shortName = this.getComponentShortName(fav.componentName);
+        var methodsCallHTML = "";
+        for(var j in fav.methods)
+        {
+            methodsCallHTML += "<a href='" + fav.componentPath + "?shouldInvokeMethod=" + fav.methods[j] + "'>call" + fav.methods[j] + "</a><br>";
+        }
         $("<div class='fav'></div>")
         .css("background-color", this.colorToCss(colors))
         .css("border", "1px solid " + this.getBorderColor(colors))
@@ -1796,6 +1819,9 @@ var BDA = {
             + "&nbsp; | &nbsp;"
             + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
             +"</div>"
+            + "<div class='favMethods'>" 
+            + methodsCallHTML
+            + "</div>"
             + "<div class='favDelete' id='delete" + fav.componentName + "'><i class='fa fa-trash-o'></i> Delete</div>"
             + "</div>")
             .appendTo("#toolbar");
@@ -1835,8 +1861,34 @@ var BDA = {
           .appendTo("#toolbar");
           $(".newFav").click(function() {
             console.log("Add component");
-            BDA.storeComponent(componentPath);
-            BDA.reloadToolbar();
+            
+            var methodsList = $('#methods');
+            var tableMethods = $('h1:contains("Methods")').next();
+            tableMethods.find('tr').each(function(index, element){
+                if(index > 0)
+                {
+                    var linkMethod = $(element).find('a').first();
+                    var methodName = $(linkMethod).attr("href").split('=')[1];
+                    methodsList.append('<li><input type="checkbox" class="method">' + methodName + '</li>');
+                }
+            });
+            
+            $('#addComponentToolbarPopup').fadeIn();
+            $('.close').click(function() { 
+                $('.popup_block').fadeOut();
+            });
+            
+            $('#submitComponent').click(function(){            
+                $('.popup_block').fadeOut();    
+                var methods = [];
+                $('.method:checked').each(function(index, element){
+                    methods.push($(element.parentNode).text());
+                });
+                console.log("methods : " + methods);
+                BDA.storeComponent(componentPath, methods);
+                BDA.reloadToolbar();
+            });
+            
           });
         }
       }
@@ -1851,8 +1903,7 @@ var BDA = {
             var tableActorHeaderColumnsCount = tableActorHeaderColumns.size();
             var tableActorDataRow = tableActor.find('tr:eq(1)');
             var tableActorDataRowCells = tableActorDataRow.find('td');
-            var actorChainIdValueLabel = tableActorDataRowCells.filter(function(index, element){return $(element).text() === "method"});
-            var actorChainIdValue = actorChainIdValueLabel.next('td').text();
+            var actorChainIdValue = $("h2:contains('Actor Chain:')").text().replace("Actor Chain: ", "");
 
             var inputsHeader = tableActorHeaderColumns.filter(function(index, element){return $(element).text() === "Inputs"});
             var inputsIndex = $(inputsHeader).index();
@@ -1882,7 +1933,7 @@ var BDA = {
             var url = window.location.origin + '/rest/model' + componentPathName + actorChainIdValue;
             console.log(url);
             var actorChainCallHtml = "<div id='actorChainCall' border>" 
-                + "<h3>Call actor</h3>" 
+                + "<h2>Call actor</h2>" 
                 + "<a href='#' onclick=\"window.prompt('Copy to clipboard: Ctrl+C, Enter', '" + url + "')\">click to copy url in clipboard</a>";
                 if (inputs.length > 0)
                   actorChainCallHtml += "<br />post parameters are " + inputs + "<br />" 
