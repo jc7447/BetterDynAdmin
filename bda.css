@@ -354,6 +354,10 @@ a {
 	float: left;
 }
 
+.fav a {
+	color:white;
+}
+
 .favLink {
 	text-align: center;
 	line-height: 16px;
@@ -484,7 +488,7 @@ table.tablesorter tr.alt-row:hover td {
 	float: left;
 	font-size: 1.2em;
 	position: fixed;
-	top: 50%; left: 50%;
+	top: 20%; left: 50%;
 	z-index: 99999;
 	box-shadow: 0px 0px 20px #000;
 	border-radius: 10px;
