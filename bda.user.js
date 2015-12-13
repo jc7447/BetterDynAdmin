@@ -6,7 +6,9 @@
 // @contributor  Benjamin Descamps
 // @grant GM_getResourceText
 // @grant GM_addStyle
-// @version 1.10
+// @grant window.focus
+// @grant GM_setClipboard
+// @version 1.10.1
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -124,9 +126,27 @@ var BDA = {
         $("#search").css("display", "inline");
       }
       else if (this.isActorChainPage)
-      {
           this.createActorCaller();
-      }
+      
+      // Handle escape key press
+      $(document).keyup(function(e) {
+        if (e.keyCode == 27) {
+          // Close add component pop-up
+          $('.popup_block').fadeOut();
+          // Close panels
+          if ($("#bdaBackupPanel").css("display") != "none")
+          {
+            $("#bdaBackupPanel").slideToggle();
+            BDA.rotateArrow($(".backupArrow i"));
+          }
+          if ($("#bdaBugPanel").css("display") != "none")
+          {
+            $("#bdaBugPanel").slideToggle();
+            BDA.rotateArrow($(".backupArrow i"));
+          }
+       }
+      });
+      
       // Monitor execution time
       var endTime = new Date();
       var time = endTime.getTime() - start;
@@ -1576,7 +1596,8 @@ var BDA = {
 
     copyToClipboard : function (text) 
     {
-      window.prompt("Copy the data below : Ctrl+C + Enter and save it into a file !", text);
+      GM_setClipboard(text);
+      window.alert("Data have been added to your clipboard");
     },
 
     //--- Toolbar functions ------------------------------------------------------------------------
@@ -1778,11 +1799,11 @@ var BDA = {
     createToolbar :function ()
     {
         $("<div id='addComponentToolbarPopup' class='popup_block'>"
-        + "<a href='#' class='close'>X</a>"
-        + "<h2>Add component methods</h2>"
-        + "<p>Chose methods</p>"
-        + "<ul id='methods'></ul>"
-        + "<input type='button' id='submitComponent' value='add'>"
+        + "<a href='#' class='close'><i class='fa fa-times'></i></a>"
+        + "<h3>Add component methods</h3>"
+        + "<p>Choose methods to shortcut : </p>"
+        + "<div id='methods'></div>"
+        + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button>"
         + "</div>").insertAfter(this.logoSelector)
         
       var favs = this.getStoredComponents();
@@ -1798,7 +1819,7 @@ var BDA = {
         var methodsCallHTML = "";
         for(var j in fav.methods)
         {
-            methodsCallHTML += "<a href='" + fav.componentPath + "?shouldInvokeMethod=" + fav.methods[j] + "'>call" + fav.methods[j] + "</a><br>";
+            methodsCallHTML += "<a href='" + fav.componentPath + "?shouldInvokeMethod=" + fav.methods[j] + "'>Call " + fav.methods[j] + "</a><br>";
         }
         $("<div class='fav'></div>")
         .css("background-color", this.colorToCss(colors))
@@ -1861,24 +1882,29 @@ var BDA = {
           .appendTo("#toolbar");
           $(".newFav").click(function() {
             console.log("Add component");
-            
-            var methodsList = $('#methods');
+            var methodsList = $("#methods");
+            methodsList.empty();
             var tableMethods = $('h1:contains("Methods")').next();
+            var curList = $("<ul class='methodsList' />").appendTo(methodsList);
             tableMethods.find('tr').each(function(index, element){
-                if(index > 0)
-                {
-                    var linkMethod = $(element).find('a').first();
-                    var methodName = $(linkMethod).attr("href").split('=')[1];
-                    methodsList.append('<li><input type="checkbox" class="method">' + methodName + '</li>');
-                }
+              if(index > 0)
+              {
+                if ((index % 12) == 0) {
+                  curList = $("<ul class='methodsList' />").appendTo(methodsList)
+                 }
+                  var linkMethod =  $(element).find('a').first();
+                  var methodName = $(linkMethod).attr("href").split('=')[1];
+                  var methodId  = "method_" + methodName;
+                  curList.append('<li><input type="checkbox" class="method" id="' + methodId + '" />' 
+                                   + ' <label for="'+ methodId +'">' + methodName + '</label></li>');
+              }
             });
-            
             $('#addComponentToolbarPopup').fadeIn();
             $('.close').click(function() { 
                 $('.popup_block').fadeOut();
             });
             
-            $('#submitComponent').click(function(){            
+            $('#submitComponent').click(function(){
                 $('.popup_block').fadeOut();    
                 var methods = [];
                 $('.method:checked').each(function(index, element){
@@ -1934,15 +1960,18 @@ var BDA = {
             console.log(url);
             var actorChainCallHtml = "<div id='actorChainCall' border>" 
                 + "<h2>Call actor</h2>" 
-                + "<a href='#' onclick=\"window.prompt('Copy to clipboard: Ctrl+C, Enter', '" + url + "')\">click to copy url in clipboard</a>";
+                + "<a href='javascript:void(0)' id='copyChainUrl'>Copy URL to clipboard</a>";
                 if (inputs.length > 0)
-                  actorChainCallHtml += "<br />post parameters are " + inputs + "<br />" 
+                  actorChainCallHtml += "<br />Post parameters are " + inputs + "<br />" 
                 actorChainCallHtml += "<form method='POST' action='/rest/model" + componentPathName + actorChainIdValue + "'>"
                 + inputsHTML 
                 + "<button type='submit'>Call <i class='fa fa-play fa-x'></button>" 
                 + "</form></div>";
                 
             tableActor.after(actorChainCallHtml);
+            $("#copyChainUrl").click(function(){
+              BDA.copyToClipboard(url);
+            });
     },
 
     setupPerfMonitorPage : function()

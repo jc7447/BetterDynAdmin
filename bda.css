@@ -273,7 +273,7 @@ a {
 
 #bdaBugPanel {
 	position: absolute;
-	top: 30px;
+	top: 34px;
 	right: 30px;
 	width: 250px;
 	font-size: 11px;
@@ -312,7 +312,7 @@ a {
 
 #bdaBackupPanel {
 	position: absolute;
-	top: 30px;
+	top: 34px;
 	right: 30px;
 	width: 250px;
 	font-size: 11px;
@@ -480,18 +480,25 @@ table.tablesorter tr.alt-row:hover td {
 	text-decoration: underline;
 }
 
-.popup_block{
-	display: none;
-	background: #fff;
-	padding: 20px;
-	border: 20px solid #ddd;
-	float: left;
-	font-size: 1.2em;
-	top: 20%; left: 50%;
-	box-shadow: 0px 0px 20px #000;
-	border-radius: 10px;
+.popup_block {
+   background: #fff none repeat scroll 0 0;
+   border: 5px solid #ddd;
+   box-shadow: 0 0 5px #000;
+   display: none;
+   font-size: 0.9em;
+   padding: 10px;
+   position: absolute;
+   left: 50%;
+   transform: translate(-50%, 0);
 }
 
-.close {
+.methodsList {
+	display: inline-block;
+	vertical-align: top;
+	margin : 0 0 15px 0;
+}
+
+.close, #submitComponent {
 	float: right;
+	color : black;
 }
