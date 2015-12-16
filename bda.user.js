@@ -1884,12 +1884,12 @@ var BDA = {
             varsList.empty();
             
             var tableMethods = $('h1:contains("Methods")').next();
-            var curList = $("<ul class='methodsList' />").appendTo(methodsList);
+            var curList = $("<ul class='popupList' />").appendTo(methodsList);
             tableMethods.find('tr').each(function(index, element){
               if(index > 0)
               {
                 if ((index % 12) == 0) {
-                  curList = $("<ul class='methodsList' />").appendTo(methodsList)
+                  curList = $("<ul class='popupList' />").appendTo(methodsList)
                  }
                   var linkMethod =  $(element).find('a').first();
                   var methodName = $(linkMethod).attr("href").split('=')[1];
@@ -1900,12 +1900,12 @@ var BDA = {
             });
             
             var tablevars = $('h1:contains("Properties")').next();
-            var curList = $("<ul class='varsList' />").appendTo(varsList);
+            var curList = $("<ul class='popupList' />").appendTo(varsList);
             tablevars.find('tr').each(function(index, element){
               if(index > 0)
               {
                 if ((index % 12) == 0) {
-                  curList = $("<ul class='varsList' />").appendTo(varsList)
+                  curList = $("<ul class='popupList' />").appendTo(varsList)
                  }
                   var linkVariable =  $(element).find('a').first();
                   var variableName = $(linkVariable).attr("href").split('=')[1];
