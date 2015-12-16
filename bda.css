@@ -492,7 +492,7 @@ table.tablesorter tr.alt-row:hover td {
    transform: translate(-50%, 0);
 }
 
-.methodsList {
+.popupList {
 	display: inline-block;
 	vertical-align: top;
 	margin : 0 0 15px 0;
@@ -501,4 +501,16 @@ table.tablesorter tr.alt-row:hover td {
 .close, #submitComponent {
 	float: right;
 	color : black;
+}
+
+#methods, #vars {
+	float:right;
+}
+
+#methods {
+	width:240px;
+}
+
+#vars {
+	width:360px;
 }
