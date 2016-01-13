@@ -490,12 +490,14 @@ table.tablesorter tr.alt-row:hover td {
    position: absolute;
    left: 50%;
    transform: translate(-50%, 0);
+   z-index:1;
+   height: 500px;
+   word-wrap: break-word;
 }
 
-.popupList {
-	display: inline-block;
-	vertical-align: top;
-	margin : 0 0 15px 0;
+#addComponentToolbarPopupContent {
+	height:93%;
+	overflow:auto;
 }
 
 .close, #submitComponent {
@@ -505,12 +507,5 @@ table.tablesorter tr.alt-row:hover td {
 
 #methods, #vars {
 	float:right;
-}
-
-#methods {
-	width:240px;
-}
-
-#vars {
-	width:360px;
+	width:50%;
 }
