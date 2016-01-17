@@ -3,21 +3,21 @@
 }
 
 #itemTreeMax {
-	width: 40px;
+  width: 40px;
 }
 
 a {
-	text-decoration: none
+  text-decoration: none
 }
 
 #RQLToolbar {
-	margin-bottom: 10px;
+  margin-bottom: 10px;
 
 }
 .select2-container .select2-choices .select2-search-field input, .select2-container .select2-choice, .select2-container .select2-choices {
-	font-family: "Arial";
-	font-size: 13px;
-	color: black;
+  font-family: "Arial";
+  font-size: 13px;
+  color: black;
 }
 
 .select2-chosen, .select2-choice > span:first-child, .select2-container .select2-choices .select2-search-field input {
@@ -25,7 +25,7 @@ a {
 }
 
 #select2-drop {
-	font-size: 13px;
+  font-size: 13px;
 }
 
 .select2-container .select2-choice {
@@ -37,127 +37,127 @@ a {
 }
 
 .select2-results {
-	max-height: 220px;
+  max-height: 220px;
 }
 
 #RQLAdd {
-	margin-left: 10px;
+  margin-left: 10px;
 }
 
 #RQLResults {
-	margin-top: 10px;
+  margin-top: 10px;
 }
 
 #RQLLog {
-	overflow-x: scroll;
+  overflow-x: scroll;
   overflow-x: hidden;
-	max-height: 100px;
-	padding : 5px;
-	border: 1px dashed #CCC;
-	 width:800px;
-	 white-space: pre-wrap;
-	 font-family: monospace;
+  max-height: 100px;
+  padding : 5px;
+  border: 1px dashed #CCC;
+   width:800px;
+   white-space: pre-wrap;
+   font-family: monospace;
 }
 #rawXml {
-	display: none;
-	margin : 0px;
-	padding : 0px;
+  display: none;
+  margin : 0px;
+  padding : 0px;
 }
 
 .dataTable {
-	font-size: 80%;
-	margin: 5px;
-	border: 1px solid #CCCCCC
+  font-size: 80%;
+  margin: 5px;
+  border: 1px solid #CCCCCC
 }
 
 .prop_name {
-	font-size: 80%;
+  font-size: 80%;
 }
 
 .prop_attr {
-	display: inline-block;
-	margin: 2px;
-	padding: 1px;
-	color: white;
-	vertical-align: middle;
+  display: inline-block;
+  margin: 2px;
+  padding: 1px;
+  color: white;
+  vertical-align: middle;
 }
 
 .prop_attr_red {
-	background-color: red;
+  background-color: red;
 }
 
 .prop_attr_blue {
-	background-color: blue;
+  background-color: blue;
 }
 
 .prop_attr_green {
-	background-color: green;
+  background-color: green;
 }
 
 .copyLink {
-	text-decoration: none;
-	color: #00214a;
+  text-decoration: none;
+  color: #00214a;
 }
 
 .copyField {
-	width: 200px;
-	display: none;
+  width: 200px;
+  display: none;
 }
 
 .dataTable td, .dataTable th {
-	padding: 3px;
+  padding: 3px;
 }
 
 .dataTable th {
-	min-width: 160px;
-	text-align: left;
+  min-width: 160px;
+  text-align: left;
 }
 
 #itemId {
-	width: 125px;
-	height: 26px;
+  width: 125px;
+  height: 26px;
 }
 
 .descriptor {
-	margin: 5px 10px 5px 5px;
+  margin: 5px 10px 5px 5px;
 }
 
 .descriptorTable {
-	float: left;
-	margin-right: 10px;
-	margin-bottom: 10px;
-	border: 1px solid #ccc;
-	white-space: nowrap;
+  float: left;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  white-space: nowrap;
 }
 
 #RQLText .CodeMirror {
-	border: 1px solid #aaa;
-	height: 250px;
-	width:800px;
-	cursor: text;
+  border: 1px solid #aaa;
+  height: 250px;
+  width:800px;
+  cursor: text;
 }
 
 #RQLText {
-	display: inline-block;
+  display: inline-block;
 }
 
 .xmlDefinition .CodeMirror {
-	border: 1px solid #eee;
-	height: auto;
+  border: 1px solid #eee;
+  height: auto;
 }
 
 .xmlDefinition .CodeMirror-scroll {
-	overflow-y: hidden;
-	overflow-x: auto;
+  overflow-y: hidden;
+  overflow-x: auto;
 }
 
 .btn-desc {
-	display: inline-block;
-	background-color: #f9f9f9;
-	color: #666666;
-	border: 1px solid #dcdcdc;
-	padding: 2px;
-	font-size: 12px;
+  display: inline-block;
+  background-color: #f9f9f9;
+  color: #666666;
+  border: 1px solid #dcdcdc;
+  padding: 2px;
+  font-size: 12px;
 }
 
 .btn-toolbar {
@@ -172,281 +172,281 @@ a {
 
 #repoToolbar
 {
-	margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .btn-toolbar:hover {
   color : black;
-	}
+  }
 
 .red {
-	color: #880000;
+  color: #880000;
 }
 
 #splitValue {
-	width: 40px;
+  width: 40px;
 }
 
 .showMore {
-	font-size: 80%;
+  font-size: 80%;
 }
 
 .storedQueriesTitle {
-	font-size: 13px;
-	font-weight: bold;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 #descProperties {
-	display: none;
-	vertical-align: top;
-	margin-left: 5px;
+  display: none;
+  vertical-align: top;
+  margin-left: 5px;
 }
 
 #descProperties tbody tr:nth-child(odd) {
-	background-color: #F0F0F6;
+  background-color: #F0F0F6;
 }
 
 #descProperties table {
-	font-size: 80%;
-	border: none;
+  font-size: 80%;
+  border: none;
 }
 
 .showQueriesLabel {
-	font-size: 80%;
-	margin: 0px;
-	padding: 5px 0px 0px 0px;
+  font-size: 80%;
+  margin: 0px;
+  padding: 5px 0px 0px 0px;
 }
 
 .scrollableTab {
-	max-width: 600px;
-	max-height: 230px;
-	overflow-x: auto;
-	border: 1px solid #CCC;
+  max-width: 600px;
+  max-height: 230px;
+  overflow-x: auto;
+  border: 1px solid #CCC;
 }
 
 #storedQueries {
-	display: inline-block;
-	vertical-align: top;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .error {
-	color: red;
+  color: red;
 }
 
 #RQLSave {
-	margin: 5px;
+  margin: 5px;
 }
 
 .deleteQuery {
-	display: none;
-	margin-top: 5px;
-	margin-left: 10px;
-	cursor: pointer;
+  display: none;
+  margin-top: 5px;
+  margin-left: 10px;
+  cursor: pointer;
 }
 
 #bdaBug {
-	position: absolute;
-	top: 0px;
-	right: 30px;
-	font-size: 11px;
-	color: white;
-	border: 1px solid #00486c;
-	border-top: none;
-	background-color: #007bb8;
-	padding: 3px;
+  position: absolute;
+  top: 0px;
+  right: 30px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #00486c;
+  border-top: none;
+  background-color: #007bb8;
+  padding: 3px;
 }
 
 #bdaBug p, #bdaBackup p {
-	margin: 0;
+  margin: 0;
 }
 
 .bugArrow, .backupArrow {
-	text-align: center;
-	cursor: pointer;
-	padding-top: 2px;
+  text-align: center;
+  cursor: pointer;
+  padding-top: 2px;
 }
 
 .bugArrow img, .backupArrow img {
-	width: 15px;
-	height: 8px;
+  width: 15px;
+  height: 8px;
 }
 
 #bdaBugPanel {
-	position: absolute;
-	top: 34px;
-	right: 30px;
-	width: 250px;
-	font-size: 11px;
-	color: white;
-	border: 1px solid #00486c;
-	border-top: none;
-	background-color: #007bb8;
-	padding: 3px;
-	display: none;
+  position: absolute;
+  top: 34px;
+  right: 30px;
+  width: 250px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #00486c;
+  border-top: none;
+  background-color: #007bb8;
+  padding: 3px;
+  display: none;
 }
 
 #bdaBugPanel a {
-	text-decoration: underline;
-	color: white;
+  text-decoration: underline;
+  color: white;
 }
 
 #history {
-	clear: both;
+  clear: both;
 }
 
 #bdaBackup {
-	position: absolute;
-	top: 0px;
-	right: 153px;
-	font-size: 11px;
-	color: white;
-	border: 1px solid #8F0000;
-	border-top: none;
-	background-color: #CC0000;
-	padding: 3px;
+  position: absolute;
+  top: 0px;
+  right: 153px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #8F0000;
+  border-top: none;
+  background-color: #CC0000;
+  padding: 3px;
 }
 
 #bdaData {
-	width: 100%;
+  width: 100%;
 }
 
 #bdaBackupPanel {
-	position: absolute;
-	top: 34px;
-	right: 30px;
-	width: 250px;
-	font-size: 11px;
-	color: white;
-	border: 1px solid #8F0000;
-	border-top: none;
-	background-color: #CC0000;
-	padding: 3px;
-	display: none;
+  position: absolute;
+  top: 34px;
+  right: 30px;
+  width: 250px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #8F0000;
+  border-top: none;
+  background-color: #CC0000;
+  padding: 3px;
+  display: none;
 }
 
 #toolbar {
-	padding: 5px;
+  padding: 5px;
 }
 
 .newFav {
-	font-size: 30px;
-	border: 1px dashed #AAAAAA;
-	height: 54px;
-	width: 50px;
-	text-align: center;
-	float: left;
-	margin: 4px;
-	line-height: 48px;
-	cursor: pointer;
+  font-size: 30px;
+  border: 1px dashed #AAAAAA;
+  height: 54px;
+  width: 50px;
+  text-align: center;
+  float: left;
+  margin: 4px;
+  line-height: 48px;
+  cursor: pointer;
 }
 
 #addComponent {
-	color: #AAAAAA;
-	text-decoration: none;
+  color: #AAAAAA;
+  text-decoration: none;
 }
 
 .fav {
-	min-height: 50px;
-	min-width: 75px;
-	margin: 4px;
-	padding: 2px;
-	color: white;
-	float: left;
+  min-height: 50px;
+  min-width: 75px;
+  margin: 4px;
+  padding: 2px;
+  color: white;
+  float: left;
 }
 
 .fav a {
-	color:white;
+  color:white;
 }
 
 .favLink {
-	text-align: center;
-	line-height: 16px;
+  text-align: center;
+  line-height: 16px;
 }
 
 .favLink a, .logdebug {
-	color: white;
-	text-decoration: none;
+  color: white;
+  text-decoration: none;
 }
 
 .favName {
-	display: inline-block;
-	vertical-align: bottom;
-	font-size: 11px;
+  display: inline-block;
+  vertical-align: bottom;
+  font-size: 11px;
 }
 
 .favArrow {
-	text-align: center;
-	cursor: pointer;
-	padding-top: 2px;
-	font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  padding-top: 2px;
+  font-size: 11px;
 }
 
 .favArrow img {
-	width: 15px;
-	height: 8px;
+  width: 15px;
+  height: 8px;
 }
 
 .favTitle {
-	font-size: 14px;
-	font-weight: bold;
-	margin-bottom: 5px;;
-	text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 5px;;
+  text-align: center;
 }
 
 .favMoreInfo {
-	font-size: 11px;
-	display: none;
-	padding: 0;
-	text-align: left;
+  font-size: 11px;
+  display: none;
+  padding: 0;
+  text-align: left;
 }
 
 .favDelete {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 .favLogDebug form {
-	margin: 0;
+  margin: 0;
 }
 
 .favLogDebug {
-	margin-bottom: 2px;
-	margin-top: 2px;
+  margin-bottom: 2px;
+  margin-top: 2px;
 }
 
 .del-cross {
-	font-weight: bold;
-	font-size: 13px;
+  font-weight: bold;
+  font-size: 13px;
 }
 
 #oracleATGbrand
 {
-	width: 120px;
-	cursor: pointer;
+  width: 120px;
+  cursor: pointer;
 }
 
 #xmlHighlight
 {
-	margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 #rawXml pre
 {
-	margin : 0;
+  margin : 0;
 }
 
 #sqltext
 {
-	display: block;
+  display: block;
 }
 #curDataSourceName
 {
-	font-weight: bold;
+  font-weight: bold;
 }
 
 #sqlResult {
-	border-collapse: collapse;
-	width: 100%;
-	border : 1px solid #ccc;
+  border-collapse: collapse;
+  width: 100%;
+  border : 1px solid #ccc;
 }
 
 #sqlResult td, #sqlResult th {
@@ -476,8 +476,8 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 .clickable:hover {
-	color : #d14;
-	text-decoration: underline;
+  color : #d14;
+  text-decoration: underline;
 }
 
 .popup_block {
@@ -490,15 +490,34 @@ table.tablesorter tr.alt-row:hover td {
    position: absolute;
    left: 50%;
    transform: translate(-50%, 0);
+   z-index:1;
+   height: 400px;
+   width: 700px;
 }
 
-.methodsList {
-	display: inline-block;
-	vertical-align: top;
-	margin : 0 0 15px 0;
+.popup_title {
+	margin-top : 0;
+}
+
+#addComponentToolbarPopupContent {
+  height:71%;
+  overflow:auto;
 }
 
 .close, #submitComponent {
-	float: right;
-	color : black;
+  float: right;
+  color : black;
+}
+
+#methods, #vars {
+  float:left; 
+  width: 50%;
+}
+
+#methods li, #vars li{
+  list-style-position:inside;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
 }

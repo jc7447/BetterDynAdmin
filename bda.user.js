@@ -8,7 +8,7 @@
 // @grant GM_addStyle
 // @grant window.focus
 // @grant GM_setClipboard
-// @version 1.10.1
+// @version 1.10.2
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -366,7 +366,7 @@ var BDA = {
     {
       var descriptorOptions = "";
       var descriptors = this.getDescriptorList();
-      descriptorOptions += "<option value=''>Select a descriptor...</option>"
+      descriptorOptions = "<option></option>";
       for (var i = 0; i != descriptors.length; i++)
         descriptorOptions += "<option value='" + descriptors[i] + "'>" + descriptors[i] + "</option>\n";
       return descriptorOptions;
@@ -1049,7 +1049,7 @@ var BDA = {
       $("#RQLToolbar").append("<div> Action : "+ actionSelect 
           + " <span id='editor'>" 
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
-          + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='js-example-placeholder-single'>" + this.getDescriptorOptions() + "</select></span>"
+          + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
           + "</span>" 
           + this.getsubmitButton() + "</div>");
 
@@ -1058,6 +1058,7 @@ var BDA = {
         width : "style",
         minimumResultsForSearch: -1
       });
+      
       
       $("#itemDescriptor").select2({
         placeholder: "Select a descriptor",
@@ -1068,16 +1069,13 @@ var BDA = {
           if ($.trim(params) === '') {
             return data;
           }
+          data = data.toUpperCase();
+          params = params.toUpperCase();
           // `params.term` should be the term that is used for searching
           // `data.text` is the text that is displayed for the data object
-          if (data.indexOf(params) == 0) {
-            var modifiedData = $.extend({}, data, true);
-            modifiedData.text += ' (matched)';
-            // You can return modified objects from here
-            // This includes matching the `children` how you want in nested data sets
-            return modifiedData;
-          }
-          return null;
+          if(data.indexOf(params) != -1)
+              return true;
+          return false;
         }
       });
 
@@ -1657,7 +1655,7 @@ var BDA = {
       this.reloadToolbar();
     },
 
-    storeComponent : function (component, methods)
+    storeComponent : function (component, methods, vars)
     {
       if(this.hasWebStorage)
       {
@@ -1671,15 +1669,8 @@ var BDA = {
           compObj.id = storedComp[storedComp.length - 1].id + 1;
         console.log("id : " + compObj.id);
         
-        if(methods !== undefined)
-        {
-            compObj.methods = [];
-            for(var index in methods)
-            {
-                compObj.methods.push(methods[index]);
-            }
-        }
-        
+        compObj.methods = methods;
+        compObj.vars = vars;
         storedComp.push(compObj);
         
         localStorage.setItem('Components', JSON.stringify(storedComp));
@@ -1778,6 +1769,7 @@ var BDA = {
     {
       $("#toolbar").remove();
       $("#toolbarHeader").remove();
+    $('#addComponentToolbarPopup').remove();
     },
 
     reloadToolbar: function ()
@@ -1800,10 +1792,13 @@ var BDA = {
     {
         $("<div id='addComponentToolbarPopup' class='popup_block'>"
         + "<a href='#' class='close'><i class='fa fa-times'></i></a>"
-        + "<h3>Add component methods</h3>"
-        + "<p>Choose methods to shortcut : </p>"
-        + "<div id='methods'></div>"
-        + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button>"
+        + "<h3 class='popup_title'>Add new component</h3>"
+        + "<p>Choose methods and/or properties to shortcut : </p>"
+        + "<div id='addComponentToolbarPopupContent'>"
+        + "<div id='methods'><ul></ul></div>"
+        + "<div id='vars'><ul></ul></div></div><br>"
+        + "<div>"
+        + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button></div>"
         + "</div>").insertAfter(this.logoSelector)
         
       var favs = this.getStoredComponents();
@@ -1816,11 +1811,17 @@ var BDA = {
         var fav = favs[i];
         var colors = this.stringToColour(fav.componentName);
         var shortName = this.getComponentShortName(fav.componentName);
-        var methodsCallHTML = "";
-        for(var j in fav.methods)
-        {
-            methodsCallHTML += "<a href='" + fav.componentPath + "?shouldInvokeMethod=" + fav.methods[j] + "'>Call " + fav.methods[j] + "</a><br>";
-        }
+        var callableHTML = "<div class='favMethods'>";
+        if(fav.methods !== undefined)
+          fav.methods.forEach(function(element){
+            callableHTML += "<a href='" + fav.componentPath + "?shouldInvokeMethod=" + element + "'>Call " + element + "</a><br>";
+          });
+        callableHTML += "</div><div class='favVars'>";
+        if(fav.vars !== undefined)
+          fav.vars.forEach(function(element){
+            callableHTML += "<a href='" + fav.componentPath + "?propertyName=" + element + "'>Change " + element + "</a><br>";
+          });
+        callableHTML += "</div>";
         $("<div class='fav'></div>")
         .css("background-color", this.colorToCss(colors))
         .css("border", "1px solid " + this.getBorderColor(colors))
@@ -1840,9 +1841,7 @@ var BDA = {
             + "&nbsp; | &nbsp;"
             + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
             +"</div>"
-            + "<div class='favMethods'>" 
-            + methodsCallHTML
-            + "</div>"
+            + callableHTML
             + "<div class='favDelete' id='delete" + fav.componentName + "'><i class='fa fa-trash-o'></i> Delete</div>"
             + "</div>")
             .appendTo("#toolbar");
@@ -1880,26 +1879,7 @@ var BDA = {
         {
           $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
           .appendTo("#toolbar");
-          $(".newFav").click(function() {
-            console.log("Add component");
-            var methodsList = $("#methods");
-            methodsList.empty();
-            var tableMethods = $('h1:contains("Methods")').next();
-            var curList = $("<ul class='methodsList' />").appendTo(methodsList);
-            tableMethods.find('tr').each(function(index, element){
-              if(index > 0)
-              {
-                if ((index % 12) == 0) {
-                  curList = $("<ul class='methodsList' />").appendTo(methodsList)
-                 }
-                  var linkMethod =  $(element).find('a').first();
-                  var methodName = $(linkMethod).attr("href").split('=')[1];
-                  var methodId  = "method_" + methodName;
-                  curList.append('<li><input type="checkbox" class="method" id="' + methodId + '" />' 
-                                   + ' <label for="'+ methodId +'">' + methodName + '</label></li>');
-              }
-            });
-            $('#addComponentToolbarPopup').fadeIn();
+      
             $('.close').click(function() { 
                 $('.popup_block').fadeOut();
             });
@@ -1907,14 +1887,46 @@ var BDA = {
             $('#submitComponent').click(function(){
                 $('.popup_block').fadeOut();    
                 var methods = [];
+                var vars = [];
                 $('.method:checked').each(function(index, element){
-                    methods.push($(element.parentNode).text());
+                    methods.push(element.parentElement.textContent);
+                });
+                $('.variable:checked').each(function(index, element){
+                    vars.push(element.parentElement.textContent);
                 });
                 console.log("methods : " + methods);
-                BDA.storeComponent(componentPath, methods);
+                console.log("vars : " + vars);
+                BDA.storeComponent(componentPath, methods, vars);
                 BDA.reloadToolbar();
             });
+      
+          $(".newFav").click(function() {
+            console.log("Add component");
+            var methodsList = $("#methods");
+            var varsList = $("#vars");
+            methodsList.empty();
+            varsList.empty();
             
+            var tableMethods = $('h1:contains("Methods")').next();
+            tableMethods.find('tr').each(function(index, element){
+              if(index > 0)
+              {
+                 var linkMethod = $(element).find('a').first();
+                 var methodName = $(linkMethod).attr("href").split('=')[1];
+                 methodsList.append('<li><input type="checkbox" class="method" id="method_' + methodName + '"><label for="method_' + methodName + '">' + methodName + '</label></li>');
+              }
+            });
+            
+            var tablevars = $('h1:contains("Properties")').next();
+            tablevars.find('tr').each(function(index, element){
+              if(index > 0)
+              {
+                var linkVariable =  $(element).find('a').first();
+                var variableName = $(linkVariable).attr("href").split('=')[1];
+                varsList.append('<li><input type="checkbox" class="variable" id="var_' + variableName + '"><label for="var_' + variableName + '">' + variableName + '</label></li>');
+              }
+            });
+            $('#addComponentToolbarPopup').fadeIn();
           });
         }
       }
