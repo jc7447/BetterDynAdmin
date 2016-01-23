@@ -8,6 +8,9 @@
 // @grant GM_addStyle
 // @grant window.focus
 // @grant GM_setClipboard
+// @grant GM_getValue
+// @grant GM_setValue
+// @grant GM_deleteValue
 // @version 1.10.2
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -27,6 +30,16 @@
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
+
+var localStorageWrapper = 
+{
+	setItem : function(arg0, arg1)
+	{
+		localStorage.setItem(arg0, arg1);
+		if(GM_getValue(BDA.GMValue_MonoInstance) === true)
+			GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
+	}
+}
 
 var BDA = {
     componentBrowserPageSelector : "h1:contains('Component Browser')",
@@ -58,6 +71,8 @@ var BDA = {
     connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
     dataSourceDir : "/atg/dynamo/service/jdbc/",
     dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
+    GMValue_MonoInstance: "monoInstance",
+    GMValue_Backup:"backup",
 
     init : function(){
       var start = new Date().getTime();
@@ -73,6 +88,7 @@ var BDA = {
       this.isExecuteQueryPage = this.isExecuteQueryPage();
       this.isComponentPage = this.isComponentPage();
       this.isActorChainPage = this.isActorChainPage();
+	  this.hasWebStorage = this.hasWebStorage();
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
         this.logoSelector = "";
@@ -89,8 +105,14 @@ var BDA = {
       console.log("Path : " + this.purgeSlashes($(location).attr('pathname')));
       console.log("isComponentPage : " + this.isComponentPage + " IsOldDynamo : " + this.isOldDynamo);
       console.log("Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
+	  console.log("BDA monoInstance mode : " + (GM_getValue(BDA.GMValue_MonoInstance) === true));
 
       $.tablesorter.defaults.sortInitialOrder = 'desc';
+	  
+	  if(GM_getValue(BDA.GMValue_MonoInstance) === true)
+	  {
+			BDA.restoreData(GM_getValue(BDA.GMValue_Backup));
+	  }
       // Setup repository page
       if (this.isRepositoryPage())
         this.setupRepositoryPage();
@@ -110,7 +132,8 @@ var BDA = {
         this.setupExecuteQueryPage();
       
       this.showComponentHsitory();
-      this.createToolbar();
+	  //this.createToolbar();
+	  this.reloadData();
       this.createBackupPanel();
       this.createBugReportPanel();
 
@@ -1049,7 +1072,7 @@ var BDA = {
       $("#RQLToolbar").append("<div> Action : "+ actionSelect 
           + " <span id='editor'>" 
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
-          + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
+          + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
           + "</span>" 
           + this.getsubmitButton() + "</div>");
 
@@ -1057,26 +1080,6 @@ var BDA = {
       $("#RQLAction").select2({
         width : "style",
         minimumResultsForSearch: -1
-      });
-      
-      
-      $("#itemDescriptor").select2({
-        placeholder: "Select a descriptor",
-        allowClear: true,
-        width : "element",
-        matcher: function (params, data) {
-          // If there are no search terms, return all of the data
-          if ($.trim(params) === '') {
-            return data;
-          }
-          data = data.toUpperCase();
-          params = params.toUpperCase();
-          // `params.term` should be the term that is used for searching
-          // `data.text` is the text that is displayed for the data object
-          if(data.indexOf(params) != -1)
-              return true;
-          return false;
-        }
       });
 
       $("#RQLToolbar").after("<div id='RQLText'></div>");
@@ -1112,6 +1115,25 @@ var BDA = {
       this.setupItemTreeForm();
       this.setupItemDescriptorTable();
       this.setupPropertiesTables();
+      
+      $(".itemDescriptor").select2({
+        placeholder: "Select a descriptor",
+        allowClear: true,
+        width : "element",
+        matcher: function (params, data) {
+          // If there are no search terms, return all of the data
+          if ($.trim(params) === '') {
+            return data;
+          }
+          data = data.toUpperCase();
+          params = params.toUpperCase();
+          // `params.term` should be the term that is used for searching
+          // `data.text` is the text that is displayed for the data object
+          if(data.indexOf(params) != -1)
+              return true;
+          return false;
+        }
+      });
       
       $("#RQLAction").change(function() {
         var action = $(this).val();
@@ -1231,7 +1253,7 @@ var BDA = {
         toggleState = 0;
       var toggleObj = BDA.getToggleObj();
       toggleObj[toggle] = toggleState;
-      localStorage.setItem('toggleObj', JSON.stringify(toggleObj));
+      localStorageWrapper.setItem('toggleObj', JSON.stringify(toggleObj));
     },
 
     showItemPropertyList : function(item)
@@ -1397,7 +1419,7 @@ var BDA = {
       var splitObj = {};
       splitObj.splitValue = $("#splitValue").val();
       splitObj.activeSplit = $("#noSplit").is(':checked');
-      localStorage.setItem('splitObj', JSON.stringify(splitObj));
+      localStorageWrapper.setItem('splitObj', JSON.stringify(splitObj));
     },
 
     storeRQLQuery : function (name, query)
@@ -1412,7 +1434,7 @@ var BDA = {
         var rqlQueries = this.getStoredRQLQueries();
         rqlQueries.push(storeQuery);
         console.log(rqlQueries);
-        localStorage.setItem('RQLQueries', JSON.stringify(rqlQueries));
+        localStorageWrapper.setItem('RQLQueries', JSON.stringify(rqlQueries));
       }
     },
 
@@ -1422,7 +1444,7 @@ var BDA = {
       if (queries.length >  index)
       {
         queries.splice(index, 1);
-        localStorage.setItem('RQLQueries', JSON.stringify(queries));
+        localStorageWrapper.setItem('RQLQueries', JSON.stringify(queries));
       } 
     },
     purgeRQLQuery : function (rqlQueries)
@@ -1477,7 +1499,7 @@ var BDA = {
         componentHistory.unshift(componentPath);
         if (componentHistory.length >= 10)
           componentHistory = componentHistory.slice(0, 9);
-        localStorage.setItem('componentHistory', JSON.stringify(componentHistory));
+        localStorageWrapper.setItem('componentHistory', JSON.stringify(componentHistory));
       }
     },
 
@@ -1535,7 +1557,7 @@ var BDA = {
     {
       $("<div id='bdaBackup'></div>").appendTo("body")
 
-      .html("<p>Backup / restore data</p>"
+      .html("<p>Configuration</p>"
           + "<div class='backupArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
@@ -1553,18 +1575,25 @@ var BDA = {
 
       .html("<p>Why should I save Better Dyn Admin data ? "
           + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
-          + "<br /><br /><strong> Remenber that you can also import your backup to a BDA in another domain !</strong> </p>"
+          + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
 
           + "<textarea id='bdaData' placeholder='Paste your data here to restore it.'></textarea>"
           + "<button id='bdaDataBackup'>Backup</button>"
           + "<button id='bdaDataRestore'>Restore</button>"
+		  + "<p>I want to use the same BDA data on every domains<input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
       );
+	  
+	  $monoInstanceInput = $('#' + BDA.GMValue_MonoInstance);
+	  $monoInstanceInput.prop("checked", GM_getValue(BDA.GMValue_MonoInstance) === true).click(function(){
+		var isMonoInstance = $monoInstanceInput.val() === 'on';
+		GM_setValue(BDA.GMValue_MonoInstance, isMonoInstance);
+		if(isMonoInstance)
+			GM_setValue(BDA.GMValue_Backup, JSON.stringify(this.getData()));
+	  });
 
       $("#bdaDataBackup").click(function (){
-        var dataObj = {};
-        dataObj.components = BDA.getStoredComponents();
-        dataObj.queries = BDA.getStoredRQLQueries();
-        BDA.copyToClipboard(JSON.stringify(dataObj));
+		  var data = this.getData();
+		  BDA.copyToClipboard(JSON.stringify(data));
       });
 
       $("#bdaDataRestore").click(function (){
@@ -1575,21 +1604,37 @@ var BDA = {
         }
       });
     },
-
-    restoreData : function (data)
-    {
-      try 
-      {
-        var dataObj = JSON.parse(data);
-        localStorage.setItem('Components', JSON.stringify(dataObj.components));
-        localStorage.setItem('RQLQueries', JSON.stringify(dataObj.queries));
+	
+	getData : function()
+	{
+        var dataObj = {};
+        dataObj.components = BDA.getStoredComponents();
+        dataObj.queries = BDA.getStoredRQLQueries();
+        return dataObj;
+	},
+	
+	reloadData : function()
+	{
         this.reloadToolbar();
         if (this.isRepositoryPage())
           this.reloadQueryList();
-      } 
-      catch (e) {
-        console.error("Parsing error:", e);
-      }
+	},
+
+    restoreData : function (data)
+    {
+		if(this.hasWebStorage && data !== undefined)
+		{
+			  try 
+			  {
+				var dataObj = JSON.parse(data);
+				localStorageWrapper.setItem('Components', JSON.stringify(dataObj.components));
+				localStorageWrapper.setItem('RQLQueries', JSON.stringify(dataObj.queries));
+				this.reloadData();
+			  } 
+			  catch (e) {
+				console.error("Parsing error:", e);
+			  }
+		}
     },
 
     copyToClipboard : function (text) 
@@ -1634,7 +1679,7 @@ var BDA = {
         storedComponents[i].id = curId;
         curId++;
       }
-      localStorage.setItem('Components', JSON.stringify(storedComponents));
+      localStorageWrapper.setItem('Components', JSON.stringify(storedComponents));
       return storedComponents;
     },
     
@@ -1651,7 +1696,7 @@ var BDA = {
         }
       }
       console.log(components);
-      localStorage.setItem('Components', JSON.stringify(components));
+      localStorageWrapper.setItem('Components', JSON.stringify(components));
       this.reloadToolbar();
     },
 
@@ -1673,7 +1718,7 @@ var BDA = {
         compObj.vars = vars;
         storedComp.push(compObj);
         
-        localStorage.setItem('Components', JSON.stringify(storedComp));
+        localStorageWrapper.setItem('Components', JSON.stringify(storedComp));
       }
     },
 
@@ -2092,7 +2137,7 @@ var BDA = {
 
       $("#itemTree").append("<div id='itemTreeForm'>\
           id : <input type='text' id='itemTreeId' /> &nbsp;\
-          descriptor :  <select id='itemTreeDesc'>" + this.getDescriptorOptions() + "</select>&nbsp;\
+          descriptor :  <span id='itemTreeDescriptorField' > descriptor :  <select id='itemTreeDesc' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>\
           max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>\
           output format :  <select id='itemTreeOutput'><option value='HTMLtab'>HTML tab</option><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option><option value='printItem'>print-item XML</option></select>&nbsp;\
           <input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label><pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>\
