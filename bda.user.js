@@ -11,7 +11,7 @@
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_deleteValue
-// @version 1.11
+// @version 1.11.1
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -64,6 +64,10 @@ var BDA = {
     dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
     GMValue_MonoInstance: "monoInstance",
     GMValue_Backup:"backup",
+    nbItemCall : 0,
+    nbItemReceived : 0,
+    itemTree : {},
+    startGettingTree : 0,
 
     init : function(){
       var start = new Date().getTime();
@@ -2180,112 +2184,122 @@ var BDA = {
       return $(xmlDoc);
     },
 
-    getSubItems : function(item, $xmlDef, itemTree, maxItem)
-    {
-      var rawItemXml;
-      var subItems = [];
-      var nbItem =  Object.keys(itemTree).length;
+    getSubItems : function(items, $xmlDef, maxItem, outputType, printRepoAttr)
+    { 
+      var nbItem =  Object.keys(BDA.itemTree).length;
       console.log("maxItem : " + maxItem + ", nbItem : " + nbItem);
       if(nbItem >= maxItem)
       {
         // console.log("max Item ("+maxItem+") reached, stopping recursion");
         return;
       }
-      //console.log("get sub items for : " + item.id + ", desc : " + item.desc);
+      BDA.nbItemCall += items.length;
+      var xmlText = "";
+      for(var i = 0; i != items.length; i++)
+          xmlText += "<print-item id='" + items[i].id + "' item-descriptor='" + items[i].desc + "' />\n";
+        
+     // console.log(xmlText);
       $.ajax({
         type: "POST",
         url: document.URL,
-        data: { xmltext: "<print-item id='" + item.id + "' item-descriptor='" + item.desc + "' />"},
-        success: function(result) {
-
-          rawItemXml = $(result).find("code").html();
+        data: { xmltext: xmlText},
+        nbItemToCall : items.length,
+        success: function(result, status, jqXHR) {
+            //console.log(this.nbItemToCall);
+          BDA.nbItemReceived += this.nbItemToCall;
+          var rawItemsXml = $(result).find("code").html();
           // remove first 2 lines
-          var tab = rawItemXml.split("\n");
+          var tab = rawItemsXml.split("\n");
           tab.splice(0,2); 
-          rawItemXml = tab.join("\n").trim();
+          rawItemsXml = tab.join("\n").trim();
           // unescape HTML
-          rawItemXml = rawItemXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+          rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
+          
+          var xmlDoc = jQuery.parseXML(rawItemsXml);
+          $(xmlDoc).find("add-item").each(function() {
+              var subItems = [];
+              var $itemXml = $(this);
+              var itemId = $itemXml.attr("id");
+              if(!BDA.itemTree.hasOwnProperty(itemId))
+              {
+                  var rawItemXml = $itemXml[0].outerHTML;
+                 // console.log("Add item to item tree : " + rawItemXml + " with ID : " + itemId);
+                  BDA.itemTree[itemId] =  rawItemXml;
+                  var descriptor = $itemXml.attr("item-descriptor");
+                  var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
+                  var superType = $itemDesc.attr("super-type");
+                  while(superType != undefined)
+                  {
+                      var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
+                      // console.log("Add super type : " + $parentDesc.attr("name"));
+                      $itemDesc = $itemDesc.add($parentDesc);
+                      superType = $parentDesc.attr("super-type");
+                  }
+                  // One to One relation
+                  $itemDesc.find('property[item-type]')
+                      .each(function(index, elm) {
+                      var $elm = $(elm);
+                      var subProperty = $elm.attr("name");
+                      //console.log(subProperty);
+                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
+                      if ($elm.attr("repository") == undefined && subId != "")
+                      {
+                          // avoid infinite recursion
+                          if(!BDA.itemTree.hasOwnProperty(subId)) 
+                          {
+                              //console.log({'id' : subId, 'desc' : $elm.attr("item-type")});
+                              subItems.push({'id' : subId, 'desc' : $elm.attr("item-type")});
+                          }
+                      }
+                  });
+
+                  // One to Many relation with list, array or map
+                  $itemDesc.find('property[component-item-type]')
+                  .each(function(index, elm) {
+                      var $elm = $(elm);
+                      var subProperty = $elm.attr("name");
+                      // console.log(subProperty);
+                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
+
+                      if ($elm.attr("repository") == undefined && subId != "")
+                      {
+                          var desc = $elm.attr("component-item-type");
+                          if(subId.indexOf(",") != -1 || subId.indexOf("=") != -1 )
+                          {
+                              var splitChar = ",";
+                              if(subId.indexOf("=") != -1)
+                                  splitChar = "=";
+                              var ids = subId.split(splitChar);
+                              for(var i = 0; i != ids.length; i++)
+                              {
+                                if(!BDA.itemTree.hasOwnProperty(ids[i])) 
+                                    subItems.push({'id' : ids[i], 'desc' : desc});
+                              }
+                          }
+                          else
+                          {
+                            if(!BDA.itemTree.hasOwnProperty(subId)) 
+                                subItems.push({'id' : subId, 'desc' : desc});
+                          }
+                      }
+                  });
+                  if (subItems.length > 0)
+                      BDA.getSubItems(subItems, $xmlDef, maxItem, outputType, printRepoAttr);
+
+                  $("#itemTreeCount").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
+                  console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
+                  if (BDA.nbItemCall == BDA.nbItemReceived)
+                    BDA.renderItemTreeTab(outputType, printRepoAttr);
+              }
+          });
         },
-        async:   false
       });
-
-
-      var xmlDoc = jQuery.parseXML(rawItemXml);
-      var $itemXml = $(xmlDoc);
-      //console.log("Add item to item tree : " + rawItemXml);
-      itemTree[item.id] =  rawItemXml;
-      $("#itemTreeCount").html("<p>" + nbItem + " items already retrieved</p>");
-
-      var descriptor = $itemXml.find("add-item").attr("item-descriptor");
-      var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
-      var superType = $itemDesc.attr("super-type");
-      while(superType != undefined)
-      {
-        var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
-        // console.log("Add super type : " + $parentDesc.attr("name"));
-        $itemDesc = $itemDesc.add($parentDesc);
-        superType = $parentDesc.attr("super-type");
-      }
-      // One to One relation
-      $itemDesc.find('property[item-type]')
-      .each(function(index, elm) {
-        var $elm = $(elm);
-        var subProperty = $elm.attr("name");
-        //console.log(subProperty);
-        var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
-        if ($elm.attr("repository") == undefined && subId != "")
-        {
-          // avoid infinite recursion
-          if(!itemTree.hasOwnProperty(subId)) 
-          {
-            console.log({'id' : subId, 'desc' : $elm.attr("item-type")});
-            subItems.push({'id' : subId, 'desc' : $elm.attr("item-type")});
-          }
-        }
-      });
-
-      // One to Many relation with list, array or map
-      $itemDesc.find('property[component-item-type]')
-      .each(function(index, elm) {
-        var $elm = $(elm);
-        var subProperty = $elm.attr("name");
-        // console.log(subProperty);
-        var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
-
-        if ($elm.attr("repository") == undefined && subId != "")
-        {
-          var desc = $elm.attr("component-item-type");
-          if(subId.indexOf(",") != -1 || subId.indexOf("=") != -1 )
-          {
-            var splitChar = ",";
-            if(subId.indexOf("=") != -1)
-              splitChar = "=";
-            var ids = subId.split(splitChar);
-            for(var i = 0; i != ids.length; i++)
-            {
-              if(!itemTree.hasOwnProperty(subId)) 
-                subItems.push({'id' : ids[i], 'desc' : desc});
-            }
-          }
-          else
-          {
-            if(!itemTree.hasOwnProperty(subId)) 
-              subItems.push({'id' : subId, 'desc' : desc});
-          }
-        }
-      });
-
-      for(var i in subItems)
-      {
-        BDA.getSubItems(subItems[i], $xmlDef, itemTree, maxItem);
-      }
-      return subItems;
     },
 
     getItemTree : function(id, descriptor, maxItem, outputType, printRepoAttr)
     {
       console.log("getItemTree - start");
-      var startGettingTree = new Date().getTime();
+      BDA.startGettingTree = new Date().getTime();
       var $xmlDef = BDA.getRepositoryXmlDef();
 
       console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
@@ -2294,29 +2308,32 @@ var BDA = {
       $("#itemTreeCount").empty();
 
       // get tree
-      var itemTree = {};
-      BDA.getSubItems({'id' : id, 'desc' : descriptor}, $xmlDef, itemTree, maxItem);
-      $("#itemTreeCount").html("<p>" + Object.keys(itemTree).length + " items retrieved</p>");
-
-      var endGettingTree = new Date();
-      var time = endGettingTree.getTime() - startGettingTree;
-      console.log("time to get item tree : " + time + "ms");
-
+      BDA.itemTree = {};
+      BDA.nbItemReceived = 0;
+      BDA.nbItemCall = 0;
+      BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
+    },
+    
+    renderItemTreeTab : function(outputType, itemTree, printRepoAttr)
+    {
+      console.log("Render item tree tab : " + outputType);
+      $("#itemTreeCount").html("<p>" + Object.keys(BDA.itemTree).length + " items retrieved.</p>");
       // print result
+      $("#itemTreeResult").empty();
       var res = "";
       if(outputType == "addItem")
       {
-        for(id in itemTree)
+        for(id in BDA.itemTree)
         {
           if (printRepoAttr)
           {
-            var xmlDoc = jQuery.parseXML(itemTree[id]);
+            var xmlDoc = jQuery.parseXML(BDA.itemTree[id]);
             var $itemXml = $(xmlDoc).find("add-item");
             $itemXml.attr("repository", BDA.getCurrentComponentPath());
             res += $itemXml[0].outerHTML;
           }
           else
-            res += itemTree[id];
+            res += BDA.itemTree[id];
           res += "\n\n";
         }
         $("#itemTreeResult").append("<pre />");
@@ -2324,15 +2341,15 @@ var BDA = {
       }
       else if (outputType == "HTMLtab")
       {
-        for(id in itemTree)
-          res += itemTree[id];
+        for(id in BDA.itemTree)
+          res += BDA.itemTree[id];
         BDA.showXMLAsTab(res, $("#itemTreeResult"));
       }
       else if (outputType == "removeItem" || outputType == "printItem")
       {
-        for(id in itemTree)
+        for(id in BDA.itemTree)
         {
-          var xmlDoc = jQuery.parseXML(itemTree[id]);
+          var xmlDoc = jQuery.parseXML(BDA.itemTree[id]);
           var $itemXml = $(xmlDoc).find("add-item");
           res += "<";
           if (outputType == "removeItem")
@@ -2347,7 +2364,10 @@ var BDA = {
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
       }
-
+        
+      var endGettingTree = new Date();
+      var time = endGettingTree.getTime() - BDA.startGettingTree;
+      console.log("time to get item tree : " + time + "ms");
     }
 };
 
