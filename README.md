@@ -27,8 +27,14 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 Change logs
 ------
 
+### 1.11
+* [#35](../../issues/35) Persitent storage accross all dyn/admin instance
+
+### 1.10
+* [#16](../../issues/16) Toolbar personalization with new shortcut system
+
 ### 1.9
-* [#29](../../pull/29) Actor chains can be call directly through their component pages
+* [Pull #29](../../pull/29) Actor chains can be call directly through their component pages
 
 ### 1.8
 * Rework repository toolbar, new 'clear' button and new select input to filter repository descritpor, using [select2.js](https://github.com/select2/select2)
