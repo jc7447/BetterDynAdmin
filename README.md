@@ -29,6 +29,7 @@ Change logs
 
 ### 1.11
 * [#35](../../issues/35) Persitent storage accross all dyn/admin instance
+* Huge optimization of item tree. Asynchronous ajax call and request aggregation 
 
 ### 1.10
 * [#16](../../issues/16) Toolbar personalization with new shortcut system
