@@ -11,7 +11,7 @@
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_deleteValue
-// @version 1.11.1
+// @version 1.12
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -68,6 +68,13 @@ var BDA = {
     nbItemReceived : 0,
     itemTree : {},
     startGettingTree : 0,
+    defaultDescriptor : { "OrderRepository"          : "order", 
+                          "CsrRepository"            : "returnRequest", 
+                          "ProfileAdapterRepository" : "user", 
+                          "ProductCatalog"           : "sku", 
+                          "InventoryRepository"      : "inventory",
+                          "PriceLists"               : "price"
+                         },
 
     init : function(){
       var start = new Date().getTime();
@@ -384,9 +391,17 @@ var BDA = {
     {
       var descriptorOptions = "";
       var descriptors = this.getDescriptorList();
-      descriptorOptions = "<option></option>";
+      descriptorOptions = "";
+      var defaultDesc = this.defaultDescriptor[this.getComponentNameFromPath(this.getCurrentComponentPath())];
+      if (defaultDesc == undefined)
+        descriptorOptions = "<option></option>";
       for (var i = 0; i != descriptors.length; i++)
-        descriptorOptions += "<option value='" + descriptors[i] + "'>" + descriptors[i] + "</option>\n";
+      {
+        descriptorOptions += "<option value='" + descriptors[i] + "'";
+        if (defaultDesc === descriptors[i])
+          descriptorOptions += "selected='selected'"
+        descriptorOptions +=  ">" + descriptors[i] + "</option>\n";
+      }
       return descriptorOptions;
     },
 
@@ -609,10 +624,14 @@ var BDA = {
       return xmlStr;
     },
 
-    renderTab : function (types, datas)
+    renderTab : function (types, datas, tabId, showSpeedbar)
     {
+      console.log(showSpeedbar);
       var html = "";
-      html += "<table class='dataTable'>";
+      html += "<table class='dataTable' ";
+      if (showSpeedbar)
+        html += "id='" + tabId + "'";
+      html += ">"
       for (var i = 0; i != types.length; i++)
       {
         var curProp = types[i];
@@ -660,7 +679,7 @@ var BDA = {
       return html;
     },
 
-    showXMLAsTab : function(xmlContent, $outputDiv)
+    showXMLAsTab : function(xmlContent, $outputDiv, showSpeedbar)
     {
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
       var $xml = $(xmlDoc);
@@ -738,7 +757,7 @@ var BDA = {
           splitValue = datas[itemDesc].length;
         var nbTab = 0;
         if (datas[itemDesc].length <= splitValue)
-          html += this.renderTab(types[itemDesc], datas[itemDesc]);
+          html += this.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), showSpeedbar);
         else
         {
           while ((splitValue * nbTab) <  datas[itemDesc].length)
@@ -748,7 +767,7 @@ var BDA = {
             if (end > datas[itemDesc].length)
               end = datas[itemDesc].length;
             var subDatas = datas[itemDesc].slice(start, end);
-            html += this.renderTab(types[itemDesc], subDatas);
+            html += this.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, showSpeedbar);
             nbTab++;
           }
         }
@@ -773,6 +792,9 @@ var BDA = {
           $(this).hide();
         });
       }
+      if (showSpeedbar)
+        BDA.createSpeedbar();
+      
       var endRenderingTab = new Date();
       var time = endRenderingTab.getTime() - startRenderingtab;
       console.log("time to render tab : " + time + "ms");
@@ -804,7 +826,7 @@ var BDA = {
 
       var xmlContent = $(this.resultsSelector).next().text().trim();
       xmlContent = this.sanitizeXml(xmlContent);
-      var log = this.showXMLAsTab(xmlContent, $("#RQLResults"));
+      var log = this.showXMLAsTab(xmlContent, $("#RQLResults"), false);
       this.showRQLLog(log, false);
       // Move raw xml
       $(this.resultsSelector).next().appendTo("#rawXml");
@@ -1113,7 +1135,7 @@ var BDA = {
       
       $(".itemDescriptor").select2({
         placeholder: "Select a descriptor",
-        allowClear: true,
+        allowClear: false,
         width : "element",
         matcher: function (params, data) {
           // If there are no search terms, return all of the data
@@ -2180,7 +2202,15 @@ var BDA = {
         },
         async:   false
       });
-      var xmlDoc = jQuery.parseXML(rawXmlDef);
+      try 
+      {
+       var xmlDoc = jQuery.parseXML(rawXmlDef);
+      }  
+      catch(err)
+      {
+        console.log("Unable to parse XML def file !");
+        return null;
+      }
       return $(xmlDoc);
     },
 
@@ -2198,7 +2228,7 @@ var BDA = {
       for(var i = 0; i != items.length; i++)
           xmlText += "<print-item id='" + items[i].id + "' item-descriptor='" + items[i].desc + "' />\n";
         
-     // console.log(xmlText);
+      //console.log(xmlText);
       $.ajax({
         type: "POST",
         url: document.URL,
@@ -2286,12 +2316,13 @@ var BDA = {
                   if (subItems.length > 0)
                       BDA.getSubItems(subItems, $xmlDef, maxItem, outputType, printRepoAttr);
 
-                  $("#itemTreeCount").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
-                  console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
-                  if (BDA.nbItemCall == BDA.nbItemReceived)
-                    BDA.renderItemTreeTab(outputType, printRepoAttr);
               }
           });
+
+          $("#itemTreeCount").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
+          console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
+          if (BDA.nbItemCall == BDA.nbItemReceived)
+            BDA.renderItemTreeTab(outputType, printRepoAttr);
         },
       });
     },
@@ -2300,13 +2331,18 @@ var BDA = {
     {
       console.log("getItemTree - start");
       BDA.startGettingTree = new Date().getTime();
-      var $xmlDef = BDA.getRepositoryXmlDef();
-
-      console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
       // reset divs
       $("#itemTreeResult").empty();
       $("#itemTreeCount").empty();
-
+      
+      // Get XML definition of the repository
+      var $xmlDef = BDA.getRepositoryXmlDef();
+      if ($xmlDef == null) 
+      {
+        $("#itemTreeResult").append("<p>Unable to parse XML definition of this repository !</p>");
+        return ;
+      }
+      console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
       // get tree
       BDA.itemTree = {};
       BDA.nbItemReceived = 0;
@@ -2343,7 +2379,7 @@ var BDA = {
       {
         for(id in BDA.itemTree)
           res += BDA.itemTree[id];
-        BDA.showXMLAsTab(res, $("#itemTreeResult"));
+        BDA.showXMLAsTab(res, $("#itemTreeResult"), true);
       }
       else if (outputType == "removeItem" || outputType == "printItem")
       {
@@ -2368,6 +2404,38 @@ var BDA = {
       var endGettingTree = new Date();
       var time = endGettingTree.getTime() - BDA.startGettingTree;
       console.log("time to get item tree : " + time + "ms");
+    },
+    
+    createSpeedbar : function() 
+    {
+      var speedBarHtml = "<a class='close' href='javascript:void(0)'><i class='fa fa-times'></i></a><p>Quick links :</p><ul>";
+      $("#itemTreeResult .dataTable").each(function(index) {
+        var $tab = $(this);
+        var id =  $tab.attr("id").trim();
+        var name = id;
+        var numb = "";
+        if (id.indexOf("_") != -1) 
+        {
+          var tab = id.split("_");
+          name = tab[0];
+          numb = tab[1];
+        }
+        var nbItem = $tab.find("td").size() / $tab.find("tr").size() 
+        speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name + " " + numb + " (" + nbItem + ")</a></li>";
+      });
+      speedBarHtml += "</ul>";
+      $("#itemTreeCount").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
+      $('#speedbar .close').click(function() { 
+        $("#speedbar").fadeOut(200);
+      });
+        var stickyTop = $('.sticky').offset().top;
+        $(window).scroll(function(){ // scroll event
+          var windowTop = $(window).scrollTop();
+          if (stickyTop < windowTop)
+            $('.sticky').css({ position: 'fixed', top: 100 });
+          else 
+            $('.sticky').css('position','static');
+        });
     }
 };
 
