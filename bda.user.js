@@ -432,12 +432,14 @@ var BDA = {
     {
       $("#itemIdField").show();
       $("#itemDescriptorField").show();
+      $("#idOnlyField").hide();
     },
 
     getAddItemEditor: function()
     {
       $("#itemIdField").hide();
       $("#itemDescriptorField").show();
+      $("#idOnlyField").hide();
     },
 
     getRemoveItemEditor : function ()
@@ -454,6 +456,7 @@ var BDA = {
     {
       $("#itemIdField").hide();
       $("#itemDescriptorField").show();
+      $("#idOnlyField").show();
     },
 
     getMultiId : function()
@@ -510,7 +513,8 @@ var BDA = {
     getQueryItemsQuery : function ()
     {
       var descriptor = $("#itemDescriptor").val();
-      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n\n";
+      var idOnly = $("#idOnly").prop('checked');
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" id-only=\"" + idOnly + "\">\n\n";
       query += "</query-items>\n";
       return query;
     },
@@ -1108,7 +1112,7 @@ var BDA = {
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
           + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
           + "</span>" 
-          + this.getsubmitButton() + "</div>");
+          + this.getsubmitButton() + "<br /><span id='idOnlyField' style='display: none;'>id only : <input type='checkbox' id='idOnly'></input></span></div>");
 
       
       $("#RQLAction").select2({
