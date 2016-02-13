@@ -4,6 +4,9 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @contributor  Benjamin Descamps
+// @homepageURL  https://github.com/jc7447/BetterDynAdmin
+// @supportURL   https://github.com/jc7447/BetterDynAdmin/issues
+// @description  Oracle Commerce Dyn Admin enhancer
 // @grant GM_getResourceText
 // @grant GM_addStyle
 // @grant window.focus
@@ -19,6 +22,7 @@
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.14.0/vis.min.js
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
@@ -27,6 +31,7 @@
 // @resource select2CSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.css
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
+// @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.14.0/vis.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -92,6 +97,7 @@ var BDA = {
       this.isActorChainPage = this.isActorChainPage();
       this.hasWebStorage = this.hasWebStorage();
       this.isRepositoryPage = this.isRepositoryPage();
+      this.isPipelineManagerPage = this.isPipelineManagerPage();
       
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
@@ -149,6 +155,10 @@ var BDA = {
         this.collectHistory();
         // Make search field visible
         $("#search").css("display", "inline");
+        if(this.isPipelineManagerPage)
+        {
+          this.setupPipelineManagerPage();
+        }
       }
       else if (this.isActorChainPage)
           this.createActorCaller();
@@ -211,6 +221,8 @@ var BDA = {
       GM_addStyle(select2BootCSS);
       var bdaCSS = GM_getResourceText("bdaCSS");
       GM_addStyle(bdaCSS);
+      var visCSS = GM_getResourceText("visCSS");
+      GM_addStyle(visCSS);
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -299,6 +311,11 @@ var BDA = {
     isActorChainPage : function()
     {
         return $("h2:contains('Actor Chain:')").size() == 1 && document.URL.indexOf('chainId=') != -1;
+    },
+    
+    isPipelineManagerPage : function()
+    {
+        return $("h2:contains('Pipeline Chains')").size() === 1;
     },
 
     rotateArrow : function ($arrow)
@@ -415,12 +432,14 @@ var BDA = {
     {
       $("#itemIdField").show();
       $("#itemDescriptorField").show();
+      $("#idOnlyField").hide();
     },
 
     getAddItemEditor: function()
     {
       $("#itemIdField").hide();
       $("#itemDescriptorField").show();
+      $("#idOnlyField").hide();
     },
 
     getRemoveItemEditor : function ()
@@ -437,6 +456,7 @@ var BDA = {
     {
       $("#itemIdField").hide();
       $("#itemDescriptorField").show();
+      $("#idOnlyField").show();
     },
 
     getMultiId : function()
@@ -493,7 +513,8 @@ var BDA = {
     getQueryItemsQuery : function ()
     {
       var descriptor = $("#itemDescriptor").val();
-      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n\n";
+      var idOnly = $("#idOnly").prop('checked');
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" id-only=\"" + idOnly + "\">\n\n";
       query += "</query-items>\n";
       return query;
     },
@@ -1091,7 +1112,7 @@ var BDA = {
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
           + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
           + "</span>" 
-          + this.getsubmitButton() + "</div>");
+          + this.getsubmitButton() + "<br /><span id='idOnlyField' style='display: none;'>id only : <input type='checkbox' id='idOnly'></input></span></div>");
 
       
       $("#RQLAction").select2({
@@ -1369,6 +1390,68 @@ var BDA = {
 
       $("#descriptorTable").remove();
       $(html).insertAfter("a[name='listItemDescriptors']");
+    },
+    
+    setupPipelineManagerPage : function()
+    {
+        //subscribe chain link to action "show diagram"
+      $("body").on("click", ".toggleDiagramShow", function(event){
+          var container = document.getElementById('pipelineScheme');
+          var $element = $(event.target);
+          var data = {
+              nodes: $element.data("nodes"),
+              edges: $element.data("edges")
+          };
+          var options = {width:"100%",height:"300",
+                         interaction:{zoomView:false,selectable:false,dragNodes:false,dragView: false},
+                         layout:{
+                             hierarchical:{enabled:true,direction:"LR",sortMethod:"hubsize", nodeSpacing:200, blockShifting: false,edgeMinimization: false, levelSeparation:300}},
+                         edges:{length:undefined},
+                         nodes:{shape:"box"},
+                         physics:{ enabled:true, hierarchicalRepulsion:{nodeDistance:200,centralGravity:0.1}}};
+         // Actually renders into container
+          var network = new vis.Network(container, data, options);
+      });
+      
+      //create diagram container
+      $("h2:contains('Pipeline Chains')").append("<br/><div id='pipelineScheme'></div>");
+      
+      //process pipeline definition file
+      BDA.processRepositoryXmlDef("definitionFile", function($xmlDef){
+          var actorChainArray = $("h2:contains('Pipeline Chains')").next();
+          var rows = $(actorChainArray).find('tr > td:first-child');
+          rows.each(function(rowIndex, rowElement){
+              var chainName = $(this).text();
+              var $chainDef = $xmlDef.find('pipelinechain[name=' + chainName + ']');
+              var nodes = new vis.DataSet();
+              var edges = new vis.DataSet();
+              var transitionLink = [];
+              $chainDef.find('pipelinelink').each(function(pipelinelinkIndex, pipelinelinkElement){
+                  var pipelineLinkName = $(pipelinelinkElement).attr('name');
+                  var processor = $(pipelinelinkElement).find('processor');
+                  var pipelineName = $(processor).attr('jndi');
+                  if(pipelineName === undefined)
+                      pipelineName = $(processor).attr('class');
+                  var shortPipelineName = pipelineName.substr(pipelineName.lastIndexOf('/')+1);
+                  shortPipelineName = shortPipelineName.substr(pipelineName.lastIndexOf('.')+1);
+                  nodes.add({id:pipelinelinkIndex, label:shortPipelineName});
+                  
+                  var transitions = $(pipelinelinkElement).find('transition');
+                  transitions.each(function(index, element){
+                      transitionLink.push({processor : $(element).attr('link'), id:pipelinelinkIndex});
+                  });
+                  var item = transitionLink.find(function(item){
+                      return item.processor == pipelineLinkName;
+                  });
+                  if(item !== undefined){
+                      edges.add({from:item.id, to:pipelinelinkIndex, arrows:'to'});
+                  }
+              });
+              $a = $("<a class='toggleDiagramShow' href='#'>" + $(rowElement).text() + "</a>");
+              $(rowElement).replaceWith($a);
+              $a.data("nodes", nodes).data("edges", edges);
+          });
+      });
     },
 
     showQueryList : function ()
@@ -1886,12 +1969,12 @@ var BDA = {
         var callableHTML = "<div class='favMethods'>";
         if(fav.methods !== undefined)
           fav.methods.forEach(function(element){
-            callableHTML += "<a href='" + fav.componentPath + "?shouldInvokeMethod=" + element + "'>Call " + element + "</a><br>";
+            callableHTML += "<a target='_blank' href='" + fav.componentPath + "?shouldInvokeMethod=" + element + "'>Call " + element + "</a><br>";
           });
         callableHTML += "</div><div class='favVars'>";
         if(fav.vars !== undefined)
           fav.vars.forEach(function(element){
-            callableHTML += "<a href='" + fav.componentPath + "?propertyName=" + element + "'>Change " + element + "</a><br>";
+            callableHTML += "<a target='_blank' href='" + fav.componentPath + "?propertyName=" + element + "'>Change " + element + "</a><br>";
           });
         callableHTML += "</div>";
         $("<div class='fav'></div>")
@@ -2184,9 +2267,9 @@ var BDA = {
 
     },
 
-    getRepositoryXmlDef : function()
+    processRepositoryXmlDef : function(property, callback)
     {
-      var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=definitionFiles";
+      var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
       console.log(url);
       var rawXmlDef = "";
       jQuery.ajax({
@@ -2199,19 +2282,18 @@ var BDA = {
           .replace(/&gt;/g, ">")
           .replace("&nbsp;", "")
           .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
+            try 
+            {
+                var xmlDoc = jQuery.parseXML(rawXmlDef);
+            }  
+            catch(err)
+            {
+                console.log("Unable to parse XML def file !");
+            }
+            if(callback !== undefined)
+                callback($(xmlDoc));
         },
-        async:   false
       });
-      try 
-      {
-       var xmlDoc = jQuery.parseXML(rawXmlDef);
-      }  
-      catch(err)
-      {
-        console.log("Unable to parse XML def file !");
-        return null;
-      }
-      return $(xmlDoc);
     },
 
     getSubItems : function(items, $xmlDef, maxItem, outputType, printRepoAttr)
@@ -2336,18 +2418,19 @@ var BDA = {
       $("#itemTreeCount").empty();
       
       // Get XML definition of the repository
-      var $xmlDef = BDA.getRepositoryXmlDef();
-      if ($xmlDef == null) 
-      {
-        $("#itemTreeResult").append("<p>Unable to parse XML definition of this repository !</p>");
-        return ;
-      }
-      console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
-      // get tree
-      BDA.itemTree = {};
-      BDA.nbItemReceived = 0;
-      BDA.nbItemCall = 0;
-      BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
+      var $xmlDef = BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
+          if ($xmlDef == null) 
+          {
+              $("#itemTreeResult").append("<p>Unable to parse XML definition of this repository !</p>");
+              return ;
+          }
+          console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
+          // get tree
+          BDA.itemTree = {};
+          BDA.nbItemReceived = 0;
+          BDA.nbItemCall = 0;
+          BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
+      });
     },
     
     renderItemTreeTab : function(outputType, itemTree, printRepoAttr)
