@@ -14,7 +14,7 @@
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_deleteValue
-// @version 1.12
+// @version 1.13
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -80,6 +80,7 @@ var BDA = {
                           "InventoryRepository"      : "inventory",
                           "PriceLists"               : "price"
                          },
+    $pipelineDef : null,
 
     init : function(){
       var start = new Date().getTime();
@@ -156,9 +157,7 @@ var BDA = {
         // Make search field visible
         $("#search").css("display", "inline");
         if(this.isPipelineManagerPage)
-        {
           this.setupPipelineManagerPage();
-        }
       }
       else if (this.isActorChainPage)
           this.createActorCaller();
@@ -928,7 +927,6 @@ var BDA = {
       console.log("Xml size : " + xmlSize);
       if (xmlSize < this.xmlDefinitionMaxSize)
       {
-       // this.setupFlowchart($("pre"));
         this.highlightAndIndentXml($("pre"));
         
       }
@@ -1043,7 +1041,7 @@ var BDA = {
         unescapeXML = vkbeautify.xml(unescapeXML, 2);
         var dateIndent = new Date();
         console.log("time to indent : " + (dateIndent.getTime() - dateStart) + "ms");
-        $(this)
+        var $codeBlock = $(this)
         // remove previous XML content
         .empty()
         // add code tags
@@ -1051,19 +1049,20 @@ var BDA = {
         .find("code")
         // set escape XML content, because highlight.js needs escape XML to works
         .text(unescapeXML);
-      });
-      
-      $('pre code').each(function(i, block) {
+        
         // Run highlight.js on each XML block
-        hljs.highlightBlock(block);
+        console.log($codeBlock.get(0));
+        hljs.highlightBlock($codeBlock.get(0));
         // Make component path clickable
-        $(block).find("span.hljs-attribute:contains('jndi'), span.hljs-attribute:contains('repository')").each(function() {
+        $codeBlock.find("span.hljs-attribute:contains('jndi'), span.hljs-attribute:contains('repository')")
+        .each(function() {
           var $value = $(this).next();
           var url = "/dyn/admin/nucleus" + $value.text().replace(/\"/g, "");
           $value.wrap("<a target='_blank' class='clickable' href='" + url + "' ></a>");
           $value.append("<i class='fa fa-external-link'></i>");
         });
       });
+      
       var dateEnd = new Date();
       var time = dateEnd.getTime() - dateStart;
       console.log("time to highlight and indent : " + time + "ms");
@@ -1111,8 +1110,9 @@ var BDA = {
           + " <span id='editor'>" 
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
           + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
+          + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>"
           + "</span>" 
-          + this.getsubmitButton() + "<br /><span id='idOnlyField' style='display: none;'>id only : <input type='checkbox' id='idOnly'></input></span></div>");
+          + this.getsubmitButton() + "</div>");
 
       
       $("#RQLAction").select2({
@@ -1394,66 +1394,145 @@ var BDA = {
     
     setupPipelineManagerPage : function()
     {
-        //subscribe chain link to action "show diagram"
-      $("body").on("click", ".toggleDiagramShow", function(event){
-          var container = document.getElementById('pipelineScheme');
-          var $element = $(event.target);
-          var data = {
-              nodes: $element.data("nodes"),
-              edges: $element.data("edges")
-          };
-          var options = {width:"100%",height:"300",
-                         interaction:{zoomView:false,selectable:false,dragNodes:false,dragView: false},
-                         layout:{
-                             hierarchical:{enabled:true,direction:"LR",sortMethod:"hubsize", nodeSpacing:200, blockShifting: false,edgeMinimization: false, levelSeparation:300}},
-                         edges:{length:undefined},
-                         nodes:{shape:"box"},
-                         physics:{ enabled:true, hierarchicalRepulsion:{nodeDistance:200,centralGravity:0.1}}};
-         // Actually renders into container
-          var network = new vis.Network(container, data, options);
-      });
-      
       //create diagram container
-      $("h2:contains('Pipeline Chains')").append("<br/><div id='pipelineScheme'></div>");
-      
+      $("h2:contains('Pipeline Chains')").append("<div class='popup_block' id='pipelinePopup'>"
+                                                 + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></div>"
+                                                 + "<div><h3></h3></div></i></a><div id='pipelineScheme'></div></div>");
+      $("#pipelinePopup .close").click(function() {
+        $("#pipelinePopup").fadeOut();
+      });
+      var $pipelineTable = $("h2:contains('Pipeline Chains')").next().attr("id", "pipelineTable");
+      $pipelineTable.find("tr:nth-child(odd)").addClass("odd");
+      $pipelineTable.find("tr:first").append("<th>Show XML</th><th>Show graph</th>");
+      $pipelineTable.find("tr:gt(0)").append("<td align='center'><i class='fa fa-code link'></i></td><td align='center'><i class='fa fa-eye link'></i></td>");
       //process pipeline definition file
       BDA.processRepositoryXmlDef("definitionFile", function($xmlDef){
-          var actorChainArray = $("h2:contains('Pipeline Chains')").next();
-          var rows = $(actorChainArray).find('tr > td:first-child');
-          rows.each(function(rowIndex, rowElement){
-              var chainName = $(this).text();
-              var $chainDef = $xmlDef.find('pipelinechain[name=' + chainName + ']');
-              var nodes = new vis.DataSet();
-              var edges = new vis.DataSet();
-              var transitionLink = [];
-              $chainDef.find('pipelinelink').each(function(pipelinelinkIndex, pipelinelinkElement){
-                  var pipelineLinkName = $(pipelinelinkElement).attr('name');
-                  var processor = $(pipelinelinkElement).find('processor');
-                  var pipelineName = $(processor).attr('jndi');
-                  if(pipelineName === undefined)
-                      pipelineName = $(processor).attr('class');
-                  var shortPipelineName = pipelineName.substr(pipelineName.lastIndexOf('/')+1);
-                  shortPipelineName = shortPipelineName.substr(pipelineName.lastIndexOf('.')+1);
-                  nodes.add({id:pipelinelinkIndex, label:shortPipelineName});
-                  
-                  var transitions = $(pipelinelinkElement).find('transition');
-                  transitions.each(function(index, element){
-                      transitionLink.push({processor : $(element).attr('link'), id:pipelinelinkIndex});
-                  });
-                  var item = transitionLink.find(function(item){
-                      return item.processor == pipelineLinkName;
-                  });
-                  if(item !== undefined){
-                      edges.add({from:item.id, to:pipelinelinkIndex, arrows:'to'});
-                  }
+          BDA.$pipelineDef = $xmlDef;
+          $pipelineTable.find('tr').each(function(index, elem){
+              var $elem = $(elem);
+              var chainName = $elem.find("td:eq(0)").text();
+              $elem.attr("id", chainName);
+              $elem.find("td:eq(7)").click(function() {
+                BDA.showPipelineXml(chainName, $elem.hasClass("odd"));
               });
-              $a = $("<a class='toggleDiagramShow' href='#'>" + $(rowElement).text() + "</a>");
-              $(rowElement).replaceWith($a);
-              $a.data("nodes", nodes).data("edges", edges);
+              
+              $elem.find("td:eq(8)").click(function() {
+                BDA.showPipelineGraph(chainName);
+              });
           });
       });
     },
-
+    
+    
+    showPipelineXml : function(chainName, isOdd)
+    {
+      console.log("Show pipeline XML for chain : " + chainName + " isOdd : " + isOdd);
+      var trId = "xml_" + chainName;
+      
+      console.log($("#" + trId).size() == 0);
+      if ($("#" + trId).size() == 0) {
+        console.log(BDA.$pipelineDef);
+        var xml = BDA.$pipelineDef.find("pipelinechain[name=" + chainName + "]")[0].outerHTML;
+        console.log(xml);
+        var $codeBlock = $("<tr id='" + trId + "'><td colspan='9'><pre></pre></td></tr>")
+        .insertAfter("#" + chainName)
+        .find("pre")
+        .text(xml);
+        if (isOdd)
+          $("#" + trId).addClass("odd");
+        BDA.highlightAndIndentXml($codeBlock);
+      }
+    },
+    
+    showPipelineGraph : function(chainName) 
+    {
+      console.log("Show pipeline graph for chain : " + chainName);
+      $("#pipelinePopup h3").text(chainName);
+      $("#pipelinePopup").show();
+      var container = document.getElementById('pipelineScheme');
+      var data = BDA.createNodesAndEdges(chainName);
+      var options = {
+                     width : "100%",
+                     height: "550px",
+                     interaction : {
+                        zoomView : true,
+                        selectable : true,
+                        dragNodes : false,
+                        dragView : true,
+                        hover : true
+                     },
+                     layout:{
+                         hierarchical : {
+                           enabled : true,
+                           direction : "LR",
+                           sortMethod : "hubsize", 
+                           nodeSpacing : 200, 
+                           blockShifting : false,
+                           edgeMinimization : false, 
+                           levelSeparation : 300
+                       }
+                     },
+                     edges : { 
+                       length : undefined
+                     },
+                     nodes : { 
+                       shape:"box"
+                     },
+                     physics :{ 
+                       enabled:true, 
+                       hierarchicalRepulsion : {
+                         nodeDistance:200,
+                         centralGravity:0.1
+                         }
+                     }
+                   };
+     // Actually renders into container
+      var network = new vis.Network(container, data, options);
+      /*
+      network.on("click", function (params) {
+        console.log("click");
+      console.log(params);
+        var id = params.nodes[0];
+        console.log(id);
+        console.log(data.nodes.get(id).label);
+        var url = "/dyn/admin/nucleus" + data.nodes.get(id).label;
+        window.open(url, '_blank');
+        
+    });*/
+    },
+    
+    createNodesAndEdges : function(chainName)
+    {
+      var $chainDef = BDA.$pipelineDef.find('pipelinechain[name=' + chainName + ']');
+      var nodes = new vis.DataSet();
+      var edges = new vis.DataSet();
+      var transitionLink = [];
+      $chainDef.find('pipelinelink').each(function(pipelinelinkIndex, pipelinelinkElement){
+          var pipelineLinkName = $(pipelinelinkElement).attr('name');
+          console.log("link : "  + pipelineLinkName);
+          var processor = $(pipelinelinkElement).find('processor');
+          var pipelineName = $(processor).attr('jndi');
+          if(pipelineName === undefined)
+              pipelineName = $(processor).attr('class');
+          var shortPipelineName = pipelineName.substr(pipelineName.lastIndexOf('/') + 1);
+          shortPipelineName = shortPipelineName.substr(pipelineName.lastIndexOf('.') + 1);
+          nodes.add({id : pipelinelinkIndex, label : shortPipelineName});
+          
+          var transitions = $(pipelinelinkElement).find('transition');
+          transitions.each(function(index, element){
+              transitionLink.push({processor : $(element).attr('link'), id : pipelinelinkIndex});
+          });
+          var item = transitionLink.find(function(item){
+              return item.processor == pipelineLinkName;
+          });
+          if(item !== undefined){
+              edges.add({from:item.id, to:pipelinelinkIndex, arrows:'to'});
+          }
+      });
+      console.log({"edges" : edges, "nodes" : nodes});
+      return {"edges" : edges, "nodes" : nodes};
+    },
+    
     showQueryList : function ()
     {
       var html = "";

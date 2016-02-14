@@ -487,16 +487,27 @@ table.tablesorter tr.alt-row:hover td {
    display: none;
    font-size: 0.9em;
    padding: 10px;
-   position: absolute;
+   position: fixed;
    left: 50%;
    transform: translate(-50%, 0);
    z-index:1;
    height: 400px;
    width: 700px;
+   top : 30px;
+}
+
+#pipelinePopup {
+   height: 600px;
+   width: 90%;
+   font-size: 14px;
+}
+
+#pipelineTable {
+	font-size: 14px;
 }
 
 .popup_title {
-	margin-top : 0;
+  margin-top : 0;
 }
 
 #addComponentToolbarPopupContent {
@@ -552,5 +563,13 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #widget li {
-	margin-top : 5px;
+  margin-top : 5px;
+}
+
+.link {
+	cursor: pointer;
+}
+
+#pipelineTable pre {
+	margin : 0;
 }
