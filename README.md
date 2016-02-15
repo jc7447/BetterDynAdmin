@@ -26,6 +26,13 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 
 Change logs
 ------
+### 1.13
+* [#44](../../issues/44) Improvement of pipeline manager pages, graphical representation of each pipeline and quick link to XML definition
+* [#41](../../issues/41) Add "id-only" checkbox for query-item
+
+### 1.12
+* New speedbar with quick links for item tree
+* Default repository descriptor for some repositories
 
 ### 1.11
 * [#35](../../issues/35) Persitent storage accross all dyn/admin instance
