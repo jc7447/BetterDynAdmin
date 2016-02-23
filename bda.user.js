@@ -2516,6 +2516,13 @@ var BDA = {
     {
       console.log("Render item tree tab : " + outputType);
       $("#itemTreeCount").html("<p>" + Object.keys(BDA.itemTree).length + " items retrieved.</p>");
+      if(outputType !== "HTMLtab")
+      {
+          $("#itemTreeCount").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
+          $('#itemTreeCopyButton').click(function(){
+              BDA.copyToClipboard($('#itemTreeResult').text());
+          });
+      }
       // print result
       $("#itemTreeResult").empty();
       var res = "";
