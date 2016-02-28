@@ -14,7 +14,7 @@
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_deleteValue
-// @version 1.13
+// @version 1.14
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -22,7 +22,7 @@
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
 // @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.min.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.14.0/vis.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
@@ -31,7 +31,7 @@
 // @resource select2CSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.css
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
-// @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.14.0/vis.min.css
+// @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -71,58 +71,92 @@ var BDA = {
     GMValue_Backup:"backup",
     nbItemCall : 0,
     nbItemReceived : 0,
-    itemTree : {},
+    itemTree : new Map(),
     startGettingTree : 0,
-    defaultDescriptor : { "OrderRepository"          : "order", 
-                          "CsrRepository"            : "returnRequest", 
-                          "ProfileAdapterRepository" : "user", 
-                          "ProductCatalog"           : "sku", 
+    defaultDescriptor : { "OrderRepository"          : "order",
+                          "CsrRepository"            : "returnRequest",
+                          "ProfileAdapterRepository" : "user",
+                          "ProductCatalog"           : "sku",
                           "InventoryRepository"      : "inventory",
                           "PriceLists"               : "price"
                          },
     $pipelineDef : null,
+    network : null,
+    options : {
+                     width : "100%",
+                     height: "550px",
+                     interaction : {
+                        zoomView : true,
+                        selectable : true,
+                        dragNodes : false,
+                        dragView : true,
+                        hover : false
+                     },
+                    layout : {
+                         hierarchical : {
+                           direction : "LR",
+                           sortMethod : "directed",
+                           nodeSpacing : 300,
+                           levelSeparation : 250
+                       }
+                     },
+                     edges: {
+                        smooth: {
+                            type: 'cubicBezier',
+                            forceDirection: 'horizontal',
+                            roundness: 0.4
+                        },
+                      },
+                      nodes: {
+                        font : {
+                          size : 11
+                        },
+                        shape : "box"
+                      },
+                      physics:false
+                   },
 
     init : function(){
       var start = new Date().getTime();
       console.log("Start BDA script");
       this.loadExternalCss();
-      this.hasErrors = this.hasErrors();
-      this.hasResults = this.hasResults(this.hasErrors);
-      this.isOldDynamo = this.isOldDynamo();
-      this.isPerfMonitorPage = this.isPerfMonitorPage();
-      this.isPerfMonitorTimePage = this.isPerfMonitorTimePage();
-      this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePage();
-      this.isServiceConfigurationPage = this.isServiceConfigurationPage();
-      this.isExecuteQueryPage = this.isExecuteQueryPage();
-      this.isComponentPage = this.isComponentPage();
-      this.isActorChainPage = this.isActorChainPage();
-      this.hasWebStorage = this.hasWebStorage();
-      this.isRepositoryPage = this.isRepositoryPage();
-      this.isPipelineManagerPage = this.isPipelineManagerPage();
-      
+      this.hasErrors = this.hasErrorsFct();
+      this.hasResults = this.hasResultsFct(this.hasErrors);
+      this.isOldDynamo = this.isOldDynamoFct();
+      this.isPerfMonitorPage = this.isPerfMonitorPageFct();
+      this.isPerfMonitorTimePage = this.isPerfMonitorTimePageFct();
+      this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePageFct();
+      this.isServiceConfigurationPage = this.isServiceConfigurationPageFct();
+      this.isExecuteQueryPage = this.isExecuteQueryPageFct();
+      this.isComponentPage = this.isComponentPageFct();
+      this.isActorChainPage = this.isActorChainPageFct();
+      this.hasWebStorage = this.hasWebStorageFct();
+      this.isRepositoryPage = this.isRepositoryPageFct();
+      this.isPipelineManagerPage = this.isPipelineManagerPageFct();
+
       console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
       if (this.isOldDynamo) {
         this.logoSelector = "";
       for (var i = 0; i != this.oldDynamoAltSelector.length; i++)
         {
-          if(i != 0)
+          if(i !== 0)
            this.logoSelector += ",";
           this.logoSelector += "img[alt='" + this.oldDynamoAltSelector[i] + "']";
         }
         console.log("OldDynamo logoSelector :" + this.logoSelector);
         this.fixCss();
       }
-       
+
       console.log("Path : " + this.purgeSlashes($(location).attr('pathname')));
       console.log("isComponentPage : " + this.isComponentPage + " IsOldDynamo : " + this.isOldDynamo);
       console.log("isRepositoryPage : " + this.isRepositoryPage + " Page has results : " + this.hasResults + ". Page has errors : " + this.hasErrors);
       console.log("BDA monoInstance mode : " + (GM_getValue(BDA.GMValue_MonoInstance) === true));
 
       $.tablesorter.defaults.sortInitialOrder = 'desc';
-    
+
       if(GM_getValue(BDA.GMValue_MonoInstance) === true)
         BDA.restoreData(GM_getValue(BDA.GMValue_Backup), false);
-      
+
       // Setup repository page
       if (this.isRepositoryPage)
         this.setupRepositoryPage();
@@ -130,7 +164,7 @@ var BDA = {
         this.setupRepositoryDefinitionFilePage();
       else if (this.isServiceConfigurationPage)
         this.setupServiceConfigurationPage();
-      
+
       // Setup performance monitor
       if (this.isPerfMonitorPage)
         this.setupPerfMonitorPage();
@@ -140,7 +174,7 @@ var BDA = {
       // Setup JDBC browser execute query
       if (this.isExecuteQueryPage)
         this.setupExecuteQueryPage();
-      
+
       this.showComponentHsitory();
       this.reloadData();
       this.createBackupPanel();
@@ -161,7 +195,7 @@ var BDA = {
       }
       else if (this.isActorChainPage)
           this.createActorCaller();
-      
+
       // Handle escape key press
       $(document).keyup(function(e) {
         if (e.keyCode == 27) {
@@ -180,7 +214,7 @@ var BDA = {
           }
        }
       });
-      
+
       // Monitor execution time
       var endTime = new Date();
       var time = endTime.getTime() - start;
@@ -189,7 +223,7 @@ var BDA = {
       else
         console.log("BDA takes : " + time + "ms");
     },
-  
+
     removeAdminLink : function()
     {
       var $componentBrowserH1 = $(this.componentBrowserPageSelector);
@@ -202,7 +236,7 @@ var BDA = {
       }
     },
 
-    loadExternalCss : function(url) 
+    loadExternalCss : function(url)
     {
       var cmCSS = GM_getResourceText("cmCSS");
       GM_addStyle(cmCSS);
@@ -225,22 +259,22 @@ var BDA = {
     },
 
     //--- Page informations ------------------------------------------------------------------------
-    isPerfMonitorPage : function()
+    isPerfMonitorPageFct : function()
     {
       return $(location).attr('pathname').indexOf("performance-monitor.jhtml") != -1;
     },
 
-    isPerfMonitorTimePage : function()
+    isPerfMonitorTimePageFct : function()
     {
       return $(location).attr('pathname').indexOf("performance-data-time.jhtml") != -1;
     },
 
-    isExecuteQueryPage : function()
+    isExecuteQueryPageFct : function()
     {
       return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
     },
-  
-    isOldDynamo : function ()
+
+    isOldDynamoFct : function ()
     {
       for(var els = document.getElementsByTagName ('img'), i = els.length; i--;)
       {
@@ -253,7 +287,7 @@ var BDA = {
     // Load default dyn admin CSS if needed
     fixCss : function()
     {
-      if ($("link[href='" + this.dynAdminCssUri + "']").size() == 0)
+      if ($("link[href='" + this.dynAdminCssUri + "']").size() === 0)
       {
         console.log("Default dyn admin CSS is missing : " + this.dynAdminCssUri + ". Add it now.");
         var $link = $("<link />")
@@ -264,55 +298,55 @@ var BDA = {
           $('head').append($link);
         else
           $('body').append($link);
-      } 
+      }
     },
-    
-    hasResults : function (hasErrors)
+
+    hasResultsFct : function (hasErrors)
     {
       return $(this.resultsSelector).size() > 0;
     },
 
-    hasErrors : function ()
+    hasErrorsFct : function ()
     {
       return $(this.errorsSelector1).size() > 0 || $(this.errorsSelector2).size() > 0;
     },
 
-    hasWebStorage : function ()
+    hasWebStorageFct : function ()
     {
       if(typeof(Storage) !== "undefined")
         return true;
       return false;
     },
 
-    isRepositoryPage : function ()
+    isRepositoryPageFct : function ()
     {
       return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
     },
 
-    isXMLDefinitionFilePage : function()
+    isXMLDefinitionFilePageFct : function()
     {
       return $("td:contains('class atg.xml.XMLFile')").size() > 0
       || $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
     },
-    
-    isServiceConfigurationPage : function()
+
+    isServiceConfigurationPageFct : function()
     {
       return location.search.indexOf("propertyName=serviceConfiguration") != -1;
     },
 
-    isComponentPage : function ()
+    isComponentPageFct : function ()
     {
-      return $("h1:contains('Directory Listing')").size() == 0 //Page is not a directory
+      return $("h1:contains('Directory Listing')").size() === 0 //Page is not a directory
       && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
       && document.URL.indexOf("?") == -1; // Page has no parameter
     },
 
-    isActorChainPage : function()
+    isActorChainPageFct : function()
     {
         return $("h2:contains('Actor Chain:')").size() == 1 && document.URL.indexOf('chainId=') != -1;
     },
-    
-    isPipelineManagerPage : function()
+
+    isPipelineManagerPageFct : function()
     {
         return $("h2:contains('Pipeline Chains')").size() === 1;
     },
@@ -333,7 +367,7 @@ var BDA = {
         return "Show less...";
       return "Show more...";
     },
-    
+
     toggleShowLabel : function (contentDisplay,selector)
     {
       if (contentDisplay == "none")
@@ -342,7 +376,7 @@ var BDA = {
         $(selector).html("Show less...");
     },
 
-    toggleCacheUsage: function () 
+    toggleCacheUsage: function ()
     {
       var $cacheUsage = $(this.cacheUsageSelector);
       $cacheUsage.next().toggle().next().toggle();
@@ -350,35 +384,35 @@ var BDA = {
       this.storeToggleState("showMoreCacheUsage", $cacheUsage.next().css("display"));
     },
 
-    toggleRepositoryView : function () 
+    toggleRepositoryView : function ()
     {
       $(this.repositoryViewSelector).next().toggle().next().toggle();
       this.toggleShowLabel($(this.repositoryViewSelector).next().css("display"), "#showMoreRepositoryView");
       this.storeToggleState("showMoreRepositoryView", $(this.repositoryViewSelector).next().css("display"));
     },
 
-    toggleProperties : function () 
+    toggleProperties : function ()
     {
       $(this.propertiesSelector).next().toggle();
       this.toggleShowLabel($(this.propertiesSelector).next().css("display"), "#showMoreProperties");
       this.storeToggleState("showMoreProperties", $(this.propertiesSelector).next().css("display"));
     },
 
-    toggleEventSets : function () 
+    toggleEventSets : function ()
     {
       $(this.eventSetsSelector).next().toggle();
       this.toggleShowLabel($(this.eventSetsSelector).next().css("display"), "#showMoreEventsSets");
       this.storeToggleState("showMoreEventsSets", $(this.eventSetsSelector).next().css("display"));
     },
 
-    toggleMethods : function () 
+    toggleMethods : function ()
     {
       $(this.methodsSelector).next().toggle();
       this.toggleShowLabel($(this.methodsSelector).next().css("display"), "#showMoreMethods");
       this.storeToggleState("showMoreMethods", $(this.methodsSelector).next().css("display"));
     },
 
-    toggleRawXml : function () 
+    toggleRawXml : function ()
     {
       $("#rawXml").toggle();
       if ($("#rawXml").css("display") == "none")
@@ -409,13 +443,13 @@ var BDA = {
       var descriptors = this.getDescriptorList();
       descriptorOptions = "";
       var defaultDesc = this.defaultDescriptor[this.getComponentNameFromPath(this.getCurrentComponentPath())];
-      if (defaultDesc == undefined)
+      if (defaultDesc === undefined)
         descriptorOptions = "<option></option>";
       for (var i = 0; i != descriptors.length; i++)
       {
         descriptorOptions += "<option value='" + descriptors[i] + "'";
         if (defaultDesc === descriptors[i])
-          descriptorOptions += "selected='selected'"
+          descriptorOptions += "selected='selected'";
         descriptorOptions +=  ">" + descriptors[i] + "</option>\n";
       }
       return descriptorOptions;
@@ -423,7 +457,7 @@ var BDA = {
 
     getsubmitButton : function ()
     {
-      return "<button type='button' id='RQLAdd'>Add</button>" 
+      return "<button type='button' id='RQLAdd'>Add</button>"
       + "<button type='button' id='RQLGo'>Add & Enter <i class='fa fa-play fa-x'></i></button>";
     },
 
@@ -442,6 +476,11 @@ var BDA = {
     },
 
     getRemoveItemEditor : function ()
+    {
+      this.getPrintItemEditor();
+    },
+
+    getRemoveItemsEditor : function ()
     {
       this.getPrintItemEditor();
     },
@@ -509,6 +548,19 @@ var BDA = {
       return query;
     },
 
+    getUpdateItemsQuery : function ()
+    {
+      var descriptor = $("#itemDescriptor").val();
+      var ids = this.getMultiId();
+      var query = "";
+      for (var i = 0; i != ids.length; i++)
+      {
+        query += "<update-items>\n\n";
+        query += "</update-items>\n";
+      }
+      return query;
+    },
+
     getQueryItemsQuery : function ()
     {
       var descriptor = $("#itemDescriptor").val();
@@ -521,8 +573,9 @@ var BDA = {
     getAllItemQuery : function ()
     {
       var descriptor = $("#itemDescriptor").val();
-      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n";
-      query += "ALL\n"
+      var idOnly = $("#idOnly").prop('checked');
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" id-only=\"" + idOnly + "\">\n";
+      query += "ALL\n";
         query += "</query-items>\n";
       return query;
     },
@@ -530,8 +583,9 @@ var BDA = {
     getLast10ItemQuery : function ()
     {
       var descriptor = $("#itemDescriptor").val();
-      var query = "<query-items item-descriptor=\"" + descriptor + "\" >\n";
-      query += "ALL ORDER BY ID DESC RANGE 0+10\n"
+      var idOnly = $("#idOnly").prop('checked');
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" id-only=\"" + idOnly + "\">\n";
+      query += "ALL ORDER BY ID DESC RANGE 0+10\n";
         query += "</query-items>\n";
       return query;
     },
@@ -551,6 +605,8 @@ var BDA = {
         query = this.getAddItemQuery();
       else if (action == "update-item")
         query = this.getUpdateItemQuery();
+      else if (action == "update-items")
+        query = this.getUpdateItemsQuery();
       else if (action == "all")
         query = this.getAllItemQuery();
       else if (action == "last_10")
@@ -575,10 +631,10 @@ var BDA = {
     sanitizeQuery : function()
     {
       var query = this.getQueryEditorValue();
-      this.setQueryEditorValue(query.replace(/repository\=\".+\"/gi, "")); 
+      this.setQueryEditorValue(query.replace(/repository\=\".+\"/gi, ""));
     },
 
-    setQueryEditorValue :function(value) 
+    setQueryEditorValue :function(value)
     {
       this.queryEditor.getDoc().setValue(value);
     },
@@ -594,13 +650,13 @@ var BDA = {
       $("#" + baseId).toggle();
       $("#text_" + baseId).toggle();
     },
-    
+
     // Escape '.', ':' in a jquery selector
     sanitizeSelector : function( id ) {
       return id.replace( /(:|\.|\[|\]|,)/g, "\\$1" );
     },
-    
-    endsWith : function (str, suffix) 
+
+    endsWith : function (str, suffix)
     {
       return str.indexOf(suffix, str.length - suffix.length) !== -1;
     },
@@ -622,11 +678,9 @@ var BDA = {
     {
       var start = new Date().getTime();
 
-      var regexp = /<\!--(.*)(\<set\-property.*\>\<\!\[CDATA\[[\S\s]*?\]\]\>\<\/set\-property\>).*-->/ig;
-
+      var regexp = /<\!--(.*)(<set\-property.*><\!\[CDATA\[[\S\s]*?\]\]\><\/set\-property\>).*-->/ig;
       var xmlStr =  xmlContent.replace(regexp, function(str, p1, p2, offset, s){
         var attributes = "set-property ";
-
         if (p1.indexOf("derived") != -1)
           attributes += "derived=\"true\" ";
         if (p1.indexOf("rdonly") != -1)
@@ -636,7 +690,6 @@ var BDA = {
 
         var newLine = p2.replace("set-property", attributes);
         return newLine;
-
       });
       var endTime = new Date();
       var time = endTime.getTime() - start;
@@ -651,11 +704,11 @@ var BDA = {
       html += "<table class='dataTable' ";
       if (showSpeedbar)
         html += "id='" + tabId + "'";
-      html += ">"
+      html += ">";
       for (var i = 0; i != types.length; i++)
       {
         var curProp = types[i];
-        if (i % 2 == 0)
+        if (i % 2 === 0)
           html += "<tr class='even'>";
         else
           html += "<tr class='odd'>";
@@ -675,10 +728,10 @@ var BDA = {
           {
             // Remove "_"
             if(curProp.name == "descriptor")
-              propValue = propValue.substr(1);   
+              propValue = propValue.substr(1);
             if (propValue.length > 25)
             {
-              var base_id = curProp.name + "_" + datas[a]["id"];
+              var base_id = curProp.name + "_" + datas[a].id;
               var link_id = "link_" + base_id;
               var field_id = "text_" + base_id;
               propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' >"
@@ -727,15 +780,15 @@ var BDA = {
           datas[curItemDesc] = [];
           nbTypes++;
         }
-        var curData = [];
+        var curData = {};
 
         $(this).find("set-property").each(function (index) {
 
-          var $curProp = $(this)
+          var $curProp = $(this);
           curData[$curProp.attr("name")] = $curProp.text();
           var type = {};
           type.name = $curProp.attr("name");
-          if ($.inArray(type.name, typesNames[curItemDesc]) == -1 ) 
+          if ($.inArray(type.name, typesNames[curItemDesc]) == -1 )
           {
             type.rdonly = $curProp.attr("rdonly");
             type.derived = $curProp.attr("derived");
@@ -744,23 +797,23 @@ var BDA = {
             typesNames[curItemDesc].push(type.name);
           }
         });
-        types[curItemDesc].sort();
-        if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) 
+        //types[curItemDesc].sort();
+        if ($.inArray("descriptor", typesNames[curItemDesc]) == -1)
         {
           var typeDescriptor = {};
           typeDescriptor.name = "descriptor";
           types[curItemDesc].unshift(typeDescriptor);
           typesNames[curItemDesc].push("descriptor");
         }
-        if ($.inArray("id", typesNames[curItemDesc]) == -1) 
+        if ($.inArray("id", typesNames[curItemDesc]) == -1)
         {
           var typeId = {};
           typeId.name = "id";
           types[curItemDesc].unshift(typeId);
           typesNames[curItemDesc].push("id");
         }
-        curData["descriptor"] = curItemDesc;
-        curData["id"] = $(this).attr("id");
+        curData.descriptor = curItemDesc;
+        curData.id = $(this).attr("id");
         datas[curItemDesc].push(curData);
       });
       var startRenderingtab = new Date().getTime();
@@ -771,7 +824,7 @@ var BDA = {
         splitValue = 0;
       else
         splitValue = parseInt(splitObj.splitValue);
-      for(var itemDesc in datas) 
+      for(var itemDesc in datas)
       {
         if (splitValue == 0)
           splitValue = datas[itemDesc].length;
@@ -814,7 +867,7 @@ var BDA = {
       }
       if (showSpeedbar)
         BDA.createSpeedbar();
-      
+
       var endRenderingTab = new Date();
       var time = endRenderingTab.getTime() - startRenderingtab;
       console.log("time to render tab : " + time + "ms");
@@ -851,12 +904,12 @@ var BDA = {
       // Move raw xml
       $(this.resultsSelector).next().appendTo("#rawXml");
       $(this.resultsSelector).remove();
-      
+
       $("#rawXmlLink").click(function() {
         BDA.toggleRawXml();
         var xmlSize = $("#rawXml pre").html().length;
         console.log("raw XML size : " + xmlSize);
-        console.log("XML max size : " + BDA.xmlDefinitionMaxSize);  
+        console.log("XML max size : " + BDA.xmlDefinitionMaxSize);
         if (xmlSize < BDA.xmlDefinitionMaxSize)
         {
           $('#rawXml').each(function(i, block) {
@@ -866,10 +919,11 @@ var BDA = {
         else
         {
           // Check if button already exists
-          if ($("#xmlHighlight").size() == 0)
+          if ($("#xmlHighlight").size() === 0)
           {
             $("<p id='xmlHighlight' />")
-            .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. <br> <button id='xmlHighlightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
+            .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. "
+                + "<br> <button id='xmlHighlightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
             .prependTo($("#rawXml"));
             $("#xmlHighlightBtn").click(function() {
               $('#rawXml pre').each(function(i, block) {
@@ -913,7 +967,7 @@ var BDA = {
       return JSON.parse(localStorage.getItem('splitObj'));
     },
 
-    escapeHTML : function (s) 
+    escapeHTML : function (s)
     {
       return String(s).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     },
@@ -928,12 +982,13 @@ var BDA = {
       if (xmlSize < this.xmlDefinitionMaxSize)
       {
         this.highlightAndIndentXml($("pre"));
-        
+
       }
       else
       {
         $("<p />")
-        .html("The definition file is big, to avoid slowing down the page, XML highlight and indentation have been disabled. <br> <button id='xmlHighlightBtn'>Highlight and indent now</button> <small>(takes few seconds)</small>")
+        .html("The definition file is big, to avoid slowing down the page, XML highlight and indentation have been disabled. <br>"
+            + "<button id='xmlHighlightBtn'>Highlight and indent now</button> <small>(takes few seconds)</small>")
         .insertAfter($("h3:contains('Value')"));
 
         $("#xmlHighlightBtn").click(function() {
@@ -941,7 +996,7 @@ var BDA = {
         });
       }
     },
-    
+
     propertiesDef : function(hljs) {
       console.log("propertiesDef");
         return {
@@ -967,8 +1022,8 @@ var BDA = {
           ]
         };
     },
-    
-    
+
+
     setupServiceConfigurationPage : function()
     {
       console.log("setupServiceConfigurationPage");
@@ -980,7 +1035,7 @@ var BDA = {
           c: [
              {
                cN: 'comment',
-               b: '#', 
+               b: '#',
                e: '$'
              },
              {
@@ -1001,13 +1056,6 @@ var BDA = {
                          cN: 'string',
                          b : /[./a-z0-9\[\]_-]+/,
                          e: '$',
-                         /*
-                         c : [
-                               {
-                                 begin: /\\\\[\\s\\S]/, 
-                                 relevance: 0
-                                }
-                         ],*/
                          r: 0
                        }
                       ],
@@ -1022,7 +1070,7 @@ var BDA = {
         var txt = $(this).html();
         $(this).text("");
         $("<code class='properties' />").appendTo($(this)).html(txt);
-        
+
       });
       $('pre code').each(function(i, block) {
         hljs.highlightBlock(block);
@@ -1033,7 +1081,7 @@ var BDA = {
     {
       var dateStart = new Date().getTime();
       console.log("Start highlightAndIndentXml");
-      
+
       $elm.each(function(index) {
         var escapeXML = $(this).html();
         var unescapeXML = $('<div/>').html(escapeXML).text();
@@ -1049,7 +1097,7 @@ var BDA = {
         .find("code")
         // set escape XML content, because highlight.js needs escape XML to works
         .text(unescapeXML);
-        
+
         // Run highlight.js on each XML block
         console.log($codeBlock.get(0));
         hljs.highlightBlock($codeBlock.get(0));
@@ -1062,19 +1110,14 @@ var BDA = {
           $value.append("<i class='fa fa-external-link'></i>");
         });
       });
-      
+
       var dateEnd = new Date();
       var time = dateEnd.getTime() - dateStart;
       console.log("time to highlight and indent : " + time + "ms");
     },
-    
+
     setupRepositoryPage : function ()
     {
-      /*
-      $("<div id='repoToolbar' />").insertAfter("h1:eq(1)");
-      $("#repoToolbar").append("<button type='button'  href='?shouldInvokeMethod=invalidateCaches'>Invalidate Caches</button>");
-      $("#repoToolbar").append("<button type='button'  href='?shouldInvokeMethod=restart'>Restart</button>");
-       */
       // Move RQL editor to the top of the page
       var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>"
         + " <optgroup label='Empty queries'>"
@@ -1083,6 +1126,7 @@ var BDA = {
         + "<option value='remove-item'>remove-item</option>"
         + "<option value='add-item'>add-item</option>"
         + "<option value='update-item'>update-item</option>"
+        + "<option value='update-items'>update-items</option>"
         + "</optgroup>"
         + " <optgroup label='Predefined queries'>"
         + "<option value='all'>query-items ALL</option>"
@@ -1106,15 +1150,15 @@ var BDA = {
       $("textarea[name=xmltext]").attr("id", "xmltext");
       $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
 
-      $("#RQLToolbar").append("<div> Action : "+ actionSelect 
-          + " <span id='editor'>" 
+      $("#RQLToolbar").append("<div> Action : "+ actionSelect
+          + " <span id='editor'>"
           + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
           + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
           + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>"
-          + "</span>" 
+          + "</span>"
           + this.getsubmitButton() + "</div>");
 
-      
+
       $("#RQLAction").select2({
         width : "style",
         minimumResultsForSearch: -1
@@ -1125,35 +1169,35 @@ var BDA = {
       $("#RQLText").after("<div id='storedQueries'></div>");
       $("#RQLText").after("<div id='descProperties'></div>");
       $("#RQLForm input[type=submit]").remove();
-      
+
       var splitObj = this.getStoredSplitObj();
       var itemByTab = this.defaultItemByTab;
       var isChecked = false;
       if (splitObj != null)
+      {
         itemByTab = splitObj.splitValue;
-      if (splitObj != null)
         isChecked = splitObj.activeSplit;
-
+      }
       var checkboxSplit =  "<input type='checkbox' id='noSplit' ";
       if (isChecked)
         checkboxSplit += " checked ";
       checkboxSplit += "/> don't split.";
-      
+
       $("#storedQueries").after("<div id='RQLSave'>"
          + "<div style='display:inline-block;width:200px'><button id='clearQuery' type='button'>Clear <i class='fa fa-ban fa-x'></i></button></div>"
          + "<div style='display:inline-block;width:530px'>Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. "
          + checkboxSplit + "</div>"
          + "<button type='submit' id='RQLSubmit'>Enter <i class='fa fa-play fa-x'></i></button>"
          + "</div>"
-         + "<div><input placeholder='Name this query' type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save <i class='fa fa-save fa-x'></i></button></div>" 
+         + "<div><input placeholder='Name this query' type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save <i class='fa fa-save fa-x'></i></button></div>"
          );
-      
+
       this.showQueryList();
       this.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {lineNumbers: false});
       this.setupItemTreeForm();
       this.setupItemDescriptorTable();
       this.setupPropertiesTables();
-      
+
       $(".itemDescriptor").select2({
         placeholder: "Select a descriptor",
         allowClear: false,
@@ -1172,7 +1216,10 @@ var BDA = {
           return false;
         }
       });
-      
+      $("#itemDescriptor").on("select2-selecting", function(e){
+        BDA.showItemPropertyList(e.val);
+      });
+
       $("#RQLAction").change(function() {
         var action = $(this).val();
         console.log("Action change : " + action);
@@ -1186,6 +1233,8 @@ var BDA = {
           BDA.getAddItemEditor();
         else if (action == "update-item")
           BDA.getUpdateItemEditor();
+        else if (action == "update-items")
+          BDA.getUpdateItemsEditor();
         else
           BDA.getQueryItemsEditor();
       });
@@ -1202,15 +1251,14 @@ var BDA = {
         var query = BDA.getRQLQuery();
         var editor = BDA.queryEditor;
         var editorCursor = editor.getCursor();
-        if(editorCursor.ch != 0)
+        if(editorCursor.ch !==  0)
           editor.setCursor(editor.getCursor().line + 1, 0);
-          
+
         BDA.queryEditor.replaceSelection(query);
-        BDA.showItemPropertyList($("#itemDescriptor").val());
       });
 
       $("#saveQuery").click(function() {
-        if (BDA.getQueryEditorValue().trim() != "" && $("#queryLabel").val().trim() != "")
+        if (BDA.getQueryEditorValue().trim().length > 0 && $("#queryLabel").val().trim().length > 0)
         {
           BDA.storeRQLQuery($("#queryLabel").val().trim(), BDA.getQueryEditorValue().trim());
           BDA.showQueryList();
@@ -1220,48 +1268,48 @@ var BDA = {
       $("#clearQuery").click(function() {
         BDA.setQueryEditorValue("");
       });
-      
+
       // Hide other sections
       var toggleObj = BDA.getToggleObj();
-      
-      var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' class='showMore'>" + this.getToggleLabel(toggleObj["showMoreRepositoryView"]) + "</a>";
-      var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' class='showMore'>" + this.getToggleLabel(toggleObj["showMoreCacheUsage"]) + "</a>";
-      var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' class='showMore'>" + this.getToggleLabel(toggleObj["showMoreProperties"]) + "</a>";
-      var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' class='showMore'>" + this.getToggleLabel(toggleObj["showMoreEventsSets"]) + "</a>";
-      var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' class='showMore'>" + this.getToggleLabel(toggleObj["showMoreMethods"]) + "</a>";
-      
+
+      var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' class='showMore'>" + this.getToggleLabel(toggleObj.showMoreRepositoryView) + "</a>";
+      var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' class='showMore'>" + this.getToggleLabel(toggleObj.showMoreCacheUsage) + "</a>";
+      var properties  = "&nbsp;<a href='javascript:void(0)' id='showMoreProperties' class='showMore'>" + this.getToggleLabel(toggleObj.showMoreProperties) + "</a>";
+      var eventSets  = "&nbsp;<a href='javascript:void(0)' id='showMoreEventsSets' class='showMore'>" + this.getToggleLabel(toggleObj.showMoreEventsSets) + "</a>";
+      var methods  = "&nbsp;<a href='javascript:void(0)' id='showMoreMethods' class='showMore'>" + this.getToggleLabel(toggleObj.showMoreMethods) + "</a>";
+
       // Auto hide Repository View
       $(this.repositoryViewSelector).append(repositoryView);
 
-      if (toggleObj.hasOwnProperty("showMoreRepositoryView") && toggleObj["showMoreRepositoryView"] == 0)
+      if (toggleObj.hasOwnProperty("showMoreRepositoryView") && toggleObj.showMoreRepositoryView == 0)
         this.toggleRepositoryView();
       $("#showMoreRepositoryView").click(function (){
         BDA.toggleRepositoryView();
       });
       // Auto hide Cache usage
       $(this.cacheUsageSelector).append(cacheUsage);
-      if (toggleObj["showMoreCacheUsage"] != 1)
+      if (toggleObj.showMoreCacheUsage != 1)
         this.toggleCacheUsage();
       $("#showMoreCacheUsage").click(function (){
         BDA.toggleCacheUsage();
       });
       // Auto hide Properties
       $(this.propertiesSelector).append(properties);
-      if (toggleObj["showMoreProperties"] != 1)
+      if (toggleObj.showMoreProperties != 1)
         this.toggleProperties();
       $("#showMoreProperties").click(function (){
         BDA.toggleProperties();
       });
       // Auto hide Events Sets
       $(this.eventSetsSelector).append(eventSets);
-      if (toggleObj["showMoreEventsSets"] != 1)
+      if (toggleObj.showMoreEventsSets != 1)
         this.toggleEventSets();
       $("#showMoreEventsSets").click(function (){
         BDA.toggleEventSets();
       });
       // Auto hide Methods
       $(this.methodsSelector).append(methods);
-      if (toggleObj["showMoreMethods"] != 1)
+      if (toggleObj.showMoreMethods != 1)
         this.toggleMethods();
       $("#showMoreMethods").click(function (){
         BDA.toggleMethods();
@@ -1270,10 +1318,9 @@ var BDA = {
 
     getToggleObj : function ()
     {
-      var toggleObj;
       if(!this.hasWebStorage)
         return {};
-      
+
       var toggleObj = localStorage.getItem('toggleObj');
       if (toggleObj != null && toggleObj != "")
         toggleObj = JSON.parse(toggleObj);
@@ -1281,7 +1328,7 @@ var BDA = {
         toggleObj = {};
       return toggleObj;
     },
-    
+
     storeToggleState : function(toggle, cssState)
     {
       if(!this.hasWebStorage)
@@ -1323,7 +1370,7 @@ var BDA = {
     {
       $("title").text(this.getComponentNameFromPath(this.getCurrentComponentPath()));
     },
-    
+
     setupFindClassLink : function()
     {
       var $classLink = null;
@@ -1335,7 +1382,7 @@ var BDA = {
       $("<span style='margin-left : 25px'><a href='/dyn/admin/atg/dynamo/admin/en/findclass.jhtml?className="+className+"&debug=true'>Find Class</a></span>")
       .insertAfter($classLink);
     },
-    
+
     setupPropertiesTables : function()
     {
       if ($("a[name=showProperties]").size() > 0)
@@ -1354,14 +1401,14 @@ var BDA = {
       html += "<div>";
       for (var i = 0; i != descriptors.length; i++)
       {
-        if (i == 0 || i % splitValue == 0)
+        if (i === 0 || i % splitValue == 0)
         {
           html += "<table class='descriptorTable'>";
           html += "<th>Descriptor</th>";
           html += "<th>View</th>";
           html += "<th>Debug</th>";
         }
-        if (i % 2 == 0)
+        if (i % 2 === 0)
           html += "<tr class='even'>";
         else
           html += "<tr class='odd'>";
@@ -1382,7 +1429,7 @@ var BDA = {
         }
         html += "</td>";
         html += "</tr>";
-        if (i != 0 && ((i + 1) % splitValue == 0 || i + 1 == descriptors.length))
+        if (i !== 0 && ((i + 1) % splitValue === 0 || i + 1 === descriptors.length))
           html += "</table>";
       }
       html += "</div>";
@@ -1391,20 +1438,23 @@ var BDA = {
       $("#descriptorTable").remove();
       $(html).insertAfter("a[name='listItemDescriptors']");
     },
-    
+
     setupPipelineManagerPage : function()
     {
       //create diagram container
       $("h2:contains('Pipeline Chains')").append("<div class='popup_block' id='pipelinePopup'>"
                                                  + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></div>"
-                                                 + "<div><h3></h3></div></i></a><div id='pipelineScheme'></div></div>");
+                                                 + "<div><h3></h3></div></i></a>"
+                                                 + "<button id='schemeOrientation'>Switch orientation <i class='fa fa-retweet'></button>"
+                                                 + "<div id='pipelineScheme'></div></div>");
       $("#pipelinePopup .close").click(function() {
         $("#pipelinePopup").fadeOut();
       });
+
       var $pipelineTable = $("h2:contains('Pipeline Chains')").next().attr("id", "pipelineTable");
       $pipelineTable.find("tr:nth-child(odd)").addClass("odd");
       $pipelineTable.find("tr:first").append("<th>Show XML</th><th>Show graph</th>");
-      $pipelineTable.find("tr:gt(0)").append("<td align='center'><i class='fa fa-code link'></i></td><td align='center'><i class='fa fa-eye link'></i></td>");
+      $pipelineTable.find("tr:gt(0)").append("<td align='center'><i class='fa fa-code link'></i></td><td align='center'><i class='fa fa-eye link'></i><sup style='font-size:8px'>&nbsp;BETA</sup></td>");
       //process pipeline definition file
       BDA.processRepositoryXmlDef("definitionFile", function($xmlDef){
           BDA.$pipelineDef = $xmlDef;
@@ -1413,27 +1463,41 @@ var BDA = {
               var chainName = $elem.find("td:eq(0)").text();
               $elem.attr("id", chainName);
               $elem.find("td:eq(7)").click(function() {
-                BDA.showPipelineXml(chainName, $elem.hasClass("odd"));
+                $td = $(this);
+                if ($td.hasClass("open"))
+                {
+                  $td.removeClass("open");
+                  BDA.hidePipelineXml(chainName);
+                }
+                else
+                {
+                  $td.addClass("open");
+                  BDA.showPipelineXml(chainName, $elem.hasClass("odd"));
+                }
               });
-              
+
               $elem.find("td:eq(8)").click(function() {
+                // Redset direction
+                BDA.options.layout.hierarchical.direction = "LR";
                 BDA.showPipelineGraph(chainName);
               });
           });
       });
     },
-    
-    
+
+    hidePipelineXml : function(chainName)
+    {
+      var trId = "xml_" + chainName;
+      $("#" + trId).remove();
+    },
+
     showPipelineXml : function(chainName, isOdd)
     {
       console.log("Show pipeline XML for chain : " + chainName + " isOdd : " + isOdd);
       var trId = "xml_" + chainName;
-      
-      console.log($("#" + trId).size() == 0);
-      if ($("#" + trId).size() == 0) {
-        console.log(BDA.$pipelineDef);
+
+      if ($("#" + trId).size() === 0) {
         var xml = BDA.$pipelineDef.find("pipelinechain[name=" + chainName + "]")[0].outerHTML;
-        console.log(xml);
         var $codeBlock = $("<tr id='" + trId + "'><td colspan='9'><pre></pre></td></tr>")
         .insertAfter("#" + chainName)
         .find("pre")
@@ -1443,96 +1507,91 @@ var BDA = {
         BDA.highlightAndIndentXml($codeBlock);
       }
     },
-    
-    showPipelineGraph : function(chainName) 
+
+    showPipelineGraph : function(chainName)
     {
       console.log("Show pipeline graph for chain : " + chainName);
       $("#pipelinePopup h3").text(chainName);
       $("#pipelinePopup").show();
       var container = document.getElementById('pipelineScheme');
       var data = BDA.createNodesAndEdges(chainName);
-      var options = {
-                     width : "100%",
-                     height: "550px",
-                     interaction : {
-                        zoomView : true,
-                        selectable : true,
-                        dragNodes : false,
-                        dragView : true,
-                        hover : true
-                     },
-                     layout:{
-                         hierarchical : {
-                           enabled : true,
-                           direction : "LR",
-                           sortMethod : "hubsize", 
-                           nodeSpacing : 200, 
-                           blockShifting : false,
-                           edgeMinimization : false, 
-                           levelSeparation : 300
-                       }
-                     },
-                     edges : { 
-                       length : undefined
-                     },
-                     nodes : { 
-                       shape:"box"
-                     },
-                     physics :{ 
-                       enabled:true, 
-                       hierarchicalRepulsion : {
-                         nodeDistance:200,
-                         centralGravity:0.1
-                         }
-                     }
-                   };
-     // Actually renders into container
-      var network = new vis.Network(container, data, options);
-      /*
-      network.on("click", function (params) {
-        console.log("click");
-      console.log(params);
-        var id = params.nodes[0];
-        console.log(id);
-        console.log(data.nodes.get(id).label);
-        var url = "/dyn/admin/nucleus" + data.nodes.get(id).label;
-        window.open(url, '_blank');
-        
-    });*/
+
+      BDA.drawGraph(container, data);
+
+      $('#schemeOrientation').unbind( "click" );
+      $('#schemeOrientation').click(function(){
+        console.log("Swith orientation, current : " + BDA.options.layout.hierarchical.direction);
+        BDA.network.destroy();
+        if(BDA.options.layout.hierarchical.direction === "LR")
+            BDA.options.layout.hierarchical.direction = "UD";
+        else
+            BDA.options.layout.hierarchical.direction = "LR";
+        console.log("Swith orientation, new : " + BDA.options.layout.hierarchical.direction);
+        BDA.drawGraph(container, data);
+      });
     },
-    
+
+    drawGraph : function(container, data) {
+       // Actually renders into container
+        BDA.network = new vis.Network(container, data, BDA.options);
+        // Make node clickable
+        BDA.network.on("click", function (params) {
+          console.log("click on the network");
+          console.log(params);
+          var id = params.nodes[0];
+          if (id !== undefined)
+          {
+            console.log(data.nodes.get(id).pipelineLinkPath);
+            var url = "/dyn/admin/nucleus/" + data.nodes.get(id).pipelineLinkPath;
+            window.open(url, '_blank');
+          }
+          else
+            console.log("Not clicked on a node");
+        });
+    },
+
     createNodesAndEdges : function(chainName)
     {
       var $chainDef = BDA.$pipelineDef.find('pipelinechain[name=' + chainName + ']');
       var nodes = new vis.DataSet();
       var edges = new vis.DataSet();
-      var transitionLink = [];
       $chainDef.find('pipelinelink').each(function(pipelinelinkIndex, pipelinelinkElement){
           var pipelineLinkName = $(pipelinelinkElement).attr('name');
           console.log("link : "  + pipelineLinkName);
           var processor = $(pipelinelinkElement).find('processor');
-          var pipelineName = $(processor).attr('jndi');
-          if(pipelineName === undefined)
-              pipelineName = $(processor).attr('class');
-          var shortPipelineName = pipelineName.substr(pipelineName.lastIndexOf('/') + 1);
-          shortPipelineName = shortPipelineName.substr(pipelineName.lastIndexOf('.') + 1);
-          nodes.add({id : pipelinelinkIndex, label : shortPipelineName});
-          
-          var transitions = $(pipelinelinkElement).find('transition');
-          transitions.each(function(index, element){
-              transitionLink.push({processor : $(element).attr('link'), id : pipelinelinkIndex});
+          var pipelineLinkPath = $(processor).attr('jndi');
+          if(pipelineLinkPath === undefined)
+              pipelineLinkPath = $(processor).attr('class');
+         nodes.add({id : pipelinelinkIndex, label : pipelineLinkName, name : pipelineLinkName, pipelineLinkPath : pipelineLinkPath});
+        });
+
+        $chainDef.find('pipelinelink').each(function(pipelinelinkIndex, pipelinelinkElement)
+        {
+          var pipelineLinkName = $(pipelinelinkElement).attr('name');
+          $(pipelinelinkElement).find('transition').each(function() {
+            var transitionName = $(this).attr("link");
+            edges.add({from : BDA.findNodeId(nodes, pipelineLinkName), to : BDA.findNodeId(nodes, transitionName), arrows : 'to', label : $(this).attr("returnvalue")});
           });
-          var item = transitionLink.find(function(item){
-              return item.processor == pipelineLinkName;
-          });
-          if(item !== undefined){
-              edges.add({from:item.id, to:pipelinelinkIndex, arrows:'to'});
-          }
-      });
+
+        });
+
       console.log({"edges" : edges, "nodes" : nodes});
       return {"edges" : edges, "nodes" : nodes};
     },
-    
+
+    findNodeId : function(nodes, name)
+    {
+      var id;
+       nodes.forEach(function(nodeElement, nodeIndex){
+         if (nodeElement.name == name)
+         {
+           id = nodeElement.id;
+           return ;
+         }
+       });
+        return id;
+    },
+
     showQueryList : function ()
     {
       var html = "";
@@ -1542,12 +1601,12 @@ var BDA = {
         if (rqlQueries != null && rqlQueries.length > 0)
         {
           html += "<span class='storedQueriesTitle'>Stored queries :</span>";
-          html += "<ul>"
+          html += "<ul>";
             for (var i = 0; i != rqlQueries.length; i++)
             {
               var storeQuery = rqlQueries[i];
               html += "<li class='savedQuery'>";
-              html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>"
+              html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
               html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
               html += "<i class='fa fa-trash-o'></i>";
               html += "</span>";
@@ -1584,7 +1643,7 @@ var BDA = {
         return [];
       var rqlQueries;
       var rqlQueriesStr = localStorage.getItem('RQLQueries');
-      if (rqlQueriesStr != null && rqlQueriesStr != "")
+      if (rqlQueriesStr !== null && rqlQueriesStr.length > 0)
         rqlQueries = JSON.parse(rqlQueriesStr);
       else
         rqlQueries = [];
@@ -1624,11 +1683,11 @@ var BDA = {
       {
         queries.splice(index, 1);
         BDA.storeItem('RQLQueries', JSON.stringify(queries));
-      } 
+      }
     },
     purgeRQLQuery : function (rqlQueries)
     {
-      // Purge query 
+      // Purge query
       var purgedRqlQueries = [];
       for (var i = 0; i != rqlQueries.length; i++)
       {
@@ -1639,7 +1698,7 @@ var BDA = {
       }
       return purgedRqlQueries;
     },
-    
+
     reloadQueryList : function ()
     {
       $("#storedQueries").empty();
@@ -1669,7 +1728,7 @@ var BDA = {
         return ;
       if (document.URL.indexOf("#") >= 0)
         return ;
-      
+
       var componentPath = this.purgeSlashes(document.location.pathname);
       var componentHistory =  JSON.parse(localStorage.getItem('componentHistory')) || [];
       if ($.inArray(componentPath, componentHistory) == -1)
@@ -1689,7 +1748,7 @@ var BDA = {
       var html = "Component history : ";
       for (var i = 0; i != componentHistory.length; i++)
       {
-        if (i != 0)
+        if (i !== 0)
           html += ", ";
         var comp = componentHistory[i];
         html += "<a href='" + comp + "'>" + this.getComponentNameFromPath(comp) + "</a>";
@@ -1699,10 +1758,10 @@ var BDA = {
 
     //--- Bug report panel
 
-    createBugReportPanel : function() 
+    createBugReportPanel : function()
     {
       var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
-      var labelIndex = Math.floor((Math.random() * labels.length)); 
+      var labelIndex = Math.floor((Math.random() * labels.length));
 
       $("<div id='bdaBug'></div>").appendTo("body")
       .html("<p>" + labels[labelIndex] + "</p>"
@@ -1760,7 +1819,7 @@ var BDA = {
           + "<button id='bdaDataBackup'>Backup</button>"
           + "<button id='bdaDataRestore'>Restore</button>"
       );
-    
+
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
       .click(function(){
         var isMonoInstance = $(this).prop('checked');
@@ -1783,7 +1842,7 @@ var BDA = {
         }
       });
     },
-  
+
     getData : function()
     {
       console.log("Getting all data from localstorage");
@@ -1792,7 +1851,7 @@ var BDA = {
       dataObj.queries = BDA.getStoredRQLQueries();
       return dataObj;
     },
-    
+
     reloadData : function()
     {
       this.reloadToolbar();
@@ -1804,21 +1863,21 @@ var BDA = {
     {
       if(this.hasWebStorage && data !== undefined)
       {
-        try 
+        try
         {
           var dataObj = JSON.parse(data);
           BDA.storeItem('Components', JSON.stringify(dataObj.components));
           BDA.storeItem('RQLQueries', JSON.stringify(dataObj.queries));
           if (reloadUI)
             this.reloadData();
-        } 
+        }
         catch (e) {
           console.error("Parsing error:", e);
         }
       }
     },
 
-    copyToClipboard : function (text) 
+    copyToClipboard : function (text)
     {
       GM_setClipboard(text);
       window.alert("Data have been added to your clipboard");
@@ -1851,7 +1910,7 @@ var BDA = {
       }
       return true;
     },
-    
+
     generateCompIds : function(storedComponents)
     {
       var curId = 0;
@@ -1863,7 +1922,7 @@ var BDA = {
       BDA.storeItem('Components', JSON.stringify(storedComponents));
       return storedComponents;
     },
-    
+
     deleteComponent : function (componentToDelete)
     {
       console.log("Delete component : " + componentToDelete);
@@ -1894,15 +1953,15 @@ var BDA = {
         if (storedComp.length > 0)
           compObj.id = storedComp[storedComp.length - 1].id + 1;
         console.log("id : " + compObj.id);
-        
+
         compObj.methods = methods;
         compObj.vars = vars;
         storedComp.push(compObj);
-        
+
         BDA.storeItem('Components', JSON.stringify(storedComp));
       }
     },
-    
+
     storeItem : function(itemName, itemValue)
     {
       //console.log("Storing item : " + itemName + " : " + itemValue);
@@ -1916,12 +1975,12 @@ var BDA = {
       // Strip last slash if any
       if (componentPath[componentPath.length - 1] == "/")
         componentPath = componentPath.substr(0 , componentPath.length - 1);
-      
+
       var tab = componentPath.split("/");
       //console.log("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
       return tab[tab.length - 1];
     },
-    
+
     purgeSlashes : function(str)
     {
       return str.replace(/([^:]\/)\/+/g, "$1");
@@ -1944,7 +2003,7 @@ var BDA = {
     {
       return this.purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
     },
-    
+
     getBorderColor : function (colors)
     {
       var borderColor = [];
@@ -1963,7 +2022,7 @@ var BDA = {
       var cssVal =  "rgb(" ;
       for (var i = 0; i < colors.length; i++)
       {
-        if (i != 0)
+        if (i !== 0)
           cssVal += ",";
         cssVal += colors[i];
       }
@@ -1979,13 +2038,13 @@ var BDA = {
       return colors;
     },
 
-    stringToColour : function (str) 
+    stringToColour : function (str)
     {
       var colors = [];
       var hash = 0;
       for (var i = 0; i < str.length; i++)
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      for (var i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         var value = (hash >> (i * 8)) & 0xFF;
         var hexVal = ('00' + value.toString(16)).substr(-2);
         colors.push(parseInt(hexVal, 16));
@@ -2033,8 +2092,8 @@ var BDA = {
         + "<div id='vars'><ul></ul></div></div><br>"
         + "<div>"
         + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button></div>"
-        + "</div>").insertAfter(this.logoSelector)
-        
+        + "</div>").insertAfter(this.logoSelector);
+
       var favs = this.getStoredComponents();
 
       $("<div id='toolbarContainer'></div>").insertAfter(this.logoSelector);
@@ -2113,13 +2172,13 @@ var BDA = {
         {
           $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
           .appendTo("#toolbar");
-      
-            $('.close').click(function() { 
+
+            $('.close').click(function() {
                 $('.popup_block').fadeOut();
             });
-            
+
             $('#submitComponent').click(function(){
-                $('.popup_block').fadeOut();    
+                $('.popup_block').fadeOut();
                 var methods = [];
                 var vars = [];
                 $('.method:checked').each(function(index, element){
@@ -2133,14 +2192,14 @@ var BDA = {
                 BDA.storeComponent(componentPath, methods, vars);
                 BDA.reloadToolbar();
             });
-      
+
           $(".newFav").click(function() {
             console.log("Add component");
             var methodsList = $("#methods");
             var varsList = $("#vars");
             methodsList.empty();
             varsList.empty();
-            
+
             var tableMethods = $('h1:contains("Methods")').next();
             tableMethods.find('tr').each(function(index, element){
               if(index > 0)
@@ -2150,7 +2209,7 @@ var BDA = {
                  methodsList.append('<li><input type="checkbox" class="method" id="method_' + methodName + '"><label for="method_' + methodName + '">' + methodName + '</label></li>');
               }
             });
-            
+
             var tablevars = $('h1:contains("Properties")').next();
             tablevars.find('tr').each(function(index, element){
               if(index > 0)
@@ -2165,7 +2224,7 @@ var BDA = {
         }
       }
     },
-    
+
     createActorCaller : function()
     {
             var componentPathName = this.getCurrentComponentPath();
@@ -2177,7 +2236,9 @@ var BDA = {
             var tableActorDataRowCells = tableActorDataRow.find('td');
             var actorChainIdValue = $("h2:contains('Actor Chain:')").text().replace("Actor Chain: ", "");
 
-            var inputsHeader = tableActorHeaderColumns.filter(function(index, element){return $(element).text() === "Inputs"});
+            var inputsHeader = tableActorHeaderColumns.filter(function(index, element){
+              return $(element).text() === "Inputs";
+            });
             var inputsIndex = $(inputsHeader).index();
             var tableInputs = $(tableActorDataRow.children().get(inputsIndex)).children().get(0);
             var inputs = [];
@@ -2198,22 +2259,22 @@ var BDA = {
                 }
             }
             var inputsHTML = "";
-            for(input in inputs)
+            for(var input in inputs)
             {
                 inputsHTML += inputs[input] + " <textarea name='" + inputs[input] + "'></textarea><br />";
             }
             var url = window.location.origin + '/rest/model' + componentPathName + actorChainIdValue;
             console.log(url);
-            var actorChainCallHtml = "<div id='actorChainCall' border>" 
-                + "<h2>Call actor</h2>" 
+            var actorChainCallHtml = "<div id='actorChainCall' border>"
+                + "<h2>Call actor</h2>"
                 + "<a href='javascript:void(0)' id='copyChainUrl'>Copy URL to clipboard</a>";
                 if (inputs.length > 0)
-                  actorChainCallHtml += "<br />Post parameters are " + inputs + "<br />" 
+                  actorChainCallHtml += "<br />Post parameters are " + inputs + "<br />";
                 actorChainCallHtml += "<form method='POST' action='/rest/model" + componentPathName + actorChainIdValue + "'>"
-                + inputsHTML 
-                + "<button type='submit'>Call <i class='fa fa-play fa-x'></button>" 
+                + inputsHTML
+                + "<button type='submit'>Call <i class='fa fa-play fa-x'></button>"
                 + "</form></div>";
-                
+
             tableActor.after(actorChainCallHtml);
             $("#copyChainUrl").click(function(){
               BDA.copyToClipboard(url);
@@ -2244,12 +2305,12 @@ var BDA = {
         $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
       });
       $tabSelector.tablesorter({
-                                'theme' : 'blue',  
+                                'theme' : 'blue',
                                 'widgets' : ["zebra"],
                                 'widgetOptions' : {
                                   zebra : [ "normal-row", "alt-row" ]
                                 }
-      }); 
+      });
     },
 
     setupExecuteQueryPage : function()
@@ -2261,7 +2322,7 @@ var BDA = {
       $("textarea").prop("id", "sqltext");
       if ($("table").size() > 0)
         $("table").prop("id", "sqlResult");
-      
+
       $("#switchDataSourceBtn").click(function(){
         var selectedDataSource = $("#newDataSource").val();
         $.ajax({
@@ -2273,11 +2334,11 @@ var BDA = {
         window.location.reload();
       });
     },
-    
+
     getAvailableDataSource : function()
     {
       var datasources = [];
-      var url = "/dyn/admin/nucleus" + this.dataSourceDir; 
+      var url = "/dyn/admin/nucleus" + this.dataSourceDir;
       $.ajax({
         url : url,
         success : function(data) {
@@ -2285,7 +2346,7 @@ var BDA = {
           .find("h3 a")
           .each(function(index, value) {
             var strValue = $(value).text();
-            if (strValue != null && strValue != "DataSourceInfoCache" && strValue.indexOf("DataSource") != -1)
+            if (strValue !== null && strValue != "DataSourceInfoCache" && strValue.indexOf("DataSource") != -1)
               datasources += "<option>" + strValue + "</option>";
           });
         },
@@ -2293,13 +2354,13 @@ var BDA = {
       });
       return datasources;
     },
-    
+
     getCurrentDataSource : function()
     {
       var datasource;
-      var url = "/dyn/admin/nucleus" + this.connectionPoolPointerComp; 
+      var url = "/dyn/admin/nucleus" + this.connectionPoolPointerComp;
       $.ajax({
-         "url" : url, 
+         "url" : url,
          "success" : function(data) {
           datasource = $(data)
           .find("a:contains('connectionPoolName')")
@@ -2313,27 +2374,34 @@ var BDA = {
       });
       return datasource;
     },
-    
+
     //--- Item Tree functions ------------------------------------------------------------------------
 
     setupItemTreeForm : function()
     {
       $("<div id='itemTree' />").insertAfter("#RQLEditor");
-      $("#itemTree").append("<h2>Get Item Tree</h2>");
-      $("#itemTree").append("<p>This tool will recursively retrieve items and print the result with the chosen output. \
-          <br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order\
-      <br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
+      var $itemTree = $("#itemTree");
+      $itemTree.append("<h2>Get Item Tree</h2>");
+      $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output."
+        +  "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order"
+        +  "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
 
-      $("#itemTree").append("<div id='itemTreeForm'>\
-          id : <input type='text' id='itemTreeId' /> &nbsp;\
-          descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>\
-          max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>\
-          output format :  <select id='itemTreeOutput'><option value='HTMLtab'>HTML tab</option><option value='addItem'>add-item XML</option><option value='removeItem'>remove-item XML</option><option value='printItem'>print-item XML</option></select>&nbsp;\
-          <input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label><pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>\
-          <button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>\
-      </div>");
-      $("#itemTree").append("<div id='itemTreeCount' />");
-      $("#itemTree").append("<div id='itemTreeResult' />");
+      $itemTree.append("<div id='itemTreeForm'>"
+          +"id : <input type='text' id='itemTreeId' /> &nbsp;"
+        +  "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + this.getDescriptorOptions() + "</select></span>"
+        +  "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>"
+        +  "output format :  <select id='itemTreeOutput'>"
+        +  "<option value='HTMLtab'>HTML tab</option>"
+        +  "<option value='addItem'>add-item XML</option>"
+        +  "<option value='removeItem'>remove-item XML</option>"
+        +  "<option value='printItem'>print-item XML</option>"
+        +  "</select>&nbsp;"
+        +  "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>"
+        +  "<pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>"
+        +  "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>"
+        + "</div>");
+      $itemTree.append("<div id='itemTreeCount' />");
+      $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
         var descriptor = $("#itemTreeDesc").val();
         var id = $("#itemTreeId").val().trim();
@@ -2361,23 +2429,23 @@ var BDA = {
           .replace(/&gt;/g, ">")
           .replace("&nbsp;", "")
           .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
-            try 
+            try
             {
                 var xmlDoc = jQuery.parseXML(rawXmlDef);
-            }  
+                if(callback !== undefined)
+                    callback($(xmlDoc));
+            }
             catch(err)
             {
                 console.log("Unable to parse XML def file !");
             }
-            if(callback !== undefined)
-                callback($(xmlDoc));
         },
       });
     },
 
     getSubItems : function(items, $xmlDef, maxItem, outputType, printRepoAttr)
-    { 
-      var nbItem =  Object.keys(BDA.itemTree).length;
+    {
+      var nbItem =  BDA.itemTree.size;
       console.log("maxItem : " + maxItem + ", nbItem : " + nbItem);
       if(nbItem >= maxItem)
       {
@@ -2388,7 +2456,7 @@ var BDA = {
       var xmlText = "";
       for(var i = 0; i != items.length; i++)
           xmlText += "<print-item id='" + items[i].id + "' item-descriptor='" + items[i].desc + "' />\n";
-        
+
       //console.log(xmlText);
       $.ajax({
         type: "POST",
@@ -2401,25 +2469,25 @@ var BDA = {
           var rawItemsXml = $(result).find("code").html();
           // remove first 2 lines
           var tab = rawItemsXml.split("\n");
-          tab.splice(0,2); 
+          tab.splice(0,2);
           rawItemsXml = tab.join("\n").trim();
           // unescape HTML
           rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
-          
+
           var xmlDoc = jQuery.parseXML(rawItemsXml);
           $(xmlDoc).find("add-item").each(function() {
               var subItems = [];
               var $itemXml = $(this);
               var itemId = $itemXml.attr("id");
-              if(!BDA.itemTree.hasOwnProperty(itemId))
+              if(BDA.itemTree.get(itemId) === undefined)
               {
                   var rawItemXml = $itemXml[0].outerHTML;
                  // console.log("Add item to item tree : " + rawItemXml + " with ID : " + itemId);
-                  BDA.itemTree[itemId] =  rawItemXml;
+                  BDA.itemTree.set(itemId, rawItemXml);
                   var descriptor = $itemXml.attr("item-descriptor");
                   var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
                   var superType = $itemDesc.attr("super-type");
-                  while(superType != undefined)
+                  while(superType !== undefined)
                   {
                       var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
                       // console.log("Add super type : " + $parentDesc.attr("name"));
@@ -2432,11 +2500,11 @@ var BDA = {
                       var $elm = $(elm);
                       var subProperty = $elm.attr("name");
                       //console.log(subProperty);
-                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
-                      if ($elm.attr("repository") == undefined && subId != "")
+                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text();
+                      if ($elm.attr("repository") === undefined && subId.length > 0)
                       {
                           // avoid infinite recursion
-                          if(!BDA.itemTree.hasOwnProperty(subId)) 
+                          if(BDA.itemTree.get(subId) === undefined)
                           {
                               //console.log({'id' : subId, 'desc' : $elm.attr("item-type")});
                               subItems.push({'id' : subId, 'desc' : $elm.attr("item-type")});
@@ -2450,9 +2518,8 @@ var BDA = {
                       var $elm = $(elm);
                       var subProperty = $elm.attr("name");
                       // console.log(subProperty);
-                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text()
-
-                      if ($elm.attr("repository") == undefined && subId != "")
+                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text();
+                      if ($elm.attr("repository") === undefined && subId.length > 0)
                       {
                           var desc = $elm.attr("component-item-type");
                           if(subId.indexOf(",") != -1 || subId.indexOf("=") != -1 )
@@ -2463,13 +2530,13 @@ var BDA = {
                               var ids = subId.split(splitChar);
                               for(var i = 0; i != ids.length; i++)
                               {
-                                if(!BDA.itemTree.hasOwnProperty(ids[i])) 
+                                if(BDA.itemTree.get(ids[i]) === undefined)
                                     subItems.push({'id' : ids[i], 'desc' : desc});
                               }
                           }
                           else
                           {
-                            if(!BDA.itemTree.hasOwnProperty(subId)) 
+                            if(BDA.itemTree.get(subId) === undefined)
                                 subItems.push({'id' : subId, 'desc' : desc});
                           }
                       }
@@ -2495,27 +2562,27 @@ var BDA = {
       // reset divs
       $("#itemTreeResult").empty();
       $("#itemTreeCount").empty();
-      
+
       // Get XML definition of the repository
       var $xmlDef = BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
-          if ($xmlDef == null) 
+          if ($xmlDef == null)
           {
               $("#itemTreeResult").append("<p>Unable to parse XML definition of this repository !</p>");
               return ;
           }
           console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
           // get tree
-          BDA.itemTree = {};
+          BDA.itemTree = new Map();
           BDA.nbItemReceived = 0;
           BDA.nbItemCall = 0;
           BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
       });
     },
-    
+
     renderItemTreeTab : function(outputType, itemTree, printRepoAttr)
     {
       console.log("Render item tree tab : " + outputType);
-      $("#itemTreeCount").html("<p>" + Object.keys(BDA.itemTree).length + " items retrieved.</p>");
+      $("#itemTreeCount").html("<p>" + BDA.itemTree.size + " items retrieved.</p>");
       if(outputType !== "HTMLtab")
       {
           $("#itemTreeCount").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
@@ -2528,33 +2595,35 @@ var BDA = {
       var res = "";
       if(outputType == "addItem")
       {
-        for(id in BDA.itemTree)
-        {
+
+        BDA.itemTree.forEach(function(data, id) {
           if (printRepoAttr)
           {
-            var xmlDoc = jQuery.parseXML(BDA.itemTree[id]);
+            var xmlDoc = jQuery.parseXML(data);
             var $itemXml = $(xmlDoc).find("add-item");
             $itemXml.attr("repository", BDA.getCurrentComponentPath());
             res += $itemXml[0].outerHTML;
           }
           else
-            res += BDA.itemTree[id];
+            res += data;
           res += "\n\n";
-        }
+        }, BDA.itemTree);
+
+        res = "<import-items>\n" + res + "\n</import-items>";
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
       }
       else if (outputType == "HTMLtab")
       {
-        for(id in BDA.itemTree)
-          res += BDA.itemTree[id];
+          BDA.itemTree.forEach(function(data, id) {
+            res += data;
+          }, BDA.itemTree);
         BDA.showXMLAsTab(res, $("#itemTreeResult"), true);
       }
       else if (outputType == "removeItem" || outputType == "printItem")
       {
-        for(id in BDA.itemTree)
-        {
-          var xmlDoc = jQuery.parseXML(BDA.itemTree[id]);
+        BDA.itemTree.forEach(function(data, id) {
+          var xmlDoc = jQuery.parseXML(data);
           var $itemXml = $(xmlDoc).find("add-item");
           res += "<";
           if (outputType == "removeItem")
@@ -2565,17 +2634,18 @@ var BDA = {
           if (printRepoAttr)
             res += " repository='"+ BDA.getCurrentComponentPath() +"'";
           res += ' />\n';
-        }
+        }, BDA.itemTree);
+
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
       }
-        
+
       var endGettingTree = new Date();
       var time = endGettingTree.getTime() - BDA.startGettingTree;
       console.log("time to get item tree : " + time + "ms");
     },
-    
-    createSpeedbar : function() 
+
+    createSpeedbar : function()
     {
       var speedBarHtml = "<a class='close' href='javascript:void(0)'><i class='fa fa-times'></i></a><p>Quick links :</p><ul>";
       $("#itemTreeResult .dataTable").each(function(index) {
@@ -2583,18 +2653,18 @@ var BDA = {
         var id =  $tab.attr("id").trim();
         var name = id;
         var numb = "";
-        if (id.indexOf("_") != -1) 
+        if (id.indexOf("_") != -1)
         {
           var tab = id.split("_");
           name = tab[0];
           numb = tab[1];
         }
-        var nbItem = $tab.find("td").size() / $tab.find("tr").size() 
+        var nbItem = $tab.find("td").size() / $tab.find("tr").size();
         speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name + " " + numb + " (" + nbItem + ")</a></li>";
       });
       speedBarHtml += "</ul>";
       $("#itemTreeCount").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
-      $('#speedbar .close').click(function() { 
+      $('#speedbar .close').click(function() {
         $("#speedbar").fadeOut(200);
       });
         var stickyTop = $('.sticky').offset().top;
@@ -2602,15 +2672,15 @@ var BDA = {
           var windowTop = $(window).scrollTop();
           if (stickyTop < windowTop)
             $('.sticky').css({ position: 'fixed', top: 100 });
-          else 
+          else
             $('.sticky').css('position','static');
         });
     }
 };
 
-if (document.getElementById("oracleATGbrand") != null || BDA.isOldDynamo())
+if (document.getElementById("oracleATGbrand") !== null || BDA.isOldDynamo())
 {
-  try 
+  try
   {
     BDA.init();
   }
@@ -2623,4 +2693,3 @@ else
 {
   console.log("BDA script not starting");
 }
-
