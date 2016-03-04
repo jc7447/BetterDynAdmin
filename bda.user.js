@@ -14,7 +14,7 @@
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_deleteValue
-// @version 1.14
+// @version 1.14.1
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
@@ -2678,7 +2678,7 @@ var BDA = {
     }
 };
 
-if (document.getElementById("oracleATGbrand") !== null || BDA.isOldDynamo())
+if (document.getElementById("oracleATGbrand") !== null || BDA.isOldDynamoFct())
 {
   try
   {
