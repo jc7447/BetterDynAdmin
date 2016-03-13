@@ -14,23 +14,26 @@
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_deleteValue
+//
+// ------ write version on bdaCSS TOO ! ------ 
 // @version 1.14.1
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.14.1
+//
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
-// @require https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
 // @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/default.min.css
-// @resource select2CSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.css
+// @resource select2CSS https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
-// @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
+// @resource fontAwsomeCSS https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -177,6 +180,7 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
+	  this.createWhatsnewPanel();
       this.createBackupPanel();
       this.createBugReportPanel();
 
@@ -246,7 +250,7 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
+      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");;
       GM_addStyle(fontAwsomeCSS);
       var select2CSS = GM_getResourceText("select2CSS");
       GM_addStyle(select2CSS);
@@ -1784,9 +1788,47 @@ var BDA = {
           $("#bdaBackupPanel").slideToggle();
           BDA.rotateArrow($(".backupArrow i"));
         }
+        if ($("#whatsnewPanel").css("display") != "none")
+        {
+          $("#whatsnewPanel").slideToggle();
+          BDA.rotateArrow($(".whatsnewArrow i"));
+        }
       });
 
 
+    },
+    
+    //--- what's new functions --------------------------------------------------------------------------
+    
+    
+    createWhatsnewPanel : function ()
+    {
+      $("<div id='whatsnew'></div>").appendTo("body")
+
+      .html("<p>What's new</p>"
+          + "<div class='whatsnewArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+      $("#whatsnew").click(function() {
+        $("#whatsnewPanel").slideToggle();
+        BDA.rotateArrow($(".whatsnewArrow i"));
+        if ($("#bdaBugPanel").css("display") != "none")
+        {
+          $("#bdaBugPanel").slideToggle();
+          BDA.rotateArrow($(".bugArrow i"));
+        }
+        if ($("#bdaBackupPanel").css("display") != "none")
+        {
+          $("#bdaBackupPanel").slideToggle();
+          BDA.rotateArrow($(".backupArrow i"));
+        }
+      });
+        
+      $("<div id='whatsnewPanel'></div>").appendTo("body");
+
+      $.get("https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md", function( data ) {
+          $( "#whatsnewPanel" ).html( data );
+      });
     },
 
     //--- backup panel functions ------------------------------------------------------------------------
@@ -1806,6 +1848,11 @@ var BDA = {
         {
           $("#bdaBugPanel").slideToggle();
           BDA.rotateArrow($(".bugArrow i"));
+        }
+        if ($("#whatsnewPanel").css("display") != "none")
+        {
+          $("#whatsnewPanel").slideToggle();
+          BDA.rotateArrow($(".whatsnewArrow i"));
         }
       });
 

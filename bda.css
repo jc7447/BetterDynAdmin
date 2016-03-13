@@ -256,7 +256,7 @@ a {
   padding: 3px;
 }
 
-#bdaBug p, #bdaBackup p {
+#bdaBug p, #bdaBackup p , #whatsnew p{
   margin: 0;
 }
 
@@ -306,11 +306,37 @@ a {
   padding: 3px;
 }
 
+#whatsnew {
+  position: absolute;
+  top: 0px;
+  right: 233px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #8F0000;
+  border-top: none;
+  background-color: #CC0000;
+  padding: 3px;
+}
+
 #bdaData {
   width: 100%;
 }
 
 #bdaBackupPanel {
+  position: absolute;
+  top: 34px;
+  right: 30px;
+  width: 285px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #8F0000;
+  border-top: none;
+  background-color: #CC0000;
+  padding: 3px;
+  display: none;
+}
+
+#whatsnewPanel {
   position: absolute;
   top: 34px;
   right: 30px;
