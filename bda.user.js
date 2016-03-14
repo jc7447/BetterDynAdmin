@@ -180,7 +180,7 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-	  this.createWhatsnewPanel();
+	  //this.createWhatsnewPanel();
       this.createBackupPanel();
       this.createBugReportPanel();
 
