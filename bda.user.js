@@ -15,7 +15,7 @@
 // @grant GM_setValue
 // @grant GM_deleteValue
 //
-// ------ write version on bdaCSS TOO ! ------ 
+// ------ write version on bdaCSS TOO ! ------
 // @version 1.14.1
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.14.1
 //
@@ -180,7 +180,7 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-	  this.createWhatsnewPanel();
+      //this.createWhatsnewPanel();
       this.createBackupPanel();
       this.createBugReportPanel();
 
@@ -250,7 +250,8 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");;
+      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS")
+      .replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");
       GM_addStyle(fontAwsomeCSS);
       var select2CSS = GM_getResourceText("select2CSS");
       GM_addStyle(select2CSS);
@@ -701,12 +702,52 @@ var BDA = {
       return xmlStr;
     },
 
-    renderTab : function (types, datas, tabId, showSpeedbar)
+    // Check if the given property contains id(s) with the given repository definition
+    // Only ID from the current repository are take in account
+    isTypeId : function(propertyName, itemDesc, $xmlDef)
     {
-      console.log(showSpeedbar);
+      var isId = false;
+      if ($xmlDef !== null)
+      {
+        // item-descriptor[name=" + itemDesc + "]
+        $xmlDef.find("property[name=" + propertyName + "]").each(function() {
+          var $property = $(this);
+          if (($property.attr("item-type") !== undefined || $property.attr("component-item-type") !== undefined)
+            && $property.attr("repository") === undefined) {
+            console.log("property : " +  propertyName + " is an ID");
+            isId = true;
+            }
+        });
+      }
+      return isId;
+    },
+
+    parseRepositoryId : function(id)
+    {
+      var tab = [];
+      if (id.indexOf("=") !== -1)
+       tab = id.split("=");
+      else
+        tab[0] = id;
+        for(var i = 0 ; i!= tab.length; i++)
+        {
+          if (tab[i].indexOf(",") != -1)
+          {
+            tab[i].split(",").forEach(function(val) {
+              tab.push("<a href='#id_"+ val +"'>" + val + "</a>");
+            });
+          }
+          else if (tab[i] !== "=")
+            tab[i] = "<a href='#id_"+ tab[i] +"'>" + tab[i] + "</a>";
+        }
+        return tab.join("");
+    },
+
+    renderTab : function (types, datas, tabId, isItemTree)
+    {
       var html = "";
       html += "<table class='dataTable' ";
-      if (showSpeedbar)
+      if (isItemTree)
         html += "id='" + tabId + "'";
       html += ">";
       for (var i = 0; i != types.length; i++)
@@ -733,16 +774,27 @@ var BDA = {
             // Remove "_"
             if(curProp.name == "descriptor")
               propValue = propValue.substr(1);
+              // propertyName_id
+            var base_id = curProp.name + "_" + datas[a].id;
             if (propValue.length > 25)
             {
-              var base_id = curProp.name + "_" + datas[a].id;
               var link_id = "link_" + base_id;
               var field_id = "text_" + base_id;
               propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' >"
               + "<span id='"+base_id+"'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
               + "</span><textarea class='copyField' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
             }
-            html += "<td>" + propValue + "</td>";
+            else if (curProp.isId === true)
+            {
+              if (isItemTree) // for item tree we create an anchor link
+              {
+                propValue = BDA.parseRepositoryId(propValue);
+              }
+            }
+            if (curProp.name == "id")
+              html += "<td id='" + base_id + "'>" + propValue + "</td>";
+            else
+              html += "<td>" + propValue + "</td>";
           }
           else
           {
@@ -756,8 +808,10 @@ var BDA = {
       return html;
     },
 
-    showXMLAsTab : function(xmlContent, $outputDiv, showSpeedbar)
+    showXMLAsTab : function(xmlContent, $xmlDef, $outputDiv, isItemTree)
     {
+      console.log($xmlDef);
+      console.log(isItemTree);
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
@@ -797,11 +851,11 @@ var BDA = {
             type.rdonly = $curProp.attr("rdonly");
             type.derived = $curProp.attr("derived");
             type.exportable = $curProp.attr("exportable");
+            type.isId = BDA.isTypeId(type.name, curItemDesc, $xmlDef);
             types[curItemDesc].push(type);
             typesNames[curItemDesc].push(type.name);
           }
         });
-        //types[curItemDesc].sort();
         if ($.inArray("descriptor", typesNames[curItemDesc]) == -1)
         {
           var typeDescriptor = {};
@@ -824,7 +878,7 @@ var BDA = {
       var html = "<p class='nbResults'>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
       var splitObj = this.getStoredSplitObj();
-      if (splitObj == null || splitObj.activeSplit == true)
+      if (splitObj === undefined || splitObj === null || splitObj.activeSplit === true)
         splitValue = 0;
       else
         splitValue = parseInt(splitObj.splitValue);
@@ -833,8 +887,12 @@ var BDA = {
         if (splitValue == 0)
           splitValue = datas[itemDesc].length;
         var nbTab = 0;
+
+        console.log("nb items : " + datas[itemDesc].length + " - item : " + itemDesc);
         if (datas[itemDesc].length <= splitValue)
-          html += this.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), showSpeedbar);
+        {
+          html += this.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
+        }
         else
         {
           while ((splitValue * nbTab) <  datas[itemDesc].length)
@@ -844,7 +902,7 @@ var BDA = {
             if (end > datas[itemDesc].length)
               end = datas[itemDesc].length;
             var subDatas = datas[itemDesc].slice(start, end);
-            html += this.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, showSpeedbar);
+            html += this.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, isItemTree);
             nbTab++;
           }
         }
@@ -869,7 +927,7 @@ var BDA = {
           $(this).hide();
         });
       }
-      if (showSpeedbar)
+      if (isItemTree)
         BDA.createSpeedbar();
 
       var endRenderingTab = new Date();
@@ -903,7 +961,7 @@ var BDA = {
 
       var xmlContent = $(this.resultsSelector).next().text().trim();
       xmlContent = this.sanitizeXml(xmlContent);
-      var log = this.showXMLAsTab(xmlContent, $("#RQLResults"), false);
+      var log = this.showXMLAsTab(xmlContent, null, $("#RQLResults"), false);
       this.showRQLLog(log, false);
       // Move raw xml
       $(this.resultsSelector).next().appendTo("#rawXml");
@@ -1797,10 +1855,10 @@ var BDA = {
 
 
     },
-    
+
     //--- what's new functions --------------------------------------------------------------------------
-    
-    
+
+
     createWhatsnewPanel : function ()
     {
       $("<div id='whatsnew'></div>").appendTo("body")
@@ -1823,7 +1881,7 @@ var BDA = {
           BDA.rotateArrow($(".backupArrow i"));
         }
       });
-        
+
       $("<div id='whatsnewPanel'></div>").appendTo("body");
 
       $.get("https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md", function( data ) {
@@ -2597,7 +2655,7 @@ var BDA = {
           $("#itemTreeCount").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
           console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
           if (BDA.nbItemCall == BDA.nbItemReceived)
-            BDA.renderItemTreeTab(outputType, printRepoAttr);
+            BDA.renderItemTreeTab(outputType, printRepoAttr, $xmlDef);
         },
       });
     },
@@ -2626,7 +2684,7 @@ var BDA = {
       });
     },
 
-    renderItemTreeTab : function(outputType, itemTree, printRepoAttr)
+    renderItemTreeTab : function(outputType, printRepoAttr, $xmlDef)
     {
       console.log("Render item tree tab : " + outputType);
       $("#itemTreeCount").html("<p>" + BDA.itemTree.size + " items retrieved.</p>");
@@ -2665,7 +2723,7 @@ var BDA = {
           BDA.itemTree.forEach(function(data, id) {
             res += data;
           }, BDA.itemTree);
-        BDA.showXMLAsTab(res, $("#itemTreeResult"), true);
+        BDA.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
       }
       else if (outputType == "removeItem" || outputType == "printItem")
       {
@@ -2697,17 +2755,16 @@ var BDA = {
       var speedBarHtml = "<a class='close' href='javascript:void(0)'><i class='fa fa-times'></i></a><p>Quick links :</p><ul>";
       $("#itemTreeResult .dataTable").each(function(index) {
         var $tab = $(this);
-        var id =  $tab.attr("id").trim();
+        var id =  $tab.attr("id");
         var name = id;
-        var numb = "";
         if (id.indexOf("_") != -1)
         {
           var tab = id.split("_");
-          name = tab[0];
-          numb = tab[1];
+          name = tab[1];
         }
         var nbItem = $tab.find("td").size() / $tab.find("tr").size();
-        speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name + " " + numb + " (" + nbItem + ")</a></li>";
+        console.log("'" + name + "'");
+        speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name.trim() + " (" + nbItem + ")</a></li>";
       });
       speedBarHtml += "</ul>";
       $("#itemTreeCount").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
