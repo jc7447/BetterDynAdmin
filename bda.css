@@ -237,8 +237,17 @@ a {
   margin: 5px;
 }
 
-.deleteQuery {
+.queryView {
   display: none;
+}
+
+.previewQuery {
+  margin-top: 5px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.deleteQuery {
   margin-top: 5px;
   margin-left: 10px;
   cursor: pointer;

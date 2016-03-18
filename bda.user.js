@@ -1667,10 +1667,18 @@ var BDA = {
             for (var i = 0; i != rqlQueries.length; i++)
             {
               var storeQuery = rqlQueries[i];
+              var escapedQuery =  $("<div>").text(storeQuery.query).html();
+
               html += "<li class='savedQuery'>";
               html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
+              html += "<span id='previewQuery" + i + "'class='previewQuery'>";
+              html += "<i class='fa fa-eye'></i>";
+              html += "</span>";
               html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
               html += "<i class='fa fa-trash-o'></i>";
+              html += "</span>";
+              html += "<span id='queryView" + i + "'class='queryView'>";
+              html += "<pre>" + escapedQuery + "</pre>";
               html += "</span>";
               html += "</li>";
             }
@@ -1678,15 +1686,26 @@ var BDA = {
         }
       }
       $("#storedQueries").html(html);
+
+      $('#storedQueries .queryView').each(function(i, block) {
+        hljs.highlightBlock(block);
+      });
+
       $(".savedQuery").click(function() {
         console.log("click on query : " + $(this).find("a").html());
         BDA.printStoredQuery( $(this).find("a").html());
       });
 
-      $(".savedQuery").hover( function() {
+    /*  $(".savedQuery").hover( function() {
         $(this).find("span.deleteQuery").toggle();
       }, function() {
         $(this).find("span.deleteQuery").toggle();
+      });*/
+
+      $(".previewQuery").hover( function() {
+        $(this).parent("li").find("span.queryView").toggle();
+      }, function() {
+        $(this).parent("li").find("span.queryView").toggle();
       });
 
       $(".deleteQuery")
