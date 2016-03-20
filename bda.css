@@ -556,7 +556,7 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #methods, #vars {
-  float:left; 
+  float:left;
   width: 50%;
 }
 
@@ -565,7 +565,7 @@ table.tablesorter tr.alt-row:hover td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
+
 }
 
 #speedbar {
@@ -607,4 +607,9 @@ table.tablesorter tr.alt-row:hover td {
 
 #pipelineTable pre {
 	margin : 0;
+}
+
+.clickable_property {
+  text-decoration : underline;
+  cursor: pointer;
 }
