@@ -118,6 +118,7 @@ var BDA = {
                       },
                       physics:false
                    },
+    STORED_CONFIG : "bdaConfig",
 
     init : function(){
       var start = new Date().getTime();
@@ -1658,6 +1659,40 @@ var BDA = {
         BDA.reloadQueryList();
       });
     },
+
+    //--- Stored configuration functions  -----------------------------------------------------------------
+
+
+    getConfigurationValue : function(name){
+        return getStoredConfiguration()[name];
+    },
+
+
+    getStoredConfiguration : function(){
+       if(!this.hasWebStorage)
+        return {};
+      var config;
+      var configStr = localStorage.getItem(this.STORED_CONFIG);
+      if (configStr !== null && configStr.length > 0)
+        config = JSON.parse(configStr);
+      else
+        config = {};
+      return config;
+    },
+
+    storeConfiguration : function (name, value)
+    {
+      if(this.hasWebStorage)
+      {
+        console.log("Try to store config: " + name + ", value : " + value);
+        var storedConfig = this.getStoredConfiguration();
+        storedConfig[name] = config;
+        console.log(config);
+        BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
+      }
+    },
+
+
     //--- Stored queries functions ------------------------------------------------------------------------
 
     getStoredRQLQueries : function ()
@@ -1878,6 +1913,7 @@ var BDA = {
       $("<div id='bdaBackupPanel'></div>").appendTo("body")
 
       .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
+          + '<p id="methods-config" class="config"></p>'
           + "<p>Why should I save Better Dyn Admin data ? "
           + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
           + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
@@ -1885,6 +1921,7 @@ var BDA = {
           + "<button id='bdaDataBackup'>Backup</button>"
           + "<button id='bdaDataRestore'>Restore</button>"
       );
+
 
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
       .click(function(){
@@ -1894,6 +1931,14 @@ var BDA = {
         if(isMonoInstance)
           GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
       });
+
+      //methods config
+      $('#methods-config').html(
+        "<textarea id='methods-config-data' placeholder='List of methods names, comma separated'></textarea>"
+        + "<button id='methods-config-submit'>Save</button>"
+        );
+
+
 
       $("#bdaDataBackup").click(function (){
         var data = BDA.getData();
