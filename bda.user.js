@@ -118,7 +118,7 @@ var BDA = {
                       },
                       physics:false
                    },
-    STORED_CONFIG : "bdaConfig",
+    STORED_CONFIG : "BdaConfiguration",
 
     init : function(){
       var start = new Date().getTime();
@@ -1959,6 +1959,7 @@ var BDA = {
       var dataObj = {};
       dataObj.components = BDA.getStoredComponents();
       dataObj.queries = BDA.getStoredRQLQueries();
+      dataObj.configuration = BDA.getStoredConfiguration();
       return dataObj;
     },
 
@@ -1978,6 +1979,7 @@ var BDA = {
           var dataObj = JSON.parse(data);
           BDA.storeItem('Components', JSON.stringify(dataObj.components));
           BDA.storeItem('RQLQueries', JSON.stringify(dataObj.queries));
+          BDA.storeItem(this.STORED_CONFIG, JSON.stringify(dataObj.configuration));
           if (reloadUI)
             this.reloadData();
         }
