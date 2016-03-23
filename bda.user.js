@@ -1664,7 +1664,7 @@ var BDA = {
 
 
     getConfigurationValue : function(name){
-        return getStoredConfiguration()[name];
+        return BDA.getStoredConfiguration()[name];
     },
 
 
@@ -1686,8 +1686,8 @@ var BDA = {
       {
         console.log("Try to store config: " + name + ", value : " + value);
         var storedConfig = this.getStoredConfiguration();
-        storedConfig[name] = config;
-        console.log(config);
+        storedConfig[name] = value;
+        console.log(value);
         BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
       }
     },
@@ -2001,14 +2001,26 @@ var BDA = {
 
       $('<div id="advancedConfig"></div>').appendTo($('#bdaBackupPanel'));
       // Default methods
-           //methods config
+      var savedMethods = this.getConfigurationValue('default_methods');
+      if(savedMethods === undefined || savedMethods == null){
+        savedMethods = "";
+      }
+
       $("#advancedConfig").append(
         "<h3>Advanced Configuration :</h3>"
         + "<p>Configure default methods when bookmarking components</p>"
-        + "<textarea id='methods-config-data' class='' placeholder='List of methods names, comma separated'></textarea>"
-        + "<button id='methods-config-submit'>Save</button>"
+        + "<textarea id='config-methods-data' class='' placeholder='List of methods names, comma separated'>"+savedMethods+"</textarea>"
+        + "<button id='config-methods-submit'>Save</button>"
         );
 
+      $('#config-methods-submit').click(
+          function(){
+            var methods=$('#config-methods-data').val().trim();
+            var methodsArray=methods.replace(/ /g,'').split(",");
+            console.log('storing methods : ' + methodsArray);
+            BDA.storeConfiguration("default_methods",methodsArray)
+          }
+        );
 
     },
 
@@ -2339,6 +2351,14 @@ var BDA = {
               }
             });
 
+            //handle default methods
+            var methods = BDA.getConfigurationValue('default_methods');
+            console.log('savedMethods: ' + methods);
+            methods.forEach(function(methodName){
+              console.log('setting default method: ' + methodName);
+              $('#method_'+methodName).attr('checked',true);
+            });
+
             var tablevars = $('h1:contains("Properties")').next();
             tablevars.find('tr').each(function(index, element){
               if(index > 0)
@@ -2348,6 +2368,7 @@ var BDA = {
                 varsList.append('<li><input type="checkbox" class="variable" id="var_' + variableName + '"><label for="var_' + variableName + '">' + variableName + '</label></li>');
               }
             });
+
             $('#addComponentToolbarPopup').fadeIn();
           });
         }
