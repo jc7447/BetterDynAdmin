@@ -1923,7 +1923,7 @@ var BDA = {
           + "<button id='bdaDataRestore'>Restore</button>"
       );
 
-      //this.createAdvancedConfigurationSubPannel();
+      this.createAdvancedConfigurationSubPannel();
 
 
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
@@ -1999,7 +1999,7 @@ var BDA = {
     {
 
 
-      $('<div id='advancedConfig'></div>').appendTo($('#bdaBackupPanel'));
+      $('<div id="advancedConfig"></div>').appendTo($('#bdaBackupPanel'));
       // Default methods
            //methods config
       $("#advancedConfig").append(
