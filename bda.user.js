@@ -33,7 +33,7 @@
 // @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/default.min.css
 // @resource select2CSS https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
-// @resource fontAwsomeCSS https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css
+// @resource fontAwsomeCSS //cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -251,7 +251,7 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");;
+      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");
       GM_addStyle(fontAwsomeCSS);
       var select2CSS = GM_getResourceText("select2CSS");
       GM_addStyle(select2CSS);
@@ -1885,6 +1885,8 @@ var BDA = {
       });
     },
 
+
+
     //--- backup panel functions ------------------------------------------------------------------------
 
     createBackupPanel : function ()
@@ -1913,7 +1915,6 @@ var BDA = {
       $("<div id='bdaBackupPanel'></div>").appendTo("body")
 
       .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
-          + '<p id="methods-config" class="config"></p>'
           + "<p>Why should I save Better Dyn Admin data ? "
           + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
           + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
@@ -1921,6 +1922,8 @@ var BDA = {
           + "<button id='bdaDataBackup'>Backup</button>"
           + "<button id='bdaDataRestore'>Restore</button>"
       );
+
+      //this.createAdvancedConfigurationSubPannel();
 
 
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
@@ -1932,12 +1935,7 @@ var BDA = {
           GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
       });
 
-      //methods config
-      $('#methods-config').html(
-        "<textarea id='methods-config-data' placeholder='List of methods names, comma separated'></textarea>"
-        + "<button id='methods-config-submit'>Save</button>"
-        );
-
+ 
 
 
       $("#bdaDataBackup").click(function (){
@@ -1953,6 +1951,7 @@ var BDA = {
         }
       });
     },
+
 
     getData : function()
     {
@@ -1992,6 +1991,25 @@ var BDA = {
     {
       GM_setClipboard(text);
       window.alert("Data have been added to your clipboard");
+    },
+
+        // advanced config
+
+    createAdvancedConfigurationSubPannel : function()
+    {
+
+
+      $('<div id='advancedConfig'></div>').appendTo($('#bdaBackupPanel'));
+      // Default methods
+           //methods config
+      $("#advancedConfig").append(
+        "<h3>Advanced Configuration :</h3>"
+        + "<p>Configure default methods when bookmarking components</p>"
+        + "<textarea id='methods-config-data' class='' placeholder='List of methods names, comma separated'></textarea>"
+        + "<button id='methods-config-submit'>Save</button>"
+        );
+
+
     },
 
     //--- Toolbar functions ------------------------------------------------------------------------
@@ -2789,8 +2807,11 @@ var BDA = {
     }
 };
 
+
+
 if (document.getElementById("oracleATGbrand") !== null || BDA.isOldDynamoFct())
 {
+  console.log("Loading BDA");
   try
   {
     BDA.init();

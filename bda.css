@@ -327,9 +327,6 @@ a {
   padding: 3px;
 }
 
-#bdaData {
-  width: 100%;
-}
 
 #bdaBackupPanel {
   position: absolute;
@@ -343,6 +340,10 @@ a {
   background-color: #CC0000;
   padding: 3px;
   display: none;
+}
+
+#bdaBackupPanel textarea {
+  width: 100%;
 }
 
 #whatsnewPanel {
