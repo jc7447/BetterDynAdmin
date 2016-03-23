@@ -2022,6 +2022,29 @@ var BDA = {
           }
         );
 
+      // Default properties
+
+      var savedProperties = this.getConfigurationValue('default_properties');
+      if(savedProperties === undefined || savedProperties == null){
+        savedProperties = "";
+      }
+
+      $("#advancedConfig").append(
+        "<p>Configure default properties when bookmarking components</p>"
+        + "<textarea id='config-properties-data' class='' placeholder='List of properties, comma separated'>"+savedProperties+"</textarea>"
+        + "<button id='config-properties-submit'>Save</button>"
+        );
+
+      $('#config-properties-submit').click(
+          function(){
+            var properties=$('#config-properties-data').val().trim();
+            var propertiesArray=properties.replace(/ /g,'').split(",");
+            console.log('storing properties : ' + propertiesArray);
+            BDA.storeConfiguration("default_properties",propertiesArray)
+          }
+        );
+
+
     },
 
     //--- Toolbar functions ------------------------------------------------------------------------
@@ -2352,9 +2375,9 @@ var BDA = {
             });
 
             //handle default methods
-            var methods = BDA.getConfigurationValue('default_methods');
-            console.log('savedMethods: ' + methods);
-            methods.forEach(function(methodName){
+            var defMethods = BDA.getConfigurationValue('default_methods');
+            console.log('savedMethods: ' + defMethods);
+            defMethods.forEach(function(methodName){
               console.log('setting default method: ' + methodName);
               $('#method_'+methodName).attr('checked',true);
             });
@@ -2367,6 +2390,13 @@ var BDA = {
                 var variableName = $(linkVariable).attr("href").split('=')[1];
                 varsList.append('<li><input type="checkbox" class="variable" id="var_' + variableName + '"><label for="var_' + variableName + '">' + variableName + '</label></li>');
               }
+            });
+
+            var defProperties = BDA.getConfigurationValue('default_properties');
+            console.log('savedProperties: ' + defProperties);
+            defProperties.forEach(function(name){
+              console.log('setting default properties: ' + name);
+              $('#var_'+name).attr('checked',true);
             });
 
             $('#addComponentToolbarPopup').fadeIn();
