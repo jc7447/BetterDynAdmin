@@ -292,6 +292,9 @@ a {
 }
 
 .menuPanel {
+  position: absolute;
+  top: 34px;
+  right: 30px;
   font-size: 11px;
   color: white;
   border: 1px solid #8F0000;
@@ -315,9 +318,6 @@ a {
 }
 
 #bdaBugPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
   width: 250px;
   background-color: #007bb8;
 }
@@ -329,9 +329,6 @@ a {
 }
 
 #bdaBackupPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
   width: 285px;
   background-color: #CC0000;
 }
@@ -343,9 +340,6 @@ a {
 }
 
 #whatsnewPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
   width: 285px;
   background-color: #CC0000;
 }
