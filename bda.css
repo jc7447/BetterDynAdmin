@@ -269,12 +269,22 @@ a {
 
 /** MENU **/
 
+#menuBar{
+  position: absolute;
+  top: 0px;
+  right: 30px;
+}
+
 .menu {
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
   border-top: none;
   padding: 3px;
+  text-align: center;
+  float:right;
+  margin-top: 0px;
+  margin-right: 3px;
 }
 
 .menu p {
@@ -301,9 +311,6 @@ a {
 }
 
 #bdaBug {
-  position: absolute;
-  top: 0px;
-  right: 30px;
   background-color: #007bb8;
 }
 
@@ -317,9 +324,7 @@ a {
 
 
 #bdaBackup {
-  position: absolute;
-  top: 0px;
-  right: 153px;
+  width: 60px;
   background-color: #CC0000;
 }
 
@@ -333,9 +338,6 @@ a {
 
 
 #whatsnew {
-  position: absolute;
-  top: 0px;
-  right: 233px;
   font-size: 11px;
   background-color: #CC0000;
 }
@@ -347,6 +349,17 @@ a {
   width: 285px;
   background-color: #CC0000;
 }
+
+#bdaConfig {
+  font-size: 11px;
+  background-color: #CC0000;
+}
+
+#bdaConfigPanel {
+  width: 285px;
+  background-color: #CC0000;
+}
+
 
 #history {
   clear: both;

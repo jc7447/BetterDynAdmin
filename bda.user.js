@@ -1817,19 +1817,19 @@ var BDA = {
 
     createMenu : function(){
 
+      $menuBar = $("<div id='menuBar'></div>").appendTo("body");
+
         //this.createWhatsnewPanel();
-      this.createBackupPanel();
-      this.createBugReportPanel();
+      this.createBugReportPanel($menuBar);
+      this.createBackupPanel($menuBar);
+      this.createConfigurationPanel($menuBar);
 
       $(".menu").bind("click",function() {
 
         $thisParent = $(this);
 
-        console.log('menu : click on ' + $thisParent.attr('id'));
-
         $('.menu').each(function(){
             $this = $(this);
-            console.log('menu : closing ' + $this.attr('id') + "display:  " +  $this.css('display'));
             $panel = $('#'+$this.attr('data-panel')); 
             if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') !="none"){
               $panel.slideToggle();
@@ -1841,29 +1841,60 @@ var BDA = {
         $panel.slideToggle();
         BDA.rotateArrow($thisParent.find(".menuArrow i"));
 
-      /*  $("#bdaBugPanel").slideToggle();
-        
-        if ($("#bdaBackupPanel").css("display") != "none")
-        {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-        if ($("#whatsnewPanel").css("display") != "none")
-        {
-          $("#whatsnewPanel").slideToggle();
-          BDA.rotateArrow($(".whatsnewArrow i"));
-        }*/
       });
     },
 
+    //--- Config Panel
+
+    createConfigurationPanel : function($menuBar){
+
+      $("<div id='bdaConfig' class='menu' data-panel='bdaConfigPanel'></div>").appendTo($menuBar)
+
+      .html("<p>Configuration</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+
+      $bdaConfigPanel = $("<div id='bdaConfigPanel' class='menuPanel'></div>").appendTo("body")
+
+      .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
+      );
+
+      this.createDefaultMethodsConfig($bdaConfigPanel);
+
+
+      $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
+      .click(function(){
+        var isMonoInstance = $(this).prop('checked');
+        console.log("Setting storage mode to mono-instance : " + isMonoInstance);
+        GM_setValue(BDA.GMValue_MonoInstance, isMonoInstance);
+        if(isMonoInstance)
+          GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
+      });
+
+
+      $("#bdaDataBackup").click(function (){
+        var data = BDA.getData();
+        BDA.copyToClipboard(JSON.stringify(data));
+      });
+
+      $("#bdaDataRestore").click(function (){
+        if (window.confirm("Sure ?"))
+        {
+          var data = $("#bdaData").val().trim();
+          BDA.restoreData(data, true);
+        }
+      });
+
+    },
     //--- Bug report panel
 
-    createBugReportPanel : function()
+    createBugReportPanel : function($menuBar)
     {
       var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
       var labelIndex = Math.floor((Math.random() * labels.length));
 
-      $("<div id='bdaBug' class='menu' data-panel='bdaBugPanel'></div>").appendTo("body")
+      $("<div id='bdaBug' class='menu' data-panel='bdaBugPanel'></div>").appendTo($menuBar)
       .html("<p>" + labels[labelIndex] + "</p>"
           + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
@@ -1903,11 +1934,11 @@ var BDA = {
 
     //--- backup panel functions ------------------------------------------------------------------------
 
-    createBackupPanel : function ()
+    createBackupPanel : function ($menuBar)
     {
-      $("<div id='bdaBackup' class='menu' data-panel='bdaBackupPanel'></div>").appendTo("body")
+      $("<div id='bdaBackup' class='menu' data-panel='bdaBackupPanel'></div>").appendTo($menuBar)
 
-      .html("<p>Configuration</p>"
+      .html("<p>Backup</p>"
           + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
@@ -1922,19 +1953,6 @@ var BDA = {
           + "<button id='bdaDataBackup'>Backup</button>"
           + "<button id='bdaDataRestore'>Restore</button>"
       );
-
-      this.createAdvancedConfigurationSubPannel();
-
-
-      $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
-      .click(function(){
-        var isMonoInstance = $(this).prop('checked');
-        console.log("Setting storage mode to mono-instance : " + isMonoInstance);
-        GM_setValue(BDA.GMValue_MonoInstance, isMonoInstance);
-        if(isMonoInstance)
-          GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
-      });
-
 
       $("#bdaDataBackup").click(function (){
         var data = BDA.getData();
@@ -1996,11 +2014,11 @@ var BDA = {
         // advanced config
 
 
-    createAdvancedConfigurationSubPannel : function()
+    createDefaultMethodsConfig : function(parentPanel)
     {
 
 
-      $('<div id="advancedConfig"></div>').appendTo($('#bdaBackupPanel'));
+      $('<div id="advancedConfig"></div>').appendTo(parentPanel);
       // Default methods
       var savedMethods = this.getConfigurationValue('default_methods');
       if(savedMethods === undefined || savedMethods == null){
