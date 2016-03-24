@@ -181,9 +181,8 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-	  //this.createWhatsnewPanel();
-      this.createBackupPanel();
-      this.createBugReportPanel();
+
+      this.createMenu();
 
       if (this.isComponentPage)
       {
@@ -1814,29 +1813,36 @@ var BDA = {
       $("#history").html(html);
     },
 
-    //--- Bug report panel
+    //MENU
 
-    createBugReportPanel : function()
-    {
-      var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
-      var labelIndex = Math.floor((Math.random() * labels.length));
+    createMenu : function(){
 
-      $("<div id='bdaBug'></div>").appendTo("body")
-      .html("<p>" + labels[labelIndex] + "</p>"
-          + "<div class='bugArrow'><i class='up fa fa-arrow-down'></i></div>"
-      );
+        //this.createWhatsnewPanel();
+      this.createBackupPanel();
+      this.createBugReportPanel();
 
-      $("<div id='bdaBugPanel'></div>").appendTo("body")
-      .html("<p>How can I help and stay tuned ? "
-          + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
-          + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
-          + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
-          + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
-      );
+      $(".menu").bind("click",function() {
 
-      $("#bdaBug").click(function() {
-        $("#bdaBugPanel").slideToggle();
-        BDA.rotateArrow($(".bugArrow i"));
+        $thisParent = $(this);
+
+        console.log('menu : click on ' + $thisParent.attr('id'));
+
+        $('.menu').each(function(){
+            $this = $(this);
+            console.log('menu : closing ' + $this.attr('id') + "display:  " +  $this.css('display'));
+            $panel = $('#'+$this.attr('data-panel')); 
+            if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') !="none"){
+              $panel.slideToggle();
+              BDA.rotateArrow($this.find(".menuArrow i"));
+            }
+        });
+       
+        $panel = $('#'+$thisParent.attr('data-panel'));
+        $panel.slideToggle();
+        BDA.rotateArrow($thisParent.find(".menuArrow i"));
+
+      /*  $("#bdaBugPanel").slideToggle();
+        
         if ($("#bdaBackupPanel").css("display") != "none")
         {
           $("#bdaBackupPanel").slideToggle();
@@ -1846,8 +1852,30 @@ var BDA = {
         {
           $("#whatsnewPanel").slideToggle();
           BDA.rotateArrow($(".whatsnewArrow i"));
-        }
+        }*/
       });
+    },
+
+    //--- Bug report panel
+
+    createBugReportPanel : function()
+    {
+      var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
+      var labelIndex = Math.floor((Math.random() * labels.length));
+
+      $("<div id='bdaBug' class='menu' data-panel='bdaBugPanel'></div>").appendTo("body")
+      .html("<p>" + labels[labelIndex] + "</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+      $("<div id='bdaBugPanel' class='menuPanel'></div>").appendTo("body")
+      .html("<p>How can I help and stay tuned ? "
+          + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
+          + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+          + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
+          + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
+      );
+
 
 
     },
@@ -1857,26 +1885,12 @@ var BDA = {
     
     createWhatsnewPanel : function ()
     {
-      $("<div id='whatsnew'></div>").appendTo("body")
+      $("<div id='whatsnew' class='menu' data-panel='whatsnewPanel'></div>").appendTo("body")
 
       .html("<p>What's new</p>"
-          + "<div class='whatsnewArrow'><i class='up fa fa-arrow-down'></i></div>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
-      $("#whatsnew").click(function() {
-        $("#whatsnewPanel").slideToggle();
-        BDA.rotateArrow($(".whatsnewArrow i"));
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#bdaBackupPanel").css("display") != "none")
-        {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-      });
         
       $("<div id='whatsnewPanel'></div>").appendTo("body");
 
@@ -1891,28 +1905,14 @@ var BDA = {
 
     createBackupPanel : function ()
     {
-      $("<div id='bdaBackup'></div>").appendTo("body")
+      $("<div id='bdaBackup' class='menu' data-panel='bdaBackupPanel'></div>").appendTo("body")
 
       .html("<p>Configuration</p>"
-          + "<div class='backupArrow'><i class='up fa fa-arrow-down'></i></div>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
-      $("#bdaBackup").click(function() {
-        $("#bdaBackupPanel").slideToggle();
-        BDA.rotateArrow($(".backupArrow i"));
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#whatsnewPanel").css("display") != "none")
-        {
-          $("#whatsnewPanel").slideToggle();
-          BDA.rotateArrow($(".whatsnewArrow i"));
-        }
-      });
 
-      $("<div id='bdaBackupPanel'></div>").appendTo("body")
+      $("<div id='bdaBackupPanel' class='menuPanel'></div>").appendTo("body")
 
       .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
           + "<p>Why should I save Better Dyn Admin data ? "
@@ -1934,8 +1934,6 @@ var BDA = {
         if(isMonoInstance)
           GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
       });
-
- 
 
 
       $("#bdaDataBackup").click(function (){
@@ -1996,6 +1994,7 @@ var BDA = {
     },
 
         // advanced config
+
 
     createAdvancedConfigurationSubPannel : function()
     {
