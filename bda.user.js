@@ -2018,28 +2018,31 @@ var BDA = {
     {
 
 
-      $('<div id="advancedConfig"></div>').appendTo(parentPanel);
+      $config = $('<div id="advancedConfig"></div>')
+      $config.appendTo(parentPanel);
       // Default methods
       var savedMethods = this.getConfigurationValue('default_methods');
       if(savedMethods === undefined || savedMethods == null){
         savedMethods = "";
       }
 
-      $("#advancedConfig").append(
-        "<h3>Advanced Configuration :</h3>"
-        + "<p>Configure default methods when bookmarking components</p>"
+       $config.append(
+        "<p>Default methods when bookmarking components:</p>"
         + "<textarea id='config-methods-data' class='' placeholder='List of methods names, comma separated'>"+savedMethods+"</textarea>"
-        + "<button id='config-methods-submit'>Save</button>"
         );
 
-      $('#config-methods-submit').click(
-          function(){
+       $submitMethods = $('<button id="config-methods-submit">Save</button>')
+        .bind('click',function(){
             var methods=$('#config-methods-data').val().trim();
             var methodsArray=methods.replace(/ /g,'').split(",");
             console.log('storing methods : ' + methodsArray);
             BDA.storeConfiguration("default_methods",methodsArray)
           }
-        );
+       )
+       ;
+       $config.append($submitMethods);
+       
+
 
       // Default properties
 
@@ -2048,21 +2051,20 @@ var BDA = {
         savedProperties = "";
       }
 
-      $("#advancedConfig").append(
-        "<p>Configure default properties when bookmarking components</p>"
+      $config.append(
+        "<p>Default properties when bookmarking components:</p>"
         + "<textarea id='config-properties-data' class='' placeholder='List of properties, comma separated'>"+savedProperties+"</textarea>"
-        + "<button id='config-properties-submit'>Save</button>"
         );
 
-      $('#config-properties-submit').click(
-          function(){
+      $submitProperties  = $('<button id="config-properties-submit">Save</button>')
+        .bind('click', function(){
             var properties=$('#config-properties-data').val().trim();
             var propertiesArray=properties.replace(/ /g,'').split(",");
             console.log('storing properties : ' + propertiesArray);
             BDA.storeConfiguration("default_properties",propertiesArray)
           }
         );
-
+      $config.append($submitProperties);
 
     },
 
