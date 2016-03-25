@@ -2397,7 +2397,7 @@ var BDA = {
             var defMethods = BDA.getConfigurationValue('default_methods');
             console.log('savedMethods: ' + defMethods);
             if(defMethods != null){
-              defMethods.forEach(function(methodName){
+                defMethods.forEach(function(methodName){
                 console.log('setting default method: ' + methodName);
                 $('#method_'+methodName).attr('checked',true);
               });
