@@ -2396,10 +2396,12 @@ var BDA = {
             //handle default methods
             var defMethods = BDA.getConfigurationValue('default_methods');
             console.log('savedMethods: ' + defMethods);
-            defMethods.forEach(function(methodName){
-              console.log('setting default method: ' + methodName);
-              $('#method_'+methodName).attr('checked',true);
-            });
+            if(default_methods != null){
+              defMethods.forEach(function(methodName){
+                console.log('setting default method: ' + methodName);
+                $('#method_'+methodName).attr('checked',true);
+              });
+            }
 
             var tablevars = $('h1:contains("Properties")').next();
             tablevars.find('tr').each(function(index, element){
@@ -2413,10 +2415,12 @@ var BDA = {
 
             var defProperties = BDA.getConfigurationValue('default_properties');
             console.log('savedProperties: ' + defProperties);
-            defProperties.forEach(function(name){
-              console.log('setting default properties: ' + name);
-              $('#var_'+name).attr('checked',true);
-            });
+            if(defProperties != null){
+              defProperties.forEach(function(name){
+                console.log('setting default properties: ' + name);
+                $('#var_'+name).attr('checked',true);
+              });
+            }
 
             $('#addComponentToolbarPopup').fadeIn();
           });
