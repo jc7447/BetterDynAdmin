@@ -276,6 +276,7 @@ a {
 }
 
 .menu {
+  height: 32px;
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
@@ -333,6 +334,14 @@ a {
   background-color: #CC0000;
 }
 
+#bdaSearch {
+  background-color: #007bb8;
+}
+
+
+#bdaSearch input{
+   margin-top: 1px;
+}
 
 #whatsnew {
   font-size: 11px;

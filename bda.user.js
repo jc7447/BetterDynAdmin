@@ -1823,6 +1823,7 @@ var BDA = {
       this.createBugReportPanel($menuBar);
       this.createBackupPanel($menuBar);
       this.createConfigurationPanel($menuBar);
+      this.createSearchBox($menuBar);
 
       $(".menu").bind("click",function() {
 
@@ -1841,6 +1842,27 @@ var BDA = {
         $panel.slideToggle();
         BDA.rotateArrow($thisParent.find(".menuArrow i"));
 
+      });
+    },
+
+    //--- Search
+    createSearchBox : function($menuBar){
+       $searchBox = $("<div id='bdaSearch' class='menu' ></div>").appendTo($menuBar)
+                      .html(
+                         '<p>Search</p>'
+                         +'<form action="/dyn/admin/atg/dynamo/admin/en/cmpn-search.jhtml">'
+                         +'<input type="text" name="query" id="searchFieldBDA" placeholder="focus: ctrl+shift+f"></input> '
+                         +'</form>'
+                       );
+
+
+       $(document).keypress(function(e){
+         var checkWebkitandIE=(e.which==70 && e.ctrlKey && e.shiftKey? 1 : 0);
+         var checkMoz=(e.which==70 && e.ctrlKey &&  e.shiftKey? 1 : 0);
+
+          if (checkWebkitandIE || checkMoz){
+            $('#searchFieldBDA').focus();
+          }
       });
     },
 
