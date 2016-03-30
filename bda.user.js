@@ -1857,7 +1857,7 @@ var BDA = {
 
 
        $(document).keypress(function(e){
-         var checkWebkitandIE=(e.which==70 && e.ctrlKey && e.shiftKey? 1 : 0);
+         var checkWebkitandIE=(e.keycode==6 && e.ctrlKey && e.shiftKey? 1 : 0);
          var checkMoz=(e.which==70 && e.ctrlKey &&  e.shiftKey? 1 : 0);
 
           if (checkWebkitandIE || checkMoz){
