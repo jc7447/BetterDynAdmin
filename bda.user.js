@@ -1945,8 +1945,7 @@ var BDA = {
 
       $("<div id='bdaBackupPanel' class='menuPanel'></div>").appendTo("body")
 
-      .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
-          + "<p>Why should I save Better Dyn Admin data ? "
+      .html("<p>Why should I save Better Dyn Admin data ? "
           + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
           + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
           + "<textarea id='bdaData' placeholder='Paste your data here to restore it.'></textarea>"
