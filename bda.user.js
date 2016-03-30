@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -118,6 +118,7 @@ var BDA = {
                       },
                       physics:false
                    },
+    STORED_CONFIG : "BdaConfiguration",
 
     init : function(){
       var start = new Date().getTime();
@@ -180,9 +181,8 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-	  //this.createWhatsnewPanel();
-      this.createBackupPanel();
-      this.createBugReportPanel();
+
+      this.createMenu();
 
       if (this.isComponentPage)
       {
@@ -250,7 +250,7 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");;
+      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");
       GM_addStyle(fontAwsomeCSS);
       var select2CSS = GM_getResourceText("select2CSS");
       GM_addStyle(select2CSS);
@@ -1609,10 +1609,18 @@ var BDA = {
             for (var i = 0; i != rqlQueries.length; i++)
             {
               var storeQuery = rqlQueries[i];
+              var escapedQuery =  $("<div>").text(storeQuery.query).html();
+
               html += "<li class='savedQuery'>";
               html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
+              html += "<span id='previewQuery" + i + "'class='previewQuery'>";
+              html += "<i class='fa fa-eye'></i>";
+              html += "</span>";
               html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
               html += "<i class='fa fa-trash-o'></i>";
+              html += "</span>";
+              html += "<span id='queryView" + i + "'class='queryView'>";
+              html += "<pre>" + escapedQuery + "</pre>";
               html += "</span>";
               html += "</li>";
             }
@@ -1620,15 +1628,26 @@ var BDA = {
         }
       }
       $("#storedQueries").html(html);
+
+      $('#storedQueries .queryView').each(function(i, block) {
+        hljs.highlightBlock(block);
+      });
+
       $(".savedQuery").click(function() {
         console.log("click on query : " + $(this).find("a").html());
         BDA.printStoredQuery( $(this).find("a").html());
       });
 
-      $(".savedQuery").hover( function() {
+    /*  $(".savedQuery").hover( function() {
         $(this).find("span.deleteQuery").toggle();
       }, function() {
         $(this).find("span.deleteQuery").toggle();
+      });*/
+
+      $(".previewQuery").hover( function() {
+        $(this).parent("li").find("span.queryView").toggle();
+      }, function() {
+        $(this).parent("li").find("span.queryView").toggle();
       });
 
       $(".deleteQuery")
@@ -1639,6 +1658,40 @@ var BDA = {
         BDA.reloadQueryList();
       });
     },
+
+    //--- Stored configuration functions  -----------------------------------------------------------------
+
+
+    getConfigurationValue : function(name){
+        return BDA.getStoredConfiguration()[name];
+    },
+
+
+    getStoredConfiguration : function(){
+       if(!this.hasWebStorage)
+        return {};
+      var config;
+      var configStr = localStorage.getItem(this.STORED_CONFIG);
+      if (configStr !== null && configStr.length > 0)
+        config = JSON.parse(configStr);
+      else
+        config = {};
+      return config;
+    },
+
+    storeConfiguration : function (name, value)
+    {
+      if(this.hasWebStorage)
+      {
+        console.log("Try to store config: " + name + ", value : " + value);
+        var storedConfig = this.getStoredConfiguration();
+        storedConfig[name] = value;
+        console.log(value);
+        BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
+      }
+    },
+
+
     //--- Stored queries functions ------------------------------------------------------------------------
 
     getStoredRQLQueries : function ()
@@ -1760,112 +1813,55 @@ var BDA = {
       $("#history").html(html);
     },
 
-    //--- Bug report panel
+    //MENU
 
-    createBugReportPanel : function()
-    {
-      var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
-      var labelIndex = Math.floor((Math.random() * labels.length));
+    createMenu : function(){
 
-      $("<div id='bdaBug'></div>").appendTo("body")
-      .html("<p>" + labels[labelIndex] + "</p>"
-          + "<div class='bugArrow'><i class='up fa fa-arrow-down'></i></div>"
-      );
+      $menuBar = $("<div id='menuBar'></div>").appendTo("body");
 
-      $("<div id='bdaBugPanel'></div>").appendTo("body")
-      .html("<p>How can I help and stay tuned ? "
-          + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
-          + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
-          + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
-          + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
-      );
+        //this.createWhatsnewPanel();
+      this.createBugReportPanel($menuBar);
+      this.createBackupPanel($menuBar);
+      this.createConfigurationPanel($menuBar);
 
-      $("#bdaBug").click(function() {
-        $("#bdaBugPanel").slideToggle();
-        BDA.rotateArrow($(".bugArrow i"));
-        if ($("#bdaBackupPanel").css("display") != "none")
-        {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-        if ($("#whatsnewPanel").css("display") != "none")
-        {
-          $("#whatsnewPanel").slideToggle();
-          BDA.rotateArrow($(".whatsnewArrow i"));
-        }
-      });
+      $(".menu").bind("click",function() {
 
+        $thisParent = $(this);
 
-    },
-    
-    //--- what's new functions --------------------------------------------------------------------------
-    
-    
-    createWhatsnewPanel : function ()
-    {
-      $("<div id='whatsnew'></div>").appendTo("body")
+        $('.menu').each(function(){
+            $this = $(this);
+            $panel = $('#'+$this.attr('data-panel')); 
+            if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') !="none"){
+              $panel.slideToggle();
+              BDA.rotateArrow($this.find(".menuArrow i"));
+            }
+        });
+       
+        $panel = $('#'+$thisParent.attr('data-panel'));
+        $panel.slideToggle();
+        BDA.rotateArrow($thisParent.find(".menuArrow i"));
 
-      .html("<p>What's new</p>"
-          + "<div class='whatsnewArrow'><i class='up fa fa-arrow-down'></i></div>"
-      );
-
-      $("#whatsnew").click(function() {
-        $("#whatsnewPanel").slideToggle();
-        BDA.rotateArrow($(".whatsnewArrow i"));
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#bdaBackupPanel").css("display") != "none")
-        {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-      });
-        
-      $("<div id='whatsnewPanel'></div>").appendTo("body");
-
-      $.get("https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md", function( data ) {
-          $( "#whatsnewPanel" ).html( data );
       });
     },
 
-    //--- backup panel functions ------------------------------------------------------------------------
+    //--- Config Panel
 
-    createBackupPanel : function ()
-    {
-      $("<div id='bdaBackup'></div>").appendTo("body")
+    createConfigurationPanel : function($menuBar){
+
+      $("<div id='bdaConfig' class='menu' data-panel='bdaConfigPanel'></div>").appendTo($menuBar)
 
       .html("<p>Configuration</p>"
-          + "<div class='backupArrow'><i class='up fa fa-arrow-down'></i></div>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
-      $("#bdaBackup").click(function() {
-        $("#bdaBackupPanel").slideToggle();
-        BDA.rotateArrow($(".backupArrow i"));
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#whatsnewPanel").css("display") != "none")
-        {
-          $("#whatsnewPanel").slideToggle();
-          BDA.rotateArrow($(".whatsnewArrow i"));
-        }
-      });
 
-      $("<div id='bdaBackupPanel'></div>").appendTo("body")
+      $bdaConfigPanel = $("<div id='bdaConfigPanel' class='menuPanel'></div>").appendTo("body")
 
       .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
-          + "<p>Why should I save Better Dyn Admin data ? "
-          + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
-          + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
-          + "<textarea id='bdaData' placeholder='Paste your data here to restore it.'></textarea>"
-          + "<button id='bdaDataBackup'>Backup</button>"
-          + "<button id='bdaDataRestore'>Restore</button>"
       );
+
+      this.createDefaultMethodsConfig($bdaConfigPanel);
+
 
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
       .click(function(){
@@ -1875,6 +1871,87 @@ var BDA = {
         if(isMonoInstance)
           GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
       });
+
+
+      $("#bdaDataBackup").click(function (){
+        var data = BDA.getData();
+        BDA.copyToClipboard(JSON.stringify(data));
+      });
+
+      $("#bdaDataRestore").click(function (){
+        if (window.confirm("Sure ?"))
+        {
+          var data = $("#bdaData").val().trim();
+          BDA.restoreData(data, true);
+        }
+      });
+
+    },
+    //--- Bug report panel
+
+    createBugReportPanel : function($menuBar)
+    {
+      var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
+      var labelIndex = Math.floor((Math.random() * labels.length));
+
+      $("<div id='bdaBug' class='menu' data-panel='bdaBugPanel'></div>").appendTo($menuBar)
+      .html("<p>" + labels[labelIndex] + "</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+      $("<div id='bdaBugPanel' class='menuPanel'></div>").appendTo("body")
+      .html("<p>How can I help and stay tuned ? "
+          + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
+          + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+          + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
+          + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
+      );
+
+
+
+    },
+    
+    //--- what's new functions --------------------------------------------------------------------------
+    
+    
+    createWhatsnewPanel : function ()
+    {
+      $("<div id='whatsnew' class='menu' data-panel='whatsnewPanel'></div>").appendTo("body")
+
+      .html("<p>What's new</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+        
+      $("<div id='whatsnewPanel'></div>").appendTo("body");
+
+      $.get("https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md", function( data ) {
+          $( "#whatsnewPanel" ).html( data );
+      });
+    },
+
+
+
+    //--- backup panel functions ------------------------------------------------------------------------
+
+    createBackupPanel : function ($menuBar)
+    {
+      $("<div id='bdaBackup' class='menu' data-panel='bdaBackupPanel'></div>").appendTo($menuBar)
+
+      .html("<p>Backup</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+
+      $("<div id='bdaBackupPanel' class='menuPanel'></div>").appendTo("body")
+
+      .html("<p>Why should I save Better Dyn Admin data ? "
+          + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
+          + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
+          + "<textarea id='bdaData' placeholder='Paste your data here to restore it.'></textarea>"
+          + "<button id='bdaDataBackup'>Backup</button>"
+          + "<button id='bdaDataRestore'>Restore</button>"
+      );
 
       $("#bdaDataBackup").click(function (){
         var data = BDA.getData();
@@ -1890,12 +1967,14 @@ var BDA = {
       });
     },
 
+
     getData : function()
     {
       console.log("Getting all data from localstorage");
       var dataObj = {};
       dataObj.components = BDA.getStoredComponents();
       dataObj.queries = BDA.getStoredRQLQueries();
+      dataObj.configuration = BDA.getStoredConfiguration();
       return dataObj;
     },
 
@@ -1915,6 +1994,7 @@ var BDA = {
           var dataObj = JSON.parse(data);
           BDA.storeItem('Components', JSON.stringify(dataObj.components));
           BDA.storeItem('RQLQueries', JSON.stringify(dataObj.queries));
+          BDA.storeItem(this.STORED_CONFIG, JSON.stringify(dataObj.configuration));
           if (reloadUI)
             this.reloadData();
         }
@@ -1928,6 +2008,63 @@ var BDA = {
     {
       GM_setClipboard(text);
       window.alert("Data have been added to your clipboard");
+    },
+
+        // advanced config
+
+
+    createDefaultMethodsConfig : function(parentPanel)
+    {
+
+
+      $config = $('<div id="advancedConfig"></div>')
+      $config.appendTo(parentPanel);
+      // Default methods
+      var savedMethods = this.getConfigurationValue('default_methods');
+      if(savedMethods === undefined || savedMethods == null){
+        savedMethods = "";
+      }
+
+       $config.append(
+        "<p>Default methods when bookmarking components:</p>"
+        + "<textarea id='config-methods-data' class='' placeholder='List of methods names, comma separated'>"+savedMethods+"</textarea>"
+        );
+
+       $submitMethods = $('<button id="config-methods-submit">Save</button>')
+        .bind('click',function(){
+            var methods=$('#config-methods-data').val().trim();
+            var methodsArray=methods.replace(/ /g,'').split(",");
+            console.log('storing methods : ' + methodsArray);
+            BDA.storeConfiguration("default_methods",methodsArray)
+          }
+       )
+       ;
+       $config.append($submitMethods);
+       
+
+
+      // Default properties
+
+      var savedProperties = this.getConfigurationValue('default_properties');
+      if(savedProperties === undefined || savedProperties == null){
+        savedProperties = "";
+      }
+
+      $config.append(
+        "<p>Default properties when bookmarking components:</p>"
+        + "<textarea id='config-properties-data' class='' placeholder='List of properties, comma separated'>"+savedProperties+"</textarea>"
+        );
+
+      $submitProperties  = $('<button id="config-properties-submit">Save</button>')
+        .bind('click', function(){
+            var properties=$('#config-properties-data').val().trim();
+            var propertiesArray=properties.replace(/ /g,'').split(",");
+            console.log('storing properties : ' + propertiesArray);
+            BDA.storeConfiguration("default_properties",propertiesArray)
+          }
+        );
+      $config.append($submitProperties);
+
     },
 
     //--- Toolbar functions ------------------------------------------------------------------------
@@ -2257,6 +2394,16 @@ var BDA = {
               }
             });
 
+            //handle default methods
+            var defMethods = BDA.getConfigurationValue('default_methods');
+            console.log('savedMethods: ' + defMethods);
+            if(defMethods != null){
+                defMethods.forEach(function(methodName){
+                console.log('setting default method: ' + methodName);
+                $('#method_'+methodName).attr('checked',true);
+              });
+            }
+
             var tablevars = $('h1:contains("Properties")').next();
             tablevars.find('tr').each(function(index, element){
               if(index > 0)
@@ -2266,6 +2413,16 @@ var BDA = {
                 varsList.append('<li><input type="checkbox" class="variable" id="var_' + variableName + '"><label for="var_' + variableName + '">' + variableName + '</label></li>');
               }
             });
+
+            var defProperties = BDA.getConfigurationValue('default_properties');
+            console.log('savedProperties: ' + defProperties);
+            if(defProperties != null){
+              defProperties.forEach(function(name){
+                console.log('setting default properties: ' + name);
+                $('#var_'+name).attr('checked',true);
+              });
+            }
+
             $('#addComponentToolbarPopup').fadeIn();
           });
         }
@@ -2725,8 +2882,11 @@ var BDA = {
     }
 };
 
+
+
 if (document.getElementById("oracleATGbrand") !== null || BDA.isOldDynamoFct())
 {
+  console.log("Loading BDA");
   try
   {
     BDA.init();
