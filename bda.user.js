@@ -15,7 +15,7 @@
 // @grant GM_setValue
 // @grant GM_deleteValue
 //
-// ------ write version on bdaCSS TOO ! ------ 
+// ------ write version on bdaCSS TOO ! ------
 // @version 1.14.1
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.14.1
 //
@@ -31,15 +31,17 @@
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
 // @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/default.min.css
-// @resource select2CSS https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css
+// @resource select2CSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/select2/select2.css
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
-// @resource fontAwsomeCSS https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css
+// @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
 var BDA = {
+    MAP_SEPARATOR : "=",
+    LIST_SEPARATOR : ",",
     componentBrowserPageSelector : "h1:contains('Component Browser')",
     descriptorTableSelector : "table:eq(0)",
     repositoryViewSelector : "h2:contains('Examine the Repository, Control Debugging')",
@@ -65,6 +67,7 @@ var BDA = {
     isServiceConfigurationPage : false,
     isExecuteQueryPage : false,
     xmlDefinitionMaxSize : 150000, // 150 Ko
+    xmlDefinitionCacheTimeout : 1200, // 20min
     queryEditor : null,
     descriptorList : null,
     connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
@@ -118,6 +121,7 @@ var BDA = {
                       },
                       physics:false
                    },
+
 
     init : function(){
       var start = new Date().getTime();
@@ -180,7 +184,7 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-	  //this.createWhatsnewPanel();
+      //this.createWhatsnewPanel();
       this.createBackupPanel();
       this.createBugReportPanel();
 
@@ -250,7 +254,7 @@ var BDA = {
       GM_addStyle(hljsThemeCSS);
       var tablesorterCSS = GM_getResourceText("tablesorterCSS");
       GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS").replace(new RegExp("../fonts/fontawesome-webfont", 'g'), "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/fonts/fontawesome-webfont");;
+      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
       GM_addStyle(fontAwsomeCSS);
       var select2CSS = GM_getResourceText("select2CSS");
       GM_addStyle(select2CSS);
@@ -427,7 +431,7 @@ var BDA = {
 
     getDescriptorList : function()
     {
-      if (this.descriptorList != null)
+      if (this.descriptorList)
         return this.descriptorList;
       var descriptors = [];
       $("#descriptorTable tr th:first-child:not([colspan])")
@@ -552,19 +556,6 @@ var BDA = {
       return query;
     },
 
-    getUpdateItemsQuery : function ()
-    {
-      var descriptor = $("#itemDescriptor").val();
-      var ids = this.getMultiId();
-      var query = "";
-      for (var i = 0; i != ids.length; i++)
-      {
-        query += "<update-items>\n\n";
-        query += "</update-items>\n";
-      }
-      return query;
-    },
-
     getQueryItemsQuery : function ()
     {
       var descriptor = $("#itemDescriptor").val();
@@ -609,8 +600,6 @@ var BDA = {
         query = this.getAddItemQuery();
       else if (action == "update-item")
         query = this.getUpdateItemQuery();
-      else if (action == "update-items")
-        query = this.getUpdateItemsQuery();
       else if (action == "all")
         query = this.getAllItemQuery();
       else if (action == "last_10")
@@ -701,12 +690,155 @@ var BDA = {
       return xmlStr;
     },
 
-    renderTab : function (types, datas, tabId, showSpeedbar)
+    // Check if the given property contains id(s) with the given item descriptor
+    // Return an item descriptor name if the property is an ID,
+    // Return null if the property is not found,
+    // Return "FOUND_NOT_ID" is the property is found but is not an ID
+     isPropertyId : function(propertyName, $itemDesc)
+     {
+       var isId = null;
+       var propertyFound = false;
+       $itemDesc.find("property[name=" + propertyName + "]").each(function() {
+         propertyFound = true;
+         $property = $(this);
+       if ($property.attr("item-type") !== undefined && $property.attr("repository") === undefined)
+         isId = $property.attr("item-type");
+       else if  ($property.attr("component-item-type") !== undefined && $property.attr("repository") === undefined)
+         isId = $property.attr("component-item-type");
+     });
+     if (propertyFound && isId === null)
+      return "FOUND_NOT_ID";
+     return isId;
+     },
+    // Check if the given property contains id(s) with the given repository definition
+    // Only ID from the current repository are take in account
+    // Return the item descriptor name if the type if an ID, null otherwise
+    isTypeId : function(propertyName, itemDesc, $xmlDef)
     {
-      console.log(showSpeedbar);
+      var isId = null;
+      if ($xmlDef !== null)
+      {
+          var $itemDesc = $xmlDef.find("item-descriptor[name=" + itemDesc + "]");
+          // First check in current item desc
+          isId = BDA.isPropertyId(propertyName, $itemDesc);
+          // In case we found the property but it's not an ID, we don't want to seach in super-type
+          if (isId == "FOUND_NOT_ID")
+            return null;
+          // In case we found the property and it's an ID
+          if (isId !== null)
+            return isId;
+          // Now we check in each super-type item desc
+          var superType = $itemDesc.attr("super-type");
+          while(superType !== undefined && isId === null)
+          {
+            var $parentDesc = $xmlDef.find("item-descriptor[name=" + superType + "]");
+            //console.log("Search in super type : " + $parentDesc.attr("name"));
+            isId = BDA.isPropertyId(propertyName, $parentDesc);
+            superType = $parentDesc.attr("super-type");
+          }
+          if (isId == "FOUND_NOT_ID")
+            return null;
+      }
+      //console.log("Property : " + propertyName + " of item " + itemDesc + " is ID : " + isId);
+      return isId;
+    },
+
+    // Parse the given repository ID into a tab, each index will contains an ID or a separator : "," or "="
+    parseRepositoryId : function(id)
+    {
+      var idAsTab = [];
+      var tab;
+      // Splice by MAP_SEPARATOR
+      if (id.indexOf(BDA.MAP_SEPARATOR) !== -1)
+      {
+        tab = id.split(BDA.MAP_SEPARATOR);
+        idAsTab[0] = tab[0];
+        idAsTab[1] = BDA.MAP_SEPARATOR;
+        idAsTab[2] = tab[1];
+      }
+      else
+        idAsTab[0] = id;
+
+      // Splice by LIST_SEPARATOR
+      var toAdd = [];
+      var toRemove = [];
+      for(var i = 0 ; i != idAsTab.length; i++)
+      {
+        if (idAsTab[i].indexOf(BDA.LIST_SEPARATOR) != -1)
+        {
+          toRemove.push(i);
+          tab = idAsTab[i].split(BDA.LIST_SEPARATOR);
+          for(var a = 0 ; a != tab.length; a++)
+          {
+            if (a !== 0)
+              toAdd.push(BDA.LIST_SEPARATOR);
+            toAdd.push(tab[a]);
+          }
+        }
+      }
+      // purge tab
+      for(var b = 0 ; b != toRemove.length; b++)
+        idAsTab.splice(toRemove[b], 1);
+      // Merge isAsTab and tAdd
+      Array.prototype.push.apply(idAsTab, toAdd);
+      return idAsTab;
+    },
+
+    renderProperty : function(curProp, propValue, itemId, isItemTree)
+    {
+      var html = "";
+      if (propValue !== null && propValue !== undefined)
+      {
+        // Remove "_"
+        if(curProp.name == "descriptor")
+          propValue = propValue.substr(1);
+          // propertyName_id
+        var base_id = curProp.name + "_" + itemId;
+        if (propValue.length > 25)
+        {
+          var link_id = "link_" + base_id;
+          var field_id = "text_" + base_id;
+          propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >"
+          + "<span id='" + base_id + "'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
+          + "</span><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
+        }
+
+        if (curProp.name == "id")
+          html += "<td id='" + base_id + "'>" + propValue + "</td>";
+        else if (curProp.isId === true)
+        {
+            propValue = BDA.parseRepositoryId(propValue);
+            html += "<td>";
+            for (var b = 0; b != propValue.length; b++)
+            {
+              if (propValue[b] != BDA.MAP_SEPARATOR && propValue[b] != BDA.LIST_SEPARATOR)
+              {
+                if (isItemTree) // for item tree we create an anchor link
+                  html += "<a class='clickable_property' href='#id_" + propValue[b] + "'>" + propValue[b] + "</a>";
+                else
+                  html += "<a class='clickable_property loadable_property' data-id='" + propValue[b] + "' data-descriptor='" + curProp.itemDesc + "'>" + propValue[b] + "</a>";
+              }
+              else
+                html += propValue[b];
+            }
+          html += "</td>";
+        }
+        else
+          html += "<td>" + propValue + "</td>";
+      }
+      else
+      {
+        html += "<td>&nbsp;</td>";
+        //console.log("propValue not found : " + curProp.name + ", descriptor : " + itemDesc);
+      }
+      return html;
+    },
+
+    renderTab : function (types, datas, tabId, isItemTree)
+    {
       var html = "";
       html += "<table class='dataTable' ";
-      if (showSpeedbar)
+      if (isItemTree)
         html += "id='" + tabId + "'";
       html += ">";
       for (var i = 0; i != types.length; i++)
@@ -728,27 +860,7 @@ var BDA = {
         for (var a = 0; a < datas.length; a++)
         {
           var propValue = datas[a][curProp.name];
-          if (propValue != null)
-          {
-            // Remove "_"
-            if(curProp.name == "descriptor")
-              propValue = propValue.substr(1);
-            if (propValue.length > 25)
-            {
-              var base_id = curProp.name + "_" + datas[a].id;
-              var link_id = "link_" + base_id;
-              var field_id = "text_" + base_id;
-              propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='"+link_id+"' >"
-              + "<span id='"+base_id+"'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
-              + "</span><textarea class='copyField' id='"+field_id+"' readonly>"+ propValue + "</textarea>";
-            }
-            html += "<td>" + propValue + "</td>";
-          }
-          else
-          {
-            html += "<td>&nbsp;</td>";
-            //console.log("propValue not found : " + curProp.name + ", descriptor : " + itemDesc);
-          }
+          html += this.renderProperty(curProp, propValue, datas[a].id, isItemTree);
         }
         html += "</tr>";
       }
@@ -756,7 +868,7 @@ var BDA = {
       return html;
     },
 
-    showXMLAsTab : function(xmlContent, $outputDiv, showSpeedbar)
+    showXMLAsTab : function(xmlContent, $xmlDef, $outputDiv, isItemTree)
     {
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
       var $xml = $(xmlDoc);
@@ -775,11 +887,11 @@ var BDA = {
 
       $addItems.each(function () {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
-        if (types[curItemDesc] == null)
+        if (!types[curItemDesc])
           types[curItemDesc] = [];
-        if (typesNames[curItemDesc] == null)
+        if (!typesNames[curItemDesc])
           typesNames[curItemDesc] = [];
-        if (datas[curItemDesc] == null)
+        if (!datas[curItemDesc])
         {
           datas[curItemDesc] = [];
           nbTypes++;
@@ -797,11 +909,19 @@ var BDA = {
             type.rdonly = $curProp.attr("rdonly");
             type.derived = $curProp.attr("derived");
             type.exportable = $curProp.attr("exportable");
+
+            var typeItemDesc = BDA.isTypeId(type.name, curItemDesc.substr(1), $xmlDef);
+            if (typeItemDesc === null)
+              type.isId = false;
+            else
+            {
+              type.isId = true;
+              type.itemDesc = typeItemDesc;
+            }
             types[curItemDesc].push(type);
             typesNames[curItemDesc].push(type.name);
           }
         });
-        //types[curItemDesc].sort();
         if ($.inArray("descriptor", typesNames[curItemDesc]) == -1)
         {
           var typeDescriptor = {};
@@ -824,17 +944,20 @@ var BDA = {
       var html = "<p class='nbResults'>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
       var splitObj = this.getStoredSplitObj();
-      if (splitObj == null || splitObj.activeSplit == true)
+      if (splitObj === undefined || splitObj === null || splitObj.activeSplit === true)
         splitValue = 0;
       else
         splitValue = parseInt(splitObj.splitValue);
       for(var itemDesc in datas)
       {
-        if (splitValue == 0)
+        if (splitValue === 0)
           splitValue = datas[itemDesc].length;
         var nbTab = 0;
+
         if (datas[itemDesc].length <= splitValue)
-          html += this.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), showSpeedbar);
+        {
+          html += this.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
+        }
         else
         {
           while ((splitValue * nbTab) <  datas[itemDesc].length)
@@ -844,7 +967,7 @@ var BDA = {
             if (end > datas[itemDesc].length)
               end = datas[itemDesc].length;
             var subDatas = datas[itemDesc].slice(start, end);
-            html += this.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, showSpeedbar);
+            html += this.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, isItemTree);
             nbTab++;
           }
         }
@@ -869,7 +992,20 @@ var BDA = {
           $(this).hide();
         });
       }
-      if (showSpeedbar)
+
+      $(".loadable_property").click(function() {
+        var $elm = $(this);
+        var id = $elm.attr("data-id");
+        var itemDesc = $elm.attr("data-descriptor");
+        var query = "<print-item id='" + id + "' item-descriptor='" + itemDesc + "' />\n";
+        if (confirm("You are about to add this query and reload the page : \n" + query))
+        {
+          BDA.setQueryEditorValue(BDA.getQueryEditorValue() + query);
+          $("#RQLForm").submit();
+        }
+      });
+
+      if (isItemTree)
         BDA.createSpeedbar();
 
       var endRenderingTab = new Date();
@@ -881,7 +1017,7 @@ var BDA = {
     showRQLLog : function (log, error)
     {
       console.log("Execution log : " + log);
-      if (log != null && log.length > 0)
+      if (log && log.length > 0)
       {
         $("<h3>Execution log</h3><div id='RQLLog'></div>").insertAfter("#RQLResults");
         var cleanLog = log.replace(/\n{2,}/g, '\n').replace(/------ /g, "").trim();
@@ -903,44 +1039,47 @@ var BDA = {
 
       var xmlContent = $(this.resultsSelector).next().text().trim();
       xmlContent = this.sanitizeXml(xmlContent);
-      var log = this.showXMLAsTab(xmlContent, $("#RQLResults"), false);
-      this.showRQLLog(log, false);
-      // Move raw xml
-      $(this.resultsSelector).next().appendTo("#rawXml");
-      $(this.resultsSelector).remove();
 
-      $("#rawXmlLink").click(function() {
-        BDA.toggleRawXml();
-        var xmlSize = $("#rawXml pre").html().length;
-        console.log("raw XML size : " + xmlSize);
-        console.log("XML max size : " + BDA.xmlDefinitionMaxSize);
-        if (xmlSize < BDA.xmlDefinitionMaxSize)
-        {
-          $('#rawXml').each(function(i, block) {
-            hljs.highlightBlock(block);
-          });
-        }
-        else
-        {
-          // Check if button already exists
-          if ($("#xmlHighlight").size() === 0)
+      BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
+        var log = BDA.showXMLAsTab(xmlContent, $xmlDef, $("#RQLResults"), false);
+        BDA.showRQLLog(log, false);
+        // Move raw xml
+        $(BDA.resultsSelector).next().appendTo("#rawXml");
+        $(BDA.resultsSelector).remove();
+
+        $("#rawXmlLink").click(function() {
+          BDA.toggleRawXml();
+          var xmlSize = $("#rawXml pre").html().length;
+          console.log("raw XML size : " + xmlSize);
+          console.log("XML max size : " + BDA.xmlDefinitionMaxSize);
+          if (xmlSize < BDA.xmlDefinitionMaxSize)
           {
-            $("<p id='xmlHighlight' />")
-            .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. "
-                + "<br> <button id='xmlHighlightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
-            .prependTo($("#rawXml"));
-            $("#xmlHighlightBtn").click(function() {
-              $('#rawXml pre').each(function(i, block) {
-                hljs.highlightBlock(block);
-              });
+            $('#rawXml').each(function(i, block) {
+              hljs.highlightBlock(block);
             });
           }
-        }
-      });
+          else
+          {
+            // Check if button already exists
+            if ($("#xmlHighlight").size() === 0)
+            {
+              $("<p id='xmlHighlight' />")
+              .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. "
+                  + "<br> <button id='xmlHighlightBtn'>Highlight XML now</button> <small>(takes few seconds)</small>")
+              .prependTo($("#rawXml"));
+              $("#xmlHighlightBtn").click(function() {
+                $('#rawXml pre').each(function(i, block) {
+                  hljs.highlightBlock(block);
+                });
+              });
+            }
+          }
+        });
 
-      $(".copyLink").click(function() {
-        BDA.showTextField($(this).attr("id").replace("link_", ""));
-      });
+        $(".copyLink").click(function() {
+          BDA.showTextField($(this).attr("id").replace("link_", ""));
+        });
+    });
     },
 
     showRqlErrors : function ()
@@ -1130,7 +1269,6 @@ var BDA = {
         + "<option value='remove-item'>remove-item</option>"
         + "<option value='add-item'>add-item</option>"
         + "<option value='update-item'>update-item</option>"
-        + "<option value='update-items'>update-items</option>"
         + "</optgroup>"
         + " <optgroup label='Predefined queries'>"
         + "<option value='all'>query-items ALL</option>"
@@ -1177,7 +1315,7 @@ var BDA = {
       var splitObj = this.getStoredSplitObj();
       var itemByTab = this.defaultItemByTab;
       var isChecked = false;
-      if (splitObj != null)
+      if (splitObj)
       {
         itemByTab = splitObj.splitValue;
         isChecked = splitObj.activeSplit;
@@ -1237,8 +1375,6 @@ var BDA = {
           BDA.getAddItemEditor();
         else if (action == "update-item")
           BDA.getUpdateItemEditor();
-        else if (action == "update-items")
-          BDA.getUpdateItemsEditor();
         else
           BDA.getQueryItemsEditor();
       });
@@ -1326,7 +1462,7 @@ var BDA = {
         return {};
 
       var toggleObj = localStorage.getItem('toggleObj');
-      if (toggleObj != null && toggleObj != "")
+      if (toggleObj && toggleObj.length > 0)
         toggleObj = JSON.parse(toggleObj);
       else
         toggleObj = {};
@@ -1405,7 +1541,7 @@ var BDA = {
       html += "<div>";
       for (var i = 0; i != descriptors.length; i++)
       {
-        if (i === 0 || i % splitValue == 0)
+        if (i === 0 || i % splitValue === 0)
         {
           html += "<table class='descriptorTable'>";
           html += "<th>Descriptor</th>";
@@ -1602,17 +1738,25 @@ var BDA = {
       if (this.hasWebStorage)
       {
         var rqlQueries = this.purgeRQLQuery(this.getStoredRQLQueries());
-        if (rqlQueries != null && rqlQueries.length > 0)
+        if (rqlQueries && rqlQueries.length > 0)
         {
           html += "<span class='storedQueriesTitle'>Stored queries :</span>";
           html += "<ul>";
             for (var i = 0; i != rqlQueries.length; i++)
             {
               var storeQuery = rqlQueries[i];
+              var escapedQuery =  $("<div>").text(storeQuery.query).html();
+
               html += "<li class='savedQuery'>";
               html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
+              html += "<span id='previewQuery" + i + "'class='previewQuery'>";
+              html += "<i class='fa fa-eye'></i>";
+              html += "</span>";
               html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
               html += "<i class='fa fa-trash-o'></i>";
+              html += "</span>";
+              html += "<span id='queryView" + i + "'class='queryView'>";
+              html += "<pre>" + escapedQuery + "</pre>";
               html += "</span>";
               html += "</li>";
             }
@@ -1620,15 +1764,20 @@ var BDA = {
         }
       }
       $("#storedQueries").html(html);
+
+      $('#storedQueries .queryView').each(function(i, block) {
+        hljs.highlightBlock(block);
+      });
+
       $(".savedQuery").click(function() {
         console.log("click on query : " + $(this).find("a").html());
         BDA.printStoredQuery( $(this).find("a").html());
       });
 
-      $(".savedQuery").hover( function() {
-        $(this).find("span.deleteQuery").toggle();
+      $(".previewQuery").hover( function() {
+        $(this).parent("li").find("span.queryView").toggle();
       }, function() {
-        $(this).find("span.deleteQuery").toggle();
+        $(this).parent("li").find("span.queryView").toggle();
       });
 
       $(".deleteQuery")
@@ -1714,7 +1863,7 @@ var BDA = {
       console.log("printStoredQuery : " + name);
       var rqlQueries = this.getStoredRQLQueries();
       console.log(rqlQueries);
-      if (rqlQueries != null)
+      if (rqlQueries)
       {
         for (var i = 0; i != rqlQueries.length; i++)
         {
@@ -1797,10 +1946,10 @@ var BDA = {
 
 
     },
-    
+
     //--- what's new functions --------------------------------------------------------------------------
-    
-    
+
+
     createWhatsnewPanel : function ()
     {
       $("<div id='whatsnew'></div>").appendTo("body")
@@ -1823,7 +1972,7 @@ var BDA = {
           BDA.rotateArrow($(".backupArrow i"));
         }
       });
-        
+
       $("<div id='whatsnewPanel'></div>").appendTo("body");
 
       $.get("https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md", function( data ) {
@@ -1938,7 +2087,7 @@ var BDA = {
         return [];
       var storedComp;
       var storedCompStr = localStorage.getItem('Components');
-      if (storedCompStr != null)
+      if (storedCompStr)
         storedComp = JSON.parse(storedCompStr);
       else
         storedComp = [];
@@ -2153,12 +2302,12 @@ var BDA = {
         var shortName = this.getComponentShortName(fav.componentName);
         var callableHTML = "<div class='favMethods'>";
         if(fav.methods !== undefined)
-          fav.methods.forEach(function(element){
+          fav.methods.forEach(function(element) {
             callableHTML += "<a target='_blank' href='" + fav.componentPath + "?shouldInvokeMethod=" + element + "'>Call " + element + "</a><br>";
           });
         callableHTML += "</div><div class='favVars'>";
         if(fav.vars !== undefined)
-          fav.vars.forEach(function(element){
+          fav.vars.forEach(function(element) {
             callableHTML += "<a target='_blank' href='" + fav.componentPath + "?propertyName=" + element + "'>Change " + element + "</a><br>";
           });
         callableHTML += "</div>";
@@ -2447,7 +2596,7 @@ var BDA = {
         +  "<pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>"
         +  "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>"
         + "</div>");
-      $itemTree.append("<div id='itemTreeCount' />");
+      $itemTree.append("<div id='itemTreeInfo' />");
       $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
         var descriptor = $("#itemTreeDesc").val();
@@ -2461,33 +2610,75 @@ var BDA = {
 
     },
 
+    storeXmlDef : function(componentPath, rawXML)
+    {
+      console.log("Storing XML def : " + componentPath);
+      var timestamp =  Math.floor(Date.now() / 1000);
+
+      localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
+      localStorage.setItem("XMLDefData", rawXML);
+    },
+
+    getXmlDef : function(componentPath)
+    {
+      console.log("Getting XML def for : " + componentPath);
+      var timestamp =  Math.floor(Date.now() / 1000);
+      var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
+      if (!xmlDefMetaData)
+        return null;
+      if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + BDA.xmlDefinitionCacheTimeout) < timestamp)
+      {
+        console.log("Xml def is outdated or from a different repo");
+        return null;
+      }
+      return localStorage.getItem("XMLDefData");
+    },
+
     processRepositoryXmlDef : function(property, callback)
     {
-      var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
-      console.log(url);
-      var rawXmlDef = "";
-      jQuery.ajax({
-        url:     url,
-        success: function(result) {
-          rawXmlDef = $(result).find("pre")
-          .html()
-          .trim()
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace("&nbsp;", "")
-          .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
-            try
-            {
-                var xmlDoc = jQuery.parseXML(rawXmlDef);
-                if(callback !== undefined)
+      if(callback !== undefined)
+      {
+        // First check cache value if any
+        var rawXmlDef = BDA.getXmlDef(BDA.getCurrentComponentPath());
+        if (rawXmlDef !== null)
+        {
+          console.log("Getting XML def from cache");
+          var xmlDoc = jQuery.parseXML(rawXmlDef);
+          if(callback !== undefined)
+              callback($(xmlDoc));
+        }
+        // If no cache entry, fetch the XML def in ajax
+        else
+         {
+          var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
+          console.log(url);
+          jQuery.ajax({
+            url:     url,
+            success: function(result) {
+              rawXmlDef = $(result).find("pre")
+              .html()
+              .trim()
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace("&nbsp;", "")
+              .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
+                try
+                {
+                    console.log("XML def length : " + rawXmlDef.length);
+                    var xmlDoc = jQuery.parseXML(rawXmlDef);
+                    BDA.storeXmlDef(BDA.getCurrentComponentPath(), rawXmlDef);
                     callback($(xmlDoc));
-            }
-            catch(err)
-            {
-                console.log("Unable to parse XML def file !");
-            }
-        },
-      });
+                }
+                catch(err)
+                {
+                    console.log("Unable to parse XML def file !");
+                    callback(null);
+                    //console.log(err);
+                }
+            },
+          });
+        }
+      }
     },
 
     getSubItems : function(items, $xmlDef, maxItem, outputType, printRepoAttr)
@@ -2594,10 +2785,10 @@ var BDA = {
               }
           });
 
-          $("#itemTreeCount").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
+          $("#itemTreeInfo").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
           console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
           if (BDA.nbItemCall == BDA.nbItemReceived)
-            BDA.renderItemTreeTab(outputType, printRepoAttr);
+            BDA.renderItemTreeTab(outputType, printRepoAttr, $xmlDef);
         },
       });
     },
@@ -2605,39 +2796,48 @@ var BDA = {
     getItemTree : function(id, descriptor, maxItem, outputType, printRepoAttr)
     {
       console.log("getItemTree - start");
-      BDA.startGettingTree = new Date().getTime();
+
       // reset divs
       $("#itemTreeResult").empty();
-      $("#itemTreeCount").empty();
+      $("#itemTreeInfo").empty();
+
+      if (!id)
+      {
+        $("#itemTreeInfo").html("<p>Please provide a valid ID</p>");
+        return ;
+      }
+
+      BDA.startGettingTree = new Date().getTime();
 
       // Get XML definition of the repository
-      var $xmlDef = BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
-          if ($xmlDef == null)
-          {
-              $("#itemTreeResult").append("<p>Unable to parse XML definition of this repository !</p>");
-              return ;
-          }
-          console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
-          // get tree
-          BDA.itemTree = new Map();
-          BDA.nbItemReceived = 0;
-          BDA.nbItemCall = 0;
-          BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
+      $("#itemTreeInfo").html("<p>Getting XML definition of this repository...</p>");
+        var $xmlDef = BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
+        if (!$xmlDef)
+        {
+          $("#itemTreeInfo").html("<p>Unable to parse XML definition of this repository !</p>");
+          return ;
+        }
+        console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
+        // get tree
+        BDA.itemTree = new Map();
+        BDA.nbItemReceived = 0;
+        BDA.nbItemCall = 0;
+        BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
       });
     },
 
-    renderItemTreeTab : function(outputType, itemTree, printRepoAttr)
+    renderItemTreeTab : function(outputType, printRepoAttr, $xmlDef)
     {
       console.log("Render item tree tab : " + outputType);
-      $("#itemTreeCount").html("<p>" + BDA.itemTree.size + " items retrieved.</p>");
       if(outputType !== "HTMLtab")
       {
-          $("#itemTreeCount").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
+          $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
           $('#itemTreeCopyButton').click(function(){
               BDA.copyToClipboard($('#itemTreeResult').text());
           });
       }
       // print result
+      $("#itemTreeInfo").empty();
       $("#itemTreeResult").empty();
       var res = "";
       if(outputType == "addItem")
@@ -2665,7 +2865,7 @@ var BDA = {
           BDA.itemTree.forEach(function(data, id) {
             res += data;
           }, BDA.itemTree);
-        BDA.showXMLAsTab(res, $("#itemTreeResult"), true);
+        BDA.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
       }
       else if (outputType == "removeItem" || outputType == "printItem")
       {
@@ -2697,20 +2897,18 @@ var BDA = {
       var speedBarHtml = "<a class='close' href='javascript:void(0)'><i class='fa fa-times'></i></a><p>Quick links :</p><ul>";
       $("#itemTreeResult .dataTable").each(function(index) {
         var $tab = $(this);
-        var id =  $tab.attr("id").trim();
+        var id =  $tab.attr("id");
         var name = id;
-        var numb = "";
         if (id.indexOf("_") != -1)
         {
           var tab = id.split("_");
-          name = tab[0];
-          numb = tab[1];
+          name = tab[1];
         }
         var nbItem = $tab.find("td").size() / $tab.find("tr").size();
-        speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name + " " + numb + " (" + nbItem + ")</a></li>";
+        speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name.trim() + " (" + nbItem + ")</a></li>";
       });
       speedBarHtml += "</ul>";
-      $("#itemTreeCount").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
+      $("#itemTreeInfo").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
       $('#speedbar .close').click(function() {
         $("#speedbar").fadeOut(200);
       });

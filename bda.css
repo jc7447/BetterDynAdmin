@@ -1,3 +1,8 @@
+
+tr.even td {
+  background-color: #FFF;
+}
+
 #itemTreeId{
   width: 100px;
 }
@@ -67,7 +72,10 @@ a {
 .dataTable {
   font-size: 80%;
   margin: 5px;
-  border: 1px solid #CCCCCC
+  border: 1px solid #CCCCCC;
+  z-index: 10;
+  position: relative;
+  background-color: #FFF;
 }
 
 .prop_name {
@@ -237,8 +245,17 @@ a {
   margin: 5px;
 }
 
-.deleteQuery {
+.queryView {
   display: none;
+}
+
+.previewQuery {
+  margin-top: 5px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.deleteQuery {
   margin-top: 5px;
   margin-left: 10px;
   cursor: pointer;
@@ -547,7 +564,7 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #methods, #vars {
-  float:left; 
+  float:left;
   width: 50%;
 }
 
@@ -556,7 +573,7 @@ table.tablesorter tr.alt-row:hover td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
+
 }
 
 #speedbar {
@@ -598,4 +615,9 @@ table.tablesorter tr.alt-row:hover td {
 
 #pipelineTable pre {
 	margin : 0;
+}
+
+.clickable_property {
+  text-decoration : underline;
+  cursor: pointer;
 }
