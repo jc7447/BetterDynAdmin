@@ -277,13 +277,13 @@ a {
   margin: 0;
 }
 
-.bugArrow, .backupArrow {
+.bugArrow, .backupArrow, .whatsnewArrow {
   text-align: center;
   cursor: pointer;
   padding-top: 2px;
 }
 
-.bugArrow img, .backupArrow img {
+.bugArrow img, .backupArrow img, .whatsnewArrow img {
   width: 15px;
   height: 8px;
 }
@@ -329,9 +329,9 @@ a {
   right: 233px;
   font-size: 11px;
   color: white;
-  border: 1px solid #8F0000;
+  border: 1px solid #44702B;
   border-top: none;
-  background-color: #CC0000;
+  background-color: #62A03E;
   padding: 3px;
 }
 
@@ -358,11 +358,11 @@ a {
   top: 34px;
   right: 30px;
   width: 285px;
-  font-size: 11px;
+  font-size: 12px;
   color: white;
-  border: 1px solid #8F0000;
+  border: 1px solid #44702B;
   border-top: none;
-  background-color: #CC0000;
+  background-color: #62A03E;
   padding: 3px;
   display: none;
 }
