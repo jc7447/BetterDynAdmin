@@ -67,6 +67,7 @@ var BDA = {
     isServiceConfigurationPage : false,
     isExecuteQueryPage : false,
     xmlDefinitionMaxSize : 150000, // 150 Ko
+    xmlDefinitionCacheTimeout : 1200, // 20min
     queryEditor : null,
     descriptorList : null,
     connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
@@ -689,6 +690,26 @@ var BDA = {
       return xmlStr;
     },
 
+    // Check if the given property contains id(s) with the given item descriptor
+    // Return an item descriptor name if the property is an ID,
+    // Return null if the property is not found,
+    // Return "FOUND_NOT_ID" is the property is found but is not an ID
+     isPropertyId : function(propertyName, $itemDesc)
+     {
+       var isId = null;
+       var propertyFound = false;
+       $itemDesc.find("property[name=" + propertyName + "]").each(function() {
+         propertyFound = true;
+         $property = $(this);
+       if ($property.attr("item-type") !== undefined && $property.attr("repository") === undefined)
+         isId = $property.attr("item-type");
+       else if  ($property.attr("component-item-type") !== undefined && $property.attr("repository") === undefined)
+         isId = $property.attr("component-item-type");
+     });
+     if (propertyFound && isId === null)
+      return "FOUND_NOT_ID";
+     return isId;
+     },
     // Check if the given property contains id(s) with the given repository definition
     // Only ID from the current repository are take in account
     // Return the item descriptor name if the type if an ID, null otherwise
@@ -697,15 +718,28 @@ var BDA = {
       var isId = null;
       if ($xmlDef !== null)
       {
-        console.log("item-descriptor[name=" + itemDesc + "] property[name=" + propertyName + "]");
-        $xmlDef.find("item-descriptor[name=" + itemDesc + "] property[name=" + propertyName + "]").each(function() {
-          var $property = $(this);
-          if ($property.attr("item-type") !== undefined && $property.attr("repository") === undefined)
-            isId = $property.attr("item-type");
-          else if  ($property.attr("component-item-type") !== undefined && $property.attr("repository") === undefined)
-            isId = $property.attr("component-item-type");
-        });
+          var $itemDesc = $xmlDef.find("item-descriptor[name=" + itemDesc + "]");
+          // First check in current item desc
+          isId = BDA.isPropertyId(propertyName, $itemDesc);
+          // In case we found the property but it's not an ID, we don't want to seach in super-type
+          if (isId == "FOUND_NOT_ID")
+            return null;
+          // In case we found the property and it's an ID
+          if (isId !== null)
+            return isId;
+          // Now we check in each super-type item desc
+          var superType = $itemDesc.attr("super-type");
+          while(superType !== undefined && isId === null)
+          {
+            var $parentDesc = $xmlDef.find("item-descriptor[name=" + superType + "]");
+            //console.log("Search in super type : " + $parentDesc.attr("name"));
+            isId = BDA.isPropertyId(propertyName, $parentDesc);
+            superType = $parentDesc.attr("super-type");
+          }
+          if (isId == "FOUND_NOT_ID")
+            return null;
       }
+      //console.log("Property : " + propertyName + " of item " + itemDesc + " is ID : " + isId);
       return isId;
     },
 
@@ -836,8 +870,6 @@ var BDA = {
 
     showXMLAsTab : function(xmlContent, $xmlDef, $outputDiv, isItemTree)
     {
-      console.log($xmlDef);
-      console.log(isItemTree);
       var xmlDoc = $.parseXML("<xml>" + xmlContent  + "</xml>");
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
@@ -877,6 +909,7 @@ var BDA = {
             type.rdonly = $curProp.attr("rdonly");
             type.derived = $curProp.attr("derived");
             type.exportable = $curProp.attr("exportable");
+
             var typeItemDesc = BDA.isTypeId(type.name, curItemDesc.substr(1), $xmlDef);
             if (typeItemDesc === null)
               type.isId = false;
@@ -907,7 +940,6 @@ var BDA = {
         curData.id = $(this).attr("id");
         datas[curItemDesc].push(curData);
       });
-      console.log(types);
       var startRenderingtab = new Date().getTime();
       var html = "<p class='nbResults'>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
@@ -922,7 +954,6 @@ var BDA = {
           splitValue = datas[itemDesc].length;
         var nbTab = 0;
 
-        console.log("nb items : " + datas[itemDesc].length + " - item : " + itemDesc);
         if (datas[itemDesc].length <= splitValue)
         {
           html += this.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
@@ -2565,7 +2596,7 @@ var BDA = {
         +  "<pre style='margin:0; display:inline;'>repository='"+ this.getCurrentComponentPath() + "'</pre> <br><br>"
         +  "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>"
         + "</div>");
-      $itemTree.append("<div id='itemTreeCount' />");
+      $itemTree.append("<div id='itemTreeInfo' />");
       $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
         var descriptor = $("#itemTreeDesc").val();
@@ -2579,35 +2610,75 @@ var BDA = {
 
     },
 
+    storeXmlDef : function(componentPath, rawXML)
+    {
+      console.log("Storing XML def : " + componentPath);
+      var timestamp =  Math.floor(Date.now() / 1000);
+
+      localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
+      localStorage.setItem("XMLDefData", rawXML);
+    },
+
+    getXmlDef : function(componentPath)
+    {
+      console.log("Getting XML def for : " + componentPath);
+      var timestamp =  Math.floor(Date.now() / 1000);
+      var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
+      if (!xmlDefMetaData)
+        return null;
+      if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + BDA.xmlDefinitionCacheTimeout) < timestamp)
+      {
+        console.log("Xml def is outdated or from a different repo");
+        return null;
+      }
+      return localStorage.getItem("XMLDefData");
+    },
+
     processRepositoryXmlDef : function(property, callback)
     {
-      var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
-      console.log(url);
-      var rawXmlDef = "";
-      jQuery.ajax({
-        url:     url,
-        success: function(result) {
-          rawXmlDef = $(result).find("pre")
-          .html()
-          .trim()
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace("&nbsp;", "")
-          .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
-            try
-            {
-                console.log("XML def length : " + rawXmlDef.length);
-                var xmlDoc = jQuery.parseXML(rawXmlDef);
-                if(callback !== undefined)
+      if(callback !== undefined)
+      {
+        // First check cache value if any
+        var rawXmlDef = BDA.getXmlDef(BDA.getCurrentComponentPath());
+        if (rawXmlDef !== null)
+        {
+          console.log("Getting XML def from cache");
+          var xmlDoc = jQuery.parseXML(rawXmlDef);
+          if(callback !== undefined)
+              callback($(xmlDoc));
+        }
+        // If no cache entry, fetch the XML def in ajax
+        else
+         {
+          var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
+          console.log(url);
+          jQuery.ajax({
+            url:     url,
+            success: function(result) {
+              rawXmlDef = $(result).find("pre")
+              .html()
+              .trim()
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace("&nbsp;", "")
+              .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
+                try
+                {
+                    console.log("XML def length : " + rawXmlDef.length);
+                    var xmlDoc = jQuery.parseXML(rawXmlDef);
+                    BDA.storeXmlDef(BDA.getCurrentComponentPath(), rawXmlDef);
                     callback($(xmlDoc));
-            }
-            catch(err)
-            {
-                console.log("Unable to parse XML def file !");
-                console.log(err);
-            }
-        },
-      });
+                }
+                catch(err)
+                {
+                    console.log("Unable to parse XML def file !");
+                    callback(null);
+                    //console.log(err);
+                }
+            },
+          });
+        }
+      }
     },
 
     getSubItems : function(items, $xmlDef, maxItem, outputType, printRepoAttr)
@@ -2714,7 +2785,7 @@ var BDA = {
               }
           });
 
-          $("#itemTreeCount").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
+          $("#itemTreeInfo").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
           console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
           if (BDA.nbItemCall == BDA.nbItemReceived)
             BDA.renderItemTreeTab(outputType, printRepoAttr, $xmlDef);
@@ -2728,22 +2799,22 @@ var BDA = {
 
       // reset divs
       $("#itemTreeResult").empty();
-      $("#itemTreeCount").empty();
+      $("#itemTreeInfo").empty();
 
       if (!id)
       {
-        $("#itemTreeResult").html("<p>Please provide a valid ID</p>");
+        $("#itemTreeInfo").html("<p>Please provide a valid ID</p>");
         return ;
       }
 
       BDA.startGettingTree = new Date().getTime();
 
       // Get XML definition of the repository
-      $("#itemTreeResult").html("<p>Getting XML definition of this repository...</p>");
+      $("#itemTreeInfo").html("<p>Getting XML definition of this repository...</p>");
         var $xmlDef = BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
         if (!$xmlDef)
         {
-          $("#itemTreeResult").html("<p>Unable to parse XML definition of this repository !</p>");
+          $("#itemTreeInfo").html("<p>Unable to parse XML definition of this repository !</p>");
           return ;
         }
         console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
@@ -2758,15 +2829,15 @@ var BDA = {
     renderItemTreeTab : function(outputType, printRepoAttr, $xmlDef)
     {
       console.log("Render item tree tab : " + outputType);
-      $("#itemTreeCount").html("<p>" + BDA.itemTree.size + " items retrieved.</p>");
       if(outputType !== "HTMLtab")
       {
-          $("#itemTreeCount").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
+          $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
           $('#itemTreeCopyButton').click(function(){
               BDA.copyToClipboard($('#itemTreeResult').text());
           });
       }
       // print result
+      $("#itemTreeInfo").empty();
       $("#itemTreeResult").empty();
       var res = "";
       if(outputType == "addItem")
@@ -2834,11 +2905,10 @@ var BDA = {
           name = tab[1];
         }
         var nbItem = $tab.find("td").size() / $tab.find("tr").size();
-        console.log("'" + name + "'");
         speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name.trim() + " (" + nbItem + ")</a></li>";
       });
       speedBarHtml += "</ul>";
-      $("#itemTreeCount").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
+      $("#itemTreeInfo").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
       $('#speedbar .close').click(function() {
         $("#speedbar").fadeOut(200);
       });

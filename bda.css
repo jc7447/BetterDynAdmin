@@ -1,3 +1,8 @@
+
+tr.even td {
+  background-color: #FFF;
+}
+
 #itemTreeId{
   width: 100px;
 }
@@ -67,7 +72,10 @@ a {
 .dataTable {
   font-size: 80%;
   margin: 5px;
-  border: 1px solid #CCCCCC
+  border: 1px solid #CCCCCC;
+  z-index: 10;
+  position: relative;
+  background-color: #FFF;
 }
 
 .prop_name {
