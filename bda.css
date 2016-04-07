@@ -381,6 +381,10 @@ a {
   text-decoration: none;
 }
 
+.newtags{
+  width: 95%;
+}
+
 .fav {
   min-height: 50px;
   min-width: 75px;
@@ -547,7 +551,7 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #addComponentToolbarPopupContent {
-  height:71%;
+  height:61%;
   overflow:auto;
 }
 

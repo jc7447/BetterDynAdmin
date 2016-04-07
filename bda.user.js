@@ -41,6 +41,22 @@
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
+//define sort unique method
+
+Array.prototype.unique = function()
+{
+  var n = {},r=[];
+  for(var i = 0; i < this.length; i++) 
+  {
+    if (!n[this[i]]) 
+    {
+      n[this[i]] = true; 
+      r.push(this[i]); 
+    }
+  }
+  return r;
+}
+
 var BDA = {
     MAP_SEPARATOR : "=",
     LIST_SEPARATOR : ",",
@@ -1797,6 +1813,22 @@ var BDA = {
         return BDA.getStoredConfiguration()[name];
     },
 
+//tags
+    getStoredTags : function(){
+        var tags;
+        var tagString = BDA.getConfigurationValue('tags');
+        if(tagString == null){
+          tags = [];
+        }else{
+          tags = JSON.parse(tagString);
+        }
+        return tags;
+    },
+
+    storeTags : function(tags){
+      BDA.storeConfiguration('tags',tags);
+    },
+
 
     getStoredConfiguration : function(){
        if(!this.hasWebStorage)
@@ -2243,7 +2275,7 @@ var BDA = {
       this.reloadToolbar();
     },
 
-    storeComponent : function (component, methods, vars)
+    storeComponent : function (component, methods, vars,tags)
     {
       if(this.hasWebStorage)
       {
@@ -2259,9 +2291,21 @@ var BDA = {
 
         compObj.methods = methods;
         compObj.vars = vars;
+        compObj.tags =tags;
         storedComp.push(compObj);
 
         BDA.storeItem('Components', JSON.stringify(storedComp));
+
+        console.log('saving tags');
+        //also save the tags as "known tags"
+        var storedTags = BDA.getStoredTags();
+        console.log('existing tags : ' + storedTags);
+        storedTags = storedTags.concat(tags);
+        console.log('concat tags : ' + storedTags);
+        storedTags = storedTags.unique();
+        console.log('saving tags to config ' + storedTags);
+        BDA.storeTags(storedTags);
+
       }
     },
 
@@ -2387,13 +2431,19 @@ var BDA = {
     createToolbar :function ()
     {
         $("<div id='addComponentToolbarPopup' class='popup_block'>"
+        + "<div class='addFavOptionewtagsns'>"
         + "<a href='#' class='close'><i class='fa fa-times'></i></a>"
         + "<h3 class='popup_title'>Add new component</h3>"
+        + "<p>Add tags:</p>"
+        + "<div id='tags'><ul id='existingTags'></ul>"
+        + "<input id='newtags' class='newtags' type='text' placeholder='comma separated'></input>"
+        + "</div>"
         + "<p>Choose methods and/or properties to shortcut : </p>"
         + "<div id='addComponentToolbarPopupContent'>"
         + "<div id='methods'><ul></ul></div>"
         + "<div id='vars'><ul></ul></div></div><br>"
-        + "<div>"
+        + "</div>"
+        + "<div class='addFavSubmit'>"
         + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button></div>"
         + "</div>").insertAfter(this.logoSelector);
 
@@ -2473,6 +2523,7 @@ var BDA = {
         var componentPath = this.purgeSlashes(document.location.pathname);
         if (!this.isComponentAlreadyStored(componentPath))
         {
+          console.log('adding fav button');
           $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
           .appendTo("#toolbar");
 
@@ -2490,9 +2541,15 @@ var BDA = {
                 $('.variable:checked').each(function(index, element){
                     vars.push(element.parentElement.textContent);
                 });
+                var tags = $('#newtags').val().split(',');
+                $('.tag:checked').each(function(index, element){
+                    tags.push(element.parentElement.textContent);
+                });
+
                 console.log("methods : " + methods);
                 console.log("vars : " + vars);
-                BDA.storeComponent(componentPath, methods, vars);
+                console.log("tags : " + tags);
+                BDA.storeComponent(componentPath, methods, vars,tags);
                 BDA.reloadToolbar();
             });
 
@@ -2500,6 +2557,7 @@ var BDA = {
             console.log("Add component");
             var methodsList = $("#methods");
             var varsList = $("#vars");
+            var tagList = $("#tags");
             methodsList.empty();
             varsList.empty();
 
