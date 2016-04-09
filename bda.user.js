@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -6,7 +6,7 @@
 // @contributor  Benjamin Descamps
 // @homepageURL  https://github.com/jc7447/BetterDynAdmin
 // @supportURL   https://github.com/jc7447/BetterDynAdmin/issues
-// @description  Oracle Commerce Dyn Admin enhancer
+// @description  Refreshing ATG Dyn Admin
 // @grant GM_getResourceText
 // @grant GM_addStyle
 // @grant window.focus
@@ -16,8 +16,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 1.14.1
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.14.1
+// @version 1.15
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.15
 //
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -35,6 +35,7 @@
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
+// @resource whatsnew https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -184,7 +185,7 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-      //this.createWhatsnewPanel();
+      this.createWhatsnewPanel();
       this.createBackupPanel();
       this.createBugReportPanel();
 
@@ -1954,13 +1955,18 @@ var BDA = {
     {
       $("<div id='whatsnew'></div>").appendTo("body")
 
-      .html("<p>What's new</p>"
+      .html("<p>What's New</p>"
           + "<div class='whatsnewArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
       $("#whatsnew").click(function() {
+
+        if ($("#whatsnewPanel").css("display") === "none")
+              $( "#whatsnewPanel" ).html(GM_getResourceText("whatsnew") );
+
         $("#whatsnewPanel").slideToggle();
         BDA.rotateArrow($(".whatsnewArrow i"));
+
         if ($("#bdaBugPanel").css("display") != "none")
         {
           $("#bdaBugPanel").slideToggle();
@@ -1971,13 +1977,10 @@ var BDA = {
           $("#bdaBackupPanel").slideToggle();
           BDA.rotateArrow($(".backupArrow i"));
         }
+
       });
 
       $("<div id='whatsnewPanel'></div>").appendTo("body");
-
-      $.get("https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md", function( data ) {
-          $( "#whatsnewPanel" ).html( data );
-      });
     },
 
     //--- backup panel functions ------------------------------------------------------------------------

@@ -26,6 +26,17 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 
 Change logs
 ------
+
+### 1.15
+* [#56](../../issues/56) Repository ids are now clickable and loadable in repository pages
+* [#51](../../issues/51) New what's new popup (thanks to ([@onewingedfallen59](https://github.com/onewingedfallen59))
+* Preview of saved queries in repository pages (thanks to ([@troussej](https://github.com/troussej))
+
+### 1.14
+* [#44](../../issues/44) New improvements of pipeline manager pages, graphical representation is better and nodes are clickable
+* [#54](../../issues/54) Item tree result can go directly to clipboard
+* [#50](../../issues/50) [#59](../../issues/59) Several bug fixes, especially for Chrome
+
 ### 1.13
 * [#44](../../issues/44) Improvement of pipeline manager pages, graphical representation of each pipeline and quick link to XML definition
 * [#41](../../issues/41) Add "id-only" checkbox for query-item
@@ -143,6 +154,7 @@ Contributors
 ---
  * Jean-Charles Manoury ([@jc7447](https://github.com/jc7447))
  * Benjamin Descamps ([@onewingedfallen59](https://github.com/onewingedfallen59))
+ * Joël Trousset ([@troussej](https://github.com/troussej))
 
 Disclaimer
 ---
