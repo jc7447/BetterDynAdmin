@@ -261,110 +261,111 @@ a {
   cursor: pointer;
 }
 
-#bdaBug {
-  position: absolute;
-  top: 0px;
-  right: 30px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #00486c;
-  border-top: none;
-  background-color: #007bb8;
-  padding: 3px;
-}
 
-#bdaBug p, #bdaBackup p , #whatsnew p{
-  margin: 0;
-}
 
-.bugArrow, .backupArrow, .whatsnewArrow {
+
+.menuArrow {
   text-align: center;
   cursor: pointer;
   padding-top: 2px;
 }
 
-.bugArrow img, .backupArrow img, .whatsnewArrow img {
+.menuArrow img {
   width: 15px;
   height: 8px;
 }
 
-#bdaBugPanel {
+
+/** MENU **/
+
+#menuBar{
   position: absolute;
-  top: 34px;
+  top: 0px;
   right: 30px;
-  width: 250px;
+}
+
+.menu {
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
   border-top: none;
-  background-color: #007bb8;
+  padding: 3px;
+  text-align: center;
+  float:right;
+  margin-top: 0px;
+  margin-right: 3px;
+}
+
+.menu p {
+   margin: 0;
+}
+
+.menuPanel {
+  position: absolute;
+  top: 34px;
+  right: 30px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #8F0000;
+  border-top: none;
+  background-color: #CC0000;
   padding: 3px;
   display: none;
 }
 
-#bdaBugPanel a {
+.menuPanel a{
   text-decoration: underline;
   color: white;
 }
 
-#history {
-  clear: both;
-}
-
-#bdaBackup {
-  position: absolute;
-  top: 0px;
-  right: 153px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #8F0000;
-  border-top: none;
-  background-color: #CC0000;
-  padding: 3px;
-}
-
-#whatsnew {
-  position: absolute;
-  top: 0px;
-  right: 233px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #44702B;
-  border-top: none;
-  background-color: #62A03E;
-  padding: 3px;
-}
-
-#bdaData {
+.menuPanel textarea {
   width: 100%;
 }
 
-#bdaBackupPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
-  width: 285px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #8F0000;
-  border-top: none;
+#bdaBug {
+  background-color: #007bb8;
+}
+
+#bdaBugPanel {
+  width: 250px;
+  background-color: #007bb8;
+}
+
+
+#bdaBackup {
+  width: 60px;
   background-color: #CC0000;
-  padding: 3px;
-  display: none;
+}
+
+#bdaBackupPanel {
+  width: 285px;
+  background-color: #CC0000;
+}
+
+
+#whatsnew {
+  font-size: 11px;
+  background-color: #CC0000;
 }
 
 #whatsnewPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
   width: 285px;
-  font-size: 12px;
-  color: white;
-  border: 1px solid #44702B;
-  border-top: none;
-  background-color: #62A03E;
-  padding: 3px;
-  display: none;
+  background-color: #CC0000;
+}
+
+#bdaConfig {
+  font-size: 11px;
+  background-color: #CC0000;
+}
+
+#bdaConfigPanel {
+  width: 285px;
+  background-color: #CC0000;
+}
+
+
+#history {
+  clear: both;
 }
 
 #toolbar {
