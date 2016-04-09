@@ -1,4 +1,4 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -16,8 +16,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 1.15
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.15
+// @version 1.15.1
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.15.1
 //
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -795,17 +795,18 @@ var BDA = {
           propValue = propValue.substr(1);
           // propertyName_id
         var base_id = curProp.name + "_" + itemId;
-        if (propValue.length > 25)
+
+        if (curProp.name == "id")
+          html += "<td id='" + base_id + "'>" + propValue + "</td>";
+       else if (propValue.length > 25)
         {
           var link_id = "link_" + base_id;
           var field_id = "text_" + base_id;
           propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >"
           + "<span id='" + base_id + "'>" + this.escapeHTML(propValue.substr(0, 25)) + "...</a>"
           + "</span><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
+          html += "<td>" + propValue + "</td>";
         }
-
-        if (curProp.name == "id")
-          html += "<td id='" + base_id + "'>" + propValue + "</td>";
         else if (curProp.isId === true)
         {
             propValue = BDA.parseRepositoryId(propValue);
