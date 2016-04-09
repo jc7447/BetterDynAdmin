@@ -1813,22 +1813,26 @@ var BDA = {
         return BDA.getStoredConfiguration()[name];
     },
 
-//tags
-    getStoredTags : function(){
-        var tags;
-        var tagString = BDA.getConfigurationValue('tags');
-        if(tagString == null){
-          tags = [];
-        }else{
-          tags = JSON.parse(tagString);
+     getStoredArray : function(name){
+        var array = BDA.getConfigurationValue(name);
+        if(array == null || array === undefined){
+          array = [];
         }
-        return tags;
+        return array;
     },
-
-    storeTags : function(tags){
-      BDA.storeConfiguration('tags',tags);
+    //  Sorts & uniq & store
+    storeUniqueArray : function(name,array,doConcat){
+      //also save the tags as "known tags"
+      var storedArray ;
+      if(doConcat){
+        storedArray = BDA.getStoredArray(name);
+        storedArray = storedArray.concat(array)
+      }else{
+        storedArray = array;
+      }
+      storedArray = storedArray.unique()
+      BDA.storeConfiguration(name,storedArray);
     },
-
 
     getStoredConfiguration : function(){
        if(!this.hasWebStorage)
@@ -1849,9 +1853,25 @@ var BDA = {
         console.log("Try to store config: " + name + ", value : " + value);
         var storedConfig = this.getStoredConfiguration();
         storedConfig[name] = value;
-        console.log(value);
         BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
       }
+    },
+
+    // -- TAGS
+
+      //tags
+    getStoredTags : function(){
+        return BDA.getStoredArray('tags');
+    },
+    storeTags : function(tags){
+       BDA.storeUniqueArray('tags',tags,true);
+    },
+    getStoredSelectedTags : function(){
+        return BDA.getStoredArray('selectedTags');
+    },
+    storeSelectedTags : function(tags){
+       console.log('storeSelectedTags : ' + tags);
+       BDA.storeUniqueArray('selectedTags',tags,false);
     },
 
 
@@ -2295,16 +2315,7 @@ var BDA = {
         storedComp.push(compObj);
 
         BDA.storeItem('Components', JSON.stringify(storedComp));
-
-        console.log('saving tags');
-        //also save the tags as "known tags"
-        var storedTags = BDA.getStoredTags();
-        console.log('existing tags : ' + storedTags);
-        storedTags = storedTags.concat(tags);
-        console.log('concat tags : ' + storedTags);
-        storedTags = storedTags.unique();
-        console.log('saving tags to config ' + storedTags);
-        BDA.storeTags(storedTags);
+        BDA.storeTags(tags);
 
       }
     },
@@ -2409,7 +2420,8 @@ var BDA = {
     {
       $("#toolbar").remove();
       $("#toolbarHeader").remove();
-    $('#addComponentToolbarPopup').remove();
+      $('#toolbarContainer').remove();
+      $('#addComponentToolbarPopup').remove();
     },
 
     reloadToolbar: function ()
@@ -2430,68 +2442,121 @@ var BDA = {
 
     createToolbar :function ()
     {
-        $("<div id='addComponentToolbarPopup' class='popup_block'>"
-        + "<div class='addFavOptionewtagsns'>"
-        + "<a href='#' class='close'><i class='fa fa-times'></i></a>"
-        + "<h3 class='popup_title'>Add new component</h3>"
-        + "<p>Add tags:</p>"
-        + "<div id='tags'><ul id='existingTags'></ul>"
-        + "<input id='newtags' class='newtags' type='text' placeholder='comma separated'></input>"
-        + "</div>"
-        + "<p>Choose methods and/or properties to shortcut : </p>"
-        + "<div id='addComponentToolbarPopupContent'>"
-        + "<div id='methods'><ul></ul></div>"
-        + "<div id='vars'><ul></ul></div></div><br>"
-        + "</div>"
+      console.log("createToolbar");
+      //get existing tags
+
+
+      $("<div id='addComponentToolbarPopup' class='popup_block'>"
+      + "<div class='addFavOptions'>"
+      + "<a href='#' class='close'><i class='fa fa-times'></i></a>"
+      + "<h3 class='popup_title'>Add new component</h3>"
+      + "<div id='favSetTags'>"
+       + "<div class='favline'>"
+        + "<div>Add tags:</div>"
+        + "<div><ul id='existingTags'></ul></div>"
+       + "</div>"
+      + "<div class='favline'>"
+       + "<div>New tags:</div>"
+       + "<div><input id='newtags' class='newtags' type='text' placeholder='comma separated'></input></div>"
+      + "</div>"
+      + "</div>"
+      + "<p>Choose methods and/or properties to shortcut : </p>"
+      + "<div id='addComponentToolbarPopupContent'>"
+      + "<div id='methods'><ul></ul></div>"
+      + "<div id='vars'><ul></ul></div></div><br>"
         + "<div class='addFavSubmit'>"
-        + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button></div>"
-        + "</div>").insertAfter(this.logoSelector);
+         + "<button type='button' id='submitComponent'>Add <i class='fa fa-play fa-x'></button></div>"
+        + "</div>"
+      + "</div>").insertAfter(this.logoSelector);
+
+      BDA.addExistingTagsToToolbarPopup();
+
 
       var favs = this.getStoredComponents();
 
       $("<div id='toolbarContainer'></div>").insertAfter(this.logoSelector);
       $("<div id='toolbar'></div>").appendTo("#toolbarContainer");
 
+        //add tags filter
+      BDA.addFavFilter();
+
+      var selectedTags = BDA.getStoredSelectedTags();
+
       for(var i = 0; i != favs.length; i++)
       {
         var fav = favs[i];
-        var colors = this.stringToColour(fav.componentName);
-        var shortName = this.getComponentShortName(fav.componentName);
-        var callableHTML = "<div class='favMethods'>";
-        if(fav.methods !== undefined)
+        var show = false; 
+
+        var componentTags = fav.tags;
+        if(selectedTags !=null && selectedTags.length > 0){
+          console.log(fav.componentName + ' componentTags = ' + componentTags);
+          if(componentTags !== null && componentTags !== undefined){
+            for (var j = 0; j < componentTags.length; j++) {
+              var cTag = componentTags[i];
+              if($.inArray(cTag,selectedTags) > -1){
+                show = true;
+              }
+            }
+          }
+        }else{
+          show = true;
+        }
+        //check filters
+
+        if(show){
+          var colors = this.stringToColour(fav.componentName);
+          var shortName = this.getComponentShortName(fav.componentName);
+          var callableHTML = "<div class='favMethods'>";
+          if(fav.methods !== undefined)
           fav.methods.forEach(function(element) {
-            callableHTML += "<a target='_blank' href='" + fav.componentPath + "?shouldInvokeMethod=" + element + "'>Call " + element + "</a><br>";
-          });
-        callableHTML += "</div><div class='favVars'>";
-        if(fav.vars !== undefined)
+              callableHTML += "<a target='_blank' href='" + fav.componentPath + "?shouldInvokeMethod=" + element + "'>Call " + element + "</a><br>";
+            });
+          callableHTML += "</div><div class='favVars'>";
+          if(fav.vars !== undefined)
           fav.vars.forEach(function(element) {
-            callableHTML += "<a target='_blank' href='" + fav.componentPath + "?propertyName=" + element + "'>Change " + element + "</a><br>";
-          });
-        callableHTML += "</div>";
-        $("<div class='fav'></div>")
-        .css("background-color", this.colorToCss(colors))
-        .css("border", "1px solid " + this.getBorderColor(colors))
-        .html("<div class='favLink'>"
-            + "<a href='" + fav.componentPath + "' title='" + fav.componentName + "' >"
-            + "<div class='favTitle'>" +  shortName + "</div>"
-            + "<div class='favName'>" + fav.componentName + "</div>"
-            +"</a></div>"
-            + "<div class='favArrow' id='favArrow" + fav.id + "'><i class=' up fa fa-arrow-down'></i></div>"
-            + "<div class='favMoreInfo' id='favMoreInfo" + fav.id + "'>"
-            + "<div class='favLogDebug'>"
-            + " <form method='POST' action='" + fav.componentPath + "' id='logDebugForm" + fav.componentName + "'>"
-            + "<input type='hidden' value='loggingDebug' name='propertyName'>"
-            + "<input type='hidden' value='' name='newValue'>"
-            + "logDebug : "
-            + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>true</a>"
-            + "&nbsp; | &nbsp;"
-            + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
-            +"</div>"
-            + callableHTML
-            + "<div class='favDelete' id='delete" + fav.componentName + "'><i class='fa fa-trash-o'></i> Delete</div>"
-            + "</div>")
-            .appendTo("#toolbar");
+              callableHTML += "<a target='_blank' href='" + fav.componentPath + "?propertyName=" + element + "'>Change " + element + "</a><br>";
+            });
+          callableHTML += "</div>";
+
+          var favTags = '';
+         
+          if(componentTags !== null && componentTags !== undefined){
+            for (var k = 0; k < componentTags.length; k++) {
+              var t = componentTags[i];
+              favTags+='#'+t;
+              if(k+1 < componentTags.length){
+                favTags+=',';
+              }
+            }
+          }
+
+          $("<div class='toolbar-elem fav'></div>")
+          .css("background-color", this.colorToCss(colors))
+          .css("border", "1px solid " + this.getBorderColor(colors))
+          .html("<div class='favLink'>"
+              + "<a href='" + fav.componentPath + "' title='" + fav.componentName + "' >"
+              + "<div class='favTitle'>" +  shortName + "</div>"
+              + "<div class='favName'>" + fav.componentName + "</div>"
+              +"</a></div>"
+              + "<div class='favArrow' id='favArrow" + fav.id + "'><i class=' up fa fa-arrow-down'></i></div>"
+              + "<div class='favMoreInfo' id='favMoreInfo" + fav.id + "'>"
+              + "<div class='favLogDebug'>"
+              + " <form method='POST' action='" + fav.componentPath + "' id='logDebugForm" + fav.componentName + "'>"
+              + "<input type='hidden' value='loggingDebug' name='propertyName'>"
+              + "<input type='hidden' value='' name='newValue'>"
+              + "logDebug : "
+              + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>true</a>"
+              + "&nbsp; | &nbsp;"
+              + "<a href='javascript:void(0)' class='logdebug' id ='logDebug" + fav.componentName + "'>false</a>"
+              +"</div>"
+              + callableHTML
+              + "<div class='favDelete' id='delete" + fav.componentName + "'><i class='fa fa-trash-o'></i> Delete</div>"
+              + '<div class="fav-tags">'+ favTags + '</div>'
+              + "</div>")
+              .appendTo("#toolbar");
+        }
       }
+
 
       $(".favArrow").click(function() {
         console.log("Click on arrow");
@@ -2524,7 +2589,7 @@ var BDA = {
         if (!this.isComponentAlreadyStored(componentPath))
         {
           console.log('adding fav button');
-          $("<div class='newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
+          $("<div class='toolbar-elem newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
           .appendTo("#toolbar");
 
             $('.close').click(function() {
@@ -2541,7 +2606,16 @@ var BDA = {
                 $('.variable:checked').each(function(index, element){
                     vars.push(element.parentElement.textContent);
                 });
-                var tags = $('#newtags').val().split(',');
+                // filter out empty values
+                var stags = $('#newtags').val().split(',');
+                var tags = [];
+                for (var i = 0; i < stags.length; i++) {
+                  var tag = stags[i];
+                  if(tag !== null && tag !== ""){
+                    tags.push(tag);
+                  }
+                }
+
                 $('.tag:checked').each(function(index, element){
                     tags.push(element.parentElement.textContent);
                 });
@@ -2604,6 +2678,100 @@ var BDA = {
           });
         }
       }
+
+       BDA.addFavTagList();
+    },
+
+    addExistingTagsToToolbarPopup(){
+        //add tags to the addFav popup
+      var tags = this.getStoredTags();
+      $tagList = $('#existingTags');
+
+      for (var i = 0; i < tags.length; i++) {
+        var tagValue = tags[i];
+        $('<label>'+tagValue+'</label>',{
+          for:tagValue
+        }).insertAfter(
+          $('<input/>',{
+            type:'checkbox',
+            name:tagValue
+          })
+         .appendTo(
+           $('<li></li>').appendTo($tagList)
+         )
+        );
+      }
+    },
+
+    addFavFilter :function(){
+
+      var tags = this.getStoredTags();
+      if(tags !=null && tags.length > 0){
+        $("<div class='toolbar-elem favFilter'><a href='javascript:void(0)' id='favFilter' title='Filter'><i class='fa fa-chevron-down'></i></a></div>")
+            .on('click',function () {
+                var open = BDA.getConfigurationValue('filterOpen');
+                if(open == null || open == undefined || !open){
+                  open = false;
+                }
+                BDA.storeConfiguration('filterOpen',!open);
+
+                $('#favTagList').toggle(50);
+            })
+            .appendTo("#toolbar");
+      }
+       
+    },
+
+    addFavTagList : function(){
+       console.log('addfavTagList');
+       var tags = this.getStoredTags();
+       var selectedTags = this.getStoredSelectedTags();
+
+
+       $tagList = $('<div id="favTagList" class="favline">').appendTo('#toolbar');
+
+        $list = $('<ul></ul>');
+        for (var i = 0; i < tags.length; i++) {
+          var tag = tags[i];
+
+          $('<label>'+tag+'</label>',{
+            for:tag
+            }
+          )
+          .insertAfter(
+            $('<input/>',{
+              type:'checkbox',
+              name:tag,
+              class:'favFilterTag',
+              checked: $.inArray(tag,selectedTags) > -1
+            }
+           )
+           .on('change',BDA.applyFavFilter)
+           .appendTo(
+             $('<li></li>').appendTo($list)
+           )
+          );
+
+          $('<li></li>')
+        }
+        $list.appendTo($tagList);
+
+
+      var open = BDA.getConfigurationValue('filterOpen');
+      if(open == null || open == undefined || !open){
+        $tagList.css('display','none');
+      }
+
+    },
+
+    applyFavFilter :function(){
+      //save tags
+      var selectedTags = [];
+      $('#favTagList input:checkbox:checked.favFilterTag').each(function(){
+          selectedTags.push($(this).attr('name'));
+      })
+      BDA.storeSelectedTags(selectedTags);
+      BDA.reloadToolbar();
     },
 
     createActorCaller : function()
