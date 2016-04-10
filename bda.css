@@ -338,6 +338,7 @@ a {
   background-color: #007bb8;
 }
 
+   height: 55%;
 #whatsnew {
   background-color: #62A03E;
   border-color : #44702B;
@@ -393,6 +394,10 @@ a {
 
 #favFilter{
   margin-top: 15px;
+}
+
+.fav-chevron{
+  line-height: 48px;
 }
 
 #favTagList{
