@@ -245,26 +245,13 @@ var BDA = {
       }
     },
 
-    loadExternalCss : function(url)
+    loadExternalCss : function()
     {
-      var cmCSS = GM_getResourceText("cmCSS");
-      GM_addStyle(cmCSS);
-      var hlCSS = GM_getResourceText("hlCSS");
-      GM_addStyle(hlCSS);
-      var hljsThemeCSS = GM_getResourceText("hljsThemeCSS");
-      GM_addStyle(hljsThemeCSS);
-      var tablesorterCSS = GM_getResourceText("tablesorterCSS");
-      GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
-      GM_addStyle(fontAwsomeCSS);
-      var select2CSS = GM_getResourceText("select2CSS");
-      GM_addStyle(select2CSS);
-      var select2BootCSS = GM_getResourceText("select2BootCSS");
-      GM_addStyle(select2BootCSS);
-      var bdaCSS = GM_getResourceText("bdaCSS");
-      GM_addStyle(bdaCSS);
-      var visCSS = GM_getResourceText("visCSS");
-      GM_addStyle(visCSS);
+		for each (var externalResource in GM_info.script.resources) {
+			if(externalResource.name.toLowerCase().includes("css")) {
+				GM_addStyle(externalResource.content);
+			}
+		}
     },
 
     //--- Page informations ------------------------------------------------------------------------
@@ -1363,6 +1350,9 @@ var BDA = {
       $("#itemDescriptor").on("select2-selecting", function(e){
         BDA.showItemPropertyList(e.val);
       });
+	  var defaultDescriptor = this.defaultDescriptor[this.getComponentNameFromPath(this.getCurrentComponentPath())];
+	  if(defaultDescriptor !== undefined)
+		BDA.showItemPropertyList(defaultDescriptor);
 
       $("#RQLAction").change(function() {
         var action = $(this).val();
@@ -1391,12 +1381,7 @@ var BDA = {
 
       $("#RQLAdd").click(function() {
         var query = BDA.getRQLQuery();
-        var editor = BDA.queryEditor;
-        var editorCursor = editor.getCursor();
-        if(editorCursor.ch !==  0)
-          editor.setCursor(editor.getCursor().line + 1, 0);
-
-        BDA.queryEditor.replaceSelection(query);
+		BDA.addToQueryEditor(query);
       });
 
       $("#saveQuery").click(function() {
@@ -1457,6 +1442,16 @@ var BDA = {
         BDA.toggleMethods();
       });
     },
+	
+	addToQueryEditor:function(query)
+	{
+        var editor = BDA.queryEditor;
+        var editorCursor = editor.getCursor();
+        if(editorCursor.ch !==  0)
+          editor.setCursor(editor.getCursor().line + 1, 0);
+
+        BDA.queryEditor.replaceSelection(query);
+	},
 
     getToggleObj : function ()
     {
@@ -1491,6 +1486,7 @@ var BDA = {
       $.get(url, function(data) {
         var $pTable = $(data).find("a[name='showProperties']").next();
         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
+		$pTable.find('tr > td:first-child').append('<input type="button" class="itemPropertyBtn" value="query"></input>');
         $("#storedQueries").css("display", "none");
         var $scrollDiv = $("<div class='scrollableTab'></div>").append($pTable);
         $("#descProperties")
@@ -1498,6 +1494,15 @@ var BDA = {
         .append($scrollDiv)
         .append("<p class='showQueriesLabel'><a href='javascript:void(0)' id='showStoredQueries'>Show stored queries</a></p>")
         .css("display", "inline-block");
+		
+		$('.itemPropertyBtn').click(function(item){
+			var $property = $($(item.target).parent());
+			var regExp = /\(([^)]+)\)/;
+			var matches = regExp.exec($property.text());
+			if (matches !== undefined && matches.length === 2) {
+				BDA.addToQueryEditor('<set-property name="' + matches[1] + '"><![CDATA[]]></set-property>\n');
+			}
+		});
 
         $("#showStoredQueries").click(function() {
           console.log("show stored queries");
