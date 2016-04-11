@@ -245,26 +245,13 @@ var BDA = {
       }
     },
 
-    loadExternalCss : function(url)
+    loadExternalCss : function()
     {
-      var cmCSS = GM_getResourceText("cmCSS");
-      GM_addStyle(cmCSS);
-      var hlCSS = GM_getResourceText("hlCSS");
-      GM_addStyle(hlCSS);
-      var hljsThemeCSS = GM_getResourceText("hljsThemeCSS");
-      GM_addStyle(hljsThemeCSS);
-      var tablesorterCSS = GM_getResourceText("tablesorterCSS");
-      GM_addStyle(tablesorterCSS);
-      var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
-      GM_addStyle(fontAwsomeCSS);
-      var select2CSS = GM_getResourceText("select2CSS");
-      GM_addStyle(select2CSS);
-      var select2BootCSS = GM_getResourceText("select2BootCSS");
-      GM_addStyle(select2BootCSS);
-      var bdaCSS = GM_getResourceText("bdaCSS");
-      GM_addStyle(bdaCSS);
-      var visCSS = GM_getResourceText("visCSS");
-      GM_addStyle(visCSS);
+		for each (var externalResource in GM_info.script.resources) {
+			if(externalResource.name.toLowerCase().includes("css")) {
+				GM_addStyle(externalResource.content);
+			}
+		}
     },
 
     //--- Page informations ------------------------------------------------------------------------
