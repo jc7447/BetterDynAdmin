@@ -338,7 +338,6 @@ a {
   background-color: #007bb8;
 }
 
-   height: 55%;
 #whatsnew {
   background-color: #62A03E;
   border-color : #44702B;
@@ -403,7 +402,8 @@ a {
 #favTagList{
   clear: left;
   margin-left: 5px;
-  padding-top: 3px;
+  margin-top: 3px;
+  height: 18px;
 }
 
 
@@ -416,15 +416,37 @@ a {
   margin-bottom: 5px;
 }
 
-.tag-filter{
-    padding: 2px 6px 2px 2px;
-    border: 1px solid #ccc;
+.bda-button{
+   color:white;
+   border: 1px solid #ccc;
    border-radius: 3px;
-   color: white;
+   font-size: 12px;
+   padding: 0px 6px 0px 0px;
+}
+
+.bda-button label, .bda-button input, .bda-button button{
+   vertical-align: middle; 
+}
+
+.bda-button-icon{
+  height: 22px;
+  width: 22px;
+  padding: 0px 0px 0px 0px;
+  vertical-align: middle; 
+}
+
+.tag-filter-button{
+   color:black;
+}
+
+
+.tag-filter{
+  cursor: pointer;
 }
 
 .tag-filter label{
   margin-left:5px;
+  cursor: pointer;
 }
 
 .favline{
@@ -443,7 +465,7 @@ a {
 }
 
 .favline li{
-    display: inline;
+    display: inline-block;
     list-style: none; /* pour enlever les puces sur IE7 */
     margin: 2px;
 }
@@ -509,6 +531,12 @@ a {
 .favDelete {
   cursor: pointer;
 }
+
+.fav-button{
+ cursor: pointer;
+ margin-right: 5px;
+}
+
 
 .favLogDebug form {
   margin: 0;
@@ -624,6 +652,11 @@ table.tablesorter tr.alt-row:hover td {
 .close, #submitComponent {
   float: right;
   color : black;
+}
+
+.fav-submit-button {
+  float: right;
+  color : black; 
 }
 
 #methods, #vars {
