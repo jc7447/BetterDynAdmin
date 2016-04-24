@@ -2782,26 +2782,32 @@ var BDA = {
           jQuery.ajax({
             url:     url,
             success: function(result) {
-              rawXmlDef = $(result).find("pre")
-              .html()
-              .trim()
-              .replace(/&lt;/g, "<")
-              .replace(/&gt;/g, ">")
-              .replace("&nbsp;", "")
-              .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
-                try
-                {
-                    console.log("XML def length : " + rawXmlDef.length);
-                    var xmlDoc = jQuery.parseXML(rawXmlDef);
-                    BDA.storeXmlDef(BDA.getCurrentComponentPath(), rawXmlDef);
-                    callback($(xmlDoc));
-                }
-                catch(err)
-                {
-                    console.log("Unable to parse XML def file !");
-                    callback(null);
-                    console.log(err);
-                }
+              $result = $(result);
+              if ($result.find("pre").size() > 0)
+              {
+                rawXmlDef = $result.find("pre")
+                .html()
+                .trim()
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace("&nbsp;", "")
+                .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
+                  try
+                  {
+                      console.log("XML def length : " + rawXmlDef.length);
+                      var xmlDoc = jQuery.parseXML(rawXmlDef);
+                      BDA.storeXmlDef(BDA.getCurrentComponentPath(), rawXmlDef);
+                      callback($(xmlDoc));
+                  }
+                  catch(err)
+                  {
+                      console.log("Unable to parse XML def file !");
+                      callback(null);
+                      console.log(err);
+                  }
+              }
+              else
+                callback(null);
             },
           });
         }
