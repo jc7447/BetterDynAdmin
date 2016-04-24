@@ -4,6 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @contributor  Benjamin Descamps
+// @contributor  Joël Trousset
 // @homepageURL  https://github.com/jc7447/BetterDynAdmin
 // @supportURL   https://github.com/jc7447/BetterDynAdmin/issues
 // @description  Refreshing ATG Dyn Admin
@@ -76,7 +77,6 @@ var BDA = {
     dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
     GMValue_MonoInstance: "monoInstance",
     GMValue_Backup:"backup",
-    nbItemCall : 0,
     nbItemReceived : 0,
     itemTree : new Map(),
     startGettingTree : 0,
@@ -122,6 +122,7 @@ var BDA = {
                       },
                       physics:false
                    },
+    STORED_CONFIG : "BdaConfiguration",
 
 
     init : function(){
@@ -185,9 +186,7 @@ var BDA = {
 
       this.showComponentHsitory();
       this.reloadData();
-      this.createWhatsnewPanel();
-      this.createBackupPanel();
-      this.createBugReportPanel();
+      this.createMenu();
 
       if (this.isComponentPage)
       {
@@ -719,7 +718,7 @@ var BDA = {
       var isId = null;
       if ($xmlDef !== null)
       {
-          var $itemDesc = $xmlDef.find("item-descriptor[name=" + itemDesc + "]");
+          var $itemDesc = $xmlDef.find("item-descriptor[name='" + itemDesc + "']");
           // First check in current item desc
           isId = BDA.isPropertyId(propertyName, $itemDesc);
           // In case we found the property but it's not an ID, we don't want to seach in super-type
@@ -732,7 +731,7 @@ var BDA = {
           var superType = $itemDesc.attr("super-type");
           while(superType !== undefined && isId === null)
           {
-            var $parentDesc = $xmlDef.find("item-descriptor[name=" + superType + "]");
+            var $parentDesc = $xmlDef.find("item-descriptor[name='" + superType + "']");
             //console.log("Search in super type : " + $parentDesc.attr("name"));
             isId = BDA.isPropertyId(propertyName, $parentDesc);
             superType = $parentDesc.attr("super-type");
@@ -1790,6 +1789,40 @@ var BDA = {
         BDA.reloadQueryList();
       });
     },
+
+    //--- Stored configuration functions  -----------------------------------------------------------------
+
+
+    getConfigurationValue : function(name){
+        return BDA.getStoredConfiguration()[name];
+    },
+
+
+    getStoredConfiguration : function(){
+       if(!this.hasWebStorage)
+        return {};
+      var config;
+      var configStr = localStorage.getItem(this.STORED_CONFIG);
+      if (configStr !== null && configStr.length > 0)
+        config = JSON.parse(configStr);
+      else
+        config = {};
+      return config;
+    },
+
+    storeConfiguration : function (name, value)
+    {
+      if(this.hasWebStorage)
+      {
+        console.log("Try to store config: " + name + ", value : " + value);
+        var storedConfig = this.getStoredConfiguration();
+        storedConfig[name] = value;
+        console.log(value);
+        BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
+      }
+    },
+
+
     //--- Stored queries functions ------------------------------------------------------------------------
 
     getStoredRQLQueries : function ()
@@ -1911,123 +1944,134 @@ var BDA = {
       $("#history").html(html);
     },
 
-    //--- Bug report panel
+    //MENU
 
-    createBugReportPanel : function()
+    createMenu : function()
     {
-      var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
-      var labelIndex = Math.floor((Math.random() * labels.length));
+      var $menuBar = $("<div id='menuBar'></div>").appendTo("body");
+      this.createBugReportPanel($menuBar);
+      this.createBackupPanel($menuBar);
+      this.createConfigurationPanel($menuBar);
+      this.createWhatsnewPanel($menuBar);
 
-      $("<div id='bdaBug'></div>").appendTo("body")
-      .html("<p>" + labels[labelIndex] + "</p>"
-          + "<div class='bugArrow'><i class='up fa fa-arrow-down'></i></div>"
-      );
-
-      $("<div id='bdaBugPanel'></div>").appendTo("body")
-      .html("<p>How can I help and stay tuned ? "
-          + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
-          + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
-          + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
-          + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
-      );
-
-      $("#bdaBug").click(function() {
-        $("#bdaBugPanel").slideToggle();
-        BDA.rotateArrow($(".bugArrow i"));
-        if ($("#bdaBackupPanel").css("display") != "none")
+      $(".menu").bind("click",function()
+      {
+        var $thisParent = $(this);
+        var $panel;
+        $('.menu').each(function()
         {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-        if ($("#whatsnewPanel").css("display") != "none")
-        {
-          $("#whatsnewPanel").slideToggle();
-          BDA.rotateArrow($(".whatsnewArrow i"));
-        }
+            $this = $(this);
+            $panel = $('#' + $this.attr('data-panel'));
+            if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') != "none")
+            {
+              $panel.slideToggle();
+              BDA.rotateArrow($this.find(".menuArrow i"));
+            }
+        });
+
+        $panel = $('#' + $thisParent.attr('data-panel'));
+        $panel.slideToggle();
+        BDA.rotateArrow($thisParent.find(".menuArrow i"));
       });
-
-
     },
 
-    //--- what's new functions --------------------------------------------------------------------------
+    //--- Config Panel
 
-
-    createWhatsnewPanel : function ()
+    createConfigurationPanel : function($menuBar)
     {
-      $("<div id='whatsnew'></div>").appendTo("body")
-
-      .html("<p>What's New</p>"
-          + "<div class='whatsnewArrow'><i class='up fa fa-arrow-down'></i></div>"
-      );
-
-      $("#whatsnew").click(function() {
-
-        if ($("#whatsnewPanel").css("display") === "none")
-              $( "#whatsnewPanel" ).html(GM_getResourceText("whatsnew") );
-
-        $("#whatsnewPanel").slideToggle();
-        BDA.rotateArrow($(".whatsnewArrow i"));
-
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#bdaBackupPanel").css("display") != "none")
-        {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-
-      });
-
-      $("<div id='whatsnewPanel'></div>").appendTo("body");
-    },
-
-    //--- backup panel functions ------------------------------------------------------------------------
-
-    createBackupPanel : function ()
-    {
-      $("<div id='bdaBackup'></div>").appendTo("body")
+      $("<div id='bdaConfig' class='menu' data-panel='bdaConfigPanel'></div>").appendTo($menuBar)
 
       .html("<p>Configuration</p>"
-          + "<div class='backupArrow'><i class='up fa fa-arrow-down'></i></div>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
-      $("#bdaBackup").click(function() {
-        $("#bdaBackupPanel").slideToggle();
-        BDA.rotateArrow($(".backupArrow i"));
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#whatsnewPanel").css("display") != "none")
-        {
-          $("#whatsnewPanel").slideToggle();
-          BDA.rotateArrow($(".whatsnewArrow i"));
-        }
-      });
+      var $bdaConfigPanel = $("<div id='bdaConfigPanel' class='menuPanel'></div>").appendTo("body")
 
-      $("<div id='bdaBackupPanel'></div>").appendTo("body")
+      .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>");
 
-      .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
-          + "<p>Why should I save Better Dyn Admin data ? "
-          + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
-          + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
-          + "<textarea id='bdaData' placeholder='Paste your data here to restore it.'></textarea>"
-          + "<button id='bdaDataBackup'>Backup</button>"
-          + "<button id='bdaDataRestore'>Restore</button>"
-      );
+      this.createDefaultMethodsConfig($bdaConfigPanel);
 
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
-      .click(function(){
+      .click(function() {
         var isMonoInstance = $(this).prop('checked');
         console.log("Setting storage mode to mono-instance : " + isMonoInstance);
         GM_setValue(BDA.GMValue_MonoInstance, isMonoInstance);
         if(isMonoInstance)
           GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
       });
+
+      $("#bdaDataBackup").click(function () {
+        var data = BDA.getData();
+        BDA.copyToClipboard(JSON.stringify(data));
+      });
+
+      $("#bdaDataRestore").click(function () {
+        if (window.confirm("Sure ?"))
+        {
+          var data = $("#bdaData").val().trim();
+          BDA.restoreData(data, true);
+        }
+      });
+
+    },
+    //--- Bug report panel
+
+    createBugReportPanel : function($menuBar)
+    {
+      var labels = ["Found a bug in BDA ?", "Want a new feature ?"];
+      var labelIndex = Math.floor((Math.random() * labels.length));
+
+      $("<div id='bdaBug' class='menu' data-panel='bdaBugPanel'></div>").appendTo($menuBar)
+      .html("<p>About</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+      $("<div id='bdaBugPanel' class='menuPanel'></div>").appendTo("body")
+      .html("<p>How can I help and stay tuned ? "
+          + "<br /><br /> Better Dyn Admin has a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
+          + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
+          + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
+      );
+    },
+
+    //--- what's new functions --------------------------------------------------------------------------
+    createWhatsnewPanel : function ($menuBar)
+    {
+      $("<div id='whatsnew' class='menu' data-panel='whatsnewPanel'></div>")
+      .appendTo($menuBar)
+      .html("<p>What's new</p>"
+      + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>");
+
+      $("<div id='whatsnewPanel' class='menuPanel'></div>")
+      .appendTo("body")
+      .html("<p id='whatsnewContent'></p>");
+
+      $("#whatsnew").click(function() {
+        console.log("On click whats new");
+        if ($("#whatsnewPanel").css("display") === "none")
+              $( "#whatsnewContent" ).html(GM_getResourceText("whatsnew") );
+      });
+    },
+
+    //--- backup panel functions ------------------------------------------------------------------------
+
+    createBackupPanel : function ($menuBar)
+    {
+      $("<div id='bdaBackup' class='menu' data-panel='bdaBackupPanel'></div>").appendTo($menuBar)
+
+      .html("<p>Backup</p>"
+          + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
+      );
+
+      $("<div id='bdaBackupPanel' class='menuPanel'></div>").appendTo("body")
+
+      .html("<p>Why should I save Better Dyn Admin data ? "
+          + "<br /><br /> Because BDA use javascript local storage. You will lose your favorite components and your stored queries if you clean your browser."
+          + "<br /><br /><strong> Remember that you can also import your backup to a BDA in another domain !</strong> </p>"
+          + "<textarea id='bdaData' placeholder='Paste your data here to restore it.'></textarea>"
+          + "<button id='bdaDataBackup'>Backup</button>"
+          + "<button id='bdaDataRestore'>Restore</button>"
+      );
 
       $("#bdaDataBackup").click(function (){
         var data = BDA.getData();
@@ -2049,6 +2093,7 @@ var BDA = {
       var dataObj = {};
       dataObj.components = BDA.getStoredComponents();
       dataObj.queries = BDA.getStoredRQLQueries();
+      dataObj.configuration = BDA.getStoredConfiguration();
       return dataObj;
     },
 
@@ -2068,6 +2113,7 @@ var BDA = {
           var dataObj = JSON.parse(data);
           BDA.storeItem('Components', JSON.stringify(dataObj.components));
           BDA.storeItem('RQLQueries', JSON.stringify(dataObj.queries));
+          BDA.storeItem(this.STORED_CONFIG, JSON.stringify(dataObj.configuration));
           if (reloadUI)
             this.reloadData();
         }
@@ -2081,6 +2127,63 @@ var BDA = {
     {
       GM_setClipboard(text);
       window.alert("Data have been added to your clipboard");
+    },
+
+        // advanced config
+
+
+    createDefaultMethodsConfig : function(parentPanel)
+    {
+
+
+      $config = $('<div id="advancedConfig"></div>');
+      $config.appendTo(parentPanel);
+      // Default methods
+      var savedMethods = this.getConfigurationValue('default_methods');
+      if(savedMethods === undefined || savedMethods == null){
+        savedMethods = "";
+      }
+
+       $config.append(
+        "<p>Default methods when bookmarking components:</p>"
+        + "<textarea id='config-methods-data' class='' placeholder='List of methods names, comma separated'>"+savedMethods+"</textarea>"
+        );
+
+       $submitMethods = $('<button id="config-methods-submit">Save</button>')
+        .bind('click',function(){
+            var methods=$('#config-methods-data').val().trim();
+            var methodsArray=methods.replace(/ /g,'').split(",");
+            console.log('storing methods : ' + methodsArray);
+            BDA.storeConfiguration("default_methods",methodsArray);
+          }
+       )
+       ;
+       $config.append($submitMethods);
+
+
+
+      // Default properties
+
+      var savedProperties = this.getConfigurationValue('default_properties');
+      if(savedProperties === undefined || savedProperties == null){
+        savedProperties = "";
+      }
+
+      $config.append(
+        "<p>Default properties when bookmarking components:</p>"
+        + "<textarea id='config-properties-data' class='' placeholder='List of properties, comma separated'>"+savedProperties+"</textarea>"
+        );
+
+      $submitProperties  = $('<button id="config-properties-submit">Save</button>')
+        .bind('click', function(){
+            var properties=$('#config-properties-data').val().trim();
+            var propertiesArray=properties.replace(/ /g,'').split(",");
+            console.log('storing properties : ' + propertiesArray);
+            BDA.storeConfiguration("default_properties",propertiesArray);
+          }
+        );
+      $config.append($submitProperties);
+
     },
 
     //--- Toolbar functions ------------------------------------------------------------------------
@@ -2410,6 +2513,16 @@ var BDA = {
               }
             });
 
+            //handle default methods
+            var defMethods = BDA.getConfigurationValue('default_methods');
+            console.log('savedMethods: ' + defMethods);
+            if(defMethods != null){
+                defMethods.forEach(function(methodName){
+                console.log('setting default method: ' + methodName);
+                $('#method_'+methodName).attr('checked',true);
+              });
+            }
+
             var tablevars = $('h1:contains("Properties")').next();
             tablevars.find('tr').each(function(index, element){
               if(index > 0)
@@ -2419,6 +2532,16 @@ var BDA = {
                 varsList.append('<li><input type="checkbox" class="variable" id="var_' + variableName + '"><label for="var_' + variableName + '">' + variableName + '</label></li>');
               }
             });
+
+            var defProperties = BDA.getConfigurationValue('default_properties');
+            console.log('savedProperties: ' + defProperties);
+            if(defProperties != null){
+              defProperties.forEach(function(name){
+                console.log('setting default properties: ' + name);
+                $('#var_'+name).attr('checked',true);
+              });
+            }
+
             $('#addComponentToolbarPopup').fadeIn();
           });
         }
@@ -2677,7 +2800,7 @@ var BDA = {
                 {
                     console.log("Unable to parse XML def file !");
                     callback(null);
-                    //console.log(err);
+                    console.log(err);
                 }
             },
           });
@@ -2689,112 +2812,126 @@ var BDA = {
     {
       var nbItem =  BDA.itemTree.size;
       console.log("maxItem : " + maxItem + ", nbItem : " + nbItem);
+
+      // Ensure that getSubItems is not call more than maxItem times
       if(nbItem >= maxItem)
       {
-        // console.log("max Item ("+maxItem+") reached, stopping recursion");
-        return;
+         console.log("max Item ("+maxItem+") reached, stopping recursion");
+         return;
       }
-      BDA.nbItemCall += items.length;
+
       var xmlText = "";
-      for(var i = 0; i != items.length; i++)
-          xmlText += "<print-item id='" + items[i].id + "' item-descriptor='" + items[i].desc + "' />\n";
+      for(var batchSize = 0; batchSize != items.length; batchSize++)
+      {
+        // Don"t ask for more items than limit
+        if ((BDA.nbItemReceived + batchSize) >= maxItem)
+          break;
+        xmlText += "<print-item id='" + items[batchSize].id + "' item-descriptor='" + items[batchSize].desc + "' />\n";
+      }
+      console.log(xmlText);
+      console.log("batch size : " + batchSize);
+      // Only request if the batchSize contains something
+      if (batchSize > 0)
+      {
+        $.ajax({
+          type: "POST",
+          url: document.URL,
+          data: { xmltext: xmlText},
+          success: function(result, status, jqXHR) {
+              //console.log(this.nbItemToCall);
+            //BDA.nbItemReceived += this.nbItemToCall;
+            var rawItemsXml = $(result).find("code").html();
+            // remove first 2 lines
+            var tab = rawItemsXml.split("\n");
+            tab.splice(0,2);
+            rawItemsXml = tab.join("\n").trim();
+            // unescape HTML
+            rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
 
-      //console.log(xmlText);
-      $.ajax({
-        type: "POST",
-        url: document.URL,
-        data: { xmltext: xmlText},
-        nbItemToCall : items.length,
-        success: function(result, status, jqXHR) {
-            //console.log(this.nbItemToCall);
-          BDA.nbItemReceived += this.nbItemToCall;
-          var rawItemsXml = $(result).find("code").html();
-          // remove first 2 lines
-          var tab = rawItemsXml.split("\n");
-          tab.splice(0,2);
-          rawItemsXml = tab.join("\n").trim();
-          // unescape HTML
-          rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
+            var xmlDoc = jQuery.parseXML(rawItemsXml);
+            BDA.nbItemReceived += $(xmlDoc).find("add-item").size();
+            $("#itemTreeInfo").html("<p>" + BDA.nbItemReceived + " items retrieved</p>");
 
-          var xmlDoc = jQuery.parseXML(rawItemsXml);
-          $(xmlDoc).find("add-item").each(function() {
-              var subItems = [];
-              var $itemXml = $(this);
-              var itemId = $itemXml.attr("id");
-              if(BDA.itemTree.get(itemId) === undefined)
-              {
-                  var rawItemXml = $itemXml[0].outerHTML;
-                 // console.log("Add item to item tree : " + rawItemXml + " with ID : " + itemId);
-                  BDA.itemTree.set(itemId, rawItemXml);
-                  var descriptor = $itemXml.attr("item-descriptor");
-                  var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
-                  var superType = $itemDesc.attr("super-type");
-                  while(superType !== undefined)
-                  {
-                      var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
-                      // console.log("Add super type : " + $parentDesc.attr("name"));
-                      $itemDesc = $itemDesc.add($parentDesc);
-                      superType = $parentDesc.attr("super-type");
-                  }
-                  // One to One relation
-                  $itemDesc.find('property[item-type]')
-                      .each(function(index, elm) {
-                      var $elm = $(elm);
-                      var subProperty = $elm.attr("name");
-                      //console.log(subProperty);
-                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text();
-                      if ($elm.attr("repository") === undefined && subId.length > 0)
-                      {
-                          // avoid infinite recursion
-                          if(BDA.itemTree.get(subId) === undefined)
-                          {
-                              //console.log({'id' : subId, 'desc' : $elm.attr("item-type")});
-                              subItems.push({'id' : subId, 'desc' : $elm.attr("item-type")});
-                          }
-                      }
-                  });
-
-                  // One to Many relation with list, array or map
-                  $itemDesc.find('property[component-item-type]')
-                  .each(function(index, elm) {
-                      var $elm = $(elm);
-                      var subProperty = $elm.attr("name");
-                      // console.log(subProperty);
-                      var subId = $itemXml.find("set-property[name="+subProperty+"]").text();
-                      if ($elm.attr("repository") === undefined && subId.length > 0)
-                      {
-                          var desc = $elm.attr("component-item-type");
-                          if(subId.indexOf(",") != -1 || subId.indexOf("=") != -1 )
-                          {
-                              var splitChar = ",";
-                              if(subId.indexOf("=") != -1)
-                                  splitChar = "=";
-                              var ids = subId.split(splitChar);
-                              for(var i = 0; i != ids.length; i++)
-                              {
-                                if(BDA.itemTree.get(ids[i]) === undefined)
-                                    subItems.push({'id' : ids[i], 'desc' : desc});
-                              }
-                          }
-                          else
-                          {
+            var subItems = [];
+            $(xmlDoc).find("add-item").each(function() {
+                var $itemXml = $(this);
+                var itemId = $itemXml.attr("id");
+                if(BDA.itemTree.get(itemId) === undefined)
+                {
+                    var rawItemXml = $itemXml[0].outerHTML;
+                   // console.log("Add item to item tree : " + rawItemXml + " with ID : " + itemId);
+                    BDA.itemTree.set(itemId, rawItemXml);
+                    var descriptor = $itemXml.attr("item-descriptor");
+                    var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
+                    var superType = $itemDesc.attr("super-type");
+                    while(superType !== undefined)
+                    {
+                        var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
+                        // console.log("Add super type : " + $parentDesc.attr("name"));
+                        $itemDesc = $itemDesc.add($parentDesc);
+                        superType = $parentDesc.attr("super-type");
+                    }
+                    // One to One relation
+                    $itemDesc.find('property[item-type]')
+                        .each(function(index, elm) {
+                        var $elm = $(elm);
+                        var subProperty = $elm.attr("name");
+                        //console.log(subProperty);
+                        var subId = $itemXml.find("set-property[name="+subProperty+"]").text();
+                        if ($elm.attr("repository") === undefined && subId.length > 0)
+                        {
+                            // avoid infinite recursion
                             if(BDA.itemTree.get(subId) === undefined)
-                                subItems.push({'id' : subId, 'desc' : desc});
-                          }
-                      }
-                  });
-                  if (subItems.length > 0)
-                      BDA.getSubItems(subItems, $xmlDef, maxItem, outputType, printRepoAttr);
+                            {
+                                //console.log({'id' : subId, 'desc' : $elm.attr("item-type")});
+                                subItems.push({'id' : subId, 'desc' : $elm.attr("item-type")});
+                            }
+                        }
+                    });
 
-              }
-          });
+                    // One to Many relation with list, array or map
+                    $itemDesc.find('property[component-item-type]')
+                    .each(function(index, elm) {
+                        var $elm = $(elm);
+                        var subProperty = $elm.attr("name");
+                        // console.log(subProperty);
+                        var subId = $itemXml.find("set-property[name="+subProperty+"]").text();
+                        if ($elm.attr("repository") === undefined && subId.length > 0)
+                        {
+                            var desc = $elm.attr("component-item-type");
+                            if(subId.indexOf(",") != -1 || subId.indexOf("=") != -1 )
+                            {
+                                var splitChar = ",";
+                                if(subId.indexOf("=") != -1)
+                                    splitChar = "=";
+                                var ids = subId.split(splitChar);
+                                for(var i = 0; i != ids.length; i++)
+                                {
+                                  if(BDA.itemTree.get(ids[i]) === undefined)
+                                      subItems.push({'id' : ids[i], 'desc' : desc});
+                                }
+                            }
+                            else
+                            {
+                              if(BDA.itemTree.get(subId) === undefined)
+                                  subItems.push({'id' : subId, 'desc' : desc});
+                            }
+                        }
+                    });
+                }
 
-          $("#itemTreeInfo").html("<p>" + BDA.nbItemReceived + " items already retrieved, " + BDA.nbItemCall + " called</p>");
-          console.log("Item call : " + BDA.nbItemCall + ", received : " + BDA.nbItemReceived);
-          if (BDA.nbItemCall == BDA.nbItemReceived)
-            BDA.renderItemTreeTab(outputType, printRepoAttr, $xmlDef);
-        },
-      });
+            });
+
+            console.log(subItems.length  + " items to retrieved in next request. Limit reach : " + (BDA.nbItemReceived >= maxItem));
+            if (subItems.length > 0 && BDA.nbItemReceived < maxItem)
+                BDA.getSubItems(subItems, $xmlDef, maxItem, outputType, printRepoAttr);
+            else
+              BDA.renderItemTreeTab(outputType, printRepoAttr, $xmlDef);
+          },
+        });
+      }
+      else
+        console.log("Request is empty, nothing to do.");
     },
 
     getItemTree : function(id, descriptor, maxItem, outputType, printRepoAttr)
@@ -2825,7 +2962,6 @@ var BDA = {
         // get tree
         BDA.itemTree = new Map();
         BDA.nbItemReceived = 0;
-        BDA.nbItemCall = 0;
         BDA.getSubItems([{'id' : id, 'desc' : descriptor}], $xmlDef, maxItem, outputType, printRepoAttr);
       });
     },
@@ -2833,20 +2969,19 @@ var BDA = {
     renderItemTreeTab : function(outputType, printRepoAttr, $xmlDef)
     {
       console.log("Render item tree tab : " + outputType);
+      $("#itemTreeInfo").empty();
+      $("#itemTreeResult").empty();
+      var res = "";
       if(outputType !== "HTMLtab")
       {
-          $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
+          console.log("Render copy button");
+          $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
           $('#itemTreeCopyButton').click(function(){
               BDA.copyToClipboard($('#itemTreeResult').text());
           });
       }
-      // print result
-      $("#itemTreeInfo").empty();
-      $("#itemTreeResult").empty();
-      var res = "";
       if(outputType == "addItem")
       {
-
         BDA.itemTree.forEach(function(data, id) {
           if (printRepoAttr)
           {
@@ -2927,8 +3062,11 @@ var BDA = {
     }
 };
 
+
+
 if (document.getElementById("oracleATGbrand") !== null || BDA.isOldDynamoFct())
 {
+  console.log("Loading BDA");
   try
   {
     BDA.init();
