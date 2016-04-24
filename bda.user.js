@@ -4,6 +4,7 @@
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @contributor  Benjamin Descamps
+// @contributor  Joël Trousset
 // @homepageURL  https://github.com/jc7447/BetterDynAdmin
 // @supportURL   https://github.com/jc7447/BetterDynAdmin/issues
 // @description  Refreshing ATG Dyn Admin
@@ -717,7 +718,7 @@ var BDA = {
       var isId = null;
       if ($xmlDef !== null)
       {
-          var $itemDesc = $xmlDef.find("item-descriptor[name=" + itemDesc + "]");
+          var $itemDesc = $xmlDef.find("item-descriptor[name='" + itemDesc + "']");
           // First check in current item desc
           isId = BDA.isPropertyId(propertyName, $itemDesc);
           // In case we found the property but it's not an ID, we don't want to seach in super-type
@@ -730,7 +731,7 @@ var BDA = {
           var superType = $itemDesc.attr("super-type");
           while(superType !== undefined && isId === null)
           {
-            var $parentDesc = $xmlDef.find("item-descriptor[name=" + superType + "]");
+            var $parentDesc = $xmlDef.find("item-descriptor[name='" + superType + "']");
             //console.log("Search in super type : " + $parentDesc.attr("name"));
             isId = BDA.isPropertyId(propertyName, $parentDesc);
             superType = $parentDesc.attr("super-type");
@@ -1945,56 +1946,53 @@ var BDA = {
 
     //MENU
 
-    createMenu : function(){
-
-      $menuBar = $("<div id='menuBar'></div>").appendTo("body");
-
-        //this.createWhatsnewPanel();
+    createMenu : function()
+    {
+      var $menuBar = $("<div id='menuBar'></div>").appendTo("body");
       this.createBugReportPanel($menuBar);
       this.createBackupPanel($menuBar);
       this.createConfigurationPanel($menuBar);
+      this.createWhatsnewPanel($menuBar);
 
-      $(".menu").bind("click",function() {
-
-        $thisParent = $(this);
-
-        $('.menu').each(function(){
+      $(".menu").bind("click",function()
+      {
+        var $thisParent = $(this);
+        var $panel;
+        $('.menu').each(function()
+        {
             $this = $(this);
-            $panel = $('#'+$this.attr('data-panel')); 
-            if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') !="none"){
+            $panel = $('#' + $this.attr('data-panel'));
+            if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') != "none")
+            {
               $panel.slideToggle();
               BDA.rotateArrow($this.find(".menuArrow i"));
             }
         });
-       
-        $panel = $('#'+$thisParent.attr('data-panel'));
+
+        $panel = $('#' + $thisParent.attr('data-panel'));
         $panel.slideToggle();
         BDA.rotateArrow($thisParent.find(".menuArrow i"));
-
       });
     },
 
     //--- Config Panel
 
-    createConfigurationPanel : function($menuBar){
-
+    createConfigurationPanel : function($menuBar)
+    {
       $("<div id='bdaConfig' class='menu' data-panel='bdaConfigPanel'></div>").appendTo($menuBar)
 
       .html("<p>Configuration</p>"
           + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
+      var $bdaConfigPanel = $("<div id='bdaConfigPanel' class='menuPanel'></div>").appendTo("body")
 
-      $bdaConfigPanel = $("<div id='bdaConfigPanel' class='menuPanel'></div>").appendTo("body")
-
-      .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>"
-      );
+      .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>");
 
       this.createDefaultMethodsConfig($bdaConfigPanel);
 
-
       $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
-      .click(function(){
+      .click(function() {
         var isMonoInstance = $(this).prop('checked');
         console.log("Setting storage mode to mono-instance : " + isMonoInstance);
         GM_setValue(BDA.GMValue_MonoInstance, isMonoInstance);
@@ -2002,13 +2000,12 @@ var BDA = {
           GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
       });
 
-
-      $("#bdaDataBackup").click(function (){
+      $("#bdaDataBackup").click(function () {
         var data = BDA.getData();
         BDA.copyToClipboard(JSON.stringify(data));
       });
 
-      $("#bdaDataRestore").click(function (){
+      $("#bdaDataRestore").click(function () {
         if (window.confirm("Sure ?"))
         {
           var data = $("#bdaData").val().trim();
@@ -2021,63 +2018,40 @@ var BDA = {
 
     createBugReportPanel : function($menuBar)
     {
-      var labels = ["Found a bug in BDA ?", "Want a new feature ?", "What's new in BDA ?"];
+      var labels = ["Found a bug in BDA ?", "Want a new feature ?"];
       var labelIndex = Math.floor((Math.random() * labels.length));
 
       $("<div id='bdaBug' class='menu' data-panel='bdaBugPanel'></div>").appendTo($menuBar)
-      .html("<p>" + labels[labelIndex] + "</p>"
+      .html("<p>About</p>"
           + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
 
       $("<div id='bdaBugPanel' class='menuPanel'></div>").appendTo("body")
       .html("<p>How can I help and stay tuned ? "
-          + "<br /><br /> Better Dyn Admin have a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
+          + "<br /><br /> Better Dyn Admin has a <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin'>GitHub page</a>. <br>"
           + "Please report any bug in the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/issues'>issues tracker</a>. Of course, you can also request new feature or suggest enhancement !"
-          + "<br /><br /> Stay tuned, look at the <a target='_blank' href='https://github.com/jc7447/BetterDynAdmin/milestones'>incoming milestones</a>."
           + "<br /><br /> <strong> BDA version " + GM_info.script.version + "</strong> </p>"
       );
-
-
-
     },
 
     //--- what's new functions --------------------------------------------------------------------------
-
-
-    createWhatsnewPanel : function ()
+    createWhatsnewPanel : function ($menuBar)
     {
-      $("<div id='whatsnew' class='menu' data-panel='whatsnewPanel'></div>").appendTo("body")
+      $("<div id='whatsnew' class='menu' data-panel='whatsnewPanel'></div>")
+      .appendTo($menuBar)
+      .html("<p>What's new</p>"
+      + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>");
 
-      .html("<p>What's New</p>"
-          + "<div class='whatsnewArrow'><i class='up fa fa-arrow-down'></i></div>"
-      );
+      $("<div id='whatsnewPanel' class='menuPanel'></div>")
+      .appendTo("body")
+      .html("<p id='whatsnewContent'></p>");
 
       $("#whatsnew").click(function() {
-
+        console.log("On click whats new");
         if ($("#whatsnewPanel").css("display") === "none")
-              $( "#whatsnewPanel" ).html(GM_getResourceText("whatsnew") );
-
-        $("#whatsnewPanel").slideToggle();
-        BDA.rotateArrow($(".whatsnewArrow i"));
-
-        if ($("#bdaBugPanel").css("display") != "none")
-        {
-          $("#bdaBugPanel").slideToggle();
-          BDA.rotateArrow($(".bugArrow i"));
-        }
-        if ($("#bdaBackupPanel").css("display") != "none")
-        {
-          $("#bdaBackupPanel").slideToggle();
-          BDA.rotateArrow($(".backupArrow i"));
-        }
-
-
+              $( "#whatsnewContent" ).html(GM_getResourceText("whatsnew") );
       });
-
-      $("<div id='whatsnewPanel'></div>").appendTo("body");
     },
-
-
 
     //--- backup panel functions ------------------------------------------------------------------------
 
@@ -2088,7 +2062,6 @@ var BDA = {
       .html("<p>Backup</p>"
           + "<div class='menuArrow'><i class='up fa fa-arrow-down'></i></div>"
       );
-
 
       $("<div id='bdaBackupPanel' class='menuPanel'></div>").appendTo("body")
 
@@ -2113,7 +2086,6 @@ var BDA = {
         }
       });
     },
-
 
     getData : function()
     {
@@ -2164,7 +2136,7 @@ var BDA = {
     {
 
 
-      $config = $('<div id="advancedConfig"></div>')
+      $config = $('<div id="advancedConfig"></div>');
       $config.appendTo(parentPanel);
       // Default methods
       var savedMethods = this.getConfigurationValue('default_methods');
@@ -2182,12 +2154,12 @@ var BDA = {
             var methods=$('#config-methods-data').val().trim();
             var methodsArray=methods.replace(/ /g,'').split(",");
             console.log('storing methods : ' + methodsArray);
-            BDA.storeConfiguration("default_methods",methodsArray)
+            BDA.storeConfiguration("default_methods",methodsArray);
           }
        )
        ;
        $config.append($submitMethods);
-       
+
 
 
       // Default properties
@@ -2207,7 +2179,7 @@ var BDA = {
             var properties=$('#config-properties-data').val().trim();
             var propertiesArray=properties.replace(/ /g,'').split(",");
             console.log('storing properties : ' + propertiesArray);
-            BDA.storeConfiguration("default_properties",propertiesArray)
+            BDA.storeConfiguration("default_properties",propertiesArray);
           }
         );
       $config.append($submitProperties);
@@ -2959,7 +2931,7 @@ var BDA = {
         });
       }
       else
-        console.log("Request is empty, nothing to do.")
+        console.log("Request is empty, nothing to do.");
     },
 
     getItemTree : function(id, descriptor, maxItem, outputType, printRepoAttr)
@@ -2997,20 +2969,19 @@ var BDA = {
     renderItemTreeTab : function(outputType, printRepoAttr, $xmlDef)
     {
       console.log("Render item tree tab : " + outputType);
+      $("#itemTreeInfo").empty();
+      $("#itemTreeResult").empty();
+      var res = "";
       if(outputType !== "HTMLtab")
       {
-          $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='copy to clipboard'></input>");
+          console.log("Render copy button");
+          $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
           $('#itemTreeCopyButton').click(function(){
               BDA.copyToClipboard($('#itemTreeResult').text());
           });
       }
-      // print result
-      $("#itemTreeInfo").empty();
-      $("#itemTreeResult").empty();
-      var res = "";
       if(outputType == "addItem")
       {
-
         BDA.itemTree.forEach(function(data, id) {
           if (printRepoAttr)
           {

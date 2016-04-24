@@ -303,12 +303,12 @@ a {
 .menuPanel {
   position: absolute;
   top: 34px;
-  right: 30px;
+  right: 33px;
+  width: 296px;
   font-size: 11px;
   color: white;
-  border: 1px solid #8F0000;
+  border : 1px solid #00486c;
   border-top: none;
-  background-color: #CC0000;
   padding: 3px;
   display: none;
 }
@@ -327,42 +327,34 @@ a {
 }
 
 #bdaBugPanel {
-  width: 250px;
   background-color: #007bb8;
 }
 
-
 #bdaBackup {
-  width: 60px;
-  background-color: #CC0000;
+  background-color: #007bb8;
 }
 
 #bdaBackupPanel {
-  width: 285px;
-  background-color: #CC0000;
+  background-color: #007bb8;
 }
 
-
 #whatsnew {
-  font-size: 11px;
-  background-color: #CC0000;
+  background-color: #62A03E;
+  border-color : #44702B;
 }
 
 #whatsnewPanel {
-  width: 285px;
-  background-color: #CC0000;
+  border-color : #44702B;
+  background-color: #62A03E;
 }
 
 #bdaConfig {
-  font-size: 11px;
-  background-color: #CC0000;
+  background-color: #007bb8;
 }
 
 #bdaConfigPanel {
-  width: 285px;
-  background-color: #CC0000;
+  background-color: #007bb8;
 }
-
 
 #history {
   clear: both;
