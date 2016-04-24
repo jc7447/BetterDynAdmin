@@ -1,6 +1,5 @@
-<p>Version 1.15</p>
+<p>Version 1.16</p>
 <ul>
-<li>Repository ids are now clickable and loadable in repository pages</li>
-<li>New what's new popup (thanks to @onewingedfallen59)</li>
-<li>Preview of saved queries in repository pages (thanks to @troussej) </li>
+<li>Default properties and methods for component in the toolbar (thanks to @troussej)</li>
+<li>Several bug fixes</li>
 </ul>
