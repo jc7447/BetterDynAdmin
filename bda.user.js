@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
-// @name         Better Dynamo Administration JTRO
-// @namespace    BetterDynAdminJTRO
+// @name         Better Dynamo Administration
+// @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
 // @author       Jean-Charles Manoury
 // @contributor  Benjamin Descamps
@@ -17,7 +17,7 @@
 //
 // ------ write version on bdaCSS TOO ! ------ 
 // @version 1.14.1
-// @resource bdaCSS https://raw.githubusercontent.com/troussej/BetterDynAdmin/master/bda.css?version=1.14.1
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.14.1
 //
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -35,8 +35,8 @@
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
-// @updateUrl https://raw.githubusercontent.com/troussej/bda/master/bda.user.js
-// @downloadUrl https://raw.githubusercontent.com/troussej/bda/master/bda.user.js
+// @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
 var BDA = {
