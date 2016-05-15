@@ -1,3 +1,8 @@
+
+tr.even td {
+  background-color: #FFF;
+}
+
 #itemTreeId{
   width: 100px;
 }
@@ -304,7 +309,6 @@ a {
   color: white;
   border : 1px solid #00486c;
   border-top: none;
-  background-color: #CC0000;
   padding: 3px;
   display: none;
 }
@@ -323,10 +327,8 @@ a {
 }
 
 #bdaBugPanel {
-  width: 250px;
   background-color: #007bb8;
 }
-
 
 #bdaBackup {
   background-color: #007bb8;
@@ -336,11 +338,9 @@ a {
   background-color: #007bb8;
 }
 
-
 #whatsnew {
   background-color: #62A03E;
   border-color : #44702B;
-  font-size: 11px;
 }
 
 #whatsnewPanel {
@@ -355,7 +355,6 @@ a {
 #bdaConfigPanel {
   background-color: #007bb8;
 }
-
 
 #history {
   clear: both;
@@ -375,7 +374,6 @@ a {
   height: 54px;
   width: 50px;
   text-align: center;
-  float: left;
   margin: 4px;
   line-height: 48px;
   cursor: pointer;
@@ -482,7 +480,6 @@ a {
   margin: 4px;
   padding: 2px;
   color: white;
-  float: left;
 }
 
 .fav a {
@@ -648,7 +645,7 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #addComponentToolbarPopupContent {
-  height:71%;
+  height:58%;
   overflow:auto;
 }
 
@@ -714,4 +711,9 @@ table.tablesorter tr.alt-row:hover td {
 
 #pipelineTable pre {
 	margin : 0;
+}
+
+.clickable_property {
+  text-decoration : underline;
+  cursor: pointer;
 }
