@@ -2071,6 +2071,7 @@ var BDA = {
     this.createBackupPanel($menuBar);
     this.createConfigurationPanel($menuBar);
     this.createWhatsnewPanel($menuBar);
+    this.createSearchBox($menuBar);
 
     $(".menu").bind("click",function() {
       var $thisParent = $(this);
@@ -2197,6 +2198,27 @@ var BDA = {
         BDA.restoreData(data, true);
       }
     });
+  },
+
+  //--- Search
+  createSearchBox : function($menuBar){
+    $searchBox = $("<div id='bdaSearch' class='menu' ></div>")
+                    .appendTo($menuBar)
+                    .html(
+                      '<p>Search</p>'
+                    + '<form action="/dyn/admin/atg/dynamo/admin/en/cmpn-search.jhtml">'
+                    + '<input type="text" name="query" id="searchFieldBDA" placeholder="focus: ctrl+shift+f"></input> '
+                    + '</form>'
+                    );
+
+    $(document).keypress(function(e){
+      var moz=(e.which == 70 && e.ctrlKey && e.shiftKey? 1 : 0);
+      var chrome=(e.which == 6 && e.ctrlKey && e.shiftKey? 1 : 0);
+
+      if (moz || chrome){
+       $('#searchFieldBDA').focus();
+    }
+   });
   },
 
   getData : function()

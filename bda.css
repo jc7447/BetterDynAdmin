@@ -261,20 +261,16 @@ a {
   cursor: pointer;
 }
 
-
-
-
 .menuArrow {
   text-align: center;
   cursor: pointer;
-  padding-top: 2px;
+  padding-top: 5px;
 }
 
 .menuArrow img {
   width: 15px;
   height: 8px;
 }
-
 
 /** MENU **/
 
@@ -285,6 +281,7 @@ a {
 }
 
 .menu {
+  height: 32px;
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
@@ -302,7 +299,7 @@ a {
 
 .menuPanel {
   position: absolute;
-  top: 34px;
+  top: 39px;
   right: 33px;
   width: 296px;
   font-size: 11px;
@@ -336,6 +333,15 @@ a {
 
 #bdaBackupPanel {
   background-color: #007bb8;
+}
+
+#bdaSearch {
+  background-color: #007bb8;
+}
+
+#bdaSearch input{
+  margin-top: 1px;
+  height: 20px;
 }
 
 #whatsnew {
@@ -425,14 +431,14 @@ a {
 }
 
 .bda-button label, .bda-button input, .bda-button button{
-   vertical-align: middle; 
+   vertical-align: middle;
 }
 
 .bda-button-icon{
   height: 22px;
   width: 22px;
   padding: 0px 0px 0px 0px;
-  vertical-align: middle; 
+  vertical-align: middle;
 }
 
 .tag-filter-button{
@@ -656,7 +662,7 @@ table.tablesorter tr.alt-row:hover td {
 
 .fav-submit-button {
   float: right;
-  color : black; 
+  color : black;
 }
 
 #methods, #vars {
