@@ -3252,23 +3252,13 @@ var BDA = {
                     if ($elm.attr("repository") === undefined && subId.length > 0)
                     {
                         var desc = $elm.attr("component-item-type");
-                        if(subId.indexOf(",") != -1 || subId.indexOf("=") != -1 )
+						var ids = BDA.parseRepositoryId(subId);
+                        for(var i = 0; i != ids.length; i++)
                         {
-                            var splitChar = ",";
-                            if(subId.indexOf("=") != -1)
-                                splitChar = "=";
-                            var ids = subId.split(splitChar);
-                            for(var i = 0; i != ids.length; i++)
-                            {
-                              if(BDA.itemTree.get(ids[i]) === undefined)
-                                  subItems.push({'id' : ids[i], 'desc' : desc});
-                            }
-                        }
-                        else
-                        {
-                          if(BDA.itemTree.get(subId) === undefined)
-                              subItems.push({'id' : subId, 'desc' : desc});
-                        }
+                          // avoid infinite recursion
+                           if(ids[i] !== BDA.MAP_SEPARATOR && ids[i] !== BDA.LIST_SEPARATOR && BDA.itemTree.get(ids[i]) === undefined)
+                               subItems.push({'id' : ids[i], 'desc' : desc});
+                         }
                     }
                 });
               }
