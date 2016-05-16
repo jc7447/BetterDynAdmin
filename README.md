@@ -27,6 +27,14 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 Change logs
 ------
 
+### 1.17
+* [#77](../../issues/77) New hashtags system for component in the toolbar. Component can now be filter by tags. (thanks to ([@troussej](https://github.com/troussej))
+* [#76](../../issues/76) Component search available everywhere (thanks to ([@troussej](https://github.com/troussej))
+
+### 1.16
+* [#67](../../issues/67) New default properties and methods system for the toolbar (thanks to ([@troussej](https://github.com/troussej))
+* Several bug fix
+
 ### 1.15
 * [#56](../../issues/56) Repository ids are now clickable and loadable in repository pages
 * [#51](../../issues/51) New what's new popup (thanks to ([@onewingedfallen59](https://github.com/onewingedfallen59))
