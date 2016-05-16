@@ -750,40 +750,38 @@ var BDA = {
   parseRepositoryId : function(id)
   {
     var idAsTab = [];
-    var tab;
-    // Splice by MAP_SEPARATOR
-    if (id.indexOf(BDA.MAP_SEPARATOR) !== -1)
+    var tab = [];
+    // Case of simple ID
+    if (id.indexOf(BDA.MAP_SEPARATOR) == -1 && id.indexOf(BDA.LIST_SEPARATOR) === -1)
+      idAsTab.push(id);
+    // Case of a list of ID
+    else if (id.indexOf(BDA.MAP_SEPARATOR) == -1 && id.indexOf(BDA.LIST_SEPARATOR) !== -1)
     {
-      tab = id.split(BDA.MAP_SEPARATOR);
-      idAsTab[0] = tab[0];
-      idAsTab[1] = BDA.MAP_SEPARATOR;
-      idAsTab[2] = tab[1];
-    }
-    else
-      idAsTab[0] = id;
-
-    // Splice by LIST_SEPARATOR
-    var toAdd = [];
-    var toRemove = [];
-    for(var i = 0 ; i != idAsTab.length; i++)
-    {
-      if (idAsTab[i].indexOf(BDA.LIST_SEPARATOR) != -1)
+      tab = id.split(BDA.LIST_SEPARATOR);
+      for(var i = 0 ; i != tab.length; i++)
       {
-        toRemove.push(i);
-        tab = idAsTab[i].split(BDA.LIST_SEPARATOR);
-        for(var a = 0 ; a != tab.length; a++)
+        if (i !== 0)
+          idAsTab.push(BDA.LIST_SEPARATOR);
+        idAsTab.push(tab[i]);
+      }
+    }
+    // Case of a Map of ID
+    else
+    {
+      var mapEntries = id.split(BDA.LIST_SEPARATOR);
+      for(var a = 0 ; a != mapEntries.length; a++)
+      {
+        if (a !== 0)
+          idAsTab.push(BDA.LIST_SEPARATOR);
+        var mapValues = mapEntries[a].split(BDA.MAP_SEPARATOR);
+        for(var b = 0 ; b != mapValues.length; b++)
         {
-          if (a !== 0)
-            toAdd.push(BDA.LIST_SEPARATOR);
-          toAdd.push(tab[a]);
+          if (b !== 0)
+            idAsTab.push(BDA.MAP_SEPARATOR);
+          idAsTab.push(mapValues[b]);
         }
       }
     }
-    // purge tab
-    for(var b = 0 ; b != toRemove.length; b++)
-      idAsTab.splice(toRemove[b], 1);
-    // Merge isAsTab and tAdd
-    Array.prototype.push.apply(idAsTab, toAdd);
     return idAsTab;
   },
 
