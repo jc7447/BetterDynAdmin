@@ -17,8 +17,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 1.17
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.17
+// @version 1.17.1
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.17.1
 
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -2268,7 +2268,7 @@ var BDA = {
     $config.appendTo(parentPanel);
     // Default methods
     var savedMethods = this.getConfigurationValue('default_methods');
-    if(savedMethods === undefined || savedMethods === null){
+    if(!savedMethods){
       savedMethods = "";
     }
 
@@ -2284,8 +2284,7 @@ var BDA = {
           console.log('storing methods : ' + methodsArray);
           BDA.storeConfiguration("default_methods",methodsArray);
         }
-     )
-     ;
+     );
      $config.append($submitMethods);
 
     // Default properties
@@ -2738,8 +2737,8 @@ var BDA = {
           varsList.empty();
 
           var tableMethods = $('h1:contains("Methods")').next();
-          tableMethods.find('tr').each(function(index, element){
-            if(index > 0)
+          tableMethods.find('tr').each(function(index, element) {
+            if (index > 0)
             {
                var linkMethod = $(element).find('a').first();
                var methodName = $(linkMethod).attr("href").split('=')[1];
@@ -2750,7 +2749,8 @@ var BDA = {
           //handle default methods
           var defMethods = BDA.getConfigurationValue('default_methods');
           console.log('savedMethods: ' + defMethods);
-          if(defMethods !== null){
+          if (defMethods)
+          {
               defMethods.forEach(function(methodName){
               console.log('setting default method: ' + methodName);
               $('#method_'+methodName).attr('checked',true);
@@ -2759,7 +2759,7 @@ var BDA = {
 
           var tablevars = $('h1:contains("Properties")').next();
           tablevars.find('tr').each(function(index, element){
-            if(index > 0)
+            if (index > 0)
             {
               var linkVariable =  $(element).find('a').first();
               var variableName = $(linkVariable).attr("href").split('=')[1];
@@ -2769,7 +2769,8 @@ var BDA = {
 
           var defProperties = BDA.getConfigurationValue('default_properties');
           console.log('savedProperties: ' + defProperties);
-          if(defProperties !== null){
+          if(defProperties)
+          {
             defProperties.forEach(function(name){
               console.log('setting default properties: ' + name);
               $('#var_'+name).attr('checked',true);
@@ -3438,7 +3439,7 @@ var BDA = {
     BDA.logTrace('after sort : ' + sorted);
     return sorted;
   }
-
+    
 }; // end of BDA
 
 // INIT BDA
