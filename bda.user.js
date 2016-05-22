@@ -790,6 +790,7 @@ var BDA = {
     var html = "";
     if (propValue !== null && propValue !== undefined)
     {
+      propValue = propValue.replace(' ', '●');
       // Remove "_"
       if(curProp.name == "descriptor")
         propValue = propValue.substr(1);
