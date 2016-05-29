@@ -17,8 +17,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 1.16
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.16
+// @version 1.17.1
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.17.1
 
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -790,6 +790,7 @@ var BDA = {
     var html = "";
     if (propValue !== null && propValue !== undefined)
     {
+      propValue = propValue.replace(' ', '●');
       // Remove "_"
       if(curProp.name == "descriptor")
         propValue = propValue.substr(1);
@@ -1359,6 +1360,9 @@ var BDA = {
     $("#itemDescriptor").on("select2-selecting", function(e){
       BDA.showItemPropertyList(e.val);
     });
+	  var defaultDescriptor = this.defaultDescriptor[this.getComponentNameFromPath(this.getCurrentComponentPath())];
+	  if(defaultDescriptor !== undefined)
+		BDA.showItemPropertyList(defaultDescriptor);
 
     $("#RQLAction").change(function() {
       var action = $(this).val();
@@ -1386,13 +1390,8 @@ var BDA = {
     });
 
     $("#RQLAdd").click(function() {
-      var query = BDA.getRQLQuery();
-      var editor = BDA.queryEditor;
-      var editorCursor = editor.getCursor();
-      if(editorCursor.ch !==  0)
-        editor.setCursor(editor.getCursor().line + 1, 0);
-
-      BDA.queryEditor.replaceSelection(query);
+        var query = BDA.getRQLQuery();
+		BDA.addToQueryEditor(query);
     });
 
     $("#saveQuery").click(function() {
@@ -1454,6 +1453,16 @@ var BDA = {
     });
   },
 
+  addToQueryEditor:function(query)
+  {
+    var editor = BDA.queryEditor;
+    var editorCursor = editor.getCursor();
+    if(editorCursor.ch !==  0)
+      editor.setCursor(editor.getCursor().line + 1, 0);
+    
+    BDA.queryEditor.replaceSelection(query);
+  },
+
   getToggleObj : function ()
   {
     if(!this.hasWebStorage)
@@ -1487,6 +1496,7 @@ var BDA = {
     $.get(url, function(data) {
       var $pTable = $(data).find("a[name='showProperties']").next();
       $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
+	  $pTable.find('tr > td:first-child').append('<input type="button" class="itemPropertyBtn" value="set-prop"></input>');
       $("#storedQueries").css("display", "none");
       var $scrollDiv = $("<div class='scrollableTab'></div>").append($pTable);
       $("#descProperties")
@@ -1494,6 +1504,15 @@ var BDA = {
       .append($scrollDiv)
       .append("<p class='showQueriesLabel'><a href='javascript:void(0)' id='showStoredQueries'>Show stored queries</a></p>")
       .css("display", "inline-block");
+	  
+	  $('.itemPropertyBtn').click(function(item){
+			var $property = $($(item.target).parent());
+			var regExp = /\(([^)]+)\)/;
+			var matches = regExp.exec($property.text());
+			if (matches !== undefined && matches.length === 2) {
+				BDA.addToQueryEditor('<set-property name="' + matches[1] + '"><![CDATA[]]></set-property>\n');
+			}
+		});
 
       $("#showStoredQueries").click(function() {
         console.log("show stored queries");
@@ -2268,7 +2287,7 @@ var BDA = {
     $config.appendTo(parentPanel);
     // Default methods
     var savedMethods = this.getConfigurationValue('default_methods');
-    if(savedMethods === undefined || savedMethods === null){
+    if(!savedMethods){
       savedMethods = "";
     }
 
@@ -2284,8 +2303,7 @@ var BDA = {
           console.log('storing methods : ' + methodsArray);
           BDA.storeConfiguration("default_methods",methodsArray);
         }
-     )
-     ;
+     );
      $config.append($submitMethods);
 
     // Default properties
@@ -2738,8 +2756,8 @@ var BDA = {
           varsList.empty();
 
           var tableMethods = $('h1:contains("Methods")').next();
-          tableMethods.find('tr').each(function(index, element){
-            if(index > 0)
+          tableMethods.find('tr').each(function(index, element) {
+            if (index > 0)
             {
                var linkMethod = $(element).find('a').first();
                var methodName = $(linkMethod).attr("href").split('=')[1];
@@ -2750,7 +2768,8 @@ var BDA = {
           //handle default methods
           var defMethods = BDA.getConfigurationValue('default_methods');
           console.log('savedMethods: ' + defMethods);
-          if(defMethods !== null){
+          if (defMethods)
+          {
               defMethods.forEach(function(methodName){
               console.log('setting default method: ' + methodName);
               $('#method_'+methodName).attr('checked',true);
@@ -2759,7 +2778,7 @@ var BDA = {
 
           var tablevars = $('h1:contains("Properties")').next();
           tablevars.find('tr').each(function(index, element){
-            if(index > 0)
+            if (index > 0)
             {
               var linkVariable =  $(element).find('a').first();
               var variableName = $(linkVariable).attr("href").split('=')[1];
@@ -2769,7 +2788,8 @@ var BDA = {
 
           var defProperties = BDA.getConfigurationValue('default_properties');
           console.log('savedProperties: ' + defProperties);
-          if(defProperties !== null){
+          if(defProperties)
+          {
             defProperties.forEach(function(name){
               console.log('setting default properties: ' + name);
               $('#var_'+name).attr('checked',true);
@@ -3438,7 +3458,7 @@ var BDA = {
     BDA.logTrace('after sort : ' + sorted);
     return sorted;
   }
-
+    
 }; // end of BDA
 
 // INIT BDA
