@@ -1,50 +1,47 @@
-// ----- JQuery plugin functions -----
+try {
+  jQuery(document).ready(function() {
+    (function($) {
+      console.log('bda.repository.js start');
+      try {
+        // Plugin constants
+        var csts = {
+          NAME: 'BetterRepository'
+        };
+        var defaults = {};
+        var settings = {};
+        var BDA;
+        var methods = {
+            // Initialize function, i.e plugin constructor.
+            init: function(options) {
+              console.log('Init plugin {0}'.format(csts.NAME));
 
-// Standard function to create a JQuery plugin entry point.
-//
-// @param methods Plugin methods.
-// @param plugin Plugin name.
+              return this.each(function() {
+                var $this = $(this);
+                settings = $.extend({}, defaults, options);
+                BDA=settings.BDA;
+                methods._build($this, settings);
+              });
+            },
+            // PUBLIC FUNCTIONS
 
-jQuery(document).ready(function() {
-	(function($) {
-		try {
+            // PRIVATE FUNCTIONS
+            _build: function($button, settings) {
 
-			// Plugin constants
-			var csts = {
-				NAME: 'BetterRepository'
-			};
-			var defaults = {
-			};
+            }
+          }
+          // Plugin entry point
 
-			var methods = {
+        $.fn.multiStatesButton = basePlugin(methods, csts.NAME);
 
-					// Initialize function, i.e plugin constructor.
-					init: function(options) {
-						console.log('Init plugin {0}'.format(csts.NAME));
+      } catch (e) {
+        console.log(e);
+      }
 
-						return this.each(function() {
+    })(jQuery);
+  });
 
-							var $this = $(this);
+  console.log('bda.repository.js end');
 
-							var settings = $.extend({}, defaults, options);
-							methods._build($this, settings);
-						});
-					},
-
-					// PUBLIC FUNCTIONS
-
-					// PRIVATE FUNCTIONS
-					_build: function($button, settings) {
-
-
-				}
-				// Plugin entry point
-
-			$.fn.multiStatesButton = basePlugin(methods, csts.NAME);
-
-		} catch (e) {
-			console.log(e);
-		}
-
-	})(jQuery);
-});
+} catch (e) {
+  console.log(e);
+}
