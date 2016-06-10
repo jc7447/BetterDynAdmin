@@ -17,8 +17,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 1.17.1
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.17.1
+// @version 1.18
+// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.18
 
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -28,6 +28,7 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
@@ -825,9 +826,11 @@ var BDA = {
               html += propValue[b];
           }
         html += "</td>";
+      } else if(curProp.name == "descriptor") {
+          html += '<td>' + propValue + "</td>";
       }
       else
-        html += "<td>" + propValue + "</td>";
+        html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
     }
     else
     {
@@ -848,9 +851,16 @@ var BDA = {
     {
       var curProp = types[i];
       if (i % 2 === 0)
-        html += "<tr class='even'>";
+        html += "<tr class='even";
       else
-        html += "<tr class='odd'>";
+        html += "<tr class='odd";
+
+      if(curProp.name == "id"){
+        html += " id";
+      } else if (curProp.name == "descriptor"){
+        html += " descriptor";
+      }
+      html += "'>";
       html += "<th>" + curProp.name + "<span class='prop_name'>";
       if (curProp.rdonly == "true")
         html += "<div class='prop_attr prop_attr_red'>R</div>";
@@ -1360,9 +1370,9 @@ var BDA = {
     $("#itemDescriptor").on("select2-selecting", function(e){
       BDA.showItemPropertyList(e.val);
     });
-	  var defaultDescriptor = this.defaultDescriptor[this.getComponentNameFromPath(this.getCurrentComponentPath())];
-	  if(defaultDescriptor !== undefined)
-		BDA.showItemPropertyList(defaultDescriptor);
+      var defaultDescriptor = this.defaultDescriptor[this.getComponentNameFromPath(this.getCurrentComponentPath())];
+      if(defaultDescriptor !== undefined)
+        BDA.showItemPropertyList(defaultDescriptor);
 
     $("#RQLAction").change(function() {
       var action = $(this).val();
@@ -1391,7 +1401,7 @@ var BDA = {
 
     $("#RQLAdd").click(function() {
         var query = BDA.getRQLQuery();
-		BDA.addToQueryEditor(query);
+        BDA.addToQueryEditor(query);
     });
 
     $("#saveQuery").click(function() {
@@ -1451,6 +1461,45 @@ var BDA = {
     $("#showMoreMethods").click(function (){
       BDA.toggleMethods();
     });
+
+    $('body').on('click', '.dataTable .fa-pencil-square-o', function(item){
+        var $target = $(item.target).parent();
+        $target.html('<input type="text" value="' + $target.text().replace('●', ' ') + '"/>');
+        var $input = $($target.children()[0]);
+        $input.focus().blur(function(item){
+            if(confirm('do you really want to update that value ?')){
+                var $target = $(item.target);
+                var $table = $target.parents(".dataTable");
+                var column = $target.parent().parent().children().index($target.parent());
+                var line = $table.find("tbody > tr").index($target.parent().parent());
+                var columnId = $table.find(".id").index();
+                var columnDescriptor = $table.find(".descriptor").index();
+                var itemId = jQuery($table.find("tbody > tr:eq(" + columnId + ")").find("> *")[column]).text();
+                var descriptor = jQuery($table.find("tbody > tr:eq(" + columnDescriptor + ")").find("> *")[column]).text();
+                var propertyName = jQuery($table.find("tbody > tr > *:first-child")[line]).text();
+                if(propertyName == "id" || propertyName == "descriptor"){
+                    $input.parent().html($input.val());
+                    $.notify(
+                        "You can't change value of id or descriptor this way.",
+                        { position:"top center",
+                         className:"error"}
+                    );
+                } else {
+                    console.log(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
+                    jQuery.post(document.location.href, 'xmltext=<update-item id="' + itemId + '" item-descriptor="' + descriptor + '"><set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]></set-property></update-item>', function(){
+                        $.notify(
+                            "value changed",
+                            { position:"top center",
+                             className:"success"}
+                        );
+                        $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
+                    });
+                }
+            } else {
+                $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
+            }
+        });
+    });
   },
 
   addToQueryEditor:function(query)
@@ -1496,7 +1545,7 @@ var BDA = {
     $.get(url, function(data) {
       var $pTable = $(data).find("a[name='showProperties']").next();
       $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
-	  $pTable.find('tr > td:first-child').append('<input type="button" class="itemPropertyBtn" value="set-prop"></input>');
+      $pTable.find('tr > td:first-child').append('<input type="button" class="itemPropertyBtn" value="set-prop"></input>');
       $("#storedQueries").css("display", "none");
       var $scrollDiv = $("<div class='scrollableTab'></div>").append($pTable);
       $("#descProperties")
@@ -1504,15 +1553,15 @@ var BDA = {
       .append($scrollDiv)
       .append("<p class='showQueriesLabel'><a href='javascript:void(0)' id='showStoredQueries'>Show stored queries</a></p>")
       .css("display", "inline-block");
-	  
-	  $('.itemPropertyBtn').click(function(item){
-			var $property = $($(item.target).parent());
-			var regExp = /\(([^)]+)\)/;
-			var matches = regExp.exec($property.text());
-			if (matches !== undefined && matches.length === 2) {
-				BDA.addToQueryEditor('<set-property name="' + matches[1] + '"><![CDATA[]]></set-property>\n');
-			}
-		});
+      
+      $('.itemPropertyBtn').click(function(item){
+            var $property = $($(item.target).parent());
+            var regExp = /\(([^)]+)\)/;
+            var matches = regExp.exec($property.text());
+            if (matches !== undefined && matches.length === 2) {
+                BDA.addToQueryEditor('<set-property name="' + matches[1] + '"><![CDATA[]]></set-property>\n');
+            }
+        });
 
       $("#showStoredQueries").click(function() {
         console.log("show stored queries");
@@ -3272,7 +3321,7 @@ var BDA = {
                     if ($elm.attr("repository") === undefined && subId.length > 0)
                     {
                         var desc = $elm.attr("component-item-type");
-						var ids = BDA.parseRepositoryId(subId);
+                        var ids = BDA.parseRepositoryId(subId);
                         for(var i = 0; i != ids.length; i++)
                         {
                           // avoid infinite recursion
