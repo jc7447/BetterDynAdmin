@@ -1,0 +1,10 @@
+=== BDA ===
+
+- bda.user.js // core : loads the page and bind the different plugins
+- bda.configuration // handle the config & local storage
+- bda.utils // utility methods
+- bda.repository
+- bda.pipeline
+- bda.bookmarks
+- zefzef zdadrvteg zrf efrefg
+

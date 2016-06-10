@@ -19,6 +19,7 @@
 // ------ write version on bdaCSS TOO ! ------
 // @version 1.17.1
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.17.1
+// @require bda.repository.js 
 
 // @require https://code.jquery.com/jquery-1.11.1.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js

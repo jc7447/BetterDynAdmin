@@ -1,0 +1,32 @@
+
+operations:
+
+	>	query
+		- repository
+		- params
+		- RQL
+		- result variable
+	> callMethod
+		- component
+		- method
+		- result
+			- type
+			- value
+	> setProperty
+		- component
+		- value
+	> saveVariable
+		- source
+			- component property
+			- rql result
+		- variableName
+
+ - syntax/grammar : how would we parse it? i found http://pegjs.org/ i think the parser should output a JS litteral containing all the different elements, so that it's interpreted in JS, and that could be saved as JSON for further re-use. Command Design Pattern
+
+ - UI/UX : maybe a global overlay so that it's not mistaken with the rest of the dyn admin. Maybe a console-like window, with a result block per instruction. you can delete/redo/save a specific command result
+
+ - pre-requisites :
+	- refactor the repository and component functions as different jquery-plugin (or other type of modules) so that it can be reused in this feature
+		- rql box
+		- component set property
+		- component call method
