@@ -31,7 +31,7 @@ try {
           }
           // Plugin entry point
 
-        $.fn.multiStatesButton = basePlugin(methods, csts.NAME);
+        $.fn.betterRepository = basePlugin(methods, csts.NAME);
 
       } catch (e) {
         console.log(e);
