@@ -41,7 +41,7 @@
     build : function()
     {
       BDA_PIPELINE.isPipelineManagerPage = BDA_PIPELINE.isPipelineManagerPageFct();
-      if(this.isPipelineManagerPage)
+      if(BDA_PIPELINE.isPipelineManagerPage)
         BDA_PIPELINE.setupPipelineManagerPage();
     },
 

@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -45,6 +45,12 @@
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.menu.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.repository.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.pipeline.js
+// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.jdbc.js
+// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.perfmonitor.js
+// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.actor.js
+// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.config.js
+// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.xmldef.js
+// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.compconfig.js
 
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -58,16 +64,12 @@ jQuery(document).ready(function() {
       componentBrowserPageSelector : "h1:contains('Component Browser')",
       logoSelector : "div#oracleATGbrand",
       oldDynamoAltSelector : ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler", "Dynamo Configuration", "JDBC Browser"],
-      hasWebStorage : false,
       isOldDynamo : false,
       isComponentPage : false,
       isPerfMonitorPage : false,
       isPerfMonitorTimePage : false,
       isXMLDefinitionFilePage : false,
       isServiceConfigurationPage : false,
-      isExecuteQueryPage : false,
-      connectionPoolPointerComp : "/atg/dynamo/admin/jdbcbrowser/ConnectionPoolPointer/",
-      dataSourceDir : "/atg/dynamo/service/jdbc/",
       dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
       GMValue_MonoInstance: "monoInstance",
       GMValue_Backup:"backup",
@@ -84,16 +86,15 @@ jQuery(document).ready(function() {
         this.isPerfMonitorTimePage = this.isPerfMonitorTimePageFct();
         this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePageFct();
         this.isServiceConfigurationPage = this.isServiceConfigurationPageFct();
-        this.isExecuteQueryPage = this.isExecuteQueryPageFct();
         this.isComponentPage = this.isComponentPageFct();
         this.isActorChainPage = this.isActorChainPageFct();
-        this.hasWebStorage = this.hasWebStorageFct();
         //this.isRepositoryPage = this.isRepositoryPageFct();
 
         console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
-        if (this.isOldDynamo) {
+        if (this.isOldDynamo)
+        {
           this.logoSelector = "";
-        for (var i = 0; i != this.oldDynamoAltSelector.length; i++)
+          for (var i = 0; i != this.oldDynamoAltSelector.length; i++)
           {
             if(i !== 0)
              this.logoSelector += ",";
@@ -113,6 +114,7 @@ jQuery(document).ready(function() {
           BDA.restoreData(GM_getValue(BDA.GMValue_Backup), false);
 
           $().bdaRepository(BDA);
+          $().bdaPipeline(BDA);
 
           if (BDA.isXMLDefinitionFilePage)
             BDA.setupRepositoryDefinitionFilePage();
@@ -126,8 +128,7 @@ jQuery(document).ready(function() {
         if (this.isPerfMonitorTimePage)
           this.setupPerfMonitorTimePage();
         // Setup JDBC browser execute query
-        if (this.isExecuteQueryPage)
-          this.setupExecuteQueryPage();
+        $().bdajdbc(BDA);
 
         this.showComponentHsitory();
         this.reloadData();
@@ -212,18 +213,6 @@ jQuery(document).ready(function() {
         }
       },
 
-      removeAdminLink : function()
-      {
-        var $componentBrowserH1 = $(this.componentBrowserPageSelector);
-        if ($componentBrowserH1.size() > 0)
-        {
-          $componentBrowserH1.prev().remove();
-          $(this.logoSelector).click(function (){
-            window.location.href = "/dyn/admin";
-          });
-        }
-      },
-
       loadExternalCss : function(url)
       {
         var cmCSS = GM_getResourceText("cmCSS");
@@ -257,11 +246,6 @@ jQuery(document).ready(function() {
         return $(location).attr('pathname').indexOf("performance-data-time.jhtml") != -1;
       },
 
-      isExecuteQueryPageFct : function()
-      {
-        return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
-      },
-
       isOldDynamoFct : function ()
       {
         for(var els = document.getElementsByTagName ('img'), i = els.length; i--;)
@@ -287,13 +271,6 @@ jQuery(document).ready(function() {
           else
             $('body').append($link);
         }
-      },
-
-      hasWebStorageFct : function ()
-      {
-        if(typeof(Storage) !== "undefined")
-          return true;
-        return false;
       },
 
       isXMLDefinitionFilePageFct : function()
@@ -459,8 +436,6 @@ jQuery(document).ready(function() {
 
       getStoredConfiguration : function()
       {
-         if(!this.hasWebStorage)
-          return {};
         var config;
         var configStr = localStorage.getItem(this.STORED_CONFIG);
         if (configStr !== null && configStr.length > 0)
@@ -472,13 +447,10 @@ jQuery(document).ready(function() {
 
       storeConfiguration : function (name, value)
       {
-        if(this.hasWebStorage)
-        {
-          console.log("Try to store config: " + name + ", value : " + JSON.stringify(value));
-          var storedConfig = this.getStoredConfiguration();
-          storedConfig[name] = value;
-          BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
-        }
+        console.log("Try to store config: " + name + ", value : " + JSON.stringify(value));
+        var storedConfig = this.getStoredConfiguration();
+        storedConfig[name] = value;
+        BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
       },
 
       // -- TAGS management function
@@ -579,8 +551,6 @@ jQuery(document).ready(function() {
       //--- History functions ------------------------------------------------------------------------
       collectHistory : function ()
       {
-        if (!this.hasWebStorage)
-          return ;
         if (document.URL.indexOf("?") >= 0)
           return ;
         if (document.URL.indexOf("#") >= 0)
@@ -634,7 +604,7 @@ jQuery(document).ready(function() {
 
       restoreData : function (data, reloadUI)
       {
-        if(this.hasWebStorage && data !== undefined)
+        if(data !== undefined)
         {
           try
           {
@@ -737,8 +707,6 @@ jQuery(document).ready(function() {
 
       getStoredComponents : function ()
       {
-        if(!this.hasWebStorage)
-          return [];
         var storedComp;
         var storedCompStr = localStorage.getItem('Components');
         if (storedCompStr)
@@ -792,28 +760,24 @@ jQuery(document).ready(function() {
 
       storeComponent : function (component, methods, vars,tags)
       {
-        if(this.hasWebStorage)
-        {
-          console.log("Try to store : " + component);
-          var compObj = {};
-          compObj.componentPath = component;
-          compObj.componentName = this.getComponentNameFromPath(component);
-          compObj.colors = this.stringToColour(compObj.componentName);
-          var storedComp = this.getStoredComponents();
-          if (storedComp.length > 0)
-            compObj.id = storedComp[storedComp.length - 1].id + 1;
-          console.log("id : " + compObj.id);
+        console.log("Try to store : " + component);
+        var compObj = {};
+        compObj.componentPath = component;
+        compObj.componentName = this.getComponentNameFromPath(component);
+        compObj.colors = this.stringToColour(compObj.componentName);
+        var storedComp = this.getStoredComponents();
+        if (storedComp.length > 0)
+          compObj.id = storedComp[storedComp.length - 1].id + 1;
+        console.log("id : " + compObj.id);
 
-          compObj.methods = methods;
-          compObj.vars = vars;
-          compObj.tags =tags;
-          storedComp.push(compObj);
+        compObj.methods = methods;
+        compObj.vars = vars;
+        compObj.tags =tags;
+        storedComp.push(compObj);
 
-          BDA.storeItem('Components', JSON.stringify(storedComp));
-          var tagMap = BDA.buildTagsFromArray(tags,false);
-          BDA.addTags(tagMap);
-
-        }
+        BDA.storeItem('Components', JSON.stringify(storedComp));
+        var tagMap = BDA.buildTagsFromArray(tags,false);
+        BDA.addTags(tagMap);
       },
 
       storeItem : function(itemName, itemValue)
@@ -1380,68 +1344,6 @@ jQuery(document).ready(function() {
         });
       },
 
-      setupExecuteQueryPage : function()
-      {
-        $("<div  id='switchDataSource'/>")
-        .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + this.getCurrentDataSource() + " </span></p>")
-        .append("<p>Switch data source to : <select id='newDataSource'>" + this.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>")
-        .insertAfter($("h1:contains('Execute Query')"));
-        $("textarea").prop("id", "sqltext");
-        if ($("table").size() > 0)
-          $("table").prop("id", "sqlResult");
-
-        $("#switchDataSourceBtn").click(function(){
-          var selectedDataSource = $("#newDataSource").val();
-          $.ajax({
-            type: "POST",
-            url : "/dyn/admin/nucleus" + BDA.connectionPoolPointerComp,
-            data : {"newValue" : BDA.dataSourceDir + selectedDataSource, "propertyName" : "connectionPool"},
-            async : false
-          });
-          window.location.reload();
-        });
-      },
-
-      getAvailableDataSource : function()
-      {
-        var datasources = [];
-        var url = "/dyn/admin/nucleus" + this.dataSourceDir;
-        $.ajax({
-          url : url,
-          success : function(data) {
-            $(data)
-            .find("h3 a")
-            .each(function(index, value) {
-              var strValue = $(value).text();
-              if (strValue !== null && strValue != "DataSourceInfoCache" && strValue.indexOf("DataSource") != -1)
-                datasources += "<option>" + strValue + "</option>";
-            });
-          },
-          async : false
-        });
-        return datasources;
-      },
-
-      getCurrentDataSource : function()
-      {
-        var datasource;
-        var url = "/dyn/admin/nucleus" + this.connectionPoolPointerComp;
-        $.ajax({
-           "url" : url,
-           "success" : function(data) {
-            datasource = $(data)
-            .find("a:contains('connectionPoolName')")
-            .parent()
-            .next()
-            .find("span")
-            .text();
-            console.log(datasource);
-          },
-          "async" : false
-        });
-        return datasource;
-      },
-
       getXmlDef : function(componentPath)
       {
         console.log("Getting XML def for : " + componentPath);
@@ -1509,6 +1411,15 @@ jQuery(document).ready(function() {
             });
           }
         }
+      },
+
+      storeXmlDef : function(componentPath, rawXML)
+      {
+        console.log("Storing XML def : " + componentPath);
+        var timestamp =  Math.floor(Date.now() / 1000);
+
+        localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
+        localStorage.setItem("XMLDefData", rawXML);
       },
 
       //UTILS
