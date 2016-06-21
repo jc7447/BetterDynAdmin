@@ -1083,8 +1083,6 @@
 
     getStoredSplitObj : function ()
     {
-      if(!BDA.hasWebStorage)
-        return null;
       return JSON.parse(localStorage.getItem('splitObj'));
     },
 
@@ -1156,15 +1154,6 @@
         BDA_REPOSITORY.getItemTree(id, descriptor, maxItem, outputType, printRepoAttr);
       });
 
-    },
-
-    storeXmlDef : function(componentPath, rawXML)
-    {
-      console.log("Storing XML def : " + componentPath);
-      var timestamp =  Math.floor(Date.now() / 1000);
-
-      localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
-      localStorage.setItem("XMLDefData", rawXML);
     },
 
     getSubItems : function(items, $xmlDef, maxItem, outputType, printRepoAttr)
@@ -1410,34 +1399,31 @@
     showQueryList : function ()
     {
       var html = "";
-      if (BDA.hasWebStorage)
-      {
         var rqlQueries = BDA_REPOSITORY.purgeRQLQuery(BDA_REPOSITORY.getStoredRQLQueries());
         if (rqlQueries && rqlQueries.length > 0)
         {
           html += "<span class='storedQueriesTitle'>Stored queries :</span>";
           html += "<ul>";
-            for (var i = 0; i != rqlQueries.length; i++)
-            {
-              var storeQuery = rqlQueries[i];
-              var escapedQuery =  $("<div>").text(storeQuery.query).html();
+          for (var i = 0; i != rqlQueries.length; i++)
+          {
+            var storeQuery = rqlQueries[i];
+            var escapedQuery =  $("<div>").text(storeQuery.query).html();
 
-              html += "<li class='savedQuery'>";
-              html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
-              html += "<span id='previewQuery" + i + "'class='previewQuery'>";
-              html += "<i class='fa fa-eye'></i>";
-              html += "</span>";
-              html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
-              html += "<i class='fa fa-trash-o'></i>";
-              html += "</span>";
-              html += "<span id='queryView" + i + "'class='queryView'>";
-              html += "<pre>" + escapedQuery + "</pre>";
-              html += "</span>";
-              html += "</li>";
-            }
+            html += "<li class='savedQuery'>";
+            html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
+            html += "<span id='previewQuery" + i + "'class='previewQuery'>";
+            html += "<i class='fa fa-eye'></i>";
+            html += "</span>";
+            html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
+            html += "<i class='fa fa-trash-o'></i>";
+            html += "</span>";
+            html += "<span id='queryView" + i + "'class='queryView'>";
+            html += "<pre>" + escapedQuery + "</pre>";
+            html += "</span>";
+            html += "</li>";
+          }
           html += "</ul>";
         }
-      }
       $("#storedQueries").html(html);
 
       $('#storedQueries .queryView').each(function(i, block) {
@@ -1468,8 +1454,6 @@
 
     getStoredRQLQueries : function ()
     {
-      if(!BDA.hasWebStorage)
-        return [];
       var rqlQueries;
       var rqlQueriesStr = localStorage.getItem('RQLQueries');
       if (rqlQueriesStr !== null && rqlQueriesStr.length > 0)
@@ -1481,8 +1465,6 @@
 
     storeSplitValue : function ()
     {
-      if(!BDA.hasWebStorage)
-        return;
       var splitObj = {};
       splitObj.splitValue = $("#splitValue").val();
       splitObj.activeSplit = $("#noSplit").is(':checked');
@@ -1491,18 +1473,15 @@
 
     storeRQLQuery : function (name, query)
     {
-      if(BDA.hasWebStorage)
-      {
-        console.log("Try to store : " + name + ", query : " + query);
-        var storeQuery = {};
-        storeQuery.name = name;
-        storeQuery.query = query;
-        storeQuery.repo = BDA.getComponentNameFromPath(BDA.getCurrentComponentPath());
-        var rqlQueries = BDA_REPOSITORY.getStoredRQLQueries();
-        rqlQueries.push(storeQuery);
-        console.log(rqlQueries);
-        BDA.storeItem('RQLQueries', JSON.stringify(rqlQueries));
-      }
+      console.log("Try to store : " + name + ", query : " + query);
+      var storeQuery = {};
+      storeQuery.name = name;
+      storeQuery.query = query;
+      storeQuery.repo = BDA.getComponentNameFromPath(BDA.getCurrentComponentPath());
+      var rqlQueries = BDA_REPOSITORY.getStoredRQLQueries();
+      rqlQueries.push(storeQuery);
+      console.log(rqlQueries);
+      BDA.storeItem('RQLQueries', JSON.stringify(rqlQueries));
     },
 
     deleteRQLQuery : function (index)
@@ -1552,9 +1531,6 @@
 
     getToggleObj : function ()
     {
-      if(!BDA.hasWebStorage)
-        return {};
-
       var toggleObj = localStorage.getItem('toggleObj');
       if (toggleObj && toggleObj.length > 0)
         toggleObj = JSON.parse(toggleObj);
@@ -1565,8 +1541,6 @@
 
     storeToggleState : function(toggle, cssState)
     {
-      if(!BDA.hasWebStorage)
-        return;
       var toggleState = 1;
       if(cssState == "none")
         toggleState = 0;
