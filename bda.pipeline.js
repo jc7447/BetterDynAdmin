@@ -1,4 +1,5 @@
 (function($) {
+  "use strict";
   var BDA_PIPELINE = {
 
     $pipelineDef : null,

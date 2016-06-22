@@ -1,4 +1,5 @@
 (function($) {
+  "use strict";
   var BDA_REPOSITORY = {
     MAP_SEPARATOR : "=",
     LIST_SEPARATOR : ",",

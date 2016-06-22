@@ -66,10 +66,6 @@ jQuery(document).ready(function() {
       oldDynamoAltSelector : ["Dynamo Component Browser", "Dynamo Administration", "Performance Monitor", "Dynamo Batch Compiler", "Dynamo Configuration", "JDBC Browser"],
       isOldDynamo : false,
       isComponentPage : false,
-      isPerfMonitorPage : false,
-      isPerfMonitorTimePage : false,
-      isXMLDefinitionFilePage : false,
-      isServiceConfigurationPage : false,
       dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
       GMValue_MonoInstance: "monoInstance",
       GMValue_Backup:"backup",
@@ -82,15 +78,8 @@ jQuery(document).ready(function() {
         console.log("Start BDA script");
         this.loadExternalCss();
         this.isOldDynamo = this.isOldDynamoFct();
-        this.isPerfMonitorPage = this.isPerfMonitorPageFct();
-        this.isPerfMonitorTimePage = this.isPerfMonitorTimePageFct();
-        this.isXMLDefinitionFilePage = this.isXMLDefinitionFilePageFct();
-        this.isServiceConfigurationPage = this.isServiceConfigurationPageFct();
         this.isComponentPage = this.isComponentPageFct();
-        this.isActorChainPage = this.isActorChainPageFct();
-        //this.isRepositoryPage = this.isRepositoryPageFct();
 
-        console.log("isPerfMonitorPage : " + this.isPerfMonitorPage + ", isPerfMonitorTimePage : " + this.isPerfMonitorTimePage);
         if (this.isOldDynamo)
         {
           this.logoSelector = "";
@@ -113,23 +102,16 @@ jQuery(document).ready(function() {
         if(GM_getValue(BDA.GMValue_MonoInstance) === true)
           BDA.restoreData(GM_getValue(BDA.GMValue_Backup), false);
 
-          $().bdaRepository(BDA);
-          $().bdaPipeline(BDA);
-
-          if (BDA.isXMLDefinitionFilePage)
-            BDA.setupRepositoryDefinitionFilePage();
-          else if (BDA.isServiceConfigurationPage)
-            BDA.setupServiceConfigurationPage();
-
-        // Setup performance monitor
-        if (this.isPerfMonitorPage)
-          this.setupPerfMonitorPage();
-        // Setup performance monitor time page
-        if (this.isPerfMonitorTimePage)
-          this.setupPerfMonitorTimePage();
-        // Setup JDBC browser execute query
+        $().bdaRepository(BDA);
+        $().bdaPipeline(BDA);
+        $().bdaXmlDef(BDA);
+        $().bdaCompConfig(BDA);
+        // Setup perf monitor plugin
+        $().bdaPerfMonitor(BDA);
+        // Setup JDBC browser plugin
         $().bdajdbc(BDA);
-
+        // Setup actor plugin
+        $().bdaActor(BDA);
         this.showComponentHsitory();
         this.reloadData();
         /*this.createMenu();*/
@@ -146,8 +128,6 @@ jQuery(document).ready(function() {
           // Make search field visible
           $("#search").css("display", "inline");
         }
-        else if (this.isActorChainPage)
-            this.createActorCaller();
 
         // Handle escape key press
         $(document).keyup(function(e) {
@@ -189,30 +169,6 @@ jQuery(document).ready(function() {
         .insertAfter($classLink);
       },
 
-      setupXMLDefinitionFilePage : function()
-      {
-        var xmlSize = 0;
-        $("pre").each(function(index) {
-          xmlSize += $(this).html().length;
-        });
-        console.log("Xml size : " + xmlSize);
-        if (xmlSize < BDA.xmlDefinitionMaxSize)
-        {
-          BDA.highlightAndIndentXml($("pre"));
-        }
-        else
-        {
-          $("<p />")
-          .html("The definition file is big, to avoid slowing down the page, XML highlight and indentation have been disabled. <br>"
-              + "<button id='xmlHighlightBtn'>Highlight and indent now</button> <small>(takes few seconds)</small>")
-          .insertAfter($("h3:contains('Value')"));
-
-          $("#xmlHighlightBtn").click(function() {
-            BDA.highlightAndIndentXml($("pre"));
-          });
-        }
-      },
-
       loadExternalCss : function(url)
       {
         var cmCSS = GM_getResourceText("cmCSS");
@@ -236,15 +192,6 @@ jQuery(document).ready(function() {
       },
 
       //--- Page informations ------------------------------------------------------------------------
-      isPerfMonitorPageFct : function()
-      {
-        return $(location).attr('pathname').indexOf("performance-monitor.jhtml") != -1;
-      },
-
-      isPerfMonitorTimePageFct : function()
-      {
-        return $(location).attr('pathname').indexOf("performance-data-time.jhtml") != -1;
-      },
 
       isOldDynamoFct : function ()
       {
@@ -273,27 +220,11 @@ jQuery(document).ready(function() {
         }
       },
 
-      isXMLDefinitionFilePageFct : function()
-      {
-        return $("td:contains('class atg.xml.XMLFile')").size() > 0
-        || $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
-      },
-
-      isServiceConfigurationPageFct : function()
-      {
-        return location.search.indexOf("propertyName=serviceConfiguration") != -1;
-      },
-
       isComponentPageFct : function ()
       {
         return $("h1:contains('Directory Listing')").size() === 0 //Page is not a directory
         && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
         && document.URL.indexOf("?") == -1; // Page has no parameter
-      },
-
-      isActorChainPageFct : function()
-      {
-          return $("h2:contains('Actor Chain:')").size() == 1 && document.URL.indexOf('chainId=') != -1;
       },
 
       rotateArrow : function ($arrow)
@@ -302,59 +233,6 @@ jQuery(document).ready(function() {
           $arrow.removeClass("fa-arrow-down").addClass("fa-arrow-up");
         else
           $arrow.removeClass("fa-arrow-up").addClass("fa-arrow-down");
-      },
-
-      setupServiceConfigurationPage : function()
-      {
-        console.log("setupServiceConfigurationPage");
-        hljs.registerLanguage("properties",
-            function(hljs) {
-          console.log(hljs);
-          return {
-            cI: true,
-            c: [
-               {
-                 cN: 'comment',
-                 b: '#',
-                 e: '$'
-               },
-               {
-                 cN: 'setting',
-                 b: /^[$a-z0-9\[\]_-]+\s*=\s*/,
-                 e: '$',
-                 c: [
-                     {
-                     cN: 'value',
-                     eW: !0,
-                     c: [
-                         {
-                           cN: 'number',
-                           b: '\\b\\d+(\\.\\d+)?',
-                           r: 10
-                         },
-                         {
-                           cN: 'string',
-                           b : /[./a-z0-9\[\]_-]+/,
-                           e: '$',
-                           r: 0
-                         }
-                        ],
-                     r: 0
-                   }
-                 ]
-               }
-            ]
-          };
-        });
-        $('pre').each(function() {
-          var txt = $(this).html();
-          $(this).text("");
-          $("<code class='properties' />").appendTo($(this)).html(txt);
-
-        });
-        $('pre code').each(function(i, block) {
-          hljs.highlightBlock(block);
-        });
       },
 
       highlightAndIndentXml : function($elm)
@@ -401,57 +279,6 @@ jQuery(document).ready(function() {
         $("title").text(this.getComponentNameFromPath(this.getCurrentComponentPath()));
       },
 
-      //--- Stored configuration functions  -----------------------------------------------------------------
-
-      getConfigurationValue : function(name)
-      {
-          return BDA.getStoredConfiguration()[name];
-      },
-
-      getStoredArray : function(name)
-      {
-        var array = BDA.getConfigurationValue(name);
-        if(array === null || array === undefined)
-        {
-          array = [];
-        }
-        return array;
-      },
-      //  Sorts & uniq & store
-      storeUniqueArray : function(name,array,doConcat)
-      {
-        //also save the tags as "known tags"
-        var storedArray ;
-        if(doConcat)
-        {
-          storedArray = BDA.getStoredArray(name);
-          storedArray = storedArray.concat(array);
-        }
-        else
-          storedArray = array;
-
-        storedArray = BDA.unique(storedArray);
-        BDA.storeConfiguration(name,storedArray);
-      },
-
-      getStoredConfiguration : function()
-      {
-        var config;
-        var configStr = localStorage.getItem(this.STORED_CONFIG);
-        if (configStr !== null && configStr.length > 0)
-          config = JSON.parse(configStr);
-        else
-          config = {};
-        return config;
-      },
-
-      storeConfiguration : function (name, value)
-      {
-        console.log("Try to store config: " + name + ", value : " + JSON.stringify(value));
-        var storedConfig = this.getStoredConfiguration();
-        storedConfig[name] = value;
-        BDA.storeItem(this.STORED_CONFIG, JSON.stringify(storedConfig));
-      },
 
       // -- TAGS management function
 
@@ -968,8 +795,8 @@ jQuery(document).ready(function() {
             show = true;
 
           //check filters
-
-          if(show){
+          if(show)
+          {
             var colors = this.stringToColour(fav.componentName);
             var shortName = this.getComponentShortName(fav.componentName);
             var callableHTML = "<div class='favMethods'>";
@@ -1255,210 +1082,6 @@ jQuery(document).ready(function() {
         }
         $list.appendTo($favline);
       },
-
-      createActorCaller : function()
-      {
-        var componentPathName = this.getCurrentComponentPath();
-        var tableActor = $('table:first');
-        var tableActorHeaderRow = tableActor.find('tr:first');
-        var tableActorHeaderColumns = tableActorHeaderRow.find('th');
-        var tableActorHeaderColumnsCount = tableActorHeaderColumns.size();
-        var tableActorDataRow = tableActor.find('tr:eq(1)');
-        var tableActorDataRowCells = tableActorDataRow.find('td');
-        var actorChainIdValue = $("h2:contains('Actor Chain:')").text().replace("Actor Chain: ", "");
-
-        var inputsHeader = tableActorHeaderColumns.filter(function(index, element){
-          return $(element).text() === "Inputs";
-        });
-        var inputsIndex = $(inputsHeader).index();
-        var tableInputs = $(tableActorDataRow.children().get(inputsIndex)).children().get(0);
-        var inputs = [];
-        if(tableInputs !== undefined)
-        {
-            var inputRows = $(tableInputs).find('tr');
-            var inputsSize = inputRows.size();
-            for(var i = 1; i < inputsSize; i++)
-            {
-                var inputRow = $(inputRows.get(i));
-                var name = $(inputRow.children().get(0));
-                var value = $(inputRow.children().get(1));
-                var isNucleus = value.text().indexOf("nucleus") != -1;
-                if(!isNucleus)
-                {
-                    inputs.push(name.text());
-                }
-            }
-        }
-        var inputsHTML = "";
-        for(var input in inputs)
-        {
-            inputsHTML += inputs[input] + " <textarea name='" + inputs[input] + "'></textarea><br />";
-        }
-        var url = window.location.origin + '/rest/model' + componentPathName + actorChainIdValue;
-        console.log(url);
-        var actorChainCallHtml = "<div id='actorChainCall' border>"
-            + "<h2>Call actor</h2>"
-            + "<a href='javascript:void(0)' id='copyChainUrl'>Copy URL to clipboard</a>";
-            if (inputs.length > 0)
-              actorChainCallHtml += "<br />Post parameters are " + inputs + "<br />";
-            actorChainCallHtml += "<form method='POST' action='/rest/model" + componentPathName + actorChainIdValue + "'>"
-            + inputsHTML
-            + "<button type='submit'>Call <i class='fa fa-play fa-x'></button>"
-            + "</form></div>";
-
-        tableActor.after(actorChainCallHtml);
-        $("#copyChainUrl").click(function(){
-          BDA.copyToClipboard(url);
-        });
-      },
-
-      setupPerfMonitorPage : function()
-      {
-        this.setupSortingTabPerfMonitor($("table:eq(1)"));
-      },
-
-      setupPerfMonitorTimePage : function()
-      {
-        this.setupSortingTabPerfMonitor($("table:eq(0)"));
-      },
-
-      setupSortingTabPerfMonitor : function($tabSelector)
-      {
-        $tabSelector.addClass("tablesorter")
-        .removeAttr("border")
-        .removeAttr("cellpadding");
-        $tabSelector.prepend("<thead class='thead' />");
-        // Put first tr into a thead tag
-        $tabSelector.find("tr:eq(0)").appendTo(".thead");
-        // Replace td by th
-        $('.thead td').each(function() {
-          var $this = $(this);
-          $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
-        });
-        $tabSelector.tablesorter({
-                                  'theme' : 'blue',
-                                  'widgets' : ["zebra"],
-                                  'widgetOptions' : {
-                                    zebra : [ "normal-row", "alt-row" ]
-                                  }
-        });
-      },
-
-      getXmlDef : function(componentPath)
-      {
-        console.log("Getting XML def for : " + componentPath);
-        var timestamp =  Math.floor(Date.now() / 1000);
-        var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
-        if (!xmlDefMetaData)
-          return null;
-        if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + BDA.xmlDefinitionCacheTimeout) < timestamp)
-        {
-          console.log("Xml def is outdated or from a different repo");
-          return null;
-        }
-        return localStorage.getItem("XMLDefData");
-      },
-
-
-      processRepositoryXmlDef : function(property, callback)
-      {
-        if(callback !== undefined)
-        {
-          // First check cache value if any
-          var rawXmlDef = BDA.getXmlDef(BDA.getCurrentComponentPath());
-          if (rawXmlDef !== null)
-          {
-            console.log("Getting XML def from cache");
-            var xmlDoc = jQuery.parseXML(rawXmlDef);
-            if(callback !== undefined)
-                callback($(xmlDoc));
-          }
-          // If no cache entry, fetch the XML def in ajax
-          else
-           {
-            var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
-            console.log(url);
-            jQuery.ajax({
-              url:     url,
-              success: function(result) {
-                var $result = $(result);
-                if ($result.find("pre").size() > 0)
-                {
-                  rawXmlDef = $result.find("pre")
-                  .html()
-                  .trim()
-                  .replace(/&lt;/g, "<")
-                  .replace(/&gt;/g, ">")
-                  .replace("&nbsp;", "")
-                  .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
-                    try
-                    {
-                        console.log("XML def length : " + rawXmlDef.length);
-                        var xmlDoc = jQuery.parseXML(rawXmlDef);
-                        BDA.storeXmlDef(BDA.getCurrentComponentPath(), rawXmlDef);
-                        callback($(xmlDoc));
-                    }
-                    catch(err)
-                    {
-                        console.log("Unable to parse XML def file !");
-                        callback(null);
-                        console.log(err);
-                    }
-                }
-                else
-                  callback(null);
-              },
-            });
-          }
-        }
-      },
-
-      storeXmlDef : function(componentPath, rawXML)
-      {
-        console.log("Storing XML def : " + componentPath);
-        var timestamp =  Math.floor(Date.now() / 1000);
-
-        localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
-        localStorage.setItem("XMLDefData", rawXML);
-      },
-
-      //UTILS
-
-      logTrace : function (msg)
-      {
-        if(this.isLoggingTrace){
-          console.log(msg);
-        }
-      },
-
-      unique : function (array)
-      {
-        var n = {},r=[];
-        for(var i = 0; i < array.length; i++)
-        {
-          if (!n[array[i]])
-          {
-            n[array[i]] = true;
-            r.push(array[i]);
-          }
-        }
-        return r;
-      },
-
-      sort : function (array)
-      {
-        BDA.logTrace('beforeSort : ' + array);
-        var sorted = array.sort(function(a,b) {
-          if(a !== null)
-            return a.localeCompare(b, 'en', { caseFirst: 'upper' });
-          else if( b !== null)
-            return -1;
-          else
-            return 0;
-        });
-        BDA.logTrace('after sort : ' + sorted);
-        return sorted;
-      }
 
     }; // end of BDA
 

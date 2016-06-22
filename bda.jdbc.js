@@ -1,4 +1,5 @@
 (function($) {
+  "use strict";
   var BDA_JDBC = {
 
     isExecuteQueryPage : false,
@@ -7,18 +8,20 @@
 
     build : function()
     {
-      isExecuteQueryPage = BDA_JDBC.isExecuteQueryPageFct();
+      BDA_JDBC.isExecuteQueryPage = BDA_JDBC.isExecuteQueryPageFct();
       if (BDA_JDBC.isExecuteQueryPage)
         BDA_JDBC.setupExecuteQueryPage();
     },
 
     isExecuteQueryPageFct : function()
     {
+      console.log($(location).attr('pathname'));
       return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
     },
 
     setupExecuteQueryPage : function()
     {
+      console.log("Setup execute query page");
       $("<div  id='switchDataSource'/>")
       .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + BDA_JDBC.getCurrentDataSource() + " </span></p>")
       .append("<p>Switch data source to : <select id='newDataSource'>" + BDA_JDBC.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>")
@@ -85,7 +88,7 @@
   // Jquery plugin creation
   $.fn.bdajdbc = function(pBDA)
    {
-    console.log('Init plugin {0}'.format('bdaRepository'));
+    console.log('Init plugin {0}'.format('bdajdbc'));
     //settings = $.extend({}, defaults, options);
     BDA = pBDA;
     BDA_JDBC.build();

@@ -1,7 +1,8 @@
 //Primary anonymous wrapper to ensure that this section will be executed only once.
 
 try{
-  console.log('bda.common.js start');  
+
+  console.log('bda.common.js start');
 
   // ----- Configuration -----
 
@@ -68,11 +69,10 @@ try{
 
     return result;
   };
-  
+
 
 
   console.log('bda.common.js initialized');
 }catch(e){
   console.log(e);
 }
-
