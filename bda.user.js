@@ -29,6 +29,7 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
+// @require lib/bootstrap/js/bootstrap.min.js
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
@@ -37,6 +38,7 @@
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
+// @resource bootstrapCSS lib/bootstrap/css/bootstrap.css
 // @resource whatsnew https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md
 
 // -- BDA plugins after all the libraries --
@@ -50,7 +52,9 @@
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.actor.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.storage.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.xmldef.js
+// @require parser/bda.dash.parser.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.compconfig.js
+// @require bda.dash.js
 
 
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -188,6 +192,8 @@ jQuery(document).ready(function() {
         GM_addStyle(bdaCSS);
         var visCSS = GM_getResourceText("visCSS");
         GM_addStyle(visCSS);
+        var bootstrapCSS = GM_getResourceText("bootstrapCSS");
+        GM_addStyle(bootstrapCSS);
       },
 
       //--- Page informations ------------------------------------------------------------------------
@@ -231,6 +237,12 @@ jQuery(document).ready(function() {
         $("title").text(getComponentNameFromPath(getCurrentComponentPath()));
       },
 
+        sortedTags = BDA.sort(sortedTags);
+        sortedTags = BDA.sort(sortedTags);
+
+      getConfigurationValue : function(){
+        //fake to fix
+      }
     }; // end of BDA
 
     // INIT BDA

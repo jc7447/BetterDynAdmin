@@ -1,3 +1,4 @@
+console.log('bda.dash.parser');
 BDA_DASH_PARSER = (function() {
   "use strict";
 
