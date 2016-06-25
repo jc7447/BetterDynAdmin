@@ -28,13 +28,13 @@ try {
                 if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') != "none")
                 {
                       $panel.slideToggle();
-                      BDA.rotateArrow($this.find(".menuArrow i"));
+                      rotateArrow($this.find(".menuArrow i"));
                 }
               });
 
               $panel = $('#' + $thisParent.attr('data-panel'));
               $panel.slideToggle();
-              BDA.rotateArrow($thisParent.find(".menuArrow i"));
+              rotateArrow($thisParent.find(".menuArrow i"));
             });
           },
 
@@ -49,29 +49,29 @@ try {
 
             var $bdaConfigPanel = $("<div id='bdaConfigPanel' class='menuPanel'></div>")
             .appendTo("body")
-            .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA.GMValue_MonoInstance + "'>");
+            .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA_STORAGE.GMValue_MonoInstance + "'>");
 
-            BDA.createDefaultMethodsConfig($bdaConfigPanel);
+            BDA_MENU.createDefaultMethodsConfig($bdaConfigPanel);
 
-            $('#' + BDA.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA.GMValue_MonoInstance) === true))
+            $('#' + BDA_STORAGE.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA_STORAGE.GMValue_MonoInstance) === true))
             .click(function() {
               var isMonoInstance = $(this).prop('checked');
               console.log("Setting storage mode to mono-instance : " + isMonoInstance);
-              GM_setValue(BDA.GMValue_MonoInstance, isMonoInstance);
+              GM_setValue(BDA_STORAGE.GMValue_MonoInstance, isMonoInstance);
               if(isMonoInstance)
-                GM_setValue(BDA.GMValue_Backup, JSON.stringify(BDA.getData()));
+                GM_setValue(BDA_STORAGE.GMValue_Backup, JSON.stringify(BDA_STORAGE.getData()));
             });
 
             $("#bdaDataBackup").click(function () {
-              var data = BDA.getData();
-              BDA.copyToClipboard(JSON.stringify(data));
+              var data = BDA_STORAGE.getData();
+              copyToClipboard(JSON.stringify(data));
             });
 
             $("#bdaDataRestore").click(function () {
               if (window.confirm("Sure ?"))
               {
                 var data = $("#bdaData").val().trim();
-                BDA.restoreData(data, true);
+                BDA_STORAGE.restoreData(data, true);
               }
             });
 
@@ -133,15 +133,15 @@ try {
             );
 
             $("#bdaDataBackup").click(function (){
-              var data = BDA.getData();
-              BDA.copyToClipboard(JSON.stringify(data));
+              var data = BDA_STORAGE.getData();
+              copyToClipboard(JSON.stringify(data));
             });
 
             $("#bdaDataRestore").click(function (){
               if (window.confirm("Sure ?"))
               {
                 var data = $("#bdaData").val().trim();
-                BDA.restoreData(data, true);
+                BDA_STORAGE.restoreData(data, true);
               }
             });
           },
@@ -166,24 +166,97 @@ try {
             }
            });
           },
- 
 
-          a : function(){
+          // advanced config
+          createDefaultMethodsConfig : function(parentPanel)
+          {
+            var $config = $('<div id="advancedConfig"></div>');
+            $config.appendTo(parentPanel);
+            // Default methods
+            var savedMethods = BDA_STORAGE.getConfigurationValue('default_methods');
+            if(!savedMethods){
+              savedMethods = "";
+            }
 
-          }
+             $config.append(
+              "<p>Default methods when bookmarking components:</p>"
+              + "<textarea id='config-methods-data' class='' placeholder='List of methods names, comma separated'>"+savedMethods+"</textarea>"
+              );
+
+             var $submitMethods = $('<button id="config-methods-submit">Save</button>')
+              .bind('click',function(){
+                  var methods=$('#config-methods-data').val().trim();
+                  var methodsArray=methods.replace(/ /g,'').split(",");
+                  console.log('storing methods : ' + methodsArray);
+                  BDA_STORAGE.storeConfiguration("default_methods",methodsArray);
+                }
+             );
+             $config.append($submitMethods);
+
+            // Default properties
+            var savedProperties = BDA_STORAGE.getConfigurationValue('default_properties');
+            if(!savedProperties){
+              savedProperties = "";
+            }
+
+            $config.append(
+              "<p>Default properties when bookmarking components:</p>"
+              + "<textarea id='config-properties-data' class='' placeholder='List of properties, comma separated'>"+savedProperties+"</textarea>"
+              );
+
+            var $submitProperties  = $('<button id="config-properties-submit">Save</button>')
+              .bind('click', function(){
+                  var properties=$('#config-properties-data').val().trim();
+                  var propertiesArray=properties.replace(/ /g,'').split(",");
+                  console.log('storing properties : ' + propertiesArray);
+                  BDA_STORAGE.storeConfiguration("default_properties",propertiesArray);
+                }
+              );
+            $config.append($submitProperties);
+
+            var savedTags = BDA_TOOLBAR.getTags();
+            var tagAsString = "";
+            var index = 0;
+            var tagsSize = Object.keys(savedTags).length;
+            for (var key in savedTags) {
+              tagAsString += key;
+              if(index < tagsSize){
+                tagAsString += ',';
+              }
+              index++;
+            }
+             $config.append(
+              "<p>Edit tags:</p>"
+              + "<textarea id='config-tags-data' class='' placeholder='List of tags, comma separated'>"+tagAsString+"</textarea>"
+              );
+
+             var $submitTags = $('<button id="config-tags-submit">Save</button>')
+              .bind('click', function(){
+                  var tagString = $('#config-tags-data').val();
+                  var tags = BDA_TOOLBAR.buildTagsFromString(tagString, false);
+                  console.log('storing tags : ' + JSON.stringify(tags));
+                  BDA_TOOLBAR.editTags(tags);
+                  BDA_TOOLBAR.reloadToolbar();
+                }
+              );
+            $config.append($submitTags);
+          },
         };
 
         var defaults = {};
         var settings;
         var BDA;
+        // Reference to BDA_STORAGE
+        var BDA_STORAGE;
 
-        $.fn.bdaMenu = function(pBDA,options){
+        $.fn.bdaMenu = function(pBDA, options){
           console.log('Init plugin {0}'.format('bdaMenu'));
           settings = $.extend({}, defaults, options);
-          BDA=pBDA;
+          BDA = pBDA;
+          BDA_STORAGE = $().bdaStorage();
           BDA_MENU.build();
           return this;
-        }
+        };
 
       } catch (e) {
         console.log(e);

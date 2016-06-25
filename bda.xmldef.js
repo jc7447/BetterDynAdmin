@@ -30,7 +30,7 @@
     console.log("Xml size : " + xmlSize);
     if (xmlSize < BDA_XML_DEF.xmlDefinitionMaxSize)
     {
-      BDA.highlightAndIndentXml($("pre"));
+      highlightAndIndentXml($("pre"));
     }
     else
     {
@@ -40,7 +40,7 @@
       .insertAfter($("h3:contains('Value')"));
 
       $("#xmlHighlightBtn").click(function() {
-        BDA.highlightAndIndentXml($("pre"));
+        highlightAndIndentXml($("pre"));
       });
     }
   },

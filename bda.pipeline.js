@@ -119,7 +119,7 @@
         .text(xml);
         if (isOdd)
           $("#" + trId).addClass("odd");
-        BDA.highlightAndIndentXml($codeBlock);
+        highlightAndIndentXml($codeBlock);
       }
     },
 

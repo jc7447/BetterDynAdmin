@@ -16,7 +16,7 @@
 
     createActorCaller : function()
     {
-      var componentPathName = BDA.getCurrentComponentPath();
+      var componentPathName = getCurrentComponentPath();
       var tableActor = $('table:first');
       var tableActorHeaderRow = tableActor.find('tr:first');
       var tableActorHeaderColumns = tableActorHeaderRow.find('th');
@@ -66,7 +66,7 @@
 
       tableActor.after(actorChainCallHtml);
       $("#copyChainUrl").click(function(){
-        BDA.copyToClipboard(url);
+        copyToClipboard(url);
       });
     },
 

@@ -150,7 +150,7 @@
       $("#itemDescriptor").on("select2-selecting", function(e){
         BDA_REPOSITORY.showItemPropertyList(e.val);
       });
-      var defaultDescriptor = BDA_REPOSITORY.defaultDescriptor[BDA.getComponentNameFromPath(BDA.getCurrentComponentPath())];
+      var defaultDescriptor = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath(getCurrentComponentPath())];
       if(defaultDescriptor !== undefined)
         BDA_REPOSITORY.showItemPropertyList(defaultDescriptor);
 
@@ -422,7 +422,7 @@
       var descriptorOptions = "";
       var descriptors = BDA_REPOSITORY.getDescriptorList();
       descriptorOptions = "";
-      var defaultDesc = BDA_REPOSITORY.defaultDescriptor[BDA.getComponentNameFromPath(BDA.getCurrentComponentPath())];
+      var defaultDesc = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath(getCurrentComponentPath())];
       if (defaultDesc === undefined)
         descriptorOptions = "<option></option>";
       for (var i = 0; i != descriptors.length; i++)
@@ -622,11 +622,6 @@
       return id.replace( /(:|\.|\[|\]|,)/g, "\\$1" );
     },
 
-    endsWith : function (str, suffix)
-    {
-      return str.indexOf(suffix, str.length - suffix.length) !== -1;
-    },
-
     purgeXml : function (xmlContent)
     {
       var xmlStr = "";
@@ -634,7 +629,7 @@
       for (var i = 0; i != lines.length; i++)
       {
         var line = lines[i].trim();
-        if (!(line.substr(0,1) == "<" && BDA.endsWith(line, ">")))
+        if (!(line.substr(0,1) == "<" && endsWith(line, ">")))
           xmlStr += line + "\n";
       }
       return xmlStr;
@@ -795,11 +790,11 @@
                 html += propValue[b];
             }
           html += "</td>";
-    } else if(curProp.name == "descriptor") {
-        html += '<td>' + propValue + "</td>";
         }
+        else if(curProp.name == "descriptor")
+          html += '<td>' + propValue + "</td>";
         else
-         html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
+          html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
       }
       else
       {
@@ -824,12 +819,12 @@
         else
           html += "<tr class='odd";
 
-    if(curProp.name == "id"){
-      html += " id";
-    } else if (curProp.name == "descriptor"){
-      html += " descriptor";
-    }
-    html += "'>";
+        if(curProp.name == "id")
+          html += " id";
+        else if (curProp.name == "descriptor")
+          html += " descriptor";
+
+        html += "'>";
         html += "<th>" + curProp.name + "<span class='prop_name'>";
         if (curProp.rdonly == "true")
           html += "<div class='prop_attr prop_attr_red'>R</div>";
@@ -1019,7 +1014,7 @@
       var xmlContent = $(BDA_REPOSITORY.resultsSelector).next().text().trim();
       xmlContent = BDA_REPOSITORY.sanitizeXml(xmlContent);
 
-      BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
+      processRepositoryXmlDef("definitionFiles", function($xmlDef){
       var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, $("#RQLResults"), false);
       BDA_REPOSITORY.showRQLLog(log, false);
       // Move raw xml
@@ -1082,11 +1077,6 @@
       BDA_REPOSITORY.showRQLLog(error, true);
     },
 
-    getStoredSplitObj : function ()
-    {
-      return JSON.parse(localStorage.getItem('splitObj'));
-    },
-
     escapeHTML : function (s)
     {
       return String(s).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1140,7 +1130,7 @@
         +  "<option value='printItem'>print-item XML</option>"
         +  "</select>&nbsp;"
         +  "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>"
-        +  "<pre style='margin:0; display:inline;'>repository='"+ BDA.getCurrentComponentPath() + "'</pre> <br><br>"
+        +  "<pre style='margin:0; display:inline;'>repository='"+ getCurrentComponentPath() + "'</pre> <br><br>"
         +  "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>"
         + "</div>");
       $itemTree.append("<div id='itemTreeInfo' />");
@@ -1288,7 +1278,7 @@
 
       // Get XML definition of the repository
       $("#itemTreeInfo").html("<p>Getting XML definition of this repository...</p>");
-        var $xmlDef = BDA.processRepositoryXmlDef("definitionFiles", function($xmlDef){
+        var $xmlDef = processRepositoryXmlDef("definitionFiles", function($xmlDef){
         if (!$xmlDef)
         {
           $("#itemTreeInfo").html("<p>Unable to parse XML definition of this repository !</p>");
@@ -1323,7 +1313,7 @@
           {
             var xmlDoc = jQuery.parseXML(data);
             var $itemXml = $(xmlDoc).find("add-item");
-            $itemXml.attr("repository", BDA.getCurrentComponentPath());
+            $itemXml.attr("repository", getCurrentComponentPath());
             res += $itemXml[0].outerHTML;
           }
           else
@@ -1353,7 +1343,7 @@
               res += "print-item";
             res += ' id="' + $itemXml.attr("id") + '" item-descriptor="' +  $itemXml.attr("item-descriptor") + "\"";
             if (printRepoAttr)
-              res += " repository='"+ BDA.getCurrentComponentPath() +"'";
+              res += " repository='"+ getCurrentComponentPath() +"'";
             res += ' />\n';
           }, BDA_REPOSITORY.itemTree);
 
@@ -1451,50 +1441,6 @@
       });
     },
 
-    //--- Stored queries functions ------------------------------------------------------------------------
-
-    getStoredRQLQueries : function ()
-    {
-      var rqlQueries;
-      var rqlQueriesStr = localStorage.getItem('RQLQueries');
-      if (rqlQueriesStr !== null && rqlQueriesStr.length > 0)
-        rqlQueries = JSON.parse(rqlQueriesStr);
-      else
-        rqlQueries = [];
-      return rqlQueries;
-    },
-
-    storeSplitValue : function ()
-    {
-      var splitObj = {};
-      splitObj.splitValue = $("#splitValue").val();
-      splitObj.activeSplit = $("#noSplit").is(':checked');
-      BDA.storeItem('splitObj', JSON.stringify(splitObj));
-    },
-
-    storeRQLQuery : function (name, query)
-    {
-      console.log("Try to store : " + name + ", query : " + query);
-      var storeQuery = {};
-      storeQuery.name = name;
-      storeQuery.query = query;
-      storeQuery.repo = BDA.getComponentNameFromPath(BDA.getCurrentComponentPath());
-      var rqlQueries = BDA_REPOSITORY.getStoredRQLQueries();
-      rqlQueries.push(storeQuery);
-      console.log(rqlQueries);
-      BDA.storeItem('RQLQueries', JSON.stringify(rqlQueries));
-    },
-
-    deleteRQLQuery : function (index)
-    {
-      var queries = BDA_REPOSITORY.getStoredRQLQueries();
-      if (queries.length >  index)
-      {
-        queries.splice(index, 1);
-        BDA.storeItem('RQLQueries', JSON.stringify(queries));
-      }
-    },
-
     purgeRQLQuery : function (rqlQueries)
     {
       // Purge query
@@ -1502,7 +1448,7 @@
       for (var i = 0; i != rqlQueries.length; i++)
       {
         var query = rqlQueries[i];
-        if (!query.hasOwnProperty("repo") || query.repo == BDA.getComponentNameFromPath(BDA.getCurrentComponentPath())) {
+        if (!query.hasOwnProperty("repo") || query.repo == getComponentNameFromPath(getCurrentComponentPath())) {
           purgedRqlQueries.push(rqlQueries[i]);
         }
       }
@@ -1528,26 +1474,6 @@
             BDA_REPOSITORY.setQueryEditorValue(rqlQueries[i].query + "\n");
         }
       }
-    },
-
-    getToggleObj : function ()
-    {
-      var toggleObj = localStorage.getItem('toggleObj');
-      if (toggleObj && toggleObj.length > 0)
-        toggleObj = JSON.parse(toggleObj);
-      else
-        toggleObj = {};
-      return toggleObj;
-    },
-
-    storeToggleState : function(toggle, cssState)
-    {
-      var toggleState = 1;
-      if(cssState == "none")
-        toggleState = 0;
-      var toggleObj = BDA_REPOSITORY.getToggleObj();
-      toggleObj[toggle] = toggleState;
-      BDA.storeItem('toggleObj', JSON.stringify(toggleObj));
     },
 
     getToggleLabel : function(state)
@@ -1612,13 +1538,29 @@
   };
   // Reference to BDA
   var BDA;
+  // Reference to BDA_STORAGE
+  var BDA_STORAGE;
+
+  var initalized = false;
+
+  reloadQueryList = function() {
+    if (BDA_REPOSITORY.isRepositoryPage)
+      BDA_REPOSITORY.reloadQueryList();
+  };
+
   // Jquery plugin creation
   $.fn.bdaRepository = function(pBDA)
    {
-    console.log('Init plugin {0}'.format('bdaRepository'));
-    //settings = $.extend({}, defaults, options);
-    BDA = pBDA;
-    BDA_REPOSITORY.build();
+     if (!initalized)
+     {
+        console.log('Init plugin {0}'.format('bdaRepository'));
+        //settings = $.extend({}, defaults, options);
+        BDA = pBDA;
+        BDA_STORAGE = $().bdaStorage();
+        BDA_REPOSITORY.build();
+        initalized = true;
+     }
+
     return this;
   };
 })(jQuery);

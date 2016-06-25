@@ -46,31 +46,187 @@ try{
     return false;
   };
 
-  // ----- JQuery plugin functions -----
+  // BDA Common functions
 
-  // Standard function to create a JQuery plugin entry point.
-  //
-  // @param methods Plugin methods.
-  // @param plugin Plugin name.
-  this.basePlugin = function(methods, plugin) {
-
-    var result = function(method) {
-
-      if (methods[method] && !/^_/.test(method)) {
-        return methods[method].apply(this, Array.prototype.slice.call(
-            arguments, 1));
-      } else if (typeof method === 'object' || !method) {
-        // Default to "init"
-        return methods.init.apply(this, arguments);
-      } else {
-        alert('Method "' + method + '" does not exist on jQuery.' + plugin);
+  this.processRepositoryXmlDef = function(property, callback)
+  {
+    if(callback !== undefined)
+    {
+      // First check cache value if any
+      var rawXmlDef = BDA_STORAGE.getXmlDef(getCurrentComponentPath());
+      if (rawXmlDef !== null)
+      {
+        console.log("Getting XML def from cache");
+        var xmlDoc = jQuery.parseXML(rawXmlDef);
+        if(callback !== undefined)
+            callback($(xmlDoc));
       }
-    };
-
-    return result;
+      // If no cache entry, fetch the XML def in ajax
+      else
+       {
+        var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
+        console.log(url);
+        jQuery.ajax({
+          url:     url,
+          success: function(result) {
+            var $result = $(result);
+            if ($result.find("pre").size() > 0)
+            {
+              rawXmlDef = $result.find("pre")
+              .html()
+              .trim()
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace("&nbsp;", "")
+              .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
+                try
+                {
+                    console.log("XML def length : " + rawXmlDef.length);
+                    var xmlDoc = jQuery.parseXML(rawXmlDef);
+                    storeXmlDef(getCurrentComponentPath(), rawXmlDef);
+                    callback($(xmlDoc));
+                }
+                catch(err)
+                {
+                    console.log("Unable to parse XML def file !");
+                    callback(null);
+                    console.log(err);
+                }
+            }
+            else
+              callback(null);
+          },
+        });
+      }
+    }
   };
 
+  this.highlightAndIndentXml = function($elm)
+  {
+    var dateStart = new Date().getTime();
+    console.log("Start highlightAndIndentXml");
 
+    $elm.each(function(index) {
+      var escapeXML = $(this).html();
+      var unescapeXML = $('<div/>').html(escapeXML).text();
+      // vkbeautify needs unescape XML to works
+      unescapeXML = vkbeautify.xml(unescapeXML, 2);
+      var dateIndent = new Date();
+      console.log("time to indent : " + (dateIndent.getTime() - dateStart) + "ms");
+      var $codeBlock = $(this)
+      // remove previous XML content
+      .empty()
+      // add code tags
+      .append("<code class='xml'></code>")
+      .find("code")
+      // set escape XML content, because highlight.js needs escape XML to works
+      .text(unescapeXML);
+
+      // Run highlight.js on each XML block
+      console.log($codeBlock.get(0));
+      hljs.highlightBlock($codeBlock.get(0));
+      // Make component path clickable
+      $codeBlock.find("span.hljs-attribute:contains('jndi'), span.hljs-attribute:contains('repository')")
+      .each(function() {
+        var $value = $(this).next();
+        var url = "/dyn/admin/nucleus" + $value.text().replace(/\"/g, "");
+        $value.wrap("<a target='_blank' class='clickable' href='" + url + "' ></a>");
+        $value.append("<i class='fa fa-external-link'></i>");
+      });
+    });
+
+    var dateEnd = new Date();
+    var time = dateEnd.getTime() - dateStart;
+    console.log("time to highlight and indent : " + time + "ms");
+  };
+
+  this.getComponentNameFromPath = function (componentPath)
+  {
+    // Strip last slash if any
+    if (componentPath[componentPath.length - 1] == "/")
+      componentPath = componentPath.substr(0 , componentPath.length - 1);
+
+    var tab = componentPath.split("/");
+    //console.log("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
+    return tab[tab.length - 1];
+  };
+
+  this.purgeSlashes = function(str)
+  {
+    return str.replace(/([^:]\/)\/+/g, "$1");
+  };
+
+  this.getComponentShortName = function (componentName)
+  {
+    var shortName = "";
+    for(var i = 0; i != componentName.length; i++)
+    {
+      var character = componentName[i];
+      if (character == character.toUpperCase() && character != ".")
+        shortName += character;
+    }
+    return shortName;
+  };
+
+  this.getCurrentComponentPath = function()
+  {
+    return purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
+  };
+
+  this.logTrace = function (msg)
+  {
+    if(isLoggingTrace){
+      console.log(msg);
+    }
+  };
+
+  this.unique = function (array)
+  {
+    var n = {},r=[];
+    for(var i = 0; i < array.length; i++)
+    {
+      if (!n[array[i]])
+      {
+        n[array[i]] = true;
+        r.push(array[i]);
+      }
+    }
+    return r;
+  };
+
+  this.sort = function (array)
+  {
+    logTrace('beforeSort : ' + array);
+    var sorted = array.sort(function(a,b) {
+      if(a !== null)
+        return a.localeCompare(b, 'en', { caseFirst: 'upper' });
+      else if( b !== null)
+        return -1;
+      else
+        return 0;
+    });
+    logTrace('after sort : ' + sorted);
+    return sorted;
+  };
+
+  this.copyToClipboard = function (text)
+  {
+    GM_setClipboard(text);
+    window.alert("Data have been added to your clipboard");
+  };
+
+  this.rotateArrow = function ($arrow)
+  {
+    if ($arrow.hasClass("fa-arrow-down"))
+      $arrow.removeClass("fa-arrow-down").addClass("fa-arrow-up");
+    else
+      $arrow.removeClass("fa-arrow-up").addClass("fa-arrow-down");
+  };
+
+  this.endsWith = function (str, suffix)
+  {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+  };
 
   console.log('bda.common.js initialized');
 }catch(e){
