@@ -11,7 +11,7 @@
 
     isActorChainPageFct : function()
     {
-        return $("h2:contains('Actor Chain:')").size() == 1 && document.URL.indexOf('chainId=') != -1;
+        return $("h2:contains('Actor Chain:')").length == 1 && document.URL.indexOf('chainId=') != -1;
     },
 
     createActorCaller : function()
@@ -20,7 +20,7 @@
       var tableActor = $('table:first');
       var tableActorHeaderRow = tableActor.find('tr:first');
       var tableActorHeaderColumns = tableActorHeaderRow.find('th');
-      var tableActorHeaderColumnsCount = tableActorHeaderColumns.size();
+      var tableActorHeaderColumnsCount = tableActorHeaderColumns.length;
       var tableActorDataRow = tableActor.find('tr:eq(1)');
       var tableActorDataRowCells = tableActorDataRow.find('td');
       var actorChainIdValue = $("h2:contains('Actor Chain:')").text().replace("Actor Chain: ", "");
@@ -34,7 +34,7 @@
       if(tableInputs !== undefined)
       {
           var inputRows = $(tableInputs).find('tr');
-          var inputsSize = inputRows.size();
+          var inputsSize = inputRows.length;
           for(var i = 1; i < inputsSize; i++)
           {
               var inputRow = $(inputRows.get(i));

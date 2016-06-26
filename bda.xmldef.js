@@ -17,8 +17,8 @@
 
   isXMLDefinitionFilePageFct : function()
   {
-    return $("td:contains('class atg.xml.XMLFile')").size() > 0
-    || $("td:contains('class [Latg.xml.XMLFile;')").size() > 0;
+    return $("td:contains('class atg.xml.XMLFile')").length > 0
+    || $("td:contains('class [Latg.xml.XMLFile;')").length > 0;
   },
 
   setupXMLDefinitionFilePage : function()

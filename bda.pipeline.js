@@ -48,7 +48,7 @@
 
     isPipelineManagerPageFct : function()
     {
-        return $("h2:contains('Pipeline Chains')").size() === 1;
+        return $("h2:contains('Pipeline Chains')").length === 1;
     },
 
     setupPipelineManagerPage : function()
@@ -69,7 +69,7 @@
       $pipelineTable.find("tr:gt(0)").append("<td align='center'><i class='fa fa-code link'></i></td><td align='center'><i class='fa fa-eye link'></i>"
                                            + "<sup style='font-size:8px'>&nbsp;BETA</sup></td>");
       //process pipeline definition file
-      BDA.processRepositoryXmlDef("definitionFile", function($xmlDef)
+      processRepositoryXmlDef("definitionFile", function($xmlDef)
       {
           BDA_PIPELINE.$pipelineDef = $xmlDef;
           $pipelineTable.find('tr').each(function(index, elem)
@@ -111,7 +111,7 @@
       console.log("Show pipeline XML for chain : " + chainName + " isOdd : " + isOdd);
       var trId = "xml_" + chainName;
 
-      if ($("#" + trId).size() === 0) {
+      if ($("#" + trId).length === 0) {
         var xml = BDA_PIPELINE.$pipelineDef.find("pipelinechain[name=" + chainName + "]")[0].outerHTML;
         var $codeBlock = $("<tr id='" + trId + "'><td colspan='9'><pre></pre></td></tr>")
         .insertAfter("#" + chainName)

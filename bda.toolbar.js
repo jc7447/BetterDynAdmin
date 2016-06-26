@@ -1,6 +1,9 @@
+  console.log('bda.toolbar.js before start');
 (function($) {
   "use strict";
-  BDA_TOOLBAR = {
+  console.log('bda.toolbar.js start');
+
+  var BDA_TOOLBAR = {
 
     build : function()
     {
@@ -13,57 +16,10 @@
 
     // -- TAGS management function
 
-    buildArray : function(stringIn)
-    {
-      var cleaned = stringIn.replace(/[ \t]/g,'').replace(/,,+/g,',');
-      var array;
-      if (cleaned !== "")
-        array = cleaned.split(',');
-      else
-        array = [];
-      return array;
-    },
-
-    buildTagsFromArray : function(tagNames,defaultValue)
-    {
-       var value = defaultValue !== null ? defaultValue : false;
-       var tags = {};
-       for (var i = 0; i < tagNames.length; i++) {
-        var tagName = tagNames[i];
-        var tag = {};
-        tag.selected = value;
-        tag.name = tagName;
-        tags[tagName] = tag;
-      }
-      console.log('buildTagsFromArray ' + JSON.stringify(tags));
-      return tags;
-    },
-
-    buildTagsFromString : function(tagString,defaultValue)
-    {
-        var tagNames = unique(BDA_TOOLBAR.buildArray(tagString));
-        return BDA_TOOLBAR.buildTagsFromArray(tagNames,defaultValue);
-    },
-
-    editTags : function(newTags)
-    {
-      console.log('editTags + ' + JSON.stringify(newTags));
-       var existingTags = BDA_TOOLBAR.getTags();
-       for (var name in existingTags)
-       {
-        if(newTags[name])
-        {
-          var oldTag = existingTags[name];
-          newTags[name].selected = oldTag.selected;
-        }
-       }
-      BDA_TOOLBAR.saveTags(newTags);
-    },
-
     addTags : function(newTags)
     {
       console.log('add tags:');
-      var existingTags = getTags();
+      var existingTags = BDA_STORAGE.getTags();
       console.log('existingTags = ' + JSON.stringify(existingTags));
       for (var name in newTags)
       {
@@ -75,26 +31,13 @@
         }
       }
       console.log('existingTags = ' + JSON.stringify(existingTags));
-      BDA_TOOLBAR.saveTags(existingTags);
-    },
-
-    getTags : function()
-    {
-        var tags = BDA_STORAGE.getConfigurationValue('tags');
-        if(tags === null || tags === undefined)
-          tags = {};
-        return tags;
-    },
-
-    saveTags : function(tags)
-    {
-      BDA_STORAGE.storeConfiguration('tags', tags);
+      BDA_STORAGE.saveTags(existingTags);
     },
 
     clearTags : function()
     {
         console.log('clearTags');
-        var savedtags = BDA_TOOLBAR.getTags();
+        var savedtags = BDA_STORAGE.getTags();
           for (var sTagName in savedtags)
           {
              var sTag = savedtags[sTagName];
@@ -102,7 +45,7 @@
           }
 
         console.log('savedtags = ' + JSON.stringify(savedtags));
-        BDA_TOOLBAR.saveTags(savedtags);
+        BDA_STORAGE.saveTags(savedtags);
         BDA_TOOLBAR.reloadToolbar();
     },
 
@@ -143,32 +86,10 @@
 
     //--- Toolbar functions ------------------------------------------------------------------------
 
-    idsSet : function(storedComponents)
-    {
-      for(var i = 0; i != storedComponents.length; i++)
-      {
-        if (storedComponents[i].hasOwnProperty("id"))
-          return false;
-      }
-      return true;
-    },
-
-    generateCompIds : function(storedComponents)
-    {
-      var curId = 0;
-      for(var i = 0; i != storedComponents.length; i++)
-      {
-        storedComponents[i].id = curId;
-        curId++;
-      }
-      BDA_STORAGE.storeItem('Components', JSON.stringify(storedComponents));
-      return storedComponents;
-    },
-
     deleteComponent : function (componentToDelete)
     {
       console.log("Delete component : " + componentToDelete);
-      var components = BDA_TOOLBAR.getStoredComponents();
+      var components = BDA_STORAGE.getStoredComponents();
       for(var i = 0; i != components.length; i++)
       {
         if (components[i].componentName == componentToDelete)
@@ -189,18 +110,19 @@
       compObj.componentPath = component;
       compObj.componentName = getComponentNameFromPath(component);
       compObj.colors = BDA_TOOLBAR.stringToColour(compObj.componentName);
-      var storedComp = BDA_TOOLBAR.getStoredComponents();
+      var storedComp = BDA_STORAGE.getStoredComponents();
       if (storedComp.length > 0)
         compObj.id = storedComp[storedComp.length - 1].id + 1;
       console.log("id : " + compObj.id);
 
       compObj.methods = methods;
       compObj.vars = vars;
-      compObj.tags =tags;
+      compObj.tags = tags;
       storedComp.push(compObj);
-
+      console.log("About to store : " + storedComp);
       BDA_STORAGE.storeItem('Components', JSON.stringify(storedComp));
-      var tagMap = BDA_TOOLBAR.buildTagsFromArray(tags,false);
+      var tagMap = buildTagsFromArray(tags,false);
+      console.log("tag map : " + tagMap);
       BDA_TOOLBAR.addTags(tagMap);
     },
 
@@ -268,13 +190,14 @@
 
     reloadToolbar: function ()
     {
+      console.log("reloadToolbar");
       BDA_TOOLBAR.deleteToolbar();
       BDA_TOOLBAR.createToolbar();
     },
 
     isComponentAlreadyStored : function(componentPath)
     {
-      var components = BDA_TOOLBAR.getStoredComponents();
+      var components = BDA_STORAGE.getStoredComponents();
       for (var i = 0; i < components.length; i++) {
         if (components[i].componentPath == componentPath)
           return true;
@@ -313,12 +236,12 @@
 
       BDA_TOOLBAR.addExistingTagsToToolbarPopup();
 
-      var favs = BDA_TOOLBAR.getStoredComponents();
+      var favs = BDA_STORAGE.getStoredComponents();
 
       $("<div id='toolbarContainer'></div>").insertAfter(BDA.logoSelector);
       $("<div id='toolbar'></div>").appendTo("#toolbarContainer");
 
-      var tags = BDA_TOOLBAR.getTags();
+      var tags = BDA_STORAGE.getTags();
       var selectedTags = [];
       for(var tagName in tags){
         var tag = tags[tagName];
@@ -455,7 +378,7 @@
                     vars.push(element.parentElement.textContent);
                 });
                 // filter out empty values
-                var tags = BDA_TOOLBAR.buildArray($('#newtags').val());
+                var tags = buildArray($('#newtags').val());
                 //add selected tags
                 $('.tag:checked').each(function(index, element){
                     tags.push(element.parentElement.textContent);
@@ -466,7 +389,7 @@
                 console.log("methods : " + methods);
                 console.log("vars : " + vars);
                 console.log("tags : " + tags);
-                BDA_STORAGE.storeComponent(componentPath, methods, vars,tags);
+                BDA_TOOLBAR.storeComponent(componentPath, methods, vars,tags);
                 BDA_TOOLBAR.reloadToolbar();
             });
 
@@ -530,7 +453,7 @@
     addExistingTagsToToolbarPopup : function()
     {
         //add tags to the addFav popup
-      var tags = BDA_TOOLBAR.getTags();
+      var tags = BDA_STORAGE.getTags();
       var $tagList = $('#existingTags');
 
       var sortedTags = [];
@@ -559,7 +482,7 @@
 
     addFavFilter :function()
     {
-      var tags = BDA_TOOLBAR.getTags();
+      var tags = BDA_STORAGE.getTags();
       if(tags !== null && Object.keys(tags).length> 0){
         $("<div class='toolbar-elem favFilter'><a href='javascript:void(0)' id='favFilter' title='Filter'><i class='fa fa-chevron-down fav-chevron'></i></a></div>")
           .on('click',function () {
@@ -578,7 +501,7 @@
     addFavTagList : function()
     {
       console.log('addfavTagList');
-      var tags = BDA_TOOLBAR.getTags();
+      var tags = BDA_STORAGE.getTags();
 
       var $favline = $('<div id="favTagList" class="favline">').appendTo('#toolbar');
 
@@ -624,7 +547,7 @@
             if(tag !== null)
               tag.selected=$(this).prop('checked');
             BDA_STORAGE.saveTags(tags);
-            BDA_STORAGE.reloadToolbar();
+            BDA_TOOLBAR.reloadToolbar();
          })
          .appendTo(
            $('<li class="bda-button tag-filter" ></li>')
@@ -643,25 +566,23 @@
   // Reference to BDA_STORAGE
   var BDA_STORAGE;
 
-  var initalized = false;
+  // Jquery plugin creation
 
-  reloadToolbar = function()
+  $.fn.bdaToolbar = function(pBDA)
+  {
+    console.log('Init plugin {0}'.format('bdaRepository'));
+    //settings = $.extend({}, defaults, options);
+    BDA = pBDA;
+    BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
+    BDA_TOOLBAR.build();
+    return this;
+  };
+
+  // Expose the reloadToolbar method as public
+  $.fn.bdaToolbar.reloadToolbar = function()
   {
     BDA_TOOLBAR.reloadToolbar();
   };
 
-  // Jquery plugin creation
-  $.fn.bdatoolbar = function(pBDA)
-  {
-    if (!initalized)
-    {
-      console.log('Init plugin {0}'.format('bdaRepository'));
-      //settings = $.extend({}, defaults, options);
-      BDA = pBDA;
-      BDA_STORAGE = $().bdaStorage();
-      BDA_TOOLBAR.build();
-      initalized = true;
-    }
-    return this;
-  };
+  console.log('bda.toolbar.js end');
 })(jQuery);

@@ -27,7 +27,7 @@
       .append("<p>Switch data source to : <select id='newDataSource'>" + BDA_JDBC.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>")
       .insertAfter($("h1:contains('Execute Query')"));
       $("textarea").prop("id", "sqltext");
-      if ($("table").size() > 0)
+      if ($("table").length > 0)
         $("table").prop("id", "sqlResult");
 
       $("#switchDataSourceBtn").click(function(){

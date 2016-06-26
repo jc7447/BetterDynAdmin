@@ -1,4 +1,5 @@
 (function($) {
+  console.log("bda.storage.js start");
   var BDA_STORAGE = {
 
     GMValue_MonoInstance: "monoInstance",
@@ -126,30 +127,6 @@
     return JSON.parse(localStorage.getItem('splitObj'));
   },
 
-  getXmlDef : function(componentPath)
-  {
-    console.log("Getting XML def for : " + componentPath);
-    var timestamp =  Math.floor(Date.now() / 1000);
-    var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
-    if (!xmlDefMetaData)
-      return null;
-    if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + BDA_STORAGE.xmlDefinitionCacheTimeout) < timestamp)
-    {
-      console.log("Xml def is outdated or from a different component");
-      return null;
-    }
-    return localStorage.getItem("XMLDefData");
-  },
-
-  storeXmlDef : function(componentPath, rawXML)
-  {
-    console.log("Storing XML def : " + componentPath);
-    var timestamp =  Math.floor(Date.now() / 1000);
-
-    localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
-    localStorage.setItem("XMLDefData", rawXML);
-  },
-
   getStoredRQLQueries : function ()
   {
     var rqlQueries;
@@ -201,18 +178,51 @@
     else
       storedComp = [];
 
-    if(storedComp.length > 0 && BDA_TOOLBAR.idsSet(storedComp))
-      storedComp = BDA_TOOLBAR.generateCompIds(storedComp);
+    if(storedComp.length > 0 && BDA_STORAGE.idsSet(storedComp))
+      storedComp = BDA_STORAGE.generateCompIds(storedComp);
     return storedComp;
   },
 
+  idsSet : function(storedComponents)
+  {
+    for(var i = 0; i != storedComponents.length; i++)
+    {
+      if (storedComponents[i].hasOwnProperty("id"))
+        return false;
+    }
+    return true;
+  },
+
+  generateCompIds : function(storedComponents)
+  {
+    var curId = 0;
+    for(var i = 0; i != storedComponents.length; i++)
+    {
+      storedComponents[i].id = curId;
+      curId++;
+    }
+    BDA_STORAGE.storeItem('Components', JSON.stringify(storedComponents));
+    return storedComponents;
+  },
 
   reloadData : function()
   {
-    $().bdaToolbar().reloadToolbar();
-    $().bdaRepository().reloadQueryList();
+    $.fn.bdaToolbar.reloadToolbar();
+    $.fn.bdaRepository.reloadQueryList();
   },
 
+  getTags : function()
+  {
+      var tags = BDA_STORAGE.getConfigurationValue('tags');
+      if(tags === null || tags === undefined)
+        tags = {};
+      return tags;
+  },
+
+  saveTags : function(tags)
+  {
+    BDA_STORAGE.storeConfiguration('tags', tags);
+  },
 
 };
 
@@ -227,7 +237,13 @@
        BDA_STORAGE.build();
        initalized = true;
      }
+     console.log(this);
     return this;
   };
+
+  $.fn.bdaStorage.getBdaStorage = function() {
+    return BDA_STORAGE;
+  };
+  console.log("bda.storage.js end");
 
 })(jQuery);

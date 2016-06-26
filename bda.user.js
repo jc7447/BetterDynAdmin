@@ -20,7 +20,7 @@
 // @version 1.18
 // @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.18
 
-// @require https://code.jquery.com/jquery-1.11.1.min.js
+// @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
@@ -67,7 +67,6 @@ jQuery(document).ready(function() {
       isOldDynamo : false,
       isComponentPage : false,
       dynAdminCssUri : "/dyn/admin/atg/dynamo/admin/admin.css",
-      isLoggingTrace : false,
 
       init : function()
       {
@@ -95,26 +94,25 @@ jQuery(document).ready(function() {
         $.tablesorter.defaults.sortInitialOrder = 'desc';
 
         // Setup storage plugin
-        $().bdaStorage(BDA);
+        $().bdaStorage();
         // Setup Repository plugin
-        $().bdaRepository(BDA);
+        $().bdaRepository();
         // Setup pipeline plugin
-        $().bdaPipeline(BDA);
+        $().bdaPipeline();
         // Setup XML definition plugin
-        $().bdaXmlDef(BDA);
+        $().bdaXmlDef();
         // Setup component configuration plugin
-        $().bdaCompConfig(BDA);
+        $().bdaCompConfig();
         // Setup perf monitor plugin
-        $().bdaPerfMonitor(BDA);
+        $().bdaPerfMonitor();
         // Setup JDBC browser plugin
-        $().bdajdbc(BDA);
+        $().bdajdbc();
         // Setup actor plugin
-        $().bdaActor(BDA);
+        $().bdaActor();
         // Setup toolbar plugin
         $().bdaToolbar(BDA);
-        //BDA.reloadData();
         // Setup Menu plugin
-        $().bdaMenu(BDA, {});
+        $().bdaMenu({});
 
         if (this.isComponentPage)
         {
@@ -206,7 +204,7 @@ jQuery(document).ready(function() {
       // Load default dyn admin CSS if needed
       fixCss : function()
       {
-        if ($("link[href='" + BDA.dynAdminCssUri + "']").size() === 0)
+        if ($("link[href='" + BDA.dynAdminCssUri + "']").length === 0)
         {
           console.log("Default dyn admin CSS is missing : " + BDA.dynAdminCssUri + ". Add it now.");
           var $link = $("<link />")
@@ -222,7 +220,7 @@ jQuery(document).ready(function() {
 
       isComponentPageFct : function ()
       {
-        return $("h1:contains('Directory Listing')").size() === 0 //Page is not a directory
+        return $("h1:contains('Directory Listing')").length === 0 //Page is not a directory
         && document.URL.indexOf('/dyn/admin/nucleus/') != -1 // Page is in nucleus browser
         && document.URL.indexOf("?") == -1; // Page has no parameter
       },

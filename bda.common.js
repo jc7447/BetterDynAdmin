@@ -3,8 +3,8 @@
 try{
 
   console.log('bda.common.js start');
-
-  // ----- Configuration -----
+  var isLoggingTrace = false;
+  var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
 
@@ -48,12 +48,39 @@ try{
 
   // BDA Common functions
 
+
+  this.buildArray = function(stringIn)
+  {
+    var cleaned = stringIn.replace(/[ \t]/g,'').replace(/,,+/g,',');
+    var array;
+    if (cleaned !== "")
+      array = cleaned.split(',');
+    else
+      array = [];
+    return array;
+  },
+
+  this.buildTagsFromArray = function(tagNames,defaultValue)
+  {
+     var value = defaultValue !== null ? defaultValue : false;
+     var tags = {};
+     for (var i = 0; i < tagNames.length; i++) {
+      var tagName = tagNames[i];
+      var tag = {};
+      tag.selected = value;
+      tag.name = tagName;
+      tags[tagName] = tag;
+    }
+    console.log('buildTagsFromArray ' + JSON.stringify(tags));
+    return tags;
+  },
+
   this.processRepositoryXmlDef = function(property, callback)
   {
     if(callback !== undefined)
     {
       // First check cache value if any
-      var rawXmlDef = BDA_STORAGE.getXmlDef(getCurrentComponentPath());
+      var rawXmlDef = getXmlDef(getCurrentComponentPath());
       if (rawXmlDef !== null)
       {
         console.log("Getting XML def from cache");
@@ -70,7 +97,7 @@ try{
           url:     url,
           success: function(result) {
             var $result = $(result);
-            if ($result.find("pre").size() > 0)
+            if ($result.find("pre").length > 0)
             {
               rawXmlDef = $result.find("pre")
               .html()
@@ -99,6 +126,30 @@ try{
         });
       }
     }
+  };
+
+  this.getXmlDef = function(componentPath)
+  {
+    console.log("Getting XML def for : " + componentPath);
+    var timestamp =  Math.floor(Date.now() / 1000);
+    var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
+    if (!xmlDefMetaData)
+      return null;
+    if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp)
+    {
+      console.log("Xml def is outdated or from a different component");
+      return null;
+    }
+    return localStorage.getItem("XMLDefData");
+  };
+
+  this.storeXmlDef = function(componentPath, rawXML)
+  {
+    console.log("Storing XML def : " + componentPath);
+    var timestamp =  Math.floor(Date.now() / 1000);
+
+    localStorage.setItem("XMLDefMetaData", JSON.stringify({componentPath : componentPath, timestamp: timestamp}));
+    localStorage.setItem("XMLDefData", rawXML);
   };
 
   this.highlightAndIndentXml = function($elm)

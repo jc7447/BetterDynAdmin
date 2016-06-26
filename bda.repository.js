@@ -1,5 +1,6 @@
 (function($) {
-  "use strict";
+  console.log("bda.repository.js started");
+//  "use strict";
   var BDA_REPOSITORY = {
     MAP_SEPARATOR : "=",
     LIST_SEPARATOR : ",",
@@ -25,7 +26,6 @@
                           "PriceLists"               : "price"
     },
     xmlDefinitionMaxSize : 150000, // 150 Ko
-    xmlDefinitionCacheTimeout : 1200, // 20min
     queryEditor : null,
     descriptorList : null,
     isRepositoryPage : false,
@@ -45,7 +45,7 @@
 
     isRepositoryPageFct : function ()
     {
-      return $("h2:contains('Run XML Operation Tags on the Repository')").size() > 0;
+      return $("h2:contains('Run XML Operation Tags on the Repository')").length > 0;
     },
 
     setupRepositoryPage : function ()
@@ -101,7 +101,7 @@
       $("#RQLText").after("<div id='descProperties'></div>");
       $("#RQLForm input[type=submit]").remove();
 
-      var splitObj = BDA_REPOSITORY.getStoredSplitObj();
+      var splitObj = BDA_STORAGE.getStoredSplitObj();
       var itemByTab = BDA_REPOSITORY.defaultItemByTab;
       var isChecked = false;
       if (splitObj)
@@ -187,7 +187,7 @@
       $("#saveQuery").click(function() {
         if (BDA_REPOSITORY.getQueryEditorValue().trim().length > 0 && $("#queryLabel").val().trim().length > 0)
         {
-          BDA_REPOSITORY.storeRQLQuery($("#queryLabel").val().trim(), BDA_REPOSITORY.getQueryEditorValue().trim());
+          BDA_STORAGE.storeRQLQuery($("#queryLabel").val().trim(), BDA_REPOSITORY.getQueryEditorValue().trim());
           BDA_REPOSITORY.showQueryList();
         }
       });
@@ -197,7 +197,7 @@
       });
 
       // Hide other sections
-      var toggleObj = BDA_REPOSITORY.getToggleObj();
+      var toggleObj = BDA_STORAGE.getToggleObj();
 
       var repositoryView  = "<a href='javascript:void(0)' id='showMoreRepositoryView' class='showMore'>" + BDA_REPOSITORY.getToggleLabel(toggleObj.showMoreRepositoryView) + "</a>";
       var cacheUsage  = "&nbsp;<a href='javascript:void(0)' id='showMoreCacheUsage' class='showMore'>" + BDA_REPOSITORY.getToggleLabel(toggleObj.showMoreCacheUsage) + "</a>";
@@ -300,7 +300,7 @@
 
     setupPropertiesTables : function()
     {
-      if ($("a[name=showProperties]").size() > 0)
+      if ($("a[name=showProperties]").length > 0)
       {
         $("a[name=showProperties]").next().attr("id", "propertiesTable");
         $("#propertiesTable").find("tr:nth-child(odd)").addClass("odd");
@@ -328,7 +328,7 @@
         else
           html += "<tr class='odd'>";
         var isDebugEnable = false;
-        if ($("a[href='" + componentURI + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors']").size() > 0)
+        if ($("a[href='" + componentURI + "?action=clriddbg&itemdesc=" + descriptors[i] + "#listItemDescriptors']").length > 0)
           isDebugEnable = true;
         html += "<td class='descriptor'>" + descriptors[i] + "</td>";
         html += "<td><a class='btn-desc' href='" + componentURI + "?action=seetmpl&itemdesc=" + descriptors[i] + "#showProperties'>Properties</a>";
@@ -392,12 +392,12 @@
 
     hasResultsFct : function (hasErrors)
     {
-      return $(BDA_REPOSITORY.resultsSelector).size() > 0;
+      return $(BDA_REPOSITORY.resultsSelector).length > 0;
     },
 
     hasErrorsFct : function ()
     {
-      return $(BDA_REPOSITORY.errorsSelector1).size() > 0 || $(BDA_REPOSITORY.errorsSelector2).size() > 0;
+      return $(BDA_REPOSITORY.errorsSelector1).length > 0 || $(BDA_REPOSITORY.errorsSelector2).length > 0;
     },
 
 
@@ -587,7 +587,7 @@
         BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
       }
       BDA_REPOSITORY.sanitizeQuery();
-      BDA_REPOSITORY.storeSplitValue();
+      BDA_STORAGE.storeSplitValue();
       // set anchor to the result div
       location.hash = '#RQLResults';
       $("#RQLForm").submit();
@@ -916,9 +916,9 @@
         datas[curItemDesc].push(curData);
       });
       var startRenderingtab = new Date().getTime();
-      var html = "<p class='nbResults'>" + $addItems.size() + " items in " + nbTypes + " descriptor(s)</p>";
+      var html = "<p class='nbResults'>" + $addItems.length + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
-      var splitObj = BDA_REPOSITORY.getStoredSplitObj();
+      var splitObj = BDA_STORAGE.getStoredSplitObj();
       if (splitObj === undefined || splitObj === null || splitObj.activeSplit === true)
         splitValue = 0;
       else
@@ -951,7 +951,7 @@
           + "<div class='prop_attr prop_attr_green'>D</div> : derived "
           + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
 
-      if ($(".copyField").size() > 0)
+      if ($(".copyField").length > 0)
       {
         // reuse $outputDiv in case we have several results set on the page (RQL query + get item tool)
         $outputDiv.find("p.nbResults").append("<br><a href='javascript:void(0)' class='showFullTextLink'>Show full text</a>");
@@ -1035,7 +1035,7 @@
         else
         {
           // Check if button already exists
-          if ($("#xmlHighlight").size() === 0)
+          if ($("#xmlHighlight").length === 0)
           {
             $("<p id='xmlHighlight' />")
             .html("The XML result is big, to avoid slowing down the page, XML highlight have been disabled. "
@@ -1059,7 +1059,7 @@
     showRqlErrors : function ()
     {
       var error = "";
-      if ($(BDA_REPOSITORY.errorsSelector1).size() > 0)
+      if ($(BDA_REPOSITORY.errorsSelector1).length > 0)
       {
         console.log("Case of error  : 1");
         error = $(BDA_REPOSITORY.errorsSelector1).next().text();
@@ -1187,7 +1187,7 @@
             rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
 
             var xmlDoc = jQuery.parseXML(rawItemsXml);
-            BDA_REPOSITORY.nbItemReceived += $(xmlDoc).find("add-item").size();
+            BDA_REPOSITORY.nbItemReceived += $(xmlDoc).find("add-item").length;
             $("#itemTreeInfo").html("<p>" + BDA_REPOSITORY.nbItemReceived + " items retrieved</p>");
 
             var subItems = [];
@@ -1284,7 +1284,7 @@
           $("#itemTreeInfo").html("<p>Unable to parse XML definition of this repository !</p>");
           return ;
         }
-        console.log("descriptor : " + $xmlDef.find("item-descriptor").size());
+        console.log("descriptor : " + $xmlDef.find("item-descriptor").length);
         // get tree
         BDA_REPOSITORY.itemTree = new Map();
         BDA_REPOSITORY.nbItemReceived = 0;
@@ -1303,7 +1303,7 @@
       console.log("Render copy button");
       $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
           $('#itemTreeCopyButton').click(function(){
-              BDA_REPOSITORY.copyToClipboard($('#itemTreeResult').text());
+              copyToClipboard($('#itemTreeResult').text());
           });
       }
       if(outputType == "addItem")
@@ -1368,7 +1368,7 @@
           var tab = id.split("_");
           name = tab[1];
         }
-        var nbItem = $tab.find("td").size() / $tab.find("tr").size();
+        var nbItem = $tab.find("td").length / $tab.find("tr").length;
         speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name.trim() + " (" + nbItem + ")</a></li>";
       });
       speedBarHtml += "</ul>";
@@ -1390,7 +1390,7 @@
     showQueryList : function ()
     {
       var html = "";
-        var rqlQueries = BDA_REPOSITORY.purgeRQLQuery(BDA_REPOSITORY.getStoredRQLQueries());
+        var rqlQueries = BDA_REPOSITORY.purgeRQLQuery(BDA_STORAGE.getStoredRQLQueries());
         if (rqlQueries && rqlQueries.length > 0)
         {
           html += "<span class='storedQueriesTitle'>Stored queries :</span>";
@@ -1436,7 +1436,7 @@
       .click(function() {
         var index = this.id.replace("deleteQuery", "");
         console.log("Delete query #" + index);
-        BDA_REPOSITORY.deleteRQLQuery(index);
+        BDA_STORAGE.deleteRQLQuery(index);
         BDA_REPOSITORY.reloadQueryList();
       });
     },
@@ -1464,7 +1464,7 @@
     printStoredQuery : function (name)
     {
       console.log("printStoredQuery : " + name);
-      var rqlQueries = BDA_REPOSITORY.getStoredRQLQueries();
+      var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
       console.log(rqlQueries);
       if (rqlQueries)
       {
@@ -1496,35 +1496,35 @@
       var $cacheUsage = $(BDA_REPOSITORY.cacheUsageSelector);
       $cacheUsage.next().toggle().next().toggle();
       BDA_REPOSITORY.toggleShowLabel($cacheUsage.next().css("display"), "#showMoreCacheUsage");
-      BDA_REPOSITORY.storeToggleState("showMoreCacheUsage", $cacheUsage.next().css("display"));
+      BDA_STORAGE.storeToggleState("showMoreCacheUsage", $cacheUsage.next().css("display"));
     },
 
     toggleRepositoryView : function ()
     {
       $(BDA_REPOSITORY.repositoryViewSelector).next().toggle().next().toggle();
       BDA_REPOSITORY.toggleShowLabel($(BDA_REPOSITORY.repositoryViewSelector).next().css("display"), "#showMoreRepositoryView");
-      BDA_REPOSITORY.storeToggleState("showMoreRepositoryView", $(BDA_REPOSITORY.repositoryViewSelector).next().css("display"));
+      BDA_STORAGE.storeToggleState("showMoreRepositoryView", $(BDA_REPOSITORY.repositoryViewSelector).next().css("display"));
     },
 
     toggleProperties : function ()
     {
       $(BDA_REPOSITORY.propertiesSelector).next().toggle();
       BDA_REPOSITORY.toggleShowLabel($(BDA_REPOSITORY.propertiesSelector).next().css("display"), "#showMoreProperties");
-      BDA_REPOSITORY.storeToggleState("showMoreProperties", $(BDA_REPOSITORY.propertiesSelector).next().css("display"));
+      BDA_STORAGE.storeToggleState("showMoreProperties", $(BDA_REPOSITORY.propertiesSelector).next().css("display"));
     },
 
     toggleEventSets : function ()
     {
       $(BDA_REPOSITORY.eventSetsSelector).next().toggle();
       BDA_REPOSITORY.toggleShowLabel($(BDA_REPOSITORY.eventSetsSelector).next().css("display"), "#showMoreEventsSets");
-      BDA_REPOSITORY.storeToggleState("showMoreEventsSets", $(BDA_REPOSITORY.eventSetsSelector).next().css("display"));
+      BDA_STORAGE.storeToggleState("showMoreEventsSets", $(BDA_REPOSITORY.eventSetsSelector).next().css("display"));
     },
 
     toggleMethods : function ()
     {
       $(BDA_REPOSITORY.methodsSelector).next().toggle();
       BDA_REPOSITORY.toggleShowLabel($(BDA_REPOSITORY.methodsSelector).next().css("display"), "#showMoreMethods");
-      BDA_REPOSITORY.storeToggleState("showMoreMethods", $(BDA_REPOSITORY.methodsSelector).next().css("display"));
+      BDA_STORAGE.storeToggleState("showMoreMethods", $(BDA_REPOSITORY.methodsSelector).next().css("display"));
     },
 
     toggleRawXml : function ()
@@ -1536,31 +1536,24 @@
         $("#rawXmlLink").html("hide raw XML");
     },
   };
-  // Reference to BDA
-  var BDA;
+
   // Reference to BDA_STORAGE
   var BDA_STORAGE;
 
-  var initalized = false;
-
-  reloadQueryList = function() {
-    if (BDA_REPOSITORY.isRepositoryPage)
-      BDA_REPOSITORY.reloadQueryList();
-  };
-
   // Jquery plugin creation
-  $.fn.bdaRepository = function(pBDA)
+  $.fn.bdaRepository = function()
    {
-     if (!initalized)
-     {
         console.log('Init plugin {0}'.format('bdaRepository'));
         //settings = $.extend({}, defaults, options);
-        BDA = pBDA;
-        BDA_STORAGE = $().bdaStorage();
+        BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
         BDA_REPOSITORY.build();
-        initalized = true;
-     }
-
     return this;
   };
+
+   $.fn.bdaRepository.reloadQueryList = function() {
+     if (BDA_REPOSITORY.isRepositoryPage)
+       BDA_REPOSITORY.reloadQueryList();
+   };
+
+  console.log("bda.repository.js end");
 })(jQuery);

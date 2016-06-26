@@ -61,20 +61,6 @@ try {
               if(isMonoInstance)
                 GM_setValue(BDA_STORAGE.GMValue_Backup, JSON.stringify(BDA_STORAGE.getData()));
             });
-
-            $("#bdaDataBackup").click(function () {
-              var data = BDA_STORAGE.getData();
-              copyToClipboard(JSON.stringify(data));
-            });
-
-            $("#bdaDataRestore").click(function () {
-              if (window.confirm("Sure ?"))
-              {
-                var data = $("#bdaData").val().trim();
-                BDA_STORAGE.restoreData(data, true);
-              }
-            });
-
           },
 
           //--- Bug report panel
@@ -214,7 +200,7 @@ try {
               );
             $config.append($submitProperties);
 
-            var savedTags = BDA_TOOLBAR.getTags();
+            var savedTags = BDA_STORAGE.getTags();
             var tagAsString = "";
             var index = 0;
             var tagsSize = Object.keys(savedTags).length;
@@ -245,15 +231,13 @@ try {
 
         var defaults = {};
         var settings;
-        var BDA;
         // Reference to BDA_STORAGE
         var BDA_STORAGE;
 
-        $.fn.bdaMenu = function(pBDA, options){
+        $.fn.bdaMenu = function(options){
           console.log('Init plugin {0}'.format('bdaMenu'));
           settings = $.extend({}, defaults, options);
-          BDA = pBDA;
-          BDA_STORAGE = $().bdaStorage();
+          BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
           BDA_MENU.build();
           return this;
         };
