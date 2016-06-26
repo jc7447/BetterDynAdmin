@@ -235,14 +235,9 @@ jQuery(document).ready(function() {
       setupPageTitle : function()
       {
         $("title").text(getComponentNameFromPath(getCurrentComponentPath()));
-      },
-
-        sortedTags = BDA.sort(sortedTags);
-        sortedTags = BDA.sort(sortedTags);
-
-      getConfigurationValue : function(){
-        //fake to fix
       }
+
+
     }; // end of BDA
 
     // INIT BDA
