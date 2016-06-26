@@ -38,7 +38,7 @@
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
-// @resource bootstrapCSS lib/bootstrap/css/bootstrap.css
+// @resource bootstrapCSS lib/bootstrap/scoped-twbs.min.css
 // @resource whatsnew https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md
 
 // -- BDA plugins after all the libraries --
@@ -52,8 +52,8 @@
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.actor.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.storage.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.xmldef.js
-// @require parser/bda.dash.parser.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.compconfig.js
+// @require parser/bda.dash.parser.js
 // @require bda.dash.js
 
 
@@ -118,6 +118,8 @@ jQuery(document).ready(function() {
         $().bdaToolbar(BDA);
         // Setup Menu plugin
         $().bdaMenu({});
+        // Setup DASH
+        $().DASH();
 
         if (this.isComponentPage)
         {
