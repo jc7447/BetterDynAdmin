@@ -738,4 +738,6 @@ table.tablesorter tr.alt-row:hover td {
 #dashScreen {
   font-family: monospace;
   height: 200px;
+  max-height: 200px;
+  overflow-y:scroll; 
 }

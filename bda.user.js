@@ -55,6 +55,7 @@
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.storage.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.xmldef.js
 // @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.compconfig.js
+// @require bda.component.js
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
 

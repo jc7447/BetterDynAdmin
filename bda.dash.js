@@ -98,9 +98,12 @@ var BDA_DASH = {
       logTrace('input: {0}'.format(val));
 
       try{
-        var command = BDA_DASH.parse(val);
-        var result = BDA_DASH.handleCommand(command);
-        BDA_DASH.writeResponse(val,command,result,"success");
+        var commands = BDA_DASH.parse(val);
+        for (var i = 0; i < commands.length; i++) {
+          var command = commands[i];
+          BDA_DASH.handleCommand(val,command);
+        }
+     
       }catch(e){
         BDA_DASH.handleError(val,e);
       }
@@ -111,8 +114,19 @@ var BDA_DASH = {
     }
   },
 
-  handleCommand : function(command){
-    return "";
+  handleCommand : function(val,command){
+    console.log('handleCommand:');
+    console.log(JSON.stringify(command));
+    console.log(command.type);
+    if(command.type == "get"){
+      console.log('type : get');
+      BDA_COMPONENT.getProperty(
+        command.component,
+        command.property,
+        function (value) {
+          BDA_DASH.writeResponse(val,command,value,"success");
+        });
+    }
   },
 
   handleError : function(val,err){
@@ -130,6 +144,7 @@ var BDA_DASH = {
     var msgClass = BDA_DASH.styles[level];
     $entry = $(BDA_DASH.templates.screenLine.format(val,debug,result,msgClass));
     $entry.appendTo(BDA_DASH.$screen);
+    BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
     return $entry;
   },
 
