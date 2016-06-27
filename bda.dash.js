@@ -1,33 +1,56 @@
 // DASH DynAdmin SHell
-
+var BDA;
 var BDA_DASH = {
 
-  devMode : true,
+  devMode : false,
+  debugMode : true,
+
+// dom elements
+  $screen : null,
+  $input : null,
+  $modal : null,
+
+  styles : {
+    success : "alert-success",
+    error : "alert-danger"
+  },
 
   templates : {
     consoleModal : 
-      '<div class="twbs"><div id="dashModal" class="modal fade" tabindex="-1" role="dialog">' +
-      '<div class="modal-dialog">' +
-      '<div class="modal-content">' +
-      '<div class="modal-header">' +
-      '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-      '<h4 class="modal-title">DASH - DynAdmin SHell</h4>' +
-      '</div>' +
-      '<div class="modal-body">' +
-      '<p>One fine body&hellip;</p>' +
-      '</div>' +
-      '<div class="modal-footer">' +
-      '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' +
-      '<button type="button" class="btn btn-primary">Save changes</button>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
+      '<div class="twbs">'+
+      '<div id="dashModal" class="modal fade" tabindex="-1" role="dialog">'+
+      '<div class="modal-dialog modal-lg">'+
+      '<div class="modal-content">'+
+      '<div class="modal-header">'+
+      '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>'+
+      '<h4 class="modal-title">DASH - DynAdmin SHell</h4>'+
+      '</div>'+
+      '<div id="dashScreen" class="modal-body">'+
+      '</div>'+
+      '<div class="modal-footer">'+
+      '<form id="dashForm" class="">'+
+      '<div class="form-group">'+
+      '<div class="input-group">'+
+      '<div class="input-group-addon">$</div>'+
+      '<input type="text" class="form-control" id="dashInput" placeholder="">'+
+      '</div>'+
+      '</div>'+
+      '</form>'+
+      '</div>'+
+      '</div>'+
+      '</div>'+
+      '</div>'+
+      '</div>',
+    screenLine : 
+      '<div class="dash_screen_line alert {3} alert-dismissible" role="alert">'+
+      '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+      '<p class="dash_feeback_line">$&gt;&nbsp;{0}</p>'+
+      '<p class="dash_debug_line">{1}</p>' +
+      '<p class="dash_return_line">{2}</p>' +
       '</div>'
   },
 
-  $screen : null,
-  $input : null,
+
 
   build : function()
   {
@@ -52,6 +75,7 @@ var BDA_DASH = {
 
       BDA_DASH.$input = $('#dashInput');
       BDA_DASH.$screen = $('#dashScreen');
+      BDA_DASH.$modal = $('#dashModal');
 
       BDA_DASH.$input.keypress(function (e) {
         if (e.which == 13) {
@@ -60,7 +84,12 @@ var BDA_DASH = {
         }
       });
       //todo add menu button
-      $('#dashModal').modal('toggle');//just put on for now
+      BDA_DASH.openDash();//just put on for now
+  },
+
+  openDash : function(){
+     BDA_DASH.$modal.modal('toggle');
+     BDA_DASH.$input.focus();
   },
 
   handleInput : function(){
@@ -68,7 +97,13 @@ var BDA_DASH = {
       var val = BDA_DASH.$input.val();
       logTrace('input: {0}'.format(val));
 
-      $entry = BDA_DASH.feedbackInput(val);
+      try{
+        var command = BDA_DASH.parse(val);
+        var result = BDA_DASH.handleCommand(command);
+        BDA_DASH.writeResponse(val,command,result,"success");
+      }catch(e){
+        BDA_DASH.handleError(val,e);
+      }
 
       BDA_DASH.$input.val('');
     }catch(e){
@@ -76,10 +111,30 @@ var BDA_DASH = {
     }
   },
 
-  feedbackInput : function(val){
-    $entry = $('<div> $&gt; {0}</div>'.format(val));
+  handleCommand : function(command){
+    return "";
+  },
+
+  handleError : function(val,err){
+    console.log(err);
+    var errMsg = err.name + " : " + err.message;
+     BDA_DASH.writeResponse(val,null,errMsg,"error");
+  },
+
+
+  writeResponse : function(val,command,result,level){
+    var debug ="";
+    if(BDA_DASH.debugMode && command != null ){
+      debug = JSON.stringify(command);
+    }
+    var msgClass = BDA_DASH.styles[level];
+    $entry = $(BDA_DASH.templates.screenLine.format(val,debug,result,msgClass));
     $entry.appendTo(BDA_DASH.$screen);
     return $entry;
+  },
+
+  parse : function(val){
+      return BDA_DASH_PARSER.parse(val);
   }
 
 };
@@ -89,9 +144,12 @@ try {
     (function($) {
       console.log('bda.dash.js start');
 
+        
+
         var settings;
         $.fn.DASH = function(pBDA,options){
           console.log('Init plugin {0}'.format('DASH'));
+          BDA=pBDA;
           BDA_DASH.build();
           return this;
         }

@@ -18,7 +18,7 @@
 //
 // ------ write version on bdaCSS TOO ! ------
 // @version 1.18
-// @resource bdaCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/bda.css?version=1.18
+// @resource bdaCSS bda.css?version=1.18
 
 // @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -29,7 +29,8 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
-// @require lib/bootstrap/js/bootstrap.min.js
+// custom bootstrap
+// @require lib/bootstrap/js/bootstrap.min.js 
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
@@ -38,6 +39,7 @@
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
+// scoped bootstrap
 // @resource bootstrapCSS lib/bootstrap/scoped-twbs.min.css
 // @resource whatsnew https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md
 
@@ -119,7 +121,7 @@ jQuery(document).ready(function() {
         // Setup Menu plugin
         $().bdaMenu({});
         // Setup DASH
-        $().DASH();
+        $().DASH(BDA);
 
         if (this.isComponentPage)
         {
@@ -190,12 +192,13 @@ jQuery(document).ready(function() {
         GM_addStyle(select2CSS);
         var select2BootCSS = GM_getResourceText("select2BootCSS");
         GM_addStyle(select2BootCSS);
+        var bootstrapCSS = GM_getResourceText("bootstrapCSS");
+        GM_addStyle(bootstrapCSS);
         var bdaCSS = GM_getResourceText("bdaCSS");
         GM_addStyle(bdaCSS);
         var visCSS = GM_getResourceText("visCSS");
         GM_addStyle(visCSS);
-        var bootstrapCSS = GM_getResourceText("bootstrapCSS");
-        GM_addStyle(bootstrapCSS);
+
       },
 
       //--- Page informations ------------------------------------------------------------------------

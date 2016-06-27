@@ -723,3 +723,19 @@ table.tablesorter tr.alt-row:hover td {
   text-decoration : underline;
   cursor: pointer;
 }
+
+/* DASH */
+
+.modal-dialog.modal-lg{
+  width: 60%;
+
+}
+
+#dashInput{
+   font-family: monospace;
+}
+
+#dashScreen {
+  font-family: monospace;
+  height: 200px;
+}
