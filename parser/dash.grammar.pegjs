@@ -1,112 +1,94 @@
-commands=
-    main:command other:(_ command)*
+command=
+    funct:litteral params:(_ param)*
     {
-        var res = []
-        res.push(main);
-        for (var i = 0; i < other.length; i++) {
-            res.push(other[i][1]);
+         var res = {
+             funct:funct,
+            params:[]
+         }
+        for (var i = 0; i < params.length; i++) {
+            res.params.push(params[i][1]);
         }
         return res;
     }
+param=
+    this
+    /   componentProperty
+    /   componentPath
+    /   componentRef
+    /   value
+    /   output
+    /   varRef
 
-command=
-        setter
-    /   getter
-    /   help
-    /   rql
-    /   echo
-    /   go
-
-// set /a/b/c/DefGhi.foo bar
-
-setter=
-    "set" _ component:componentName "." property:name _ value:name
-    { 
-      return {
-        type:'set',
-        component:component,
-        property:property,
-        value:value
-        }
-    }
-
-// get /a/b/c/DefGhi.foo bar >var
-
-getter=
-    "get" _ component:componentName "." property:name _ out:output?
-    { return {
-        type:'get',
-        component:component,
-        property:property,
-        output:out
-        }
-}
-
-help=
-    "help"
+this=
+    "@this"
     {
-        return {type:'help'}
+        return {
+            type : 'this'
+        }
     }
 
-rql=
-    print
-    /query
+value=
+    value:litteral
+    {
+        return {
+            type:'value',
+            value:value
+        }
+    }
+
+
     
-print=
-    "print"  _ component:componentName _ itemdesc:name _ id:name
+varRef=
+    "$" name:litteral
     {
         return {
-            type:"rql-print",
-            component:component,
-            itemDescriptor:itemdesc,
-            id:id
-        }
-    }
-    
-query=
-    "query"
-
-echo=
-    "echo" _ "$" name:name
-    {
-        return {
-                type:"echo",
-                name:name
-            }
-    }
-
-go=
-    "go" _ component:componentName
-    {
-        return {
-            type :'go',
-            component:component
+            type : 'varRef',
+            name:name
         }
     }
 
 output=
-    ">" value:name
+    ">" name:litteral
     {
-        return value
+        return {
+            type : 'output',
+            name:name
+        }
     }
+    
+componentProperty=
+    component:(componentPath / componentRef )  "." property:litteral
+    {
+         return {
+            type : 'componentProperty',
+            component:component,
+            property:property,
+        } 
+    }
+    
+componentRef=
+    "@" name:litteral
+    {
+        return {
+            type : 'componentRef',
+            name:name
+        }
+    }
+
+componentPath=
+    path:componentName
+    {
+        return {
+            type : 'componentPath',
+            path:path
+        }
+    }  
+  
 componentName=
-    value:(chunk)+
-    {
-        return value.join("")
-    }
-    
-chunk=
-    "/" value:name
-    {
-        return "/"+value
-    }
+     $("/"litteral)+
 
-name=
-    value:[a-zA-Z-:]+
-    {
-        return value.join("")
-    }
+litteral=
+    $[a-zA-Z-:]+
     
-
 _ "whitespace"
-  = [ \t\n\r]*
+  = [ \t]*

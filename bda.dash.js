@@ -6,8 +6,6 @@ var BDA_DASH = {
   devMode : false,
   debugMode : false,
 
-  VARS : [],
-
 // dom elements
   $screen : null,
   $input : null,
@@ -72,6 +70,112 @@ var BDA_DASH = {
       '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.'
   },
 
+  VARS : {},
+  FCT : {
+
+    //get /atg/commerce/order/OrderRepository.repositoryName >toto
+    get: function(cmdString, params) {
+
+      var parsedParams = BDA_DASH.parseParams( 
+        [
+          {
+            name: "componentProperty",
+            type: "componentProperty"
+          },
+          {
+            name:"output",
+            type:"output",
+            required:false
+          }
+        ],
+        params);
+      /*     var outputVar = params[1];*/
+
+      logTrace("parsedParams : " + JSON.stringify(parsedParams));
+
+      BDA_COMPONENT.getProperty(
+        parsedParams.componentProperty.path,
+        parsedParams.componentProperty.property,
+        function(value) {
+          if(! isNull(parsedParams.output)){
+            BDA_DASH.VARS[parsedParams.output.name] = value;
+          }
+          BDA_DASH.writeResponse(cmdString, params, value, "success");
+        });
+    },
+
+    //set /atg/commerce/order/OrderRepository.loggingError false
+    set : function(cmdString,params){
+        var parsedParams = BDA_DASH.parseParams( 
+        [
+          {
+            name: "componentProperty",
+            type: "componentProperty"
+          },
+          {
+            name:"value",
+            type:"value"
+          }
+        ],
+        params);
+      /*     var outputVar = params[1];*/
+
+      logTrace("parsedParams : " + JSON.stringify(parsedParams));
+
+      BDA_COMPONENT.setProperty(
+        parsedParams.componentProperty.path,
+        parsedParams.componentProperty.property,
+        parsedParams.value,
+        function (value) {
+          BDA_DASH.writeResponse(cmdString, params, value, "success");
+        });
+    },
+
+    go : function(cmdString,params){
+
+      var parsedParams = BDA_DASH.parseParams(
+        [
+          {
+            name: "component",
+            type: "component"
+          }
+        ]
+        ,
+        params);
+
+      BDA_DASH.goToComponent(parsedParams.component);
+    }
+
+    /*    switch(command.type) {
+      //get /atg/commerce/order/OrderRepository.repositoryName >toto
+    case "get":
+       
+    case "set":
+        BDA_COMPONENT.setProperty(
+          command.component,
+          command.property,
+          command.value,
+          function (value) {
+            BDA_DASH.writeResponse(val,command,value,"success");
+          });
+        break;
+    case "help":
+        BDA_DASH.writeResponse(val,command,BDA_DASH.templates.help,"success");
+        break;
+    case "go":
+      BDA_DASH.goToComponent(command);
+        break;
+    case "echo":
+        var variable = BDA_DASH.getVarValue(command.name);
+        BDA_DASH.writeResponse(val,command,variable,"success");
+        break;
+    default:
+        BDA_DASH.writeResponse(val,command,BDA_DASH.templates.not_implemented,"warning");
+    }*/
+
+  },
+
+
   build : function()
   {
 //toto
@@ -126,18 +230,20 @@ var BDA_DASH = {
 
   handleInput : function(){
     try{
-      var val = BDA_DASH.$input.val();
-      logTrace('input: {0}'.format(val));
+      var input = BDA_DASH.$input.val();
+      input = $.trim(input);
+      var commands = input.split("\n");
+      logTrace('input: {0}'.format(input));
 
       try{
-        var commands = BDA_DASH.parse(val);
         for (var i = 0; i < commands.length; i++) {
-          var command = commands[i];
-          BDA_DASH.handleCommand(val,command);
+          var stringCmd = commands[i];
+          var command = BDA_DASH.parse(stringCmd);
+          BDA_DASH.handleCommand(stringCmd,command);
         }
      
       }catch(e){
-        BDA_DASH.handleError(val,e);
+        BDA_DASH.handleError(input,e);
       }
 
       BDA_DASH.$input.val('');
@@ -150,40 +256,14 @@ var BDA_DASH = {
     logTrace('handleCommand:');
     logTrace(JSON.stringify(command));
 
-    switch(command.type) {
-      //get /atg/commerce/order/OrderRepository.repositoryName >toto
-    case "get":
-        BDA_COMPONENT.getProperty(
-          command.component,
-          command.property,
-          function (value) {
-            if(! isNull(command.output)){
-              BDA_DASH.VARS[command.output] = value;
-            }
-            BDA_DASH.writeResponse(val,command,value,"success");
-          });
-        break;
-    case "set":
-        BDA_COMPONENT.setProperty(
-          command.component,
-          command.property,
-          command.value,
-          function (value) {
-            BDA_DASH.writeResponse(val,command,value,"success");
-          });
-        break;
-    case "help":
-        BDA_DASH.writeResponse(val,command,BDA_DASH.templates.help,"success");
-        break;
-    case "go":
-      BDA_DASH.goToComponent(command);
-        break;
-    case "echo":
-        var variable = BDA_DASH.getVarValue(command.name);
-        BDA_DASH.writeResponse(val,command,variable,"success");
-        break;
-    default:
-        BDA_DASH.writeResponse(val,command,BDA_DASH.templates.not_implemented,"warning");
+    var fct = BDA_DASH.FCT[command.funct]
+    if(! isNull(fct)){
+      fct(val,command.params);
+    }else{
+      throw {
+        name: "Unknown function",
+        message: "This command does not exist."
+      }
     }
 
   },
@@ -207,6 +287,11 @@ var BDA_DASH = {
     return $entry;
   },
 
+  goToComponent : function(component){
+    var url = "/dyn/admin/nucleus" + component;
+    window.location=url;
+  },
+
   getVarValue : function(name){
     var val = BDA_DASH.VARS[name];
     if(val == undefined || val == null){
@@ -215,9 +300,122 @@ var BDA_DASH = {
     return val;
   },
 
-  goToComponent : function(command){
-    var url = "/dyn/admin/nucleus" + command.component;
-    window.location=url;
+  parseParams : function(expected,params){
+
+    var res = {};
+
+    for (var i = 0; i < expected.length; i++) {
+      var exp =  $.extend( {required:true},  expected[i]);;
+      var inParam =params[i];
+
+      logTrace('parseParams');
+      logTrace('exp = ' + JSON.stringify(exp));
+      logTrace('inParam = ' + JSON.stringify(inParam));
+
+      if(isNull(inParam)){
+        if(exp.required ){
+          throw {
+            name : "Missing argument",
+            message : "Missing {0} at #{1}".format(exp.name,i+1)
+          }
+        }
+      }else{
+        res[exp.name] = BDA_DASH.getParamValue(exp,inParam);
+      }
+
+
+
+    }
+    return res;
+  },
+
+  //match expected type & actual
+  getParamValue : function(exp,param){
+
+    var res;
+
+    switch(exp.type){
+      case 'component':
+        res = BDA_DASH.getComponent(param);
+        break;
+      case 'componentProperty':
+        res = BDA_DASH.getComponentProperty(param);
+        break;
+      case 'value':
+        res = BDA_DASH.getValue(param);
+        break;
+      case 'output':
+        res = param.name;
+        break;
+      default:
+        throw {
+          name : "Parsing Exception",
+          message : "invalid parameter type"
+        }
+    }
+    console.log("getParamValue : " + res);
+    return res;
+  },
+
+
+  getValue : function(param){
+    console.log('getValue : param : ' + JSON.stringify(param));
+    var res = "";
+    switch(param.type) {
+      case "value":
+        res = param.value;
+        break;
+      case "varRef":
+        res = BDA_DASH.VARS[param.name];
+        if(isNull(res)){
+          throw {
+            name : "Invalid Name",
+            message : "No such variable ${0}".format(param.name)
+          }
+        }
+        break;
+      case "component":
+        res =  BDA_DASH.getComponent(param);
+        break;
+      default:
+        throw {
+          name : "Parsing Exception",
+          message : "invalid value type"
+        }
+    }
+    return res;
+  },
+
+  getComponentProperty : function(param){
+
+    if(param.type !== 'componentProperty'){
+      throw {
+          name : "Parsing Exception",
+          message : "invalid component type"
+        }
+    }
+
+    return {
+      property:param.property,
+      path: BDA_DASH.getComponent(param.component)
+    }
+
+  },
+
+  getComponent : function(componentParam){
+    console.log('componentParam : ' + JSON.stringify(componentParam));
+    var path = "";
+    switch(componentParam.type) {
+      case "componentPath":
+        path = componentParam.path;
+        break;
+      default:
+        throw {
+          name : "Parsing Exception",
+          message : "invalid component parameter"
+        }
+    }
+    return path;
   },
 
   parse : function(val){
