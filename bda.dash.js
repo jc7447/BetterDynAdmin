@@ -44,6 +44,8 @@ var BDA_DASH = {
     screenLine : 
       '<div class="dash_screen_line alert {3} alert-dismissible" role="alert">'+
       '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+      '<button type="button" class="close"  aria-label="Save"><i class="fa fa-floppy-o" aria-hidden="true"></i></button>'+
+      '<button type="button" class="close"  aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>'+
       '<p class="dash_feeback_line">$&gt;&nbsp;{0}</p>'+
       '<p class="dash_debug_line">{1}</p>' +
       '<p class="dash_return_line">{2}</p>' +
@@ -98,7 +100,7 @@ var BDA_DASH = {
       });
 
       //todo add menu button
-      BDA_DASH.openDash();//just put on for now
+     // BDA_DASH.openDash();//just put on for now
   },
 
   openDash : function(){
