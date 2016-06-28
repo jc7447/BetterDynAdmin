@@ -8,7 +8,7 @@ BDA_COMPONENT = {
 
 	propertiesSelector : 'h1:contains("Properties")',
 	setProperty : function(component,property,value,callback){
-		var url = '/dyn/admin/nucleus'+component;
+		var url = '/dyn/admin/nucleus{0}/'.format(component);
 		
 		$.ajax(
 			{
@@ -18,7 +18,7 @@ BDA_COMPONENT = {
 					propertyName : property,
 					newValue : value
 				},
-				success : function(data){
+				success : function(data,status, jqXHR){
 					BDA_COMPONENT.extractValueFromPropertyPage(data,callback);
 				} 
 					
@@ -34,18 +34,14 @@ BDA_COMPONENT = {
 			{
 				type : 'GET',
 				url : url,
-				success : function(data){
-					BDA_COMPONENT.extractValueFromPropertyPage(data,callback);
+				success : function(result, status, jqXHR){
+					BDA_COMPONENT.extractValueFromPropertyPage(result,callback);
 				} 
 			}
 		)
 	},
-	extractValueFromPropertyPage : function(data,callback){
-		var $res = $(data);
-		console.log($res);
-		var valueTitle = $res.find('<h3>Value</h3>');
-		console.log(valueTitle);
-		var newvalue = valueTitle.next().find('pre').innerHtml();
+	extractValueFromPropertyPage : function(result,callback){
+		var newvalue = $('<div></div>').html(result).find('h3:contains("Value")').next().text()
 		console.log(newvalue);
 		callback(newvalue);
 	}

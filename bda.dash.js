@@ -3,7 +3,7 @@ var BDA;
 var BDA_DASH = {
 
   devMode : false,
-  debugMode : true,
+  debugMode : false,
 
 // dom elements
   $screen : null,
@@ -32,7 +32,7 @@ var BDA_DASH = {
       '<div class="form-group">'+
       '<div class="input-group">'+
       '<div class="input-group-addon">$</div>'+
-      '<input type="text" class="form-control" id="dashInput" placeholder="">'+
+      '<input type="text" class="form-control" id="dashInput" placeholder="" name="query">'+
       '</div>'+
       '</div>'+
       '</form>'+
@@ -77,19 +77,32 @@ var BDA_DASH = {
       BDA_DASH.$screen = $('#dashScreen');
       BDA_DASH.$modal = $('#dashModal');
 
+      BDA_DASH.$modal.on('shown.bs.modal', function () {
+          BDA_DASH.$input.focus();
+      })
+
       BDA_DASH.$input.keypress(function (e) {
         if (e.which == 13) {
           BDA_DASH.handleInput()
           return false;
         }
       });
+
+      $(document).keypress(function(e){
+        var char =String.fromCharCode(e.which).toLowerCase();
+        var combo=(char === 't' && e.ctrlKey && e.altKey? 1 : 0);
+
+        if (combo ){
+          BDA_DASH.openDash();
+        }
+      });
+
       //todo add menu button
       BDA_DASH.openDash();//just put on for now
   },
 
   openDash : function(){
-     BDA_DASH.$modal.modal('toggle');
-     BDA_DASH.$input.focus();
+     BDA_DASH.$modal.modal('show');
   },
 
   handleInput : function(){
@@ -118,11 +131,18 @@ var BDA_DASH = {
     console.log('handleCommand:');
     console.log(JSON.stringify(command));
     console.log(command.type);
-    if(command.type == "get"){
-      console.log('type : get');
+    if(command.type === "get"){
       BDA_COMPONENT.getProperty(
         command.component,
         command.property,
+        function (value) {
+          BDA_DASH.writeResponse(val,command,value,"success");
+        });
+    }else if(command.type === "set"){
+      BDA_COMPONENT.setProperty(
+        command.component,
+        command.property,
+        command.value,
         function (value) {
           BDA_DASH.writeResponse(val,command,value,"success");
         });
@@ -162,12 +182,16 @@ try {
         
 
         var settings;
-        $.fn.DASH = function(pBDA,options){
+        $.fn.initDASH = function(pBDA,options){
           console.log('Init plugin {0}'.format('DASH'));
           BDA=pBDA;
           BDA_DASH.build();
           return this;
         }
+
+         $.fn.openDash = function(){
+          BDA_DASH.openDash();
+         }
 
 
     })(jQuery);

@@ -122,7 +122,7 @@ jQuery(document).ready(function() {
         // Setup Menu plugin
         $().bdaMenu({});
         // Setup DASH
-        $().DASH(BDA);
+        $().initDASH(BDA);
 
         if (this.isComponentPage)
         {
