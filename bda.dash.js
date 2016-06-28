@@ -1,4 +1,5 @@
 // DASH DynAdmin SHell
+"use strict";
 var BDA;
 var BDA_DASH = {
 
