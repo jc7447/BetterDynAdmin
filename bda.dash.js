@@ -6,6 +6,8 @@ var BDA_DASH = {
   devMode : false,
   debugMode : false,
 
+  VARS : [],
+
 // dom elements
   $screen : null,
   $input : null,
@@ -13,7 +15,8 @@ var BDA_DASH = {
 
   styles : {
     success : "alert-success",
-    error : "alert-danger"
+    error : "alert-danger",
+    warning : "alert-warning"
   },
 
   templates : {
@@ -50,10 +53,24 @@ var BDA_DASH = {
       '<p class="dash_feeback_line">$&gt;&nbsp;{0}</p>'+
       '<p class="dash_debug_line">{1}</p>' +
       '<p class="dash_return_line">{2}</p>' +
-      '</div>'
+      '</div>',
+    not_implemented:
+      'This command is not implemented yet.',
+    help:
+      '<ul>'+
+      '<li>' +
+      'help - prints this help'+
+      '</li>' +
+      '<li>' +
+      'get /some/Component.property value [>variable]'+
+      '</li>' +
+       '<li>' +
+      'set /some/Component.property newvalue'+
+      '</li>' +
+      '<ul>',
+    errMsg:
+      '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.'
   },
-
-
 
   build : function()
   {
@@ -94,7 +111,6 @@ var BDA_DASH = {
       $(document).keypress(function(e){
         var char =String.fromCharCode(e.which).toLowerCase();
         var combo=(char === 't' && e.ctrlKey && e.altKey? 1 : 0);
-
         if (combo ){
           BDA_DASH.openDash();
         }
@@ -131,30 +147,50 @@ var BDA_DASH = {
   },
 
   handleCommand : function(val,command){
-    console.log('handleCommand:');
-    console.log(JSON.stringify(command));
-    console.log(command.type);
-    if(command.type === "get"){
-      BDA_COMPONENT.getProperty(
-        command.component,
-        command.property,
-        function (value) {
-          BDA_DASH.writeResponse(val,command,value,"success");
-        });
-    }else if(command.type === "set"){
-      BDA_COMPONENT.setProperty(
-        command.component,
-        command.property,
-        command.value,
-        function (value) {
-          BDA_DASH.writeResponse(val,command,value,"success");
-        });
+    logTrace('handleCommand:');
+    logTrace(JSON.stringify(command));
+
+    switch(command.type) {
+      //get /atg/commerce/order/OrderRepository.repositoryName >toto
+    case "get":
+        BDA_COMPONENT.getProperty(
+          command.component,
+          command.property,
+          function (value) {
+            if(! isNull(command.output)){
+              BDA_DASH.VARS[command.output] = value;
+            }
+            BDA_DASH.writeResponse(val,command,value,"success");
+          });
+        break;
+    case "set":
+        BDA_COMPONENT.setProperty(
+          command.component,
+          command.property,
+          command.value,
+          function (value) {
+            BDA_DASH.writeResponse(val,command,value,"success");
+          });
+        break;
+    case "help":
+        BDA_DASH.writeResponse(val,command,BDA_DASH.templates.help,"success");
+        break;
+    case "go":
+      BDA_DASH.goToComponent(command);
+        break;
+    case "echo":
+        var variable = BDA_DASH.getVarValue(command.name);
+        BDA_DASH.writeResponse(val,command,variable,"success");
+        break;
+    default:
+        BDA_DASH.writeResponse(val,command,BDA_DASH.templates.not_implemented,"warning");
     }
+
   },
 
   handleError : function(val,err){
-    console.log(err);
-    var errMsg = err.name + " : " + err.message;
+    logTrace(err);
+    var errMsg = BDA_DASH.templates.errMsg.format(err.name , err.message);
      BDA_DASH.writeResponse(val,null,errMsg,"error");
   },
 
@@ -165,10 +201,23 @@ var BDA_DASH = {
       debug = JSON.stringify(command);
     }
     var msgClass = BDA_DASH.styles[level];
-    $entry = $(BDA_DASH.templates.screenLine.format(val,debug,result,msgClass));
+    var $entry = $(BDA_DASH.templates.screenLine.format(val,debug,result,msgClass));
     $entry.appendTo(BDA_DASH.$screen);
     BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
     return $entry;
+  },
+
+  getVarValue : function(name){
+    var val = BDA_DASH.VARS[name];
+    if(val == undefined || val == null){
+      val ="";
+    }
+    return val;
+  },
+
+  goToComponent : function(command){
+    var url = "/dyn/admin/nucleus" + command.component;
+    window.location=url;
   },
 
   parse : function(val){
@@ -180,27 +229,24 @@ var BDA_DASH = {
 try {
   jQuery(document).ready(function() {
     (function($) {
-      console.log('bda.dash.js start');
-
-        
-
+      logTrace('bda.dash.js start');
         var settings;
         $.fn.initDASH = function(pBDA,options){
-          console.log('Init plugin {0}'.format('DASH'));
+          logTrace('Init plugin {0}'.format('DASH'));
           BDA=pBDA;
           BDA_DASH.build();
           return this;
         }
 
-         $.fn.openDash = function(){
+        $.fn.openDash = function(){
           BDA_DASH.openDash();
-         }
+        }
 
 
     })(jQuery);
   });
 
-  console.log('bda.dash.js end');
+  logTrace('bda.dash.js end');
 
 } catch (e) {
   console.log(e);

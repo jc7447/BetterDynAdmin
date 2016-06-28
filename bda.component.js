@@ -25,7 +25,6 @@ BDA_COMPONENT = {
 			}
 		)
 	},
-	//get /atg/commerce/order/OrderRepository.repositoryName
 	getProperty : function(component,property,callback){
 		console.log('getProperty {0} {1}'.format(component,property));
 
