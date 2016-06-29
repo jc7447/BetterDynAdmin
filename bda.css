@@ -747,3 +747,7 @@ table.tablesorter tr.alt-row:hover td {
       padding-bottom: 5px;
       margin-bottom: 5px;
 }
+
+.typeahead.dropdown-menu{
+  text-align: left;
+}

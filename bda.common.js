@@ -3,7 +3,7 @@
 try{
 
   console.log('bda.common.js start');
-  var isLoggingTrace = true;
+  var isLoggingTrace = false;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -258,6 +258,18 @@ try{
     });
     logTrace('after sort : ' + sorted);
     return sorted;
+  };
+
+  this.sortUnique = function (arr) {
+    if (arr.length === 0) return arr;
+    arr = arr.sort(function (a, b) { return a*1 - b*1; });
+    var ret = [arr[0]];
+    for (var i = 1; i < arr.length; i++) { // start loop at 1 as element 0 can never be a duplicate
+        if (arr[i-1] !== arr[i]) {
+            ret.push(arr[i]);
+        }
+    }
+    return ret;
   };
 
   this.copyToClipboard = function (text)

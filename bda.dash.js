@@ -34,7 +34,7 @@ var BDA_DASH = {
       '<div class="form-group">'+
       '<div class="input-group">'+
       '<div class="input-group-addon">$</div>'+
-      '<input type="text" class="form-control" id="dashInput" placeholder="" name="query">'+
+      '<input type="text" class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off">'+
       '</div>'+
       '</div>'+
       '</form>'+
@@ -64,6 +64,7 @@ var BDA_DASH = {
   },
 
   HIST : [],
+  typeahead_base : [],
   VARS : {},
   FCT : {
 
@@ -247,6 +248,12 @@ var BDA_DASH = {
           BDA_DASH.$input.focus();
       })
 
+      BDA_DASH.$input.typeahead({source:BDA_DASH.typeahead, 
+            autoSelect: true}); 
+      for(var funcName in BDA_DASH.FCT){
+        BDA_DASH.typeahead_base.push(funcName);
+      }
+
       BDA_DASH.$input.keypress(function (e) {
         if (e.which == 13) {
           BDA_DASH.handleInput()
@@ -333,6 +340,11 @@ var BDA_DASH = {
     BDA_DASH.HIST.push(val); 
     BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
     return $entry;
+  },
+
+  typeahead : function(query,processCallback){
+    var suggestions = sortUnique(BDA_DASH.typeahead_base.concat(BDA_DASH.HIST));
+    processCallback(suggestions);
   },
 
   goToComponent : function(component){
