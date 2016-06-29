@@ -54,22 +54,16 @@ var BDA_DASH = {
       '</div>',
     not_implemented:
       'This command is not implemented yet.',
-    help:
-      '<ul>'+
-      '<li>' +
-      'help - prints this help'+
-      '</li>' +
-      '<li>' +
-      'get /some/Component.property value [>variable]'+
-      '</li>' +
-       '<li>' +
-      'set /some/Component.property newvalue'+
-      '</li>' +
-      '<ul>',
+    help: {
+      help : 'prints this help',
+      get : 'get /some/Component.property [>variable]',
+      set : 'set /some/Component.property newvalue'
+    },
     errMsg:
       '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.'
   },
 
+  HIST : [],
   VARS : {},
   FCT : {
 
@@ -98,7 +92,7 @@ var BDA_DASH = {
         parsedParams.componentProperty.property,
         function(value) {
           if(! isNull(parsedParams.output)){
-            BDA_DASH.VARS[parsedParams.output.name] = value;
+            BDA_DASH.VARS[parsedParams.output] = value;
           }
           BDA_DASH.writeResponse(cmdString, params, value, "success");
         });
@@ -144,6 +138,54 @@ var BDA_DASH = {
         params);
 
       BDA_DASH.goToComponent(parsedParams.component);
+    },
+
+    echo : function(cmdString,params){
+      var parsedParams = BDA_DASH.parseParams( 
+        [
+          {
+            name:"value",
+            type:"value"
+          }
+        ],
+        params);
+      var value = parsedParams.value;
+       BDA_DASH.writeResponse(cmdString, params, value, "success");
+    },
+
+    vars : function(cmdString,params){
+
+      var value = JSON.stringify(BDA_DASH.VARS);
+      BDA_DASH.writeResponse(cmdString, params, value, "success");
+
+    },
+
+    clear : function(cmdString,params){
+      //BDA_DASH.$screen.find('.alert').each(function(){$(this).alert('close')});
+      BDA_DASH.$screen.find('.alert').alert('close');
+      BDA_DASH.HIST.push(cmdString);
+    },
+
+    history : function(cmdString,params){
+      var value = JSON.stringify(BDA_DASH.HIST);
+      BDA_DASH.writeResponse(cmdString, params, value, "success");
+    },
+
+    help : function(cmdString,params){
+
+      var values = [];
+      var msg;
+      values.push('<ul>');
+      for(var funcName  in BDA_DASH.FCT){
+        msg = BDA_DASH.templates.help[funcName];
+        if(isNull(msg)){
+          msg="";
+        }
+        values.push('<li><strong>{0}</strong> : {1}</li>'.format(funcName,msg))
+      }
+      values.push('</ul>');
+      msg = values.join('');
+      BDA_DASH.writeResponse(cmdString, params, msg, "success");
     }
 
     /*    switch(command.type) {
@@ -238,7 +280,9 @@ var BDA_DASH = {
       try{
         for (var i = 0; i < commands.length; i++) {
           var stringCmd = commands[i];
+          stringCmd = $.trim(stringCmd);
           var command = BDA_DASH.parse(stringCmd);
+         
           BDA_DASH.handleCommand(stringCmd,command);
         }
      
@@ -283,6 +327,10 @@ var BDA_DASH = {
     var msgClass = BDA_DASH.styles[level];
     var $entry = $(BDA_DASH.templates.screenLine.format(val,debug,result,msgClass));
     $entry.appendTo(BDA_DASH.$screen);
+
+    //add to history after the command is done - not rly clean but will do for now
+    //next step is persist the history
+    BDA_DASH.HIST.push(val); 
     BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
     return $entry;
   },
@@ -370,7 +418,7 @@ var BDA_DASH = {
         if(isNull(res)){
           throw {
             name : "Invalid Name",
-            message : "No such variable ${0}".format(param.name)
+            message : "No such variable {0}".format(param.name)
           }
         }
         break;
