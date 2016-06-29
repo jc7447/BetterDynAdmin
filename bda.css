@@ -743,9 +743,16 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #dashScreen .alert{
-      padding-top: 5px;
-      padding-bottom: 5px;
-      margin-bottom: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+
+#dashScreen pre{
+  background-color: inherit;
+  font-family: inherit;
+  border: 0;
+  color:inherit;
 }
 
 .typeahead.dropdown-menu{

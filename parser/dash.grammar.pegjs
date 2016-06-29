@@ -67,11 +67,16 @@ componentProperty=
     }
     
 componentRef=
-    "@" name:litteral
+    "@" name:litteral index:('#' Integer)?
     {
+        var idx = null;
+        if(index !=null){
+            idx=index[1];
+        }
         return {
             type : 'componentRef',
-            name:name
+            name:name,
+            index:idx
         }
     }
 
@@ -89,6 +94,9 @@ componentName=
 
 litteral=
     $[a-zA-Z-:]+
+
+Integer "integer"
+  = [0-9]+ { return parseInt(text(), 10); }
     
 _ "whitespace"
   = [ \t]*
