@@ -343,7 +343,7 @@ var BDA_DASH = {
   },
 
   typeahead : function(query,processCallback){
-    var suggestions = sortUnique(BDA_DASH.typeahead_base.concat(BDA_DASH.HIST));
+    var suggestions = unique(sort(BDA_DASH.typeahead_base.concat(BDA_DASH.HIST)));
     processCallback(suggestions);
   },
 
