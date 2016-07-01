@@ -33,9 +33,9 @@ var BDA_DASH = {
       '<form id="dashForm" class="">' +
       '<div class="form-group">' +
       '<div class="input-group">' +
-    //  '<div class="input-group-addon">$</div>' +
-    //  '<input type="text" class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off">' +
-      '<textarea  class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"></textarea>' +
+      '<div class="input-group-addon">$</div>' +
+      '<input type="text" class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off">' +
+    //  '<textarea  class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"></textarea>' +
       '</div>' +
       '</div>' +
       '</form>' +
