@@ -33,8 +33,9 @@ var BDA_DASH = {
       '<form id="dashForm" class="">' +
       '<div class="form-group">' +
       '<div class="input-group">' +
-      '<div class="input-group-addon">$</div>' +
-      '<input type="text" class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off">' +
+    //  '<div class="input-group-addon">$</div>' +
+    //  '<input type="text" class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off">' +
+      '<textarea  class="form-control" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"></textarea>' +
       '</div>' +
       '</div>' +
       '</form>' +
@@ -225,11 +226,18 @@ var BDA_DASH = {
 
     BDA_DASH.$input.keypress(function(e) {
 
-      if (e.which == 13) {
+      if (e.which == 13 && !e.altKey  && !e.shiftKey) {
         e.preventDefault(); 
         BDA_DASH.handleInput()
         return false;
       }
+    });
+
+    $(document).keydown(function(e){
+     if(e.ctrlKey && e.altKey &&  e.which == 84){
+         e.preventDefault();
+        BDA_DASH.openDash();
+     }
     });
 /*
     $(document).keypress(function(e) {
