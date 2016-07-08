@@ -280,6 +280,19 @@ try{
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
+  this.buildSimpleTable = function($item,tableTemplate,rowTemplate){
+    var itemDesc = $item.attr('item-descriptor');
+    var id = $item.attr('id');
+    var rows = [];
+    $item.find('set-property').each(function(){
+      var $row = $(this);
+      rows.push(rowTemplate.format($row.attr('name'),$row.text()));
+    });
+    var table = tableTemplate.format(itemDesc,id,rows.join(''));
+
+    return table;
+  }
+
   console.log('bda.common.js initialized');
 }catch(e){
   console.log(e);

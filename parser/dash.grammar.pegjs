@@ -11,15 +11,21 @@ command=
         return res;
     }
 param=
-    this
-    /   componentProperty
+        componentProperty
+    /   keywords
+    /   flags
     /   componentPath
     /   componentRef
+    /   complexValue
     /   value
     /   output
     /   varRef
 
-this=
+keywords=
+      thisRef
+    / lastOutput
+
+thisRef=
     "@this"
     {
         return {
@@ -27,8 +33,34 @@ this=
         }
     }
 
+lastOutput=
+    "@#"
+    {
+        return{
+            type : 'lastOutput'
+        }
+    }
+
+flags=
+    "-" flags:[a-zA-Z]+
+    {
+        return {
+            type:'flags',
+            values:flags
+        }
+    }
+
 value=
     value:litteral
+    {
+        return {
+            type:'value',
+            value:value
+        }
+    }
+
+complexValue=
+    value:complexLitteral
     {
         return {
             type:'value',
@@ -57,7 +89,7 @@ output=
     }
     
 componentProperty=
-    component:(componentPath / componentRef )  "." property:litteral
+    component:(thisRef / componentPath / componentRef  )  "." property:litteral
     {
          return {
             type : 'componentProperty',
@@ -93,10 +125,13 @@ componentName=
      $("/"litteral)+
 
 litteral=
-    $[a-zA-Z-:]+
+    $[a-zA-Z0-9\-:]+
+
+complexLitteral=
+    $[a-zA-Z0-9\-:/?#._]+    
 
 Integer "integer"
   = [0-9]+ { return parseInt(text(), 10); }
     
 _ "whitespace"
-  = [ \t]*
+  = [ \t]+

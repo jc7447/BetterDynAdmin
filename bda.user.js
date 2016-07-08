@@ -1,4 +1,4 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -31,7 +31,8 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // custom bootstrap
 // @require lib/bootstrap/js/bootstrap.min.js 
-// @require https://raw.githubusercontent.com/bassjobsen/Bootstrap-3-Typeahead/master/bootstrap3-typeahead.min.js
+// @require http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.min.js
+//  https://raw.githubusercontent.com/bassjobsen/Bootstrap-3-Typeahead/master/bootstrap3-typeahead.min.js
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
@@ -42,20 +43,21 @@
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
 // scoped bootstrap
 // @resource bootstrapCSS lib/bootstrap/scoped-twbs.min.css
+// @resource typeahead-bootstrapCSS https://raw.githubusercontent.com/bassjobsen/typeahead.js-bootstrap-css/master/typeaheadjs.css
 // @resource whatsnew https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/WHATSNEW.md
 
 // -- BDA plugins after all the libraries --
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.common.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.menu.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.toolbar.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.repository.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.pipeline.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.jdbc.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.perfmonitor.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.actor.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.storage.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.xmldef.js
-// @require https://raw.githubusercontent.com/jc7447/bda/dev/bda.compconfig.js
+// @require bda.common.js
+// @require bda.menu.js
+// @require bda.toolbar.js
+// @require bda.repository.js
+// @require bda.pipeline.js
+// @require bda.jdbc.js
+// @require bda.perfmonitor.js
+// @require bda.actor.js
+// @require bda.storage.js
+// @require bda.xmldef.js
+// @require bda.compconfig.js
 // @require bda.component.js
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
@@ -196,6 +198,8 @@ jQuery(document).ready(function() {
         GM_addStyle(select2BootCSS);
         var bootstrapCSS = GM_getResourceText("bootstrapCSS");
         GM_addStyle(bootstrapCSS);
+        var typeaheadbootstrapCSS = GM_getResourceText("typeahead-bootstrapCSS");
+        GM_addStyle(typeaheadbootstrapCSS);
         var bdaCSS = GM_getResourceText("bdaCSS");
         GM_addStyle(bdaCSS);
         var visCSS = GM_getResourceText("visCSS");

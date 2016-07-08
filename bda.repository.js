@@ -31,6 +31,10 @@
     isRepositoryPage : false,
     hasErrors : false,
     hasResults : false,
+    templates : {
+      printItem : '<print-item item-descriptor="{0}" id="{1}"/>',
+      queryItems : '<query-items item-descriptor="{0}">{1}</query-items>'
+    },
 
     build : function()
     {
@@ -1535,6 +1539,40 @@
       else
         $("#rawXmlLink").html("hide raw XML");
     },
+
+    // simply handles an ajax call to a repository and parse the result
+    // xmltext : full xml text
+    // repository : only the strict nucleus path
+    // callback : take 1 param : array of add-items
+    executeQuery : function(xmltext,repository,callback,errCallback){
+
+       $.ajax({
+          type: "POST",
+          url: "/dyn/admin/nucleus/{0}/".format(repository),
+          data: { xmltext: xmltext},
+          success: function(result, status, jqXHR) {
+            var rawItemsXml = $(result).find("code").html();
+            // remove first 2 lines
+            var tab = rawItemsXml.split("\n");
+            tab.splice(0,2);
+            rawItemsXml = tab.join("\n").trim();
+            // unescape HTML
+            rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
+            var xmlDoc = jQuery.parseXML(rawItemsXml);
+            callback($(xmlDoc));
+          },
+          error: function(result, status, jqXHR) {
+            if(!isNull(errCallback)){
+              errCallback();
+            }
+          }
+        })
+    },
+
+    executePrintItem : function(itemDescriptor,id,repository,callback,errCallback){
+      var xmlText = BDA_REPOSITORY.templates.printItem.format(itemDescriptor,id);
+      BDA_REPOSITORY.executeQuery(xmlText,repository,callback,errCallback);
+    }
   };
 
   // Reference to BDA_STORAGE
@@ -1553,6 +1591,10 @@
    $.fn.bdaRepository.reloadQueryList = function() {
      if (BDA_REPOSITORY.isRepositoryPage)
        BDA_REPOSITORY.reloadQueryList();
+   };
+
+   $.fn.executePrintItem = function(itemDescriptor,id,repository,callback,errCallback){
+     BDA_REPOSITORY.executePrintItem(itemDescriptor,id,repository,callback,errCallback);
    };
 
   console.log("bda.repository.js end");

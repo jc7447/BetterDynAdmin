@@ -120,6 +120,7 @@ try {
 
             $("#bdaDataBackup").click(function (){
               var data = BDA_STORAGE.getData();
+              console.log('bdaDataBackup ' + data);
               copyToClipboard(JSON.stringify(data));
             });
 
