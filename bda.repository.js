@@ -1554,12 +1554,12 @@
             var rawItemsXml = $(result).find("code").html();
             // remove first 2 lines
             var tab = rawItemsXml.split("\n");
-            tab.splice(0,2);
+           var head =  tab.splice(0,2);
             rawItemsXml = tab.join("\n").trim();
             // unescape HTML
             rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
             var xmlDoc = jQuery.parseXML(rawItemsXml);
-            callback($(xmlDoc));
+            callback($(xmlDoc),head);
           },
           error: function(result, status, jqXHR) {
             if(!isNull(errCallback)){
@@ -1596,6 +1596,15 @@
    $.fn.executePrintItem = function(itemDescriptor,id,repository,callback,errCallback){
      BDA_REPOSITORY.executePrintItem(itemDescriptor,id,repository,callback,errCallback);
    };
+
+   $.fn.executePrintItem = function(itemDescriptor,id,repository,callback,errCallback){
+     BDA_REPOSITORY.executePrintItem(itemDescriptor,id,repository,callback,errCallback);
+   };
+
+    $.fn.executeRql = function(xmlText,repository,callback,errCallback){
+     BDA_REPOSITORY.executeQuery(xmlText,repository,callback,errCallback);
+   };
+
 
   console.log("bda.repository.js end");
 })(jQuery);

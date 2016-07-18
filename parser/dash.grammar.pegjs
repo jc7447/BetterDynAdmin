@@ -1,5 +1,5 @@
 command=
-    funct:litteral params:(_ param)*
+    funct:litteral params:(_ param)* end?
     {
          var res = {
              funct:funct,
@@ -20,6 +20,7 @@ param=
     /   value
     /   output
     /   varRef
+    /   rqlWrapper
 
 keywords=
       thisRef
@@ -123,7 +124,35 @@ componentPath=
   
 componentName=
      $("/"litteral)+
-
+     
+rqlWrapper=
+  "{" rql:rql "}"
+    {
+      return {
+          type: 'rql',
+            value: rql
+          }
+    }
+rql=
+  lines:line*
+  {
+      var linesArray = []
+        for (var i = 0; i < lines.length; i++) {
+          var l = lines[i];
+            if(l.length > 0 && l !="\n"){
+              linesArray.push(l);
+            }
+        }
+      return linesArray.join('\n'); 
+    }
+   
+line=
+  end
+  /value:[^{}\n]+ end?
+    {
+      return value.join('');
+    }
+   
 litteral=
     $[a-zA-Z0-9\-:]+
 
@@ -135,3 +164,6 @@ Integer "integer"
     
 _ "whitespace"
   = [ \t]+
+
+end
+  =[;\n]

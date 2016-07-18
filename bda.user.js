@@ -59,6 +59,7 @@
 // @require bda.xmldef.js
 // @require bda.compconfig.js
 // @require bda.component.js
+// @require parser/bda.dash.line.splitter.js
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
 

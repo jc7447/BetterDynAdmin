@@ -141,6 +141,19 @@
     return rqlQueries;
   },
 
+  getQueryByName: function(repo, name) {
+    var res = null;
+    var shortRepoName =  getComponentNameFromPath(repo);
+    var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
+    for (var i = 0; i != rqlQueries.length; i++) {
+      var query = rqlQueries[i];
+      if ( query.repo == shortRepoName && query.name == name) {
+        res = query;
+      }
+    }
+    return res;
+  },
+
   storeSplitValue : function ()
   {
     var splitObj = {};

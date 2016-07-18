@@ -764,8 +764,8 @@ table.tablesorter tr.alt-row:hover td {
 #dashScreen {
   font-family: monospace;
   overflow-y:scroll; 
-  max-height: 400px;
-  height: 400px;
+  max-height: 250px;
+  height: 250px;
 }
 
 #dashScreen .alert{
@@ -822,3 +822,4 @@ button.dash_save{
 .no-padding{
   padding: 0 !important;
 }
+
