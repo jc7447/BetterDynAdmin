@@ -1048,7 +1048,7 @@ jQuery(document).ready(function() {
       handleOutput: function(cmd, params, result, textResult, level) {
         logTrace('handleOutput ' + textResult);
         logTrace(params);
-        if (!isNull(params) && !isNull(params.output)) {
+        if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
           BDA_DASH.saveOutput(result, params.output);
         }
 
@@ -1066,12 +1066,19 @@ jQuery(document).ready(function() {
       },
 
       saveOutput: function(result, outputDef) {
+
+        if(isNull(result)){
+          logTrace("result is null, not saving anything");
+          return;
+        }
+
         logTrace('saveOutput');
         logTrace(outputDef);
         logTrace(result);
 
         //handle everything like an arrray
         var resArray = [].concat(result);
+
         logTrace(resArray);
         var idx = outputDef.index;
         if (isNull(idx)) {
@@ -1079,6 +1086,11 @@ jQuery(document).ready(function() {
         }
         var res = resArray[idx];
         logTrace(res);
+
+        if(isNull(res)){
+          logTrace("result is null, not saving anything");
+          return;
+        }
 
         var out;
         if (isNull(outputDef.format)) {
@@ -1210,10 +1222,15 @@ jQuery(document).ready(function() {
         BDA_DASH.handleInput(input);
       },
 
-      getVarValue: function(name) {
-        var val = BDA_DASH.VARS[name];
+      getVarValue: function(param) {
+        console.log("getVarValue");
+        console.log(param);
+        var val = BDA_DASH.VARS[param.name];
         if (val == undefined || val == null) {
           val = "";
+        }
+        if(!isNull(param.path) && param.path !== ""){
+          val = subProp(val, param.path);
         }
         return val;
       },
@@ -1303,7 +1320,7 @@ jQuery(document).ready(function() {
             res = param.value;
             break;
           case "varRef":
-            res = BDA_DASH.getVarValue(param.name);
+            res = BDA_DASH.getVarValue(param);
             if (isNull(res)) {
               throw {
                 name: "Invalid Name",
@@ -1365,7 +1382,7 @@ jQuery(document).ready(function() {
             path = getCurrentComponentPath();
             break;
           case "varRef":
-            path = BDA_DASH.getVarValue(componentParam.name);
+            path = BDA_DASH.getVarValue(componentParam);
             break;
           case "componentPath":
             path = componentParam.path;

@@ -3,13 +3,19 @@ commands=
     
     
 command=
-  nonnull
-    /eol
+    comment
+  /   nonnull
+    / eol
    
     
 nonnull=
   elem:elem+ eol?
     { return elem.join('')}
+    
+comment=
+  "#" [^\n;]* eol
+    { return ''}
+
     
 elem=
    multWrapper
