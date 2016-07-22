@@ -3,7 +3,7 @@
 try {
 
   console.log('bda.common.js start');
-  var isLoggingTrace = false;
+  var isLoggingTrace = true;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----

@@ -181,6 +181,12 @@ jQuery(document).ready(function() {
         required: false
       }],
 
+      flagsParamDef: [{
+        name: "flags",
+        type: "flags",
+        required: false
+      }],
+
       HIST: [],
       typeahead_base: [],
       //to sync multiple methods
@@ -1046,6 +1052,13 @@ jQuery(document).ready(function() {
 
       //end method, should be always called at the end of a shell function
       handleOutput: function(cmd, params, result, textResult, level) {
+
+        var silent = false;
+        if (BDA_DASH.hasFlag(params, 's')) {
+          silent = true;
+          textResult = "";
+        }
+
         logTrace('handleOutput ' + textResult);
         logTrace(params);
         if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
@@ -1067,7 +1080,7 @@ jQuery(document).ready(function() {
 
       saveOutput: function(result, outputDef) {
 
-        if(isNull(result)){
+        if (isNull(result)) {
           logTrace("result is null, not saving anything");
           return;
         }
@@ -1087,7 +1100,7 @@ jQuery(document).ready(function() {
         var res = resArray[idx];
         logTrace(res);
 
-        if(isNull(res)){
+        if (isNull(res)) {
           logTrace("result is null, not saving anything");
           return;
         }
@@ -1229,17 +1242,19 @@ jQuery(document).ready(function() {
         if (val == undefined || val == null) {
           val = "";
         }
-        if(!isNull(param.path) && param.path !== ""){
+        if (!isNull(param.path) && param.path !== "") {
           val = subProp(val, param.path);
         }
         return val;
       },
 
       parseParams: function(pExpected, params) {
-
+        logTrace("parseParams");
         var res = {};
         if (!isNull(pExpected)) {
-          var expected = pExpected.concat(BDA_DASH.defaultParams);
+          var expected = BDA_DASH.flagsParamDef.concat(pExpected).concat(BDA_DASH.defaultParams);
+
+          logTrace(expected);
 
           var j = 0;
           for (var i = 0; i < expected.length; i++) {
@@ -1248,7 +1263,7 @@ jQuery(document).ready(function() {
             }, expected[i]);;
             var inParam = params[j];
 
-            logTrace('parseParams');
+            logTrace('parseParam:');
             logTrace('exp = ' + JSON.stringify(exp));
             logTrace('inParam = ' + JSON.stringify(inParam));
 
@@ -1301,16 +1316,18 @@ jQuery(document).ready(function() {
           case 'output':
             res = param;
             break;
+          case 'flags':
+            res = BDA_DASH.getFlags(param);
+            break;
           default:
             throw {
               name: "Parsing Exception",
               message: "invalid parameter type"
             }
         }
-        logTrace("getParamValue : " + res);
+        logTrace("getParamValue : " + JSON.stringify(res));
         return res;
       },
-
 
       getValue: function(param) {
         logTrace('getValue : param : ' + JSON.stringify(param));
@@ -1423,6 +1440,16 @@ jQuery(document).ready(function() {
         return path;
       },
 
+      getFlags: function(param) {
+        if (param.type != "flags") {
+          throw {
+            name: "Parsing Exception",
+            message: "invalid value type {0}".format(param.type)
+          }
+        }
+        return param;
+      },
+
       parse: function(val) {
         return BDA_DASH_PARSER.parse(val);
       },
@@ -1457,6 +1484,11 @@ jQuery(document).ready(function() {
           function(match, number) {
             return typeof args[number] !== undefined ? args[number] : match;
           });
+      },
+
+      hasFlag: function(params, flag) {
+        return (!isNull(params) && !isNull(params.flags) && params.flags.values.indexOf(flag) > -1);
+
       }
 
 
