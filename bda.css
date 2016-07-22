@@ -285,6 +285,7 @@ a {
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
+  background-color: #007bb8;
   border-top: none;
   padding: 3px;
   text-align: center;
@@ -763,6 +764,11 @@ table.tablesorter tr.alt-row:hover td {
   font-size: 14px;
 }
 
+#dashEditor{
+  resize: vertical;
+  min-height: 100px;
+}
+
 #dashScreen {
   font-family: monospace;
   overflow-y:scroll; 
@@ -823,5 +829,19 @@ button.dash_save{
 
 .no-padding{
   padding: 0 !important;
+}
+
+#bdaDashMenuElem .menuArrow{
+  padding-top: 2px;
+}
+
+kbd{
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #fff;
+  background-color: #333;
+  border-radius: 3px;
+  -webkit-box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
 }
 

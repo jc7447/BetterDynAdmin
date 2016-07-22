@@ -10,7 +10,12 @@ command=
         }
         return res;
     }
+
 param=
+  simpleParam
+  / composedParam
+
+simpleParam=
         componentProperty
     /   keywords
     /   flags
@@ -20,7 +25,11 @@ param=
     /   value
     /   output
     /   varRef
-    /   rqlWrapper
+   
+
+composedParam=
+     multilineWrapper
+    / array
 
 keywords=
       thisRef
@@ -52,7 +61,7 @@ flags=
     }
 
 value=
-    value:litteral
+    value:litteralPath
     {
         return {
             type:'value',
@@ -68,9 +77,7 @@ complexValue=
             value:value
         }
     }
-
-
-    
+   
 varRef=
     "$" name:litteral
     {
@@ -81,16 +88,28 @@ varRef=
     }
 
 output=
-    ">" name:litteral
+    ">" name:litteral index:('#' Integer)? format:(objectDef/singlePath)?
     {
+      var idx = null;
+        if(index !=null){
+            idx=index[1];
+        }
         return {
             type : 'output',
-            name:name
+            name:name,
+            index:idx,
+            format:format
         }
     }
     
+singlePath=
+  ":" path:value
+    {
+      return path
+    }
+    
 componentProperty=
-    component:(thisRef / componentPath / componentRef  )  "." property:litteral
+    component:(thisRef / componentPath / componentRef / varRef )  "." property:(value/varRef)
     {
          return {
             type : 'componentProperty',
@@ -125,15 +144,15 @@ componentPath=
 componentName=
      $("/"litteral)+
      
-rqlWrapper=
-  "{" rql:rql "}"
+multilineWrapper=
+  "{" lines:multiline "}"
     {
       return {
-          type: 'rql',
-            value: rql
+          type: 'multiline',
+            value: lines
           }
     }
-rql=
+multiline=
   lines:line*
   {
       var linesArray = []
@@ -145,18 +164,68 @@ rql=
         }
       return linesArray.join('\n'); 
     }
-   
 line=
   end
   /value:[^{}\n]+ end?
     {
       return value.join('');
     }
+    
+objectDef=
+  "("  l1:objectLine l2:("," objectLine)* ")"
+  {
+    var arr = [];
+        arr.push(l1);
+        for (var i = 0; i < l2.length; i++) {
+          var v = l2[i];
+           arr.push(v[1]);
+        }
+        return {type:'objectDef',value:arr};
+  }
+    
+objectLine= 
+     __? v:(litteral __ ":" __ litteralPath) _?
+    {
+      if(v!=null){
+          return {name:v[0],path:v[4]}
+        }else{
+          return null;
+        }
+        
+    }
+   
+array=
+  "[" _? value:simpleParam values:( _? "," _? simpleParam)* _? "]"
+    {
+      var arr = [];
+        arr.push(value);
+        for (var i = 0; i < values.length; i++) {
+          var v = values[i];
+           arr.push(v[3]);
+        }
+        return { type: 'array',
+            value: arr
+           };
+    }
+   
+    
+complexLitteral=
+  withspace
+    / spacelessCplx
+
+withspace=
+  "\"" _? value:$( complexLitteral (_ complexLitteral)*) _? "\""
+  {
+      return value;
+    }
    
 litteral=
-    $[a-zA-Z0-9\-:]+
-
-complexLitteral=
+    $[a-zA-Z0-9\-]+
+    
+litteralPath=
+    $[a-zA-Z0-9\-.]+
+    
+spacelessCplx=
     $[a-zA-Z0-9\-:/?#._]+    
 
 Integer "integer"
@@ -164,6 +233,9 @@ Integer "integer"
     
 _ "whitespace"
   = [ \t]+
+
+__ "extended whitespace"
+  =[ \t\n]*
 
 end
   =[;\n]

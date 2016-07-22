@@ -38,6 +38,7 @@ jQuery(document).ready(function() {
           '<div class="modal-content">' +
           '<div class="modal-header">' +
           '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '<button id="dashClearScreen" type="button" class="close dash_close" data-dismiss="" aria-label="Clear"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
           '<h4 class="modal-title">DASH - DynAdmin SHell</h4>' +
           '</div>' +
           '<div id="dashScreen" class="modal-body">' +
@@ -50,7 +51,7 @@ jQuery(document).ready(function() {
           '<div class="input-group">' +
           '<div class="input-group-addon"><span id="dash_dollar">$</span><i class="fa fa-spinner fa-spin" id="dash_spinner" style="display: none;"></i></div>' +
           '<input type="text" class="form-control dash-input main-input" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"/>' +
-          '<span  class="input-group-btn"><button id="dashCleanInput" class="btn btn-default">&times;</button></span>' +
+          '<span  class="input-group-btn"><button type="button" id="dashCleanInput" class="btn btn-default">&times;</button></span>' +
           '</div>' +
           '</div>' +
           '</form>' +
@@ -117,13 +118,14 @@ jQuery(document).ready(function() {
           '<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab">Console</a></li>' +
           '<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab">Editor</a></li>' +
           '</ul>' +
+          '<div id="dashTips"></div>' +
           '</div>' +
           '</div>' +
           '</div>' +
           '</div>' +
           '</div>',
         screenLine: '<div class="dash_screen_line alert {1} alert-dismissible" role="alert" data-command="">' +
-          '<button type="button" class="close dash_close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '<button type="button" class="close dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
           '<button type="button" class="btn btn-default dash_save" aria-label="Save" aria-pressed="false" style="display:none;" >' +
           '<i class="fa fa-floppy-o" aria-hidden="true"></i>' +
           '<input type="checkbox" class="innerCheckbox hidden"/>' +
@@ -138,21 +140,32 @@ jQuery(document).ready(function() {
           '</div>',
         not_implemented: 'This command is not implemented yet.',
         helpMain: '<div>References:<ul>' +
+          '<li>Save the result of a command to a variable using ">varName"</li>' +
           '<li>Reference to variable : $varName</li>' +
           '<li>Reference to component : @FAV - where FAV is the shortname of a bookmarked component, ex @OR : OrderRepository.</li>' +
           '<li>Reference to current component : @this</li>' +
-          '</ul></div>',
+          '</ul>' +
+          '<p>For more information go to the <a target="_blank"  href="https://github.com/jc7447/BetterDynAdmin/wiki/Dash">github wiki</a></p>' +
+          '</div>',
         help: {
           help: 'prints this help',
-          get: 'get /some/Component.property [>variable]',
+          get: 'get /some/Component.property',
           set: 'set /some/Component.property newvalue',
           go: 'go /to/some/Component - redirects to the component page',
           print: 'print /some/Repository itemDesc id',
           comprefs: 'lists all the available component references',
           vars: 'lists all the available variables',
-          vi: 'Text editor'
-
+          vi: 'Text editor',
         },
+        tips: [
+          'You can open Dash by using the shortcut <kbd>ctrl + alt + T</kbd>',
+          'Submit the editor content by pressing <kbd>alt + enter</kbd>',
+          'Use @this to reference the current component',
+          'Use @SHORT to reference a component that has been favorited',
+          'Type help to try to get some help',
+          'All your base are belong to us.'
+        ],
+        menuElem: '<div id="bdaDashMenuElem" class="menu" title="ctrl+alt+T"><p>Dash</p><div class="menuArrow">$</div></div>',
         errMsg: '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.',
         tableTemplate: '<table class="table"><tr><th>{0}</th><th>{1}</th></tr>{2}</table>',
         rowTemplate: '<tr><td>{0}</td><td>{1}</td></tr>',
@@ -247,7 +260,8 @@ jQuery(document).ready(function() {
           }],
           main: function(cmdString, params) {
             var value = params.value;
-            BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+            var text = JSON.stringify(params.value);
+            BDA_DASH.handleOutput(cmdString, params, value, text, "success");
           }
         },
 
@@ -282,13 +296,15 @@ jQuery(document).ready(function() {
               function($xmlDoc) {
                 try {
                   var res = "";
+                  var items = []
                   if (!isNull($xmlDoc)) {
                     var $itemXml;
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
                       res += BDA_DASH.templates.printItemTemplate.format($itemXml.attr('id'), buildSimpleTable($itemXml, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+                      items.push(convertAddItemToPlainObject($itemXml));
                     })
-                    BDA_DASH.handleOutput(cmdString, params, $itemXml, res, "success");
+                    BDA_DASH.handleOutput(cmdString, params, items, res, "success");
                   } else {
                     throw {
                       name: "Not Found",
@@ -319,9 +335,16 @@ jQuery(document).ready(function() {
             name: "xmlText",
             type: "value",
             required: false
+          }, {
+            name: "queryParams",
+            type: "array",
+            required: false
           }],
 
           main: function(cmdString, params) {
+
+            logTrace('rql function:');
+            logTrace(JSON.stringify(params));
 
             var xmlText, repo;
             if (!isNull(params.componentProperty)) {
@@ -346,6 +369,13 @@ jQuery(document).ready(function() {
               }
             }
 
+            if (params.queryParams != null) {
+              console.log('params.queryParams:');
+              console.log(params.queryParams);
+              xmlText = BDA_DASH.formatRql(xmlText, params.queryParams);
+              //expand the params
+            }
+
             logTrace('repo : ' + repo);
             logTrace('xmlText : ' + xmlText);
 
@@ -357,11 +387,13 @@ jQuery(document).ready(function() {
                   var res = head.join('') + "\n";
                   if (!isNull($xmlDoc)) {
                     var $itemXml;
+                    var items = [];
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
                       res += BDA_DASH.templates.printItemTemplate.format($itemXml.attr('id'), buildSimpleTable($itemXml, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+                      items.push(convertAddItemToPlainObject($itemXml));
                     })
-                    BDA_DASH.handleOutput(cmdString, params, $itemXml, res, "success");
+                    BDA_DASH.handleOutput(cmdString, params, items, res, "success");
                   } else {
                     throw {
                       name: "Not Found",
@@ -412,8 +444,8 @@ jQuery(document).ready(function() {
               $values.append($('<p><strong>{0}</strong></p>'.format(q.name + " : ")));
               $values.append($('<pre></pre>').text(q.query));
             }
-            var value = $values.outerHTML();
-            BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+            var textvalue = $values.outerHTML();
+            BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
 
           }
         },
@@ -450,8 +482,8 @@ jQuery(document).ready(function() {
           commandPattern: '',
           main: function(cmdString, params) {
 
-            var value = '<pre>{0}</pre>'.format(JSON.stringify(BDA_DASH.VARS, null, 2));
-            BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+            var textvalue = '<pre>{0}</pre>'.format(JSON.stringify(BDA_DASH.VARS, null, 2));
+            BDA_DASH.handleOutput(cmdString, params, BDA_DASH.VARS, textvalue, "success");
 
           }
         },
@@ -462,8 +494,20 @@ jQuery(document).ready(function() {
           main: function(cmdString, params) {
 
             var value = '<pre>{0}</pre>'.format(JSON.stringify(BDA_DASH.COMP_REFS, null, 2));
-            BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+            BDA_DASH.handleOutput(cmdString, params, BDA_DASH.COMP_REFS, value, "success");
 
+          }
+        },
+
+        //FIXME
+        '-': {
+          commandPattern: '',
+          main: function(cmdString, params) {
+
+            if (BDA_DASH.HIST.length > 0) {
+              BDA_DASH.$input.val(BDA_DASH.HIST[BDA_DASH.HIST.length - 1]);
+            }
+            BDA_DASH.handleNextQueuedElem();
           }
         },
 
@@ -472,7 +516,6 @@ jQuery(document).ready(function() {
           main: function(cmdString, params) {
             //BDA_DASH.$screen.find('.alert').each(function(){$(this).alert('close')});
             BDA_DASH.$screen.find('.alert').alert('close');
-            BDA_DASH.HIST.push(cmdString);
             BDA_DASH.handleNextQueuedElem();
           }
         },
@@ -507,7 +550,7 @@ jQuery(document).ready(function() {
             }
             var txtValue = $value.outerHTML();
             console.log(txtValue);
-            BDA_DASH.handleOutput(cmdString, params, txtValue, txtValue, "success");
+            BDA_DASH.handleOutput(cmdString, params, BDA_DASH.HIST, txtValue, "success");
 
           }
         },
@@ -589,12 +632,15 @@ jQuery(document).ready(function() {
         //change the screen size to keep the modal same size
         logTrace('bind tab change events');
         //init size
-  /*      BDA_DASH.calcDesiredWindowHeight();
-        BDA_DASH.updateScreenHeight();*/
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
 
           BDA_DASH.updateScreenHeight();
+          var $target = $(e.target);
+          //save latest tab
+          var tId = $target.attr('id');
+          BDA_STORAGE.storeConfiguration('dashDefaultTab', tId);
 
+          $('#dashFooter .tab-pane.active .main-input').focus();
         });
         //resize dash on window resize
         $(window).resize(function() {
@@ -617,6 +663,10 @@ jQuery(document).ready(function() {
             BDA_DASH.handleInput()
             return false;
           }
+        });
+
+        $('#dashClearScreen').on('click', function() {
+          BDA_DASH.$screen.find('.alert').alert('close');
         });
 
         /*     BDA_DASH.$input.keydown(function(e) {
@@ -895,6 +945,9 @@ jQuery(document).ready(function() {
           console.error(e);
         }
 
+        var rdm = Math.floor(Math.random() * BDA_DASH.templates.tips.length);
+        var tip = BDA_DASH.templates.tips[rdm];
+        $('#dashTips').html(tip);
         BDA_DASH.$modal.modal('show');
       },
 
@@ -903,7 +956,6 @@ jQuery(document).ready(function() {
 
           $('#dash_dollar').hide();
           $('#dash_spinner').show();
-
 
           if (isNull(input)) {
             input = BDA_DASH.$input.val();
@@ -936,8 +988,6 @@ jQuery(document).ready(function() {
             BDA_DASH.handleError(input, e);
           }
 
-          BDA_DASH.$input.typeahead('val', '');
-          //          BDA_DASH.$input.val('');
         } catch (e) {
           logTrace(e);
         }
@@ -955,6 +1005,8 @@ jQuery(document).ready(function() {
         } else {
           $('#dash_dollar').show();
           $('#dash_spinner').hide();
+          BDA_DASH.$input.typeahead('val', '');
+          //          BDA_DASH.$input.val('');
         }
       },
 
@@ -962,7 +1014,7 @@ jQuery(document).ready(function() {
         logTrace('executeCommand:');
         logTrace(JSON.stringify(command));
 
-         BDA_DASH.saveHistory(val, true);
+        BDA_DASH.saveHistory(val, true);
 
         var fct = BDA_DASH.FCT[command.funct]
         if (!isNull(fct) && !isNull(fct.main)) {
@@ -995,8 +1047,9 @@ jQuery(document).ready(function() {
       //end method, should be always called at the end of a shell function
       handleOutput: function(cmd, params, result, textResult, level) {
         logTrace('handleOutput ' + textResult);
+        logTrace(params);
         if (!isNull(params) && !isNull(params.output)) {
-          BDA_DASH.VARS[params.output] = result;
+          BDA_DASH.saveOutput(result, params.output);
         }
 
         var msgClass = BDA_DASH.styles[level];
@@ -1010,6 +1063,55 @@ jQuery(document).ready(function() {
         BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
         BDA_DASH.handleNextQueuedElem();
         return $entry;
+      },
+
+      saveOutput: function(result, outputDef) {
+        logTrace('saveOutput');
+        logTrace(outputDef);
+        logTrace(result);
+
+        //handle everything like an arrray
+        var resArray = [].concat(result);
+        logTrace(resArray);
+        var idx = outputDef.index;
+        if (isNull(idx)) {
+          idx = 0;
+        }
+        var res = resArray[idx];
+        logTrace(res);
+
+        var out;
+        if (isNull(outputDef.format)) {
+          out = res;
+        } else {
+
+          switch (outputDef.format.type) {
+            case 'value':
+              out = subProp(res, outputDef.format.value);
+              break;
+            case 'objectDef':
+              out = {};
+              for (var i = 0; i < outputDef.format.value.length; i++) {
+                var def = outputDef.format.value[i];
+                logTrace(def);
+                //def.path is of form a.b.c
+                var val = subProp(res, def.path);
+                logTrace(val);
+                out[def.name] = val;
+              }
+              break;
+            default:
+              throw {
+                name: 'InvalidType',
+                message: 'Invalid output format'
+              }
+          }
+
+
+        }
+        logTrace('output:');
+        logTrace(out);
+        BDA_DASH.VARS[outputDef.name] = out;
       },
 
       //
@@ -1176,8 +1278,11 @@ jQuery(document).ready(function() {
           case 'value':
             res = BDA_DASH.getValue(param);
             break;
+          case 'array':
+            res = BDA_DASH.getArrayValue(param.value);
+            break;
           case 'output':
-            res = param.name;
+            res = param;
             break;
           default:
             throw {
@@ -1198,7 +1303,7 @@ jQuery(document).ready(function() {
             res = param.value;
             break;
           case "varRef":
-            res = BDA_DASH.VARS[param.name];
+            res = BDA_DASH.getVarValue(param.name);
             if (isNull(res)) {
               throw {
                 name: "Invalid Name",
@@ -1211,15 +1316,28 @@ jQuery(document).ready(function() {
           case "this":
             res = BDA_DASH.getComponent(param);
             break;
-          case "rql":
+          case "multiline":
             res = param.value;
             break;
           default:
             throw {
               name: "Parsing Exception",
-              message: "invalid value type"
+              message: "invalid value type {0}".format(param.type)
             }
         }
+        return res;
+      },
+
+      getArrayValue: function(paramArray) {
+        logTrace('getArrayValue');
+        logTrace(paramArray);
+        var res = [];
+        for (var i = 0; i < paramArray.length; i++) {
+          var param = paramArray[i];
+          var value = BDA_DASH.getValue(param);
+          res.push(value);
+        }
+        logTrace(res);
         return res;
       },
 
@@ -1233,7 +1351,7 @@ jQuery(document).ready(function() {
         }
 
         return {
-          property: param.property,
+          property: BDA_DASH.getValue(param.property),
           path: BDA_DASH.getComponent(param.component)
         }
 
@@ -1245,6 +1363,9 @@ jQuery(document).ready(function() {
         switch (componentParam.type) {
           case "this":
             path = getCurrentComponentPath();
+            break;
+          case "varRef":
+            path = BDA_DASH.getVarValue(componentParam.name);
             break;
           case "componentPath":
             path = componentParam.path;
@@ -1304,6 +1425,21 @@ jQuery(document).ready(function() {
           compRefList.push(fav.componentPath.replace(/\/dyn\/admin\/nucleus/g, '').replace(/\/$/g, ''));
           BDA_DASH.COMP_REFS[key] = compRefList;
         }
+      },
+
+      createMenuElem: function() {
+        var $elem = $(BDA_DASH.templates.menuElem);
+        $elem
+          .on('click', BDA_DASH.openDash);
+        return $elem;
+      },
+
+      formatRql: function(rql, args) {
+
+        return rql.replace(/\$(\d+)/g,
+          function(match, number) {
+            return typeof args[number] !== undefined ? args[number] : match;
+          });
       }
 
 
@@ -1323,6 +1459,13 @@ jQuery(document).ready(function() {
       logTrace('Init plugin {0}'.format('DASH'));
       BDA = pBDA;
       BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
+
+
+      if ($().bdaAddMenuElem) {
+        logTrace('before init menu elem');
+        $().bdaAddMenuElem(BDA_DASH.createMenuElem());
+      }
+
       return this;
     }
 

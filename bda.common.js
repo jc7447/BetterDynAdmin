@@ -270,11 +270,57 @@ try {
     return table;
   }
 
-  $.fn.outerHTML = function(s) {
-  return (s)
-  ? this.before(s).remove()
-  : $("<p>").append(this.eq(0).clone()).html();
+  this.convertAddItemToPlainObject = function($item) {
+    var o = {};
+
+    var itemDesc = $item.attr('item-descriptor');
+    o.itemDescriptor = itemDesc;
+    var id = $item.attr('id');
+    o.id = id;
+    $item.find('set-property').each(function() {
+      var $row = $(this);
+      o[$row.attr('name')] = $row.text();
+    });
+
+    return o;
   }
+
+  this.index = function(obj, i) {
+    return obj[i]
+  }
+
+  // if s = a.b.c, return o.a.b.c 
+  this.subProp = function(o, s) {
+    return s.split('.').reduce(index, o);
+  }
+
+
+  this.sanitizeXml = function(xmlContent) {
+      var start = new Date().getTime();
+
+      var regexp = /<\!--(.*)(<set\-property.*><\!\[CDATA\[[\S\s]*?\]\]\><\/set\-property\>).*-->/ig;
+      var xmlStr = xmlContent.replace(regexp, function(str, p1, p2, offset, s) {
+        var attributes = "set-property ";
+        if (p1.indexOf("derived") != -1)
+          attributes += "derived=\"true\" ";
+        if (p1.indexOf("rdonly") != -1)
+          attributes += "rdonly=\"true\" ";
+        if (p1.indexOf("export") != -1)
+          attributes += "export=\"true\" ";
+
+        var newLine = p2.replace("set-property", attributes);
+        return newLine;
+      });
+      var endTime = new Date();
+      var time = endTime.getTime() - start;
+      console.log("time to sanitize : " + time + "ms");
+      return xmlStr;
+    },
+
+    $.fn.outerHTML = function(s) {
+      return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
+    }
+
 
 
   console.log('bda.common.js initialized');
