@@ -59,7 +59,7 @@
 
   storeConfiguration : function (name, value)
   {
-    console.log("Try to store config: " + name + ", value : " + JSON.stringify(value));
+    logTrace("Try to store config: " + name + ", value : " + JSON.stringify(value));
     var storedConfig = BDA_STORAGE.getStoredConfiguration();
     storedConfig[name] = value;
     BDA_STORAGE.storeItem(BDA_STORAGE.STORED_CONFIG, JSON.stringify(storedConfig));
@@ -162,13 +162,17 @@
     BDA_STORAGE.storeItem('splitObj', JSON.stringify(splitObj));
   },
 
-  storeRQLQuery : function (name, query)
+  storeRQLQuery : function (name, query,componentPath)
   {
     console.log("Try to store : " + name + ", query : " + query);
     var storeQuery = {};
     storeQuery.name = name;
     storeQuery.query = query;
-    storeQuery.repo = getComponentNameFromPath(getCurrentComponentPath());
+    var path = componentPath;
+    if(isNull(path)){
+      path= getCurrentComponentPath();
+    }
+    storeQuery.repo = getComponentNameFromPath(path);
     var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
     rqlQueries.push(storeQuery);
     console.log(rqlQueries);

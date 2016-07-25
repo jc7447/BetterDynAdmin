@@ -181,6 +181,12 @@ jQuery(document).ready(function() {
         required: false
       }],
 
+      flagsParamDef: [{
+        name: "flags",
+        type: "flags",
+        required: false
+      }],
+
       HIST: [],
       typeahead_base: [],
       //to sync multiple methods
@@ -412,41 +418,86 @@ jQuery(document).ready(function() {
 
         queries: {
 
-          commandPattern: '[/some/Repo|@SHORT]',
+          commandPattern: '(add|list) (/some/Repo|@SHORT) [name {xmlText}]',
 
           paramDef: [{
-            name: "component",
+            name: "action",
+            type: "value"
+          }, {
+            name: "repo",
             type: "component",
+            required: true
+          }, {
+            name: "name",
+            type: "value",
+            required: false
+          }, {
+            name: "xmlText",
+            type: "value",
             required: false
           }],
           main: function(cmdString, params) {
 
-            var queries = BDA_STORAGE.getStoredRQLQueries();
+            var action = params.action;
 
-            var purgedRqlQueries = [];
-            if (!isNull(params.component)) {
+            switch (action) {
+              case "list":
 
-              for (var i = 0; i != queries.length; i++) {
-                var query = queries[i];
-                if (!query.hasOwnProperty("repo") || query.repo == getComponentNameFromPath(params.component)) {
-                  purgedRqlQueries.push(query);
+                var queries = BDA_STORAGE.getStoredRQLQueries();
+                var purgedRqlQueries = [];
+                if (!isNull(params.repo)) {
+
+                  for (var i = 0; i != queries.length; i++) {
+                    var query = queries[i];
+                    if (!query.hasOwnProperty("repo") || query.repo == getComponentNameFromPath(params.repo)) {
+                      purgedRqlQueries.push(query);
+                    }
+                  }
+
+                } else {
+                  purgedRqlQueries = queries;
                 }
-              }
 
-            } else {
-              purgedRqlQueries = queries;
+                var $values = $('<dl></dl>');
+                for (var i = 0; i < purgedRqlQueries.length; i++) {
+                  var q = purgedRqlQueries[i];
+                  console.log(q.query);
+                  $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
+                  $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
+                }
+                var textvalue = $values.outerHTML();
+                BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
+
+                break;
+              case "add":
+
+                var name = $.trim(params.name);
+                var xmlText = $.trim(params.xmlText);
+                if (isNull(name) || name.length == 0) {
+                  throw {
+                    name: "MissingParameters",
+                    message: "Missing query name"
+                  }
+                }
+                if (isNull(xmlText) || xmlText.length == 0) {
+                  throw {
+                    name: "MissingParameters",
+                    message: "Missing xmlText"
+                  }
+                }
+
+                BDA_STORAGE.storeRQLQuery(name, xmlText, params.repo);
+                var util = $('<pre></pre>').text(xmlText);
+                var msg = "Saved script {0} with content {1}".format(name, util.outerHTML());
+
+                BDA_DASH.handleOutput(cmdString, params, name, msg, "success");
+                break;
+              default:
+                throw {
+                  name: "InvalidParameter",
+                  message: "Action {0} does not exists.<br/>Usage: queries {1}".format(action, BDA_DASH.FCT.queries.commandPattern)
+                }
             }
-
-            var $values = $('<div></div>');
-            for (var i = 0; i < purgedRqlQueries.length; i++) {
-              var q = purgedRqlQueries[i];
-              console.log(q.query);
-              $values.append($('<p><strong>{0}</strong></p>'.format(q.name + " : ")));
-              $values.append($('<pre></pre>').text(q.query));
-            }
-            var textvalue = $values.outerHTML();
-            BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
-
           }
         },
 
@@ -574,6 +625,34 @@ jQuery(document).ready(function() {
             values.push(BDA_DASH.templates.helpMain);
             msg = values.join('');
             BDA_DASH.handleOutput(cmdString, params, msg, msg, "success");
+          }
+        },
+
+        fav: {
+
+          paramDef: [{
+            name: "component",
+            type: "component"
+          }],
+
+          main: function(cmdString, params) {
+
+            var path = params.component;
+            //add /d/a/nucleus
+            path = extendComponentPath(path);
+            //check if fav exists
+            if ($.fn.bdaToolbar.isComponentAlreadyStored(path)) {
+              throw {
+                name: "ExistingFav",
+                message: "Favorite {0} already exists.".format(path),
+                level: "warning"
+              }
+            } else {
+              $.fn.bdaToolbar.saveFavorite(path, [], [], []);
+              var msg = "Favorite {0} created".format(path);
+              BDA_DASH.handleOutput(cmdString, params, msg, msg, "success");
+            }
+
           }
         }
       },
@@ -1035,7 +1114,11 @@ jQuery(document).ready(function() {
       handleError: function(val, err) {
         logTrace(err);
         var errMsg = BDA_DASH.templates.errMsg.format(err.name, err.message);
-        BDA_DASH.handleOutput(val, null, null, errMsg, "error");
+        var level = err.level;
+        if (isNull(level)) {
+          level = "error";
+        }
+        BDA_DASH.handleOutput(val, null, null, errMsg, level);
       },
 
       handleSysError: function(val, err) {
@@ -1046,9 +1129,16 @@ jQuery(document).ready(function() {
 
       //end method, should be always called at the end of a shell function
       handleOutput: function(cmd, params, result, textResult, level) {
+
+        var silent = false;
+        if (BDA_DASH.hasFlag(params, 's')) {
+          silent = true;
+          textResult = "";
+        }
+
         logTrace('handleOutput ' + textResult);
         logTrace(params);
-        if (!isNull(params) && !isNull(params.output)) {
+        if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
           BDA_DASH.saveOutput(result, params.output);
         }
 
@@ -1066,12 +1156,19 @@ jQuery(document).ready(function() {
       },
 
       saveOutput: function(result, outputDef) {
+
+        if (isNull(result)) {
+          logTrace("result is null, not saving anything");
+          return;
+        }
+
         logTrace('saveOutput');
         logTrace(outputDef);
         logTrace(result);
 
         //handle everything like an arrray
         var resArray = [].concat(result);
+
         logTrace(resArray);
         var idx = outputDef.index;
         if (isNull(idx)) {
@@ -1079,6 +1176,11 @@ jQuery(document).ready(function() {
         }
         var res = resArray[idx];
         logTrace(res);
+
+        if (isNull(res)) {
+          logTrace("result is null, not saving anything");
+          return;
+        }
 
         var out;
         if (isNull(outputDef.format)) {
@@ -1210,19 +1312,26 @@ jQuery(document).ready(function() {
         BDA_DASH.handleInput(input);
       },
 
-      getVarValue: function(name) {
-        var val = BDA_DASH.VARS[name];
+      getVarValue: function(param) {
+        console.log("getVarValue");
+        console.log(param);
+        var val = BDA_DASH.VARS[param.name];
         if (val == undefined || val == null) {
           val = "";
+        }
+        if (!isNull(param.path) && param.path !== "") {
+          val = subProp(val, param.path);
         }
         return val;
       },
 
       parseParams: function(pExpected, params) {
-
+        logTrace("parseParams");
         var res = {};
         if (!isNull(pExpected)) {
-          var expected = pExpected.concat(BDA_DASH.defaultParams);
+          var expected = BDA_DASH.flagsParamDef.concat(pExpected).concat(BDA_DASH.defaultParams);
+
+          logTrace(expected);
 
           var j = 0;
           for (var i = 0; i < expected.length; i++) {
@@ -1231,7 +1340,7 @@ jQuery(document).ready(function() {
             }, expected[i]);;
             var inParam = params[j];
 
-            logTrace('parseParams');
+            logTrace('parseParam:');
             logTrace('exp = ' + JSON.stringify(exp));
             logTrace('inParam = ' + JSON.stringify(inParam));
 
@@ -1284,16 +1393,18 @@ jQuery(document).ready(function() {
           case 'output':
             res = param;
             break;
+          case 'flags':
+            res = BDA_DASH.getFlags(param);
+            break;
           default:
             throw {
               name: "Parsing Exception",
               message: "invalid parameter type"
             }
         }
-        logTrace("getParamValue : " + res);
+        logTrace("getParamValue : " + JSON.stringify(res));
         return res;
       },
-
 
       getValue: function(param) {
         logTrace('getValue : param : ' + JSON.stringify(param));
@@ -1303,7 +1414,7 @@ jQuery(document).ready(function() {
             res = param.value;
             break;
           case "varRef":
-            res = BDA_DASH.getVarValue(param.name);
+            res = BDA_DASH.getVarValue(param);
             if (isNull(res)) {
               throw {
                 name: "Invalid Name",
@@ -1365,7 +1476,7 @@ jQuery(document).ready(function() {
             path = getCurrentComponentPath();
             break;
           case "varRef":
-            path = BDA_DASH.getVarValue(componentParam.name);
+            path = BDA_DASH.getVarValue(componentParam);
             break;
           case "componentPath":
             path = componentParam.path;
@@ -1406,6 +1517,16 @@ jQuery(document).ready(function() {
         return path;
       },
 
+      getFlags: function(param) {
+        if (param.type != "flags") {
+          throw {
+            name: "Parsing Exception",
+            message: "invalid value type {0}".format(param.type)
+          }
+        }
+        return param;
+      },
+
       parse: function(val) {
         return BDA_DASH_PARSER.parse(val);
       },
@@ -1440,6 +1561,11 @@ jQuery(document).ready(function() {
           function(match, number) {
             return typeof args[number] !== undefined ? args[number] : match;
           });
+      },
+
+      hasFlag: function(params, flag) {
+        return (!isNull(params) && !isNull(params.flags) && params.flags.values.indexOf(flag) > -1);
+
       }
 
 

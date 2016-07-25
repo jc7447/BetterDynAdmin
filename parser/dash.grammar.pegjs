@@ -5,8 +5,12 @@ command=
              funct:funct,
             params:[]
          }
+         var p;
         for (var i = 0; i < params.length; i++) {
-            res.params.push(params[i][1]);
+          p =params[i][1];
+            if(p !== null) {
+              res.params.push(p);
+            }
         }
         return res;
     }
@@ -16,7 +20,8 @@ param=
   / composedParam
 
 simpleParam=
-        componentProperty
+    comment
+    /   componentProperty
     /   keywords
     /   flags
     /   componentPath
@@ -26,7 +31,10 @@ simpleParam=
     /   output
     /   varRef
    
-
+comment=
+  "#".*
+    {return null}
+    
 composedParam=
      multilineWrapper
     / array
@@ -79,11 +87,16 @@ complexValue=
     }
    
 varRef=
-    "$" name:litteral
+    "$" name:litteral path:singlePath?
     {
+      var vpath = null;
+        if(path !=null){
+          vpath=path.value;
+        }
         return {
             type : 'varRef',
-            name:name
+            name:name,
+            path:vpath
         }
     }
 
