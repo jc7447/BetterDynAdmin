@@ -3,7 +3,7 @@
 try {
 
   console.log('bda.common.js start');
-  var isLoggingTrace = true;
+  var isLoggingTrace = false;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -204,17 +204,6 @@ try {
 
   this.getCurrentComponentPath = function() {
     return purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
-  };
-
-  this.extendComponentPath = function(path){
-    var p = path;
-    if(!p.startsWith("/dyn/admin/nucleus/")){
-      p="/dyn/admin/nucleus/" + p;
-    }
-    if(!p.endsWith("/")){
-      p=p+"/";
-    }
-    return purgeSlashes(p);
   };
 
   this.logTrace = function(msg) {
