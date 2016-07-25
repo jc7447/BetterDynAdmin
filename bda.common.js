@@ -321,7 +321,16 @@ try {
       return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
     }
 
-
+    this.extendComponentPath  =function(path){
+      var res = path;
+      if(!path.startsWith('/dyn/admin/nucleus/')){
+        res = '/dyn/admin/nucleus/'+res;
+      }
+      if(!res.endsWith('/')){
+        res = res+'/';
+      }
+return purgeSlashes(res);
+    };
 
   console.log('bda.common.js initialized');
 } catch (e) {
