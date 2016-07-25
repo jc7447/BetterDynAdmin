@@ -421,87 +421,83 @@ jQuery(document).ready(function() {
           commandPattern: '(add|list) (/some/Repo|@SHORT) [name {xmlText}]',
 
           paramDef: [{
-              name: "action",
-              type: "value"
-            }, {
-              name: "repo",
-              type: "component",
-              required: true
-            },
-            {
-              name: "name",
-              type: "value",
-              required: false
-            }, {
-              name: "xmlText",
-              type: "value",
-              required: false
-            }
-          ],
+            name: "action",
+            type: "value"
+          }, {
+            name: "repo",
+            type: "component",
+            required: true
+          }, {
+            name: "name",
+            type: "value",
+            required: false
+          }, {
+            name: "xmlText",
+            type: "value",
+            required: false
+          }],
           main: function(cmdString, params) {
 
             var action = params.action;
 
-            switch(action){
+            switch (action) {
               case "list":
 
-                  var queries = BDA_STORAGE.getStoredRQLQueries();
-                  var purgedRqlQueries = [];
-                  if (!isNull(params.repo)) {
+                var queries = BDA_STORAGE.getStoredRQLQueries();
+                var purgedRqlQueries = [];
+                if (!isNull(params.repo)) {
 
-                    for (var i = 0; i != queries.length; i++) {
-                      var query = queries[i];
-                      if (!query.hasOwnProperty("repo") || query.repo == getComponentNameFromPath(params.repo)) {
-                        purgedRqlQueries.push(query);
-                      }
+                  for (var i = 0; i != queries.length; i++) {
+                    var query = queries[i];
+                    if (!query.hasOwnProperty("repo") || query.repo == getComponentNameFromPath(params.repo)) {
+                      purgedRqlQueries.push(query);
                     }
-
-                  } else {
-                    purgedRqlQueries = queries;
                   }
 
-                  var $values = $('<dl></dl>');
-                  for (var i = 0; i < purgedRqlQueries.length; i++) {
-                    var q = purgedRqlQueries[i];
-                    console.log(q.query);
-                    $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
-                    $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
-                  }
-                  var textvalue = $values.outerHTML();
-                  BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
+                } else {
+                  purgedRqlQueries = queries;
+                }
 
-              break;
+                var $values = $('<dl></dl>');
+                for (var i = 0; i < purgedRqlQueries.length; i++) {
+                  var q = purgedRqlQueries[i];
+                  console.log(q.query);
+                  $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
+                  $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
+                }
+                var textvalue = $values.outerHTML();
+                BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
+
+                break;
               case "add":
 
                 var name = $.trim(params.name);
                 var xmlText = $.trim(params.xmlText);
-                if(isNull(name) || name.length == 0){
+                if (isNull(name) || name.length == 0) {
                   throw {
-                    name:"MissingParameters",
-                    message:"Missing query name"
+                    name: "MissingParameters",
+                    message: "Missing query name"
                   }
                 }
-                if(isNull(xmlText) || xmlText.length == 0){
+                if (isNull(xmlText) || xmlText.length == 0) {
                   throw {
-                    name:"MissingParameters",
-                    message:"Missing xmlText"
+                    name: "MissingParameters",
+                    message: "Missing xmlText"
                   }
                 }
 
-                BDA_STORAGE.storeRQLQuery(name, xmlText,params.repo);
+                BDA_STORAGE.storeRQLQuery(name, xmlText, params.repo);
                 var util = $('<pre></pre>').text(xmlText);
-                var msg = "Saved script {0} with content {1}".format(name,util.outerHTML());
+                var msg = "Saved script {0} with content {1}".format(name, util.outerHTML());
 
-                 BDA_DASH.handleOutput(cmdString, params, name, msg, "success");
-              break;
+                BDA_DASH.handleOutput(cmdString, params, name, msg, "success");
+                break;
               default:
-              throw {
-                name:"InvalidParameter",
-                message:"Action {0} does not exists.<br/>Usage: queries {1}".format(action,BDA_DASH.FCT.queries.commandPattern)
-              }
+                throw {
+                  name: "InvalidParameter",
+                  message: "Action {0} does not exists.<br/>Usage: queries {1}".format(action, BDA_DASH.FCT.queries.commandPattern)
+                }
             }
-
-        
           }
         },
 
@@ -649,7 +645,7 @@ jQuery(document).ready(function() {
               throw {
                 name: "ExistingFav",
                 message: "Favorite {0} already exists.".format(path),
-                level:"warning"
+                level: "warning"
               }
             } else {
               $.fn.bdaToolbar.saveFavorite(path, [], [], []);
@@ -1119,8 +1115,8 @@ jQuery(document).ready(function() {
         logTrace(err);
         var errMsg = BDA_DASH.templates.errMsg.format(err.name, err.message);
         var level = err.level;
-        if(isNull(level)){
-          level="error";
+        if (isNull(level)) {
+          level = "error";
         }
         BDA_DASH.handleOutput(val, null, null, errMsg, level);
       },
