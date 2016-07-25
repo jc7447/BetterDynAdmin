@@ -162,13 +162,17 @@
     BDA_STORAGE.storeItem('splitObj', JSON.stringify(splitObj));
   },
 
-  storeRQLQuery : function (name, query)
+  storeRQLQuery : function (name, query,componentPath)
   {
     console.log("Try to store : " + name + ", query : " + query);
     var storeQuery = {};
     storeQuery.name = name;
     storeQuery.query = query;
-    storeQuery.repo = getComponentNameFromPath(getCurrentComponentPath());
+    var path = componentPath;
+    if(isNull(path)){
+      path= getCurrentComponentPath();
+    }
+    storeQuery.repo = getComponentNameFromPath(path);
     var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
     rqlQueries.push(storeQuery);
     console.log(rqlQueries);

@@ -206,6 +206,17 @@ try {
     return purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
   };
 
+  this.extendComponentPath = function(path){
+    var p = path;
+    if(!p.startsWith("/dyn/admin/nucleus/")){
+      p="/dyn/admin/nucleus/" + p;
+    }
+    if(!p.endsWith("/")){
+      p=p+"/";
+    }
+    return purgeSlashes(p);
+  };
+
   this.logTrace = function(msg) {
     if (isLoggingTrace) {
       console.log(msg);
