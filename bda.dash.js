@@ -460,12 +460,12 @@ jQuery(document).ready(function() {
                     purgedRqlQueries = queries;
                   }
 
-                  var $values = $('<div></div>');
+                  var $values = $('<dl></dl>');
                   for (var i = 0; i < purgedRqlQueries.length; i++) {
                     var q = purgedRqlQueries[i];
                     console.log(q.query);
-                    $values.append($('<p><strong>{0}</strong></p>'.format(q.name + " : ")));
-                    $values.append($('<pre></pre>').text(q.query));
+                    $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
+                    $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
                   }
                   var textvalue = $values.outerHTML();
                   BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
