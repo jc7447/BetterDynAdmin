@@ -7,7 +7,6 @@ try {
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
-
   // Change Array.toString() default behavior, will display array content.
   //
   // @return String representation of the array.
