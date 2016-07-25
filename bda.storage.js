@@ -179,15 +179,19 @@
     BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(rqlQueries));
   },
 
-  deleteRQLQuery : function (index)
-  {
-    var queries = BDA_STORAGE.getStoredRQLQueries();
-    if (queries.length >  index)
-    {
-      queries.splice(index, 1);
-      BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(queries));
-    }
-  },
+    deleteRQLQuery: function(index) {
+      try {
+
+        var queries = BDA_STORAGE.getStoredRQLQueries();
+        if (queries.length > index) {
+          queries.splice(index, 1);
+             logTrace(queries);
+          BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(queries));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
 
   getStoredComponents : function ()
   {

@@ -1212,26 +1212,32 @@
 
     showQueryList: function() {
       var html = "";
-      var rqlQueries = BDA_REPOSITORY.purgeRQLQuery(BDA_STORAGE.getStoredRQLQueries());
+      // fix delete query : the index used to delete was not correct
+      // we need to keep original index
+      var rqlQueries =BDA_STORAGE.getStoredRQLQueries();
+      var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
       if (rqlQueries && rqlQueries.length > 0) {
         html += "<span class='storedQueriesTitle'>Stored queries :</span>";
         html += "<ul>";
         for (var i = 0; i != rqlQueries.length; i++) {
           var storeQuery = rqlQueries[i];
-          var escapedQuery = $("<div>").text(storeQuery.query).html();
+            if (!storeQuery.hasOwnProperty("repo") || storeQuery.repo == currComponentName) {
 
-          html += "<li class='savedQuery'>";
-          html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
-          html += "<span id='previewQuery" + i + "'class='previewQuery'>";
-          html += "<i class='fa fa-eye'></i>";
-          html += "</span>";
-          html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
-          html += "<i class='fa fa-trash-o'></i>";
-          html += "</span>";
-          html += "<span id='queryView" + i + "'class='queryView'>";
-          html += "<pre>" + escapedQuery + "</pre>";
-          html += "</span>";
-          html += "</li>";
+            var escapedQuery = $("<div>").text(storeQuery.query).html();
+
+            html += "<li class='savedQuery'>";
+            html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
+            html += "<span id='previewQuery" + i + "'class='previewQuery'>";
+            html += "<i class='fa fa-eye'></i>";
+            html += "</span>";
+            html += "<span id='deleteQuery" + i + "'class='deleteQuery'>";
+            html += "<i class='fa fa-trash-o'></i>";
+            html += "</span>";
+            html += "<span id='queryView" + i + "'class='queryView'>";
+            html += "<pre>" + escapedQuery + "</pre>";
+            html += "</span>";
+            html += "</li>";
+          }
         }
         html += "</ul>";
       }
@@ -1256,6 +1262,7 @@
         .click(function() {
           var index = this.id.replace("deleteQuery", "");
           console.log("Delete query #" + index);
+          console.log(BDA_STORAGE.deleteRQLQuery);
           BDA_STORAGE.deleteRQLQuery(index);
           BDA_REPOSITORY.reloadQueryList();
         });
