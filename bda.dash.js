@@ -486,6 +486,13 @@ jQuery(document).ready(function() {
                   }
                 }
 
+                var savedQuery = BDA_STORAGE.getQueryByName(params.repo, name);
+                if (!isNull(savedQuery)) {
+                  throw {
+                    name: "ExistingValue",
+                    message: "A query already exists with name {0} in {1}.".format(name, params.repo)
+                  }
+                }
                 BDA_STORAGE.storeRQLQuery(name, xmlText, params.repo);
                 var util = $('<pre></pre>').text(xmlText);
                 var msg = "Saved script {0} with content {1}".format(name, util.outerHTML());
@@ -643,7 +650,7 @@ jQuery(document).ready(function() {
             //check if fav exists
             if ($.fn.bdaToolbar.isComponentAlreadyStored(path)) {
               throw {
-                name: "ExistingFav",
+                name: "ExistingValue",
                 message: "Favorite {0} already exists.".format(path),
                 level: "warning"
               }
