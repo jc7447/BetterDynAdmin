@@ -1002,7 +1002,7 @@ jQuery(document).ready(function() {
           BDA_DASH.loadScript(name);
         });
 
-        BDA_DASH.$editor.keypress(function(e) {
+        BDA_DASH.$editor.keydown(function(e) {
           if (e.which == 13 && e.altKey && !e.shiftKey && !e.ctrlKey) {
             e.preventDefault();
             var input = BDA_DASH.$editor.val();
