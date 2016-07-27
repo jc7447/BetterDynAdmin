@@ -17,7 +17,7 @@ jQuery(document).ready(function() {
       $footer: null,
 
       modalHeight: 200,
-      modalHeightRatio: 0.85,
+      modalHeightRatio: 0.9,
       //
       initialized: false,
 
@@ -25,26 +25,30 @@ jQuery(document).ready(function() {
       histIdxOffset: 0,
 
       styles: {
-        success: "alert-success",
-        error: "alert-danger",
-        warning: "alert-warning",
+        success: "success",
+        error: "danger",
+        warning: "warning",
         hidden: "hidden"
       },
       keyword_this: "this",
       templates: {
         consoleModal: '<div class="twbs">' +
-          '<div id="dashModal" class="modal fade" tabindex="-1" role="dialog">' +
+          '<div id="dashModal" class="modal fade" tabindex="-1" role="dialog" data-fullscreen="false">' +
           '<div id="dashModalDialog" class="modal-dialog modal-lg">' +
           '<div class="modal-content">' +
           '<div class="modal-header">' +
           '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-          '<button id="dashClearScreen" type="button" class="close dash_close" data-dismiss="" aria-label="Clear"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
+          '<button id="dashClearScreen" type="button" class="close dash_close" aria-label="Clear"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
+          // '<button id="dashFullScreen" type="button" class="close dash_close" aria-label="Fullscreen"><i class="fa fa-arrows-alt" aria-hidden="true"></i></button>' +
           '<h4 class="modal-title">DASH - DynAdmin SHell</h4>' +
           '</div>' +
-          '<div id="dashScreen" class="modal-body">' +
+          '<div class="modal-body">' +
+          '<div class="container-fluid">' +
+          '<div id="dashInnerBody" class="row">' +
+          '<div id="dashScreen" class="dashcol col-lg-12" >' +
           '</div>' +
-          '<div id="dashFooter" class="modal-footer">' +
-          '<div class="tab-content">' +
+          '' +
+          '<div id="dashControl" class="tab-content dashcol col-lg-12">' +
           '<div role="tabpanel" class="tab-pane fade in active" id="dash-console-tab">' +
           '<form id="dashForm" class="">' +
           '<div class="form-group">' +
@@ -55,13 +59,10 @@ jQuery(document).ready(function() {
           '</div>' +
           '</div>' +
           '</form>' +
-          '<div>' +
-          '&nbsp;' +
-          '</div>' +
           '</div>' +
           '<div role="tabpanel" class="tab-pane fade" id="dash-editor-tab">' +
           '<form id="dashEditorForm" class="form-horizontal">' +
-          '<div class="form-group">' +
+          '<div class="form-group top-row">' +
           '<div class="col-sm-3">' +
           '<select id="dashEditorScriptList" class="form-control">' +
           '</select>' +
@@ -84,12 +85,12 @@ jQuery(document).ready(function() {
           '<input type="text" class="form-control dash-input main-input" id="dashSaveScriptName" placeholder="Name" name="save" autocomplete="off"></input>' +
           '</div>' +
           '</div>' +
-          '<div class="form-group">' +
+          '<div class="form-group middle-row">' +
           '<div class="col-sm-12">' +
-          '<textarea id="dashEditor" class="form-control dash-input main-input" rows="5" placeholder=""></textarea>' +
+          '<textarea id="dashEditor" class="form-control dash-input main-input" rows="12  " placeholder=""></textarea>' +
           '</div>' +
           '</div>' +
-          '<div class="form-group">' +
+          '<div class="form-group bottom-row">' +
           '<div class="col-sm-1">' +
           '<button type="button" id="dashClearEditor" class="btn btn-primary">' +
           '<i class="fa fa-ban" aria-hidden="true"/>&nbsp;' +
@@ -114,28 +115,36 @@ jQuery(document).ready(function() {
           '</form>' +
           '</div>' +
           '</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '<div id="dashFooter" class="modal-footer">' +
           '<ul class="nav nav-pills">' +
-          '<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab">Console</a></li>' +
-          '<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab">Editor</a></li>' +
+          '<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab" data-fs-mode="false">Console</a></li>' +
+          '<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab"  data-fs-mode="true">Editor</a></li>' +
           '</ul>' +
           '<div id="dashTips"></div>' +
           '</div>' +
           '</div>' +
           '</div>' +
-          '</div>' +
           '</div>',
-        screenLine: '<div class="dash_screen_line alert {1} alert-dismissible" role="alert" data-command="">' +
-          '<button type="button" class="close dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
-          '<button type="button" class="btn btn-default dash_save" aria-label="Save" aria-pressed="false" style="display:none;" >' +
+        screenLine: '<div class="dash_screen_line alert alert-{1} alert-dismissible" role="alert" data-command="">' +
+          '<div class="btn-group" role="group">' +
+          '<button type="button" class="btn btn-{1} dash_redo"  aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>' +
+          '<button type="button" class="btn btn-{1} dash_save" aria-label="Save" aria-pressed="false" style="display:none;" >' +
           '<i class="fa fa-floppy-o" aria-hidden="true"></i>' +
           '<input type="checkbox" class="innerCheckbox hidden"/>' +
           '</button>' +
-          '<button type="button" class="close dash_redo"  aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>' +
+          '<button type="button" class="btn btn-{1} dash_clipboard"  aria-label="Redo"><i class="fa fa-copy" aria-hidden="true"></i></button>' +
+          '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
+          '</div>' +
           '<p class="dash_feeback_line">$&gt;&nbsp;<span class="cmd"></span></p>' +
           '<p class="dash_return_line">{0}</p>' +
           '</div>',
-        systemResponse: '<div class="dash_screen_sys_res alert {1} alert-dismissible" role="alert" >' +
-          '<button type="button" class="close dash_close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+        systemResponse: '<div class="dash_screen_sys_res alert alert-{1} alert-dismissible" role="alert" >' +
+          '<div class="btn-group" role="group">' +
+          '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '</div>' +
           '<p class="dash_return_line">{0}</p>' +
           '</div>',
         not_implemented: 'This command is not implemented yet.',
@@ -702,16 +711,21 @@ jQuery(document).ready(function() {
         BDA_DASH.$input = $('#dashInput');
         BDA_DASH.$screen = $('#dashScreen');
         BDA_DASH.$modal = $('#dashModal');
+        BDA_DASH.$modalContent = $('#dashModal .modal-content');
         BDA_DASH.$footer = $('#dashFooter');
         BDA_DASH.$header = $('#dashModal .modal-header');
+        BDA_DASH.$body = $('#dashModal .modal-body');
+        BDA_DASH.$innerBody = $('#dashInnerBody');
+        BDA_DASH.$control = $('#dashControl');
 
 
         logTrace('bind open modal focus');
         //when modal open, focus current tab main input
         BDA_DASH.$modal.on('shown.bs.modal', function() {
+          //      $('.modal-backdrop').wrap('<div class="twbs"></div>');
           BDA_DASH.calcDesiredWindowHeight();
           BDA_DASH.updateScreenHeight();
-          $('#dashFooter .tab-pane.active .main-input').focus();
+          $('.tab-pane.active .main-input').focus();
         })
 
         //when tab change, focus the main input
@@ -720,18 +734,24 @@ jQuery(document).ready(function() {
         //init size
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
 
-          BDA_DASH.updateScreenHeight();
           var $target = $(e.target);
+          var fsMode = $target.attr('data-fs-mode') == "true";
+
+          BDA_DASH.toggleFullScreen(fsMode);
+
+          // BDA_DASH.updateScreenHeight(); //done bt toggleFS
           //save latest tab
           var tId = $target.attr('id');
           BDA_STORAGE.storeConfiguration('dashDefaultTab', tId);
 
-          $('#dashFooter .tab-pane.active .main-input').focus();
+          $('.tab-pane.active .main-input').focus();
         });
         //resize dash on window resize
         $(window).resize(function() {
-          BDA_DASH.calcDesiredWindowHeight();
-          BDA_DASH.updateScreenHeight();
+          if (BDA_DASH.$modalContent.is(":visible")) {
+            BDA_DASH.calcDesiredWindowHeight();
+            BDA_DASH.updateScreenHeight();
+          }
         });
 
         BDA_DASH.initTypeahead();
@@ -753,6 +773,10 @@ jQuery(document).ready(function() {
 
         $('#dashClearScreen').on('click', function() {
           BDA_DASH.$screen.find('.alert').alert('close');
+        });
+
+        $('#dashFullScreen').on('click', function() {
+          BDA_DASH.toggleFullScreen();
         });
 
         /*     BDA_DASH.$input.keydown(function(e) {
@@ -777,8 +801,19 @@ jQuery(document).ready(function() {
         BDA_DASH.initEditor();
 
         BDA_DASH.$modal.on("click", ".dash_redo", function(event) {
-          BDA_DASH.redo($(this).parent().attr('data-command'));
+          BDA_DASH.redo($(this).parent().parent().attr('data-command'));
         });
+
+        BDA_DASH.$modal.on("click", ".dash_clipboard", function(event) {
+          logTrace('copyToClipboard');
+          var txtcmd = $(this).parent().parent().attr('data-command');
+          logTrace(txtcmd);
+          if (!isNull(txtcmd) && txtcmd.length > 0) {
+            copyToClipboard(txtcmd);
+          }
+        });
+
+
       },
 
       submitSaveScriptForm: function() {
@@ -786,7 +821,7 @@ jQuery(document).ready(function() {
         var scriptText = $('#dashEditor').val();
         var override = true;
         BDA_DASH.saveScript(scriptName, scriptText, override);
-        BDA_DASH.reloadScripts();
+        BDA_DASH.reloadScripts(scriptName);
       },
 
       //reset save mode
@@ -829,19 +864,34 @@ jQuery(document).ready(function() {
       calcDesiredWindowHeight: function() {
         var windowH = window.innerHeight;
         logTrace(' windowH ' + windowH);
-        var val = windowH * BDA_DASH.modalHeightRatio;
+        var val = Math.floor(windowH * BDA_DASH.modalHeightRatio);
         BDA_DASH.modalHeight = val;
         logTrace('new modalHeight ' + val);
       },
 
       updateScreenHeight: function() {
-        var curFooterHeight = parseInt(BDA_DASH.$footer.css('height').replace('px', ''));
-        var modalHeader = parseInt(BDA_DASH.$header.css('height').replace('px', ''));
-        logTrace('curFooterHeight ' + curFooterHeight);
-        var newScreenSize = BDA_DASH.modalHeight - curFooterHeight - modalHeader;
-        logTrace('newScreenSize ' + newScreenSize);
-        $('#dashScreen').css('max-height', newScreenSize + 'px');
-        $('#dashScreen').css('height', newScreenSize + 'px');
+        var fs = BDA_DASH.$modal.attr('data-fullscreen');
+        //adapt modal size
+        if (fs == "true") {
+          if (BDA_DASH.$editor.is(":visible")) {
+            logTrace("adjust editor");
+            //set size to 0 so that it does not impact form size
+            BDA_DASH.$screen.setHeightAndMax(0);
+            //push editor to max size
+            BDA_DASH.$editor.adjustToFit(BDA_DASH.$modalContent, BDA_DASH.modalHeight);
+            //set screen to the form size
+            BDA_DASH.$screen.setHeightAndMax($('#dashEditorForm').fullHeight());
+
+          } else {
+            logTrace("adjust screen");
+            BDA_DASH.$screen.adjustToFit(BDA_DASH.$modalContent, BDA_DASH.modalHeight);
+          }
+
+        } else {
+          //revert editor then resize body
+          BDA_DASH.$editor.removeAttr('style');
+          BDA_DASH.$screen.adjustToFit(BDA_DASH.$modalContent, BDA_DASH.modalHeight);
+        }
       },
 
       saveScript: function(scriptName, scriptText, override) {
@@ -891,11 +941,14 @@ jQuery(document).ready(function() {
       },
 
       deleteScript: function(name) {
+        var r = confirm('Confirm deletion of script "{0}"'.format(name));
         logTrace('deleting script {0}'.format(name));
-        var savedScripts = BDA_STORAGE.getScripts();
-        delete savedScripts[name];
-        BDA_STORAGE.saveScripts(savedScripts);
-        BDA_DASH.reloadScripts();
+        if (r == true) {
+          var savedScripts = BDA_STORAGE.getScripts();
+          delete savedScripts[name];
+          BDA_STORAGE.saveScripts(savedScripts);
+          BDA_DASH.reloadScripts();
+        }
       },
 
       loadScript: function(name) {
@@ -904,8 +957,10 @@ jQuery(document).ready(function() {
         $('#dashSaveScriptName').val(name);
       },
 
-      reloadScripts: function() {
+      reloadScripts: function(
+        defaultName) {
         $('#dashEditorScriptList').html('');
+        var $list = $('#dashEditorScriptList');
 
         var savedScripts = BDA_STORAGE.getScripts();
         logTrace('savedScripts ' + JSON.stringify(savedScripts));
@@ -916,9 +971,11 @@ jQuery(document).ready(function() {
           lines.push(line);
         }
 
-        $(lines.join('')).appendTo(
-          $('#dashEditorScriptList')
-        );
+        $(lines.join('')).appendTo($list);
+        if (!isNull(defaultName)) {
+          $list.val(defaultName)
+        }
+
       },
 
       initEditor: function() {
@@ -1573,8 +1630,23 @@ jQuery(document).ready(function() {
       hasFlag: function(params, flag) {
         return (!isNull(params) && !isNull(params.flags) && params.flags.values.indexOf(flag) > -1);
 
-      }
+      },
 
+      toggleFullScreen: function(on) {
+        if (isNull(on)) {
+          var fs = BDA_DASH.$modal.attr('data-fullscreen');
+          on = (fs == "true");
+        }
+        if (on) {
+          BDA_DASH.$modal.attr('data-fullscreen', true).addClass('fullscreen');
+          $('.dashcol').removeClass('col-lg-12').addClass('col-lg-6');
+        } else {
+          BDA_DASH.$modal.attr('data-fullscreen', false).removeClass('fullscreen');
+          $('.dashcol').removeClass('col-lg-6').addClass('col-lg-12');
+        }
+        //update modal size
+        BDA_DASH.updateScreenHeight();
+      },
 
     };
 

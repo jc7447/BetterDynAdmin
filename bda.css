@@ -734,6 +734,11 @@ table.tablesorter tr.alt-row:hover td {
 
 }
 
+.fullscreen .modal-dialog.modal-lg{
+  width: 95%;
+
+}
+
 #dashModal .modal-content{
 }
 
@@ -748,7 +753,6 @@ table.tablesorter tr.alt-row:hover td {
 
 #dashForm{
    font-family: monospace;
-   margin-bottom: 0;
 }
 
 #dashForm .tt-hint{
@@ -766,15 +770,21 @@ table.tablesorter tr.alt-row:hover td {
 
 #dashEditor{
   resize: vertical;
-  min-height: 100px;
-  max-height: 300px; 
+ /* min-height: 100px; */
 }
 
 #dashScreen {
   font-family: monospace;
-  overflow-y:scroll; 
+  overflow-y: auto; 
   max-height: 250px;
   height: 250px;
+  margin-bottom: 15px;
+}
+
+.fullscreen #dashScreen{
+  margin-bottom: 0;
+  height: 100%;
+  max-height: 100%;
 }
 
 #dashScreen .alert{
@@ -782,6 +792,7 @@ table.tablesorter tr.alt-row:hover td {
   padding-bottom: 5px;
   margin-bottom: 5px;
 }
+
 
 #dashScreen pre{
   background-color: inherit;
@@ -812,8 +823,18 @@ table.table{
   border-style: inherit;
 }
 
-button.dash_save{
-  float: right;
+#dashModal .alert .btn-group{
+  float:right;
+   opacity: 0.8;
+}
+
+#dashModal .alert button.btn{
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+#dashModal .alert button.btn:hover,#dashModal .alert button.btn:focus{
+    opacity: 1;
 }
 
 .printItem{
@@ -846,3 +867,40 @@ kbd{
   box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
 }
 
+
+#dashModal .modal-footer{
+  margin-top: 0;
+  border-top: 0;
+  padding: 5px 20px 5px;
+}
+
+#dashModal .modal-body{
+  padding-bottom: 0;
+}
+
+/* recopy bootstrap without wrapper*/
+.modal-backdrop.fade {
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+.twbs .fade.in {
+    opacity: 1;
+}
+.modal-backdrop.in {
+    opacity: .5;
+    filter: alpha(opacity=50);
+}
+.modal-backdrop{
+  position: fixed;
+top: 0;
+right: 0;
+bottom: 0;
+left: 0;
+z-index: 1030;
+background-color: #000;
+}
+.fade {
+    opacity: 0;
+    -webkit-transition: opacity .15s linear;
+    transition: opacity .15s linear;
+}

@@ -295,41 +295,78 @@ try {
 
 
   this.sanitizeXml = function(xmlContent) {
-      var start = new Date().getTime();
+    var start = new Date().getTime();
 
-      var regexp = /<\!--(.*)(<set\-property.*><\!\[CDATA\[[\S\s]*?\]\]\><\/set\-property\>).*-->/ig;
-      var xmlStr = xmlContent.replace(regexp, function(str, p1, p2, offset, s) {
-        var attributes = "set-property ";
-        if (p1.indexOf("derived") != -1)
-          attributes += "derived=\"true\" ";
-        if (p1.indexOf("rdonly") != -1)
-          attributes += "rdonly=\"true\" ";
-        if (p1.indexOf("export") != -1)
-          attributes += "export=\"true\" ";
+    var regexp = /<\!--(.*)(<set\-property.*><\!\[CDATA\[[\S\s]*?\]\]\><\/set\-property\>).*-->/ig;
+    var xmlStr = xmlContent.replace(regexp, function(str, p1, p2, offset, s) {
+      var attributes = "set-property ";
+      if (p1.indexOf("derived") != -1)
+        attributes += "derived=\"true\" ";
+      if (p1.indexOf("rdonly") != -1)
+        attributes += "rdonly=\"true\" ";
+      if (p1.indexOf("export") != -1)
+        attributes += "export=\"true\" ";
 
-        var newLine = p2.replace("set-property", attributes);
-        return newLine;
-      });
-      var endTime = new Date();
-      var time = endTime.getTime() - start;
-      console.log("time to sanitize : " + time + "ms");
-      return xmlStr;
-    },
+      var newLine = p2.replace("set-property", attributes);
+      return newLine;
+    });
+    var endTime = new Date();
+    var time = endTime.getTime() - start;
+    console.log("time to sanitize : " + time + "ms");
+    return xmlStr;
+  };
 
-    $.fn.outerHTML = function(s) {
-      return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
+  $.fn.outerHTML = function(s) {
+    return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
+  }
+
+  this.extendComponentPath = function(path) {
+    var res = path;
+    if (!path.startsWith('/dyn/admin/nucleus/')) {
+      res = '/dyn/admin/nucleus/' + res;
     }
+    if (!res.endsWith('/')) {
+      res = res + '/';
+    }
+    return purgeSlashes(res);
+  };
 
-    this.extendComponentPath  =function(path){
-      var res = path;
-      if(!path.startsWith('/dyn/admin/nucleus/')){
-        res = '/dyn/admin/nucleus/'+res;
-      }
-      if(!res.endsWith('/')){
-        res = res+'/';
-      }
-return purgeSlashes(res);
-    };
+  $.fn.adjustToFit = function($parent, targetTotalSize, minSize) {
+    var curSize = $parent.fullHeight();
+    var delta = targetTotalSize - curSize;
+    var hThis = parseInt(this.css('height').replace('px', ''));
+    hThis += delta;
+    if (!isNull(minSize)) {
+      hThis = Math.max(minSize, hThis);
+    }
+    this.setHeightAndMax(hThis);
+    return this;
+  }
+
+  $.fn.fullHeight = function() {
+    var h = parseInt(this.css('height').replace('px', ''));
+    var mBot = parseInt(this.css('margin-bottom').replace('px', ''));
+    var mTop = parseInt(this.css('margin-top').replace('px', ''));
+    var total = h + mTop + mBot;
+
+    return total;
+  }
+
+  $.fn.innerHeight = function() {
+    var h = parseInt(this.css('height').replace('px', ''));
+    var pBot = parseInt(this.css('padding-bottom').replace('px', ''));
+    var pTop = parseInt(this.css('padding-top').replace('px', ''));
+    var total = h - pTop - pBot;
+
+    return total;
+  }
+
+  $.fn.setHeightAndMax = function(value) {
+    this.css('max-height', value + 'px');
+    this.css('height', value + 'px');
+    return this;
+  }
+
 
   console.log('bda.common.js initialized');
 } catch (e) {
