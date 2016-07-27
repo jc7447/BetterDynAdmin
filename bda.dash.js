@@ -1067,9 +1067,38 @@ jQuery(document).ready(function() {
             displayKey: 'value',
             templates: {
               suggestion: function(data) {
-                return '<div><strong>' + data.value + '</strong> ' + data.pattern + '</div>';
+                var pattern = data.pattern;
+                if(isNull(pattern)){
+                  pattern="";
+                }
+                return '<div><strong>{0}</strong>{1}</div>'.format(data.value,pattern);
               }
             }
+          });
+
+          //ability to delete entries from typeahead
+          BDA_DASH.$input.keydown(function(e){
+
+            //up
+            if(e.which == 38){
+              BDA_DASH.moveInHistory(true);
+            }
+            //down
+            if(e.which == 40){
+              BDA_DASH.moveInHistory(false);
+            }
+            //suppr /del
+          //  console.log(e.which);
+           /* if(e.which == 46){
+              var text = $('.tt-menu .tt-cursor').text();
+              console.log(text);
+              var idx = BDA_DASH.HIST.indexOf(text);
+              while(idx >-1){
+                BDA_DASH.HIST.splice(idx,1);
+                idx = BDA_DASH.HIST.indexOf(text);
+              }
+              BDA_DASH.clearHistory();
+            }*/
           });
 
         } catch (e) {
@@ -1302,6 +1331,7 @@ jQuery(document).ready(function() {
         if (idx >= 0 && idx < BDA_DASH.HIST.length) {
           var val = BDA_DASH.HIST[idx];
           BDA_DASH.$input.val(val);
+          BDA_DASH.$input.typeahead('val', val);
           BDA_DASH.$input.typeahead('close');
         }
         var newoffset = BDA_DASH.HIST.length - idx;
@@ -1316,12 +1346,13 @@ jQuery(document).ready(function() {
         console.log('BDA_DASH.histIdxOffset = ' + BDA_DASH.histIdxOffset);
       },
 
-      clearHistory: function() {
+      clearHistory: function(newValue) {
         BDA_DASH.HIST = [];
         BDA_DASH.suggestionEngine.clear();
         BDA_DASH.suggestionEngine.add(BDA_DASH.typeahead_base);
         BDA_STORAGE.storeConfiguration('dashHistory', BDA_DASH.HIST);
       },
+
 
       saveHistory: function(val, persist) {
         BDA_DASH.HIST.push(val);
