@@ -37,14 +37,14 @@ jQuery(document).ready(function() {
           '<div id="dashModalDialog" class="modal-dialog modal-lg">' +
           '<div class="modal-content">' +
           '<div class="modal-header">' +
-          '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-          '<button id="dashClearScreen" type="button" class="close dash_close" aria-label="Clear"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
+          '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span >&times;</span></button>' +
           '<h4 class="modal-title">DASH - DynAdmin SHell</h4>' +
           '</div>' +
           '<div class="modal-body">' +
           '<div class="container-fluid">' +
           '<div id="dashInnerBody" class="row">' +
           '<div id="dashScreen" class="dashcol col-lg-12" >' +
+          '' +
           '<div id="" class="progress" style="display:none;" >' +
           '<div id="dashProgressBar" class="progress-bar  progress-bar-success" " role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="">' +
           '</div>' +
@@ -72,23 +72,23 @@ jQuery(document).ready(function() {
           '<div class="col-sm-5">' +
           '<div class="btn-group" role="group" >' +
           '<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">' +
-          '<i class="fa fa-folder-open" aria-hidden="true"/>&nbsp;' +
+          '<i class="fa fa-folder-open" />&nbsp;' +
           '</i>' +
           '</button>' +
           '<button type="button" id="dashDeleteScript" class="btn btn-primary" title="delete">' +
-          '<i class="fa fa-trash-o" aria-hidden="true"/>&nbsp;' +
+          '<i class="fa fa-trash-o" />&nbsp;' +
           '</i>' +
           '</button>' +
           '<button type="button" id="dashRunEditor" class="btn btn-primary" title="run">' +
-          '<i class="fa fa-play" aria-hidden="true"/>&nbsp;' +
+          '<i class="fa fa-play" />&nbsp;' +
           '</i>' +
           '</button>' +
           '<button type="button" id="dashSaveEditor" class="btn btn-primary" title="save">' +
-          '<i class="fa fa-floppy-o" aria-hidden="true"/>&nbsp;' +
+          '<i class="fa fa-floppy-o" />&nbsp;' +
           '</i>' +
           '</button>' +
           '<button type="button" id="dashClearEditor" class="btn btn-primary" title="clear">' +
-          '<i class="fa fa-ban" aria-hidden="true"/>&nbsp;' +
+          '<i class="fa fa-eraser" />&nbsp;' +
           '</i>' +
           '</button>' +
           '</div>' +
@@ -113,28 +113,30 @@ jQuery(document).ready(function() {
           '<ul class="nav nav-pills">' +
           '<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab" data-fs-mode="false">Console</a></li>' +
           '<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab"  data-fs-mode="true">Editor</a></li>' +
+          '<li role="presentation" class="pull-right footer-right" ><a id="dashClearScreen" class="btn-default"   role="tab" aria-controls="clearScreen" >Clear Screen <i class="fa fa-ban" ></i></a></li>' +
           '</ul>' +
-          '<div id="dashTips"></div>' +
+          '<div id="dashTips" class="text-muted"></div>' +
+          '</div>' +
           '</div>' +
           '</div>' +
           '</div>' +
           '</div>',
         screenLine: '<div class="dash_screen_line alert alert-{1} alert-dismissible" role="alert" data-command="">' +
           '<div class="btn-group" role="group">' +
-          '<button type="button" class="btn btn-{1} dash_redo"  aria-label="Redo"><i class="fa fa-repeat" aria-hidden="true"></i></button>' +
+          '<button type="button" class="btn btn-{1} dash_redo"  aria-label="Redo"><i class="fa fa-repeat" ></i></button>' +
           '<button type="button" class="btn btn-{1} dash_save" aria-label="Save" aria-pressed="false" style="display:none;" >' +
-          '<i class="fa fa-floppy-o" aria-hidden="true"></i>' +
+          '<i class="fa fa-floppy-o" ></i>' +
           '<input type="checkbox" class="innerCheckbox hidden"/>' +
           '</button>' +
-          '<button type="button" class="btn btn-{1} dash_clipboard"  aria-label="Redo"><i class="fa fa-copy" aria-hidden="true"></i></button>' +
-          '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
+          '<button type="button" class="btn btn-{1} dash_clipboard"  aria-label="Redo"><i class="fa fa-copy" ></i></button>' +
+          '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times" ></i></button>' +
           '</div>' +
           '<p class="dash_feeback_line">$&gt;&nbsp;<span class="cmd"></span></p>' +
           '<p class="dash_return_line">{0}</p>' +
           '</div>',
         systemResponse: '<div class="dash_screen_sys_res alert alert-{1} alert-dismissible" role="alert" >' +
           '<div class="btn-group" role="group">' +
-          '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times" /></button>' +
           '</div>' +
           '<p class="dash_return_line">{0}</p>' +
           '</div>',
@@ -165,7 +167,7 @@ jQuery(document).ready(function() {
           'Type help to try to get some help',
           'All your base are belong to us.'
         ],
-        menuElem: '<div id="bdaDashMenuElem" class="menu" title="ctrl+alt+T"><p>Dash</p><div class="menuArrow">$</div></div>',
+        menuElem: '<div id="bdaDashMenuElem" class="menu" title="ctrl+alt+T"><p>Dash</p><div class="menuArrow"><i class="fa fa-terminal" /></div></div>',
         errMsg: '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.',
         tableTemplate: '<table class="table"><tr><th>{0}</th><th>{1}</th></tr>{2}</table>',
         rowTemplate: '<tr><td>{0}</td><td>{1}</td></tr>',
@@ -1702,7 +1704,7 @@ jQuery(document).ready(function() {
         var $bar = $('#dashProgressBar');
         $bar.css('width', '0');
         $bar.text('0/{0}'.format(total));
-        if(total >1){
+        if (total > 1) {
           $bar.parent().fadeIn();
         }
       },

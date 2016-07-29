@@ -904,3 +904,16 @@ background-color: #000;
     -webkit-transition: opacity .15s linear;
     transition: opacity .15s linear;
 }
+
+#dashTips{
+  margin-top:10px;
+  margin-bottom:5px;
+}
+
+.footer-right{
+  cursor: pointer;
+}
+
+.footer-right a {
+  border: 1px solid transparent;
+}
