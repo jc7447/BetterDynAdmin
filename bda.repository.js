@@ -1214,14 +1214,14 @@
       var html = "";
       // fix delete query : the index used to delete was not correct
       // we need to keep original index
-      var rqlQueries =BDA_STORAGE.getStoredRQLQueries();
+      var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
       var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
       if (rqlQueries && rqlQueries.length > 0) {
         html += "<span class='storedQueriesTitle'>Stored queries :</span>";
         html += "<ul>";
         for (var i = 0; i != rqlQueries.length; i++) {
           var storeQuery = rqlQueries[i];
-            if (!storeQuery.hasOwnProperty("repo") || storeQuery.repo == currComponentName) {
+          if (!storeQuery.hasOwnProperty("repo") || storeQuery.repo == currComponentName) {
 
             var escapedQuery = $("<div>").text(storeQuery.query).html();
 
@@ -1373,9 +1373,9 @@
           var xmlDoc = jQuery.parseXML(rawItemsXml);
           callback($(xmlDoc), head);
         },
-        error: function(result, status, jqXHR) {
+        error: function(jqXHR, textStatus, errorThrown) {
           if (!isNull(errCallback)) {
-            errCallback();
+            errCallback(jqXHR, textStatus, errorThrown);
           }
         }
       })

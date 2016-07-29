@@ -769,7 +769,7 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #dashEditor{
-  resize: vertical;
+  resize: none;
  /* min-height: 100px; */
 }
 

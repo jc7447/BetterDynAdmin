@@ -39,15 +39,17 @@ jQuery(document).ready(function() {
           '<div class="modal-header">' +
           '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
           '<button id="dashClearScreen" type="button" class="close dash_close" aria-label="Clear"><i class="fa fa-ban" aria-hidden="true"></i></button>' +
-          // '<button id="dashFullScreen" type="button" class="close dash_close" aria-label="Fullscreen"><i class="fa fa-arrows-alt" aria-hidden="true"></i></button>' +
           '<h4 class="modal-title">DASH - DynAdmin SHell</h4>' +
           '</div>' +
           '<div class="modal-body">' +
           '<div class="container-fluid">' +
           '<div id="dashInnerBody" class="row">' +
           '<div id="dashScreen" class="dashcol col-lg-12" >' +
+          '<div id="" class="progress" style="display:none;" >' +
+          '<div id="dashProgressBar" class="progress-bar  progress-bar-success" " role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="">' +
           '</div>' +
-          '' +
+          '</div>' +
+          '</div>' +
           '<div id="dashControl" class="tab-content dashcol col-lg-12">' +
           '<div role="tabpanel" class="tab-pane fade in active" id="dash-console-tab">' +
           '<form id="dashForm" class="">' +
@@ -67,19 +69,30 @@ jQuery(document).ready(function() {
           '<select id="dashEditorScriptList" class="form-control">' +
           '</select>' +
           '</div>' +
-          '<div class="col-sm-2">' +
+          '<div class="col-sm-5">' +
           '<div class="btn-group" role="group" >' +
-          '<button type="button" id="dashLoadScript" class="btn btn-primary">' +
+          '<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">' +
           '<i class="fa fa-folder-open" aria-hidden="true"/>&nbsp;' +
           '</i>' +
           '</button>' +
-          '<button type="button" id="dashDeleteScript" class="btn btn-primary">' +
+          '<button type="button" id="dashDeleteScript" class="btn btn-primary" title="delete">' +
           '<i class="fa fa-trash-o" aria-hidden="true"/>&nbsp;' +
+          '</i>' +
+          '</button>' +
+          '<button type="button" id="dashRunEditor" class="btn btn-primary" title="run">' +
+          '<i class="fa fa-play" aria-hidden="true"/>&nbsp;' +
+          '</i>' +
+          '</button>' +
+          '<button type="button" id="dashSaveEditor" class="btn btn-primary" title="save">' +
+          '<i class="fa fa-floppy-o" aria-hidden="true"/>&nbsp;' +
+          '</i>' +
+          '</button>' +
+          '<button type="button" id="dashClearEditor" class="btn btn-primary" title="clear">' +
+          '<i class="fa fa-ban" aria-hidden="true"/>&nbsp;' +
           '</i>' +
           '</button>' +
           '</div>' +
           '</div>' +
-          '<div class="col-sm-3"></div>' +
           '<label for="dashSaveScriptName" class="col-sm-1 control-label">Name</label>' +
           '<div class="col-sm-3">' +
           '<input type="text" class="form-control dash-input main-input" id="dashSaveScriptName" placeholder="Name" name="save" autocomplete="off"></input>' +
@@ -88,28 +101,6 @@ jQuery(document).ready(function() {
           '<div class="form-group middle-row">' +
           '<div class="col-sm-12">' +
           '<textarea id="dashEditor" class="form-control dash-input main-input" rows="12  " placeholder=""></textarea>' +
-          '</div>' +
-          '</div>' +
-          '<div class="form-group bottom-row">' +
-          '<div class="col-sm-1">' +
-          '<button type="button" id="dashClearEditor" class="btn btn-primary">' +
-          '<i class="fa fa-ban" aria-hidden="true"/>&nbsp;' +
-          '</i>' +
-          '</button>' +
-          '</div>' +
-          '<div class="col-sm-9">' +
-          '</div>' +
-          '<div class="col-sm-2">' +
-          '<div class="btn-group pull-right" role="group" >' +
-          '<button type="button" id="dashRunEditor" class="btn btn-primary">' +
-          '<i class="fa fa-play" aria-hidden="true"/>&nbsp;' +
-          '</i>' +
-          '</button>' +
-          '<button type="button" id="dashSaveEditor" class="btn btn-primary">' +
-          '<i class="fa fa-floppy-o" aria-hidden="true"/>&nbsp;' +
-          '</i>' +
-          '</button>' +
-          '</div>' +
           '</div>' +
           '</div>' +
           '</form>' +
@@ -200,6 +191,10 @@ jQuery(document).ready(function() {
       typeahead_base: [],
       //to sync multiple methods
       QUEUE: [],
+      progress: {
+        total: 0,
+        current: 0
+      },
       //references to components
       COMP_REFS: {},
       //variables
@@ -224,6 +219,12 @@ jQuery(document).ready(function() {
               params.componentProperty.property,
               function(value) {
                 BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+              },
+              function(jqXHR, textStatus, errorThrown) {
+                BDA_DASH.handleError(cmdString, {
+                  name: textStatus,
+                  message: errorThrown
+                });
               });
           }
         },
@@ -247,7 +248,14 @@ jQuery(document).ready(function() {
               params.value,
               function(value) {
                 BDA_DASH.handleOutput(cmdString, params, value, value, "success");
-              });
+              },
+              function(jqXHR, textStatus, errorThrown) {
+                BDA_DASH.handleError(cmdString, {
+                  name: textStatus,
+                  message: errorThrown
+                });
+              }
+            );
           }
         },
 
@@ -329,6 +337,12 @@ jQuery(document).ready(function() {
                 } catch (e) {
                   BDA_DASH.handleError(cmdString, e);
                 }
+              },
+              function(jqXHR, textStatus, errorThrown) {
+                BDA_DASH.handleError(cmdString, {
+                  name: textStatus,
+                  message: errorThrown
+                });
               }
             );
           }
@@ -418,6 +432,12 @@ jQuery(document).ready(function() {
                 } catch (e) {
                   BDA_DASH.handleError(cmdString, e);
                 }
+              },
+              function(jqXHR, textStatus, errorThrown) {
+                BDA_DASH.handleError(cmdString, {
+                  name: textStatus,
+                  message: errorThrown
+                });
               }
             );
 
@@ -536,8 +556,11 @@ jQuery(document).ready(function() {
               function(value) {
                 BDA_DASH.handleOutput(cmdString, params, value, JSON.stringify(value), "success");
               },
-              function(error) {
-                BDA_DASH.handleError(cmdString, error);
+              function(jqXHR, textStatus, errorThrown) {
+                BDA_DASH.handleError(cmdString, {
+                  name: textStatus,
+                  message: errorThrown
+                });
               }
             );
           }
@@ -566,23 +589,12 @@ jQuery(document).ready(function() {
           }
         },
 
-        //FIXME
-        '-': {
-          commandPattern: '',
-          main: function(cmdString, params) {
-
-            if (BDA_DASH.HIST.length > 0) {
-              BDA_DASH.$input.val(BDA_DASH.HIST[BDA_DASH.HIST.length - 1]);
-            }
-            BDA_DASH.handleNextQueuedElem();
-          }
-        },
-
         clear: {
           commandPattern: '',
           main: function(cmdString, params) {
             //BDA_DASH.$screen.find('.alert').each(function(){$(this).alert('close')});
             BDA_DASH.$screen.find('.alert').alert('close');
+            BDA_DASH.updateProgress();
             BDA_DASH.handleNextQueuedElem();
           }
         },
@@ -1068,37 +1080,37 @@ jQuery(document).ready(function() {
             templates: {
               suggestion: function(data) {
                 var pattern = data.pattern;
-                if(isNull(pattern)){
-                  pattern="";
+                if (isNull(pattern)) {
+                  pattern = "";
                 }
-                return '<div><strong>{0}</strong>{1}</div>'.format(data.value,pattern);
+                return '<div><strong>{0}</strong>{1}</div>'.format(data.value, pattern);
               }
             }
           });
 
           //ability to delete entries from typeahead
-          BDA_DASH.$input.keydown(function(e){
+          BDA_DASH.$input.keydown(function(e) {
 
             //up
-            if(e.which == 38){
+            if (e.which == 38) {
               BDA_DASH.moveInHistory(true);
             }
             //down
-            if(e.which == 40){
+            if (e.which == 40) {
               BDA_DASH.moveInHistory(false);
             }
             //suppr /del
-          //  console.log(e.which);
-           /* if(e.which == 46){
-              var text = $('.tt-menu .tt-cursor').text();
-              console.log(text);
-              var idx = BDA_DASH.HIST.indexOf(text);
-              while(idx >-1){
-                BDA_DASH.HIST.splice(idx,1);
-                idx = BDA_DASH.HIST.indexOf(text);
-              }
-              BDA_DASH.clearHistory();
-            }*/
+            //  console.log(e.which);
+            /* if(e.which == 46){
+               var text = $('.tt-menu .tt-cursor').text();
+               console.log(text);
+               var idx = BDA_DASH.HIST.indexOf(text);
+               while(idx >-1){
+                 BDA_DASH.HIST.splice(idx,1);
+                 idx = BDA_DASH.HIST.indexOf(text);
+               }
+               BDA_DASH.clearHistory();
+             }*/
           });
 
         } catch (e) {
@@ -1142,7 +1154,6 @@ jQuery(document).ready(function() {
           logTrace('input: {0}'.format(input));
 
           BDA_DASH.QUEUE = []; //clear
-
           try {
             for (var i = 0; i < commands.length; i++) {
               var stringCmd = commands[i];
@@ -1152,7 +1163,7 @@ jQuery(document).ready(function() {
                 BDA_DASH.QUEUE.push([stringCmd, command]);
               }
             }
-
+            BDA_DASH.resetProgress(BDA_DASH.QUEUE.length);
             //start handling the queue
             BDA_DASH.handleNextQueuedElem();
 
@@ -1168,6 +1179,8 @@ jQuery(document).ready(function() {
       handleNextQueuedElem: function() {
         var cmd = BDA_DASH.QUEUE.shift();
         if (!isNull(cmd)) {
+
+
           try {
             BDA_DASH.executeCommand(cmd[0], cmd[1]);
 
@@ -1178,7 +1191,10 @@ jQuery(document).ready(function() {
           $('#dash_dollar').show();
           $('#dash_spinner').hide();
           BDA_DASH.$input.typeahead('val', '');
-          //          BDA_DASH.$input.val('');
+          setTimeout(function() {
+              $('#dashProgressBar').parent().fadeOut();
+            }, 2000)
+            //          BDA_DASH.$input.val('');
         }
       },
 
@@ -1244,6 +1260,7 @@ jQuery(document).ready(function() {
         //add to history after the command is done - not rly clean but will do for now
         //next step is persist the history
         BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
+        BDA_DASH.updateProgress();
         BDA_DASH.handleNextQueuedElem();
         return $entry;
       },
@@ -1677,6 +1694,30 @@ jQuery(document).ready(function() {
         }
         //update modal size
         BDA_DASH.updateScreenHeight();
+      },
+
+      resetProgress: function(total) {
+        BDA_DASH.progress.current = 0;
+        BDA_DASH.progress.total = total;
+        var $bar = $('#dashProgressBar');
+        $bar.css('width', '0');
+        $bar.text('0/{0}'.format(total));
+        if(total >1){
+          $bar.parent().fadeIn();
+        }
+      },
+
+      updateProgress: function() {
+        BDA_DASH.progress.current++;
+        var $bar = $('#dashProgressBar');
+        var ratio = 0;
+        if (BDA_DASH.progress.total > 0) {
+          ratio = BDA_DASH.progress.current / BDA_DASH.progress.total * 100;
+        };
+        $bar.css('width', ratio + '%');
+        $bar.text('{0}/{1}'.format(BDA_DASH.progress.current, BDA_DASH.progress.total));
+        //move to bottom
+        var $progress = $bar.parent().detach().appendTo(BDA_DASH.$screen);
       },
 
     };
