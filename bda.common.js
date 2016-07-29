@@ -252,6 +252,13 @@ try {
       $arrow.removeClass("fa-arrow-up").addClass("fa-arrow-down");
   };
 
+  this.rotateArrowQuarter = function($arrow) {
+    if ($arrow.hasClass("fa-arrow-down"))
+      $arrow.removeClass("fa-arrow-down").addClass("fa-arrow-right");
+    else
+      $arrow.removeClass("fa-arrow-right").addClass("fa-arrow-down");
+  };
+
   this.endsWith = function(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
@@ -366,6 +373,7 @@ try {
     this.css('height', value + 'px');
     return this;
   }
+
 
 
   console.log('bda.common.js initialized');

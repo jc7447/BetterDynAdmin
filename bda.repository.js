@@ -36,7 +36,7 @@
       queryItems: '<query-items item-descriptor="{0}">{1}</query-items>'
     },
 
-    CACHE_STAT_TITLE_REGEXP : /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
+    CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
 
     build: function() {
       BDA_REPOSITORY.isRepositoryPage = BDA_REPOSITORY.isRepositoryPageFct();
@@ -1391,83 +1391,100 @@
     },
 
 
-    setupRepositoryCacheSection : function(){
+    setupRepositoryCacheSection: function() {
 
-      try{
+      try {
 
-      var start = new Date().getTime();
-      var $cacheUsage = $(this.cacheUsageSelector);
-      var $cacheTable = $cacheUsage.next().next().find('table');
-      var size = $cacheTable.find('th').first().find('th').length;
+        var start = new Date().getTime();
+        var $cacheUsage = $(this.cacheUsageSelector);
+        var $cacheTable = $cacheUsage.next().next().find('table');
+        var size = $cacheTable.find('th').first().find('th').length;
 
-      var index = -1;
-      $cacheTable.find('tr').each(function(){
-        var $tr = $(this);
-        if(index % 3 == 0){
-          //highlight per item
-           $tr.addClass('odd cache expanded');
+        console.log('cache section size ' + size);
+        $cacheTable.addClass('cache');
 
-           var $td = $tr.find('td').first();
-           $td.attr('colspan',23)
+        var index = 0;
+        $cacheTable.find('tr').each(function() {
+          var $tr = $(this);
+               //if header
+          if(index == 0){ //first
+            //set first cell so that it doesn't change size when the rest collapse
+            var $first = $tr.find('th').first();
+            var color = $first.css('background-color');
+            $first.css('color',color).text('Items');
+          }
+          else if ((index-1) % 3 == 0) { //if sub-header
 
-           //$td.insert($arrow);
+            //highlight per item
+            $tr.addClass('odd cache-subheader collapsed');
+            //expand the cell width
+            var $td = $tr.find('td').first();
+            $td.attr('colspan', 23)
 
-          //enhance the title line
-          var $b = $td.find('b:contains("item-descriptor")');
-          var text = $b.html();
+            //$td.insert($arrow);
+            //enhance the title line
+            var text = $td.find('b:contains("item-descriptor")').first().text();
 
-          var match = BDA.CACHE_STAT_TITLE_REGEXP.exec(text);
-          var itemDesc = match[1];
-          var cacheMode = match[2];
-          var cacheLocality = match[3];
-          var newText = '<span> item-descriptor=<b>'+itemDesc+'</b> cache-mode=<b>'+cacheMode+'</b> cache-locality=<b>'+cacheLocality+'</b></span>';
+            var match = BDA_REPOSITORY.CACHE_STAT_TITLE_REGEXP.exec(text);
+            var itemDesc = match[1];
+            var cacheMode = match[2];
+            var cacheLocality = match[3];
+            var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc,cacheMode,cacheLocality);
 
-          $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-down"></i></span>');
-          $td.html($arrow);
-          $td.append(newText);
+            var $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-right"></i></span>'+newText);
+            $td.html($arrow);
 
-          //collapse items
-          $tr.bind('click',BDA.toggleCacheLines);
+            //collapse items
+            $tr.bind('click', BDA_REPOSITORY.toggleCacheLines);
+          } else {
+            $tr.css('display', 'none');
+          }
 
-        }
+          index++;
+        });
 
-        index++;
-       });
+        //collapse all button
+        var $resetLink = $cacheUsage.next();
 
-       //collapse all button
-       $resetLink =  $cacheUsage.next();
+        var $buttons = $('<div></div>').appendTo($resetLink);
 
-       $expandAll = $('<button></button>',{
-          id : 'cacheExpandAll',
-          class :'cache expand',
-          value : 'expandAll',
-          html: 'Expand All'
-       })
-       .bind('click',function(){
-          $cacheTable.find('tr.odd.cache.collapsed').each(BDA.toggleCacheLines);
-       })
-       .appendTo($resetLink)
-       ;
+        var $expandAll = $('<button></button>', {
+            id: 'cacheExpandAll',
+            class: ' cache expand',
+            value: 'expandAll',
+            html: 'Expand All'
+          })
+          .bind('click', function() {
+            $cacheTable.find('tr.cache-subheader.collapsed').each(BDA_REPOSITORY.toggleCacheLines);
+          })
+          .appendTo($buttons);
 
-       $collapseAll = $('<button></button>',{
-          id : 'collapseAll',
-          class :'cache collapse',
-          value : 'collapseAll',
-          html: 'Collapse All'
-       })
-       .on('click',function(){
-          $cacheTable.find('tr.odd.cache.expanded').each(BDA.toggleCacheLines);
-       })
-       .appendTo($resetLink)
-       .click() //start all collapsed
-       ;
+        var $collapseAll = $('<button></button>', {
+            id: 'collapseAll',
+            class: 'cache collapse',
+            value: 'collapseAll',
+            html: 'Collapse All'
+          })
+          .on('click', function() {
+            $cacheTable.find('tr.cache-subheader.expanded').each(BDA_REPOSITORY.toggleCacheLines);
+          })
+          .appendTo($buttons);
 
-       var end = new Date().getTime();
-       console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
-     }catch(err){
-      console.log(err);
-     }
+        var end = new Date().getTime();
+        console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
+      } catch (err) {
+        console.error(err);
+      }
 
+    },
+
+    toggleCacheLines: function() {
+      $tr = $(this);
+      $tr.toggleClass('collapsed')
+        .toggleClass('expanded')
+      $tr.next().toggle()
+      $tr.next().next().toggle();
+      rotateArrowQuarter($tr.find('.cacheArrow i'));
     },
   };
 
