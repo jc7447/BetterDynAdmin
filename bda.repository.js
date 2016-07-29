@@ -36,6 +36,8 @@
       queryItems: '<query-items item-descriptor="{0}">{1}</query-items>'
     },
 
+    CACHE_STAT_TITLE_REGEXP : /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
+
     build: function() {
       BDA_REPOSITORY.isRepositoryPage = BDA_REPOSITORY.isRepositoryPageFct();
       BDA_REPOSITORY.hasErrors = BDA_REPOSITORY.hasErrorsFct();
@@ -217,6 +219,8 @@
       $("#showMoreMethods").click(function() {
         BDA_REPOSITORY.toggleMethods();
       });
+
+      BDA_REPOSITORY.setupRepositoryCacheSection();
 
       $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
         var $target = $(item.target).parent();
@@ -1384,7 +1388,87 @@
     executePrintItem: function(itemDescriptor, id, repository, callback, errCallback) {
       var xmlText = BDA_REPOSITORY.templates.printItem.format(itemDescriptor, id);
       BDA_REPOSITORY.executeQuery(xmlText, repository, callback, errCallback);
-    }
+    },
+
+
+    setupRepositoryCacheSection : function(){
+
+      try{
+
+      var start = new Date().getTime();
+      var $cacheUsage = $(this.cacheUsageSelector);
+      var $cacheTable = $cacheUsage.next().next().find('table');
+      var size = $cacheTable.find('th').first().find('th').length;
+
+      var index = -1;
+      $cacheTable.find('tr').each(function(){
+        var $tr = $(this);
+        if(index % 3 == 0){
+          //highlight per item
+           $tr.addClass('odd cache expanded');
+
+           var $td = $tr.find('td').first();
+           $td.attr('colspan',23)
+
+           //$td.insert($arrow);
+
+          //enhance the title line
+          var $b = $td.find('b:contains("item-descriptor")');
+          var text = $b.html();
+
+          var match = BDA.CACHE_STAT_TITLE_REGEXP.exec(text);
+          var itemDesc = match[1];
+          var cacheMode = match[2];
+          var cacheLocality = match[3];
+          var newText = '<span> item-descriptor=<b>'+itemDesc+'</b> cache-mode=<b>'+cacheMode+'</b> cache-locality=<b>'+cacheLocality+'</b></span>';
+
+          $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-down"></i></span>');
+          $td.html($arrow);
+          $td.append(newText);
+
+          //collapse items
+          $tr.bind('click',BDA.toggleCacheLines);
+
+        }
+
+        index++;
+       });
+
+       //collapse all button
+       $resetLink =  $cacheUsage.next();
+
+       $expandAll = $('<button></button>',{
+          id : 'cacheExpandAll',
+          class :'cache expand',
+          value : 'expandAll',
+          html: 'Expand All'
+       })
+       .bind('click',function(){
+          $cacheTable.find('tr.odd.cache.collapsed').each(BDA.toggleCacheLines);
+       })
+       .appendTo($resetLink)
+       ;
+
+       $collapseAll = $('<button></button>',{
+          id : 'collapseAll',
+          class :'cache collapse',
+          value : 'collapseAll',
+          html: 'Collapse All'
+       })
+       .on('click',function(){
+          $cacheTable.find('tr.odd.cache.expanded').each(BDA.toggleCacheLines);
+       })
+       .appendTo($resetLink)
+       .click() //start all collapsed
+       ;
+
+       var end = new Date().getTime();
+       console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
+     }catch(err){
+      console.log(err);
+     }
+
+    },
   };
 
   // Reference to BDA_STORAGE
