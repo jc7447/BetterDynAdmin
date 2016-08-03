@@ -801,6 +801,14 @@ table.tablesorter tr.alt-row:hover td {
   color:inherit;
 }
 
+#dashScreen .dl-horizontal dt{
+  width: 80px;
+}
+
+#dashScreen .dl-horizontal dd{
+  margin-left: 90px;
+}
+
 .typeahead.dropdown-menu{
   text-align: left;
 }
@@ -917,6 +925,8 @@ background-color: #000;
 .footer-right a {
   border: 1px solid transparent;
 }
+
+
 
 /** CACHE STATS **/
 

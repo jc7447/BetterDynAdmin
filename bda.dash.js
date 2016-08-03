@@ -8,8 +8,13 @@ jQuery(document).ready(function() {
     var BDA_DASH = {
 
       devMode: false,
-      debugMode: false,
+      version:0.7,
 
+      settings: {
+        domain: "",
+        verbose: false,
+        silent:false
+      },
       // dom elements
       $screen: null,
       $input: null,
@@ -38,7 +43,7 @@ jQuery(document).ready(function() {
           '<div class="modal-content">' +
           '<div class="modal-header">' +
           '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span >&times;</span></button>' +
-          '<h4 class="modal-title">DASH - DynAdmin SHell</h4>' +
+          '<h4 class="modal-title">DASH - DynAdmin SHell - v{0}</h4>' +
           '</div>' +
           '<div class="modal-body">' +
           '<div class="container-fluid">' +
@@ -71,10 +76,10 @@ jQuery(document).ready(function() {
           '</div>' +
           '<div class="col-sm-5">' +
           '<div class="btn-group" role="group" >' +
-          '<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">' +
+          /*'<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">' +
           '<i class="fa fa-folder-open" />&nbsp;' +
           '</i>' +
-          '</button>' +
+          '</button>' +*/
           '<button type="button" id="dashDeleteScript" class="btn btn-primary" title="delete">' +
           '<i class="fa fa-trash-o" />&nbsp;' +
           '</i>' +
@@ -132,6 +137,7 @@ jQuery(document).ready(function() {
           '<button type="button" class="btn btn-{1} dash_close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times" ></i></button>' +
           '</div>' +
           '<p class="dash_feeback_line">$&gt;&nbsp;<span class="cmd"></span></p>' +
+          '<p class="dash_log_line">{2}</p>' +
           '<p class="dash_return_line">{0}</p>' +
           '</div>',
         systemResponse: '<div class="dash_screen_sys_res alert alert-{1} alert-dismissible" role="alert" >' +
@@ -141,24 +147,22 @@ jQuery(document).ready(function() {
           '<p class="dash_return_line">{0}</p>' +
           '</div>',
         not_implemented: 'This command is not implemented yet.',
-        helpMain: '<div>References:<ul>' +
+        helpMain: '<div><h5>References:</h5><ul>' +
           '<li>Save the result of a command to a variable using ">varName"</li>' +
           '<li>Reference to variable : $varName</li>' +
           '<li>Reference to component : @FAV - where FAV is the shortname of a bookmarked component, ex @OR : OrderRepository.</li>' +
           '<li>Reference to current component : @this</li>' +
           '</ul>' +
+          '<div><h5>Keyboard Shortcuts:</h5>' +
+          '<dl class="dl-horizontal">' +
+          '<dt>CTRL+C</dt><dd>Clears the console input - only if no text is selected</dd>' +
+          '<dt>CTRL+L</dt><dd>Clears the screen, in either the console or the editor</dd>' +
+          '<dt>CTRL+ENTER</dt><dd>In editor, runs the selected text, or the whole textarea if nothing is selected</dd>' +
+          '<dt>CTRL+ALT+T</dt><dd>Opens this console</dd>' +
+          '</dl>' +
+          '</div>' +
           '<p>For more information go to the <a target="_blank"  href="https://github.com/jc7447/BetterDynAdmin/wiki/Dash">github wiki</a></p>' +
           '</div>',
-        help: {
-          help: 'prints this help',
-          get: 'get /some/Component.property',
-          set: 'set /some/Component.property newvalue',
-          go: 'go /to/some/Component - redirects to the component page',
-          print: 'print /some/Repository itemDesc id',
-          comprefs: 'lists all the available component references',
-          vars: 'lists all the available variables',
-          vi: 'Text editor',
-        },
         tips: [
           'You can open Dash by using the shortcut <kbd>ctrl + alt + T</kbd>',
           'Submit the editor content by pressing <kbd>alt + enter</kbd>',
@@ -172,9 +176,7 @@ jQuery(document).ready(function() {
         tableTemplate: '<table class="table"><tr><th>{0}</th><th>{1}</th></tr>{2}</table>',
         rowTemplate: '<tr><td>{0}</td><td>{1}</td></tr>',
         printItemTemplate: '<div class="panel panel-default printItem"><div class="panel-heading">Printing item with id: {0}</div>{1}</div>',
-        editorScriptLine: '<option value="{0}">' +
-          '{0}' +
-          '</option>'
+        editorScriptLine: '<option value="{0}">{1}</option>'
       },
 
       defaultParams: [{
@@ -192,10 +194,16 @@ jQuery(document).ready(function() {
       HIST: [],
       typeahead_base: [],
       //to sync multiple methods
-      QUEUE: [],
+      STACK: [],
+      LOG: [],
       progress: {
         total: 0,
         current: 0
+      },
+      flags: {
+        SILENT: 's',
+        SKIP_HISTORY: 'k',
+        VERBOSE: 'v'
       },
       //references to components
       COMP_REFS: {},
@@ -208,26 +216,30 @@ jQuery(document).ready(function() {
         get: {
 
           commandPattern: '(/some/Component|@SHORT).propertyName',
-
+          help: 'Return the value of /some/Component.propertyName',
           paramDef: [{
             name: "componentProperty",
             type: "componentProperty"
           }],
 
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             BDA_COMPONENT.getProperty(
               params.componentProperty.path,
               params.componentProperty.property,
               function(value) {
-                BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+                callback(value);
               },
               function(jqXHR, textStatus, errorThrown) {
-                BDA_DASH.handleError(cmdString, {
+                errCallback({
                   name: textStatus,
                   message: errorThrown
                 });
               });
+          },
+
+          responseToString: function(params, returnValue) {
+            return returnValue;
           }
         },
 
@@ -235,6 +247,7 @@ jQuery(document).ready(function() {
         set: {
 
           commandPattern: '(/some/Component|@SHORT).propertyName value',
+          help: 'sets the value of <em>/some/Component.propertyName</em> to <em>value</em>',
           paramDef: [{
             name: "componentProperty",
             type: "componentProperty"
@@ -242,34 +255,37 @@ jQuery(document).ready(function() {
             name: "value",
             type: "value"
           }],
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             BDA_COMPONENT.setProperty(
               params.componentProperty.path,
               params.componentProperty.property,
               params.value,
               function(value) {
-                BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+                callback(value);
               },
               function(jqXHR, textStatus, errorThrown) {
-                BDA_DASH.handleError(cmdString, {
+                errCallback({
                   name: textStatus,
                   message: errorThrown
                 });
               }
             );
+          },
+          responseToString: function(params, retval) {
+            return retval;
           }
         },
 
         go: {
 
           commandPattern: '/some/Component|@SHORT',
-
+          help: 'redirects to the component page',
           paramDef: [{
             name: "component",
             type: "component"
           }],
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             BDA_DASH.goToComponent(params.component);
           }
@@ -278,23 +294,30 @@ jQuery(document).ready(function() {
         echo: {
 
           commandPattern: 'value|@SHORT|$var',
-
+          help: 'returns the value of a variable or a reference or a plain value',
           paramDef: [{
             name: "value",
             type: "value"
           }],
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
             var value = params.value;
-            var text = JSON.stringify(params.value);
-            BDA_DASH.handleOutput(cmdString, params, value, text, "success");
+            callback(value);
+          },
+
+          responseToString: function(params, retval) {
+            return JSON.stringify(retval);
           }
         },
 
         vi: {
           commandPattern: '',
-          main: function(cmdString, params) {
+          help: 'Text editor',
+          main: function(params, callback, errCallback) {
             var value = "Just kidding ;)";
-            BDA_DASH.handleOutput(cmdString, params, value, value, "success");
+            callback(value);
+          },
+          responseToString: function(params, retval) {
+            return retval;
           }
         },
 
@@ -302,7 +325,7 @@ jQuery(document).ready(function() {
         print: {
 
           commandPattern: 'print /some/Repo|@SHORT itemDescriptor id',
-
+          help: 'return the result of a print-item',
           paramDef: [{
             name: "repo",
             type: "component"
@@ -313,7 +336,7 @@ jQuery(document).ready(function() {
             name: "id",
             type: "value"
           }],
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
             $().executePrintItem(
               params.itemDesc,
               params.id,
@@ -326,10 +349,9 @@ jQuery(document).ready(function() {
                     var $itemXml;
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
-                      res += BDA_DASH.templates.printItemTemplate.format($itemXml.attr('id'), buildSimpleTable($itemXml, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
                       items.push(convertAddItemToPlainObject($itemXml));
                     })
-                    BDA_DASH.handleOutput(cmdString, params, items, res, "success");
+                    callback(items);
                   } else {
                     throw {
                       name: "Not Found",
@@ -337,23 +359,31 @@ jQuery(document).ready(function() {
                     }
                   }
                 } catch (e) {
-                  BDA_DASH.handleError(cmdString, e);
+                  errCallback(e);
                 }
               },
               function(jqXHR, textStatus, errorThrown) {
-                BDA_DASH.handleError(cmdString, {
+                errCallback({
                   name: textStatus,
                   message: errorThrown
                 });
               }
             );
+          },
+          responseToString: function(params, retval) {
+            var res = "";
+            for (var i = 0; i < retval.length; i++) {
+              var item = retval[i];
+              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+            }
+            return res;
           }
         },
 
         rql: {
 
-          commandPattern: '(/some/Repo|@SHORT)(.saveQuery | { <rql/> })',
-
+          commandPattern: '(/some/Repo|@SHORT)(.saveQuery | { xmlText })',
+          help: 'executes the xmlText between brackets or a saved query',
           paramDef: [{
             name: "componentProperty",
             type: "componentProperty",
@@ -372,7 +402,7 @@ jQuery(document).ready(function() {
             required: false
           }],
 
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             logTrace('rql function:');
             logTrace(JSON.stringify(params));
@@ -421,10 +451,9 @@ jQuery(document).ready(function() {
                     var items = [];
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
-                      res += BDA_DASH.templates.printItemTemplate.format($itemXml.attr('id'), buildSimpleTable($itemXml, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
                       items.push(convertAddItemToPlainObject($itemXml));
                     })
-                    BDA_DASH.handleOutput(cmdString, params, items, res, "success");
+                    callback(items);
                   } else {
                     throw {
                       name: "Not Found",
@@ -432,11 +461,11 @@ jQuery(document).ready(function() {
                     }
                   }
                 } catch (e) {
-                  BDA_DASH.handleError(cmdString, e);
+                  errCallback(e);
                 }
               },
               function(jqXHR, textStatus, errorThrown) {
-                BDA_DASH.handleError(cmdString, {
+                errCallback({
                   name: textStatus,
                   message: errorThrown
                 });
@@ -444,13 +473,57 @@ jQuery(document).ready(function() {
             );
 
           },
+          responseToString: function(params, retval) {
+            var res = "";
+            for (var i = 0; i < retval.length; i++) {
+              var item = retval[i];
+              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+            }
+            return res;
+          }
 
+        },
+
+        global: {
+          commandPattern: '(domain|verbose|silent) value',
+          help: 'verbose : make all commands verbose<br/>silent : all commands silent<br/>domain: change the domain to do the calls',
+          paramDef: [{
+            name: "action",
+            type: "value"
+          }, {
+            name: "value",
+            type: "value",
+            required: false
+          }],
+          main: function(params, callback, errCallback) {
+            var ret = "";
+            switch (params.action) {
+              case 'silent':
+                BDA_DASH.settings.silent = (params.value == "true" ? true : false);
+                ret = "setting global silent to {0}".format(BDA_DASH.settings.silent);
+                break;
+              case 'verbose':
+                BDA_DASH.settings.verbose = (params.value == "true"? true : false);
+                ret = "setting global verbose to {0}".format(BDA_DASH.settings.verbose);
+                break;
+              case 'domain':
+                BDA_DASH.settings.domain = ((isNull(params.value) || params.value.length == 0) ? "" : params.value);
+                ret = "setting global verbose to {0}".format(BDA_DASH.settings.verbose);
+                break;
+              default:
+                throw {
+                  name: "InvalidParameter",
+                  message: "Action {0} does not exists.<br/>Usage: global {1}".format(action, BDA_DASH.FCT.queries.commandPattern)
+                }
+            }
+            callback(ret);
+          }
         },
 
         queries: {
 
           commandPattern: '(add|list) (/some/Repo|@SHORT) [name {xmlText}]',
-
+          help: 'list : list the existing queries - add : saves the xmlQuery between brackets',
           paramDef: [{
             name: "action",
             type: "value"
@@ -467,7 +540,7 @@ jQuery(document).ready(function() {
             type: "value",
             required: false
           }],
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             var action = params.action;
 
@@ -489,15 +562,7 @@ jQuery(document).ready(function() {
                   purgedRqlQueries = queries;
                 }
 
-                var $values = $('<dl></dl>');
-                for (var i = 0; i < purgedRqlQueries.length; i++) {
-                  var q = purgedRqlQueries[i];
-                  console.log(q.query);
-                  $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
-                  $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
-                }
-                var textvalue = $values.outerHTML();
-                BDA_DASH.handleOutput(cmdString, params, purgedRqlQueries, textvalue, "success");
+                callback(purgedRqlQueries);
 
                 break;
               case "add":
@@ -525,10 +590,12 @@ jQuery(document).ready(function() {
                   }
                 }
                 BDA_STORAGE.storeRQLQuery(name, xmlText, params.repo);
-                var util = $('<pre></pre>').text(xmlText);
-                var msg = "Saved script {0} with content {1}".format(name, util.outerHTML());
+                var res = {
+                  name: name,
+                  xmlText: xmlText
+                };
 
-                BDA_DASH.handleOutput(cmdString, params, name, msg, "success");
+                callback(res);
                 break;
               default:
                 throw {
@@ -536,13 +603,39 @@ jQuery(document).ready(function() {
                   message: "Action {0} does not exists.<br/>Usage: queries {1}".format(action, BDA_DASH.FCT.queries.commandPattern)
                 }
             }
+          },
+
+          responseToString: function(params, returnValue) {
+
+            var textvalue = "";
+
+            var action = params.action;
+
+            switch (action) {
+              case "list":
+                var $values = $('<dl></dl>');
+                for (var i = 0; i < returnValue.length; i++) {
+                  var q = returnValue[i];
+                  console.log(q.query);
+                  $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
+                  $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
+                }
+                var textvalue = $values.outerHTML();
+                break;
+              case "add":
+                var util = $('<pre></pre>').text(returnValue.xmlText);
+                textvalue = "Saved script {0} with content {1}".format(returnValue.name, util.outerHTML());
+                break;
+              default:
+            }
+            return textvalue;
           }
         },
 
         call: {
 
-          commandPattern: '(/some/Repo|@SHORT) methodName',
-
+          commandPattern: '(/some/Component|@SHORT) methodName',
+          help: 'call the method /someComponent.methodName and returns  the result',
           paramDef: [{
             name: "component",
             type: "component"
@@ -551,53 +644,90 @@ jQuery(document).ready(function() {
             type: "value"
           }],
 
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
             BDA_COMPONENT.call(
               params.component,
               params.method,
               function(value) {
-                BDA_DASH.handleOutput(cmdString, params, value, JSON.stringify(value), "success");
+                callback(value);
               },
               function(jqXHR, textStatus, errorThrown) {
-                BDA_DASH.handleError(cmdString, {
+                errCallback({
                   name: textStatus,
                   message: errorThrown
                 });
               }
             );
+          },
+
+          responseToString: function(params, retval) {
+            return JSON.stringify(retval);
           }
         },
 
+        run: {
 
+          commandPattern: 'scriptName',
+          help: 'runs a saved script',
+          paramDef: [{
+            name: "scriptName",
+            type: "value"
+          }],
+
+          main: function(params, callback, errCallback) {
+            var name = params.scriptName;
+            var savedScripts = BDA_STORAGE.getScripts();
+            if (!isNull(savedScripts[name])) {
+              BDA_DASH.stackInput(savedScripts[name].text);
+              callback(name);
+            } else {
+              throw {
+                name: "InvalidParameter",
+                message: "No saved script by the name {0}".format(name)
+              }
+            }
+          },
+
+          responseToString: function(params, retval) {
+            return "Running script {0}".format(retval);
+          }
+        },
         vars: {
-
           commandPattern: '',
-          main: function(cmdString, params) {
+          help: 'lists all the available variables',
+          main: function(params, callback, errCallback) {
 
-            var textvalue = '<pre>{0}</pre>'.format(JSON.stringify(BDA_DASH.VARS, null, 2));
-            BDA_DASH.handleOutput(cmdString, params, BDA_DASH.VARS, textvalue, "success");
 
+            callback(BDA_DASH.VARS);
+
+          },
+          responseToString: function(params, retval) {
+            return '<pre>{0}</pre>'.format(JSON.stringify(retval, null, 2));
           }
         },
 
         comprefs: {
 
           commandPattern: '',
-          main: function(cmdString, params) {
+          help: 'lists all the available component references',
+          main: function(params, callback, errCallback) {
 
-            var value = '<pre>{0}</pre>'.format(JSON.stringify(BDA_DASH.COMP_REFS, null, 2));
-            BDA_DASH.handleOutput(cmdString, params, BDA_DASH.COMP_REFS, value, "success");
+            callback(BDA_DASH.COMP_REFS);
 
+          },
+          responseToString: function(params, retval) {
+            return '<pre>{0}</pre>'.format(JSON.stringify(retval, null, 2));
           }
         },
 
         clear: {
           commandPattern: '',
-          main: function(cmdString, params) {
+          help: 'clears the screen - CTRL+L works also',
+          main: function(params, callback, errCallback) {
             //BDA_DASH.$screen.find('.alert').each(function(){$(this).alert('close')});
             BDA_DASH.$screen.find('.alert').alert('close');
             BDA_DASH.updateProgress();
-            BDA_DASH.handleNextQueuedElem();
+            BDA_DASH.handleNextStackElem();
           }
         },
 
@@ -609,7 +739,7 @@ jQuery(document).ready(function() {
             required: false
           }],
 
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             var action = params.action;
             if (!isNull(action)) {
@@ -624,48 +754,56 @@ jQuery(document).ready(function() {
               }
 
             }
+            callback(BDA_DASH.HIST);
+          },
+          responseToString: function(params, retval) {
             var $value = $('<ol></ol>')
-            for (var i = 0; i < BDA_DASH.HIST.length; i++) {
-              var h = BDA_DASH.HIST[i]
+            for (var i = 0; i < retval.length; i++) {
+              var h = retval[i];
               $value.append($('<li></li>').text(h));
             }
-            var txtValue = $value.outerHTML();
-            console.log(txtValue);
-            BDA_DASH.handleOutput(cmdString, params, BDA_DASH.HIST, txtValue, "success");
-
+            return $value.outerHTML();
           }
         },
 
         help: {
           commandPattern: '',
-          main: function(cmdString, params) {
+          help: 'prints this help',
+          main: function(params, callback, errCallback) {
 
             var values = [];
-            var msg;
-            values.push('Available Functions:')
+            var msg, cmdPattern;
+            values.push('<h5>Available Functions:</h5>')
             values.push('<ul>');
             for (var funcName in BDA_DASH.FCT) {
-              msg = BDA_DASH.templates.help[funcName];
+              msg = BDA_DASH.FCT[funcName].help;
               if (isNull(msg)) {
                 msg = "";
               }
-              values.push('<li><strong>{0}</strong> : {1}</li>'.format(funcName, msg))
+              cmdPattern = BDA_DASH.FCT[funcName].commandPattern;
+              if (isNull(cmdPattern)) {
+                cmdPattern = "";
+              }
+              values.push('<li><strong>{0} {1}</strong> - {2}</li>'.format(funcName, cmdPattern, msg));
             }
             values.push('</ul>');
             values.push(BDA_DASH.templates.helpMain);
             msg = values.join('');
-            BDA_DASH.handleOutput(cmdString, params, msg, msg, "success");
+            callback(msg);
+          },
+          responseToString: function(params, retval) {
+            return retval;
           }
         },
 
         fav: {
-
+          help: 'saves a component as a favorite',
           paramDef: [{
             name: "component",
             type: "component"
           }],
 
-          main: function(cmdString, params) {
+          main: function(params, callback, errCallback) {
 
             var path = params.component;
             //add /d/a/nucleus
@@ -679,10 +817,12 @@ jQuery(document).ready(function() {
               }
             } else {
               $.fn.bdaToolbar.saveFavorite(path, [], [], []);
-              var msg = "Favorite {0} created".format(path);
-              BDA_DASH.handleOutput(cmdString, params, msg, msg, "success");
+              callback(path);
             }
+          },
 
+          responseToString: function(params, retval) {
+            return "Favorite {0} created".format(retval);
           }
         }
       },
@@ -706,7 +846,7 @@ jQuery(document).ready(function() {
         } else {
           consoleHtml = BDA_DASH.templates.consoleModal;
         }
-
+        consoleHtml=consoleHtml.format(BDA_DASH.version);
 
         $(consoleHtml).insertAfter(BDA.logoSelector);
         if (BDA_DASH.devMode) {
@@ -775,12 +915,35 @@ jQuery(document).ready(function() {
         //bind console input
         logTrace('bind enter');
         BDA_DASH.$input.keydown(function(e) {
+          //ENTER
           if (e.which == 13 && !e.altKey && !e.shiftKey) {
             e.preventDefault();
             BDA_DASH.histIdxOffset = 0;
             //close suggestions
             BDA_DASH.$input.typeahead('close');
             BDA_DASH.handleInput()
+            return false;
+          }
+          //ctrl+C
+          if (e.which == 67 && !e.altKey && !e.shiftKey && e.ctrlKey) {
+            var input = BDA_DASH.$input[0];
+            var selected = false;
+            if (typeof input.selectionStart == "number") {
+              //if selection length is not null
+              selected = input.selectionStart < input.selectionEnd;
+            }
+            //only clear if nothing is selected
+            if (!selected) {
+              e.preventDefault();
+              BDA_DASH.$input.typeahead('val', '');
+              BDA_DASH.$input.typeahead('close');
+              return false;
+            }
+          }
+          //ctrl+K or ctrl+L
+          if ((e.which == 75 || e.which == 76) && !e.altKey && !e.shiftKey && e.ctrlKey) {
+            e.preventDefault();
+            BDA_DASH.$screen.find('.alert').alert('close');
             return false;
           }
         });
@@ -827,6 +990,7 @@ jQuery(document).ready(function() {
           }
         });
 
+        BDA_DASH.handleInput('help -k'); //skip history..
 
       },
 
@@ -971,23 +1135,25 @@ jQuery(document).ready(function() {
         $('#dashSaveScriptName').val(name);
       },
 
-      reloadScripts: function(
-        defaultName) {
+      reloadScripts: function(defaultName) {
         $('#dashEditorScriptList').html('');
         var $list = $('#dashEditorScriptList');
 
         var savedScripts = BDA_STORAGE.getScripts();
         logTrace('savedScripts ' + JSON.stringify(savedScripts));
         var lines = [];
+        //default
+        var line = BDA_DASH.templates.editorScriptLine.format("", "Choose a script");
+        lines.push(line);
         for (var name in savedScripts) {
           logTrace('name ' + name);
-          var line = BDA_DASH.templates.editorScriptLine.format(name);
+          line = BDA_DASH.templates.editorScriptLine.format(name, name);
           lines.push(line);
         }
 
         $(lines.join('')).appendTo($list);
         if (!isNull(defaultName)) {
-          $list.val(defaultName)
+          $list.val(defaultName);
         }
 
       },
@@ -1011,16 +1177,62 @@ jQuery(document).ready(function() {
           BDA_DASH.deleteScript(name);
         });
 
-        $('#dashLoadScript').on('click', function() {
-          var name = $('#dashEditorScriptList').val();
-          BDA_DASH.loadScript(name);
+        $('#dashEditorScriptList').on('change', function() {
+          var name = $(this).val();
+          if (!isNull(name) && name.length > 0) {
+            BDA_DASH.loadScript(name);
+
+          }
         });
+
+        /* $('#dashLoadScript').on('click', function() {
+           var name = $('#dashEditorScriptList').val();
+           BDA_DASH.loadScript(name);
+         });*/
 
         BDA_DASH.$editor.keydown(function(e) {
           if (e.which == 13 && e.altKey && !e.shiftKey && !e.ctrlKey) {
             e.preventDefault();
-            var input = BDA_DASH.$editor.val();
-            BDA_DASH.handleInput(input);
+
+            var inputText = BDA_DASH.$editor.val();
+
+            var input = BDA_DASH.$editor[0];
+            if (!isNull(inputText) && inputText.length > 0 && typeof input.selectionStart == "number") {
+              var start = input.selectionStart
+              var end = input.selectionEnd;
+              console.log(start);
+              console.log(end);
+              //if selection length is not null
+              if (end > start) {
+                inputText = inputText.substring(start, end);
+              }
+              console.log(inputText);
+            }
+
+            BDA_DASH.handleInput(inputText);
+            return false;
+          }
+
+          //ctrl+C
+          if (e.which == 67 && !e.altKey && !e.shiftKey && e.ctrlKey) {
+            var input = BDA_DASH.$editor[0];
+            var selected = false;
+            if (typeof input.selectionStart == "number") {
+              //if selection length is not null
+              selected = input.selectionStart < input.selectionEnd;
+            }
+            //only clear if nothing is selected
+            if (!selected) {
+              e.preventDefault();
+              BDA_DASH.$input.typeahead('val', '');
+              BDA_DASH.$input.typeahead('close');
+              return false;
+            }
+          }
+          //ctrl+K or ctrl+L
+          if ((e.which == 75 || e.which == 76) && !e.altKey && !e.shiftKey && e.ctrlKey) {
+            e.preventDefault();
+            BDA_DASH.$screen.find('.alert').alert('close');
             return false;
           }
         });
@@ -1142,33 +1354,14 @@ jQuery(document).ready(function() {
 
           $('#dash_dollar').hide();
           $('#dash_spinner').show();
+          BDA_DASH.STACK = []; //clear
+          BDA_DASH.resetProgress(0);
 
-          if (isNull(input)) {
-            input = BDA_DASH.$input.val();
-          }
-          var commands;
-          if (!isNull(input)) {
-            input = $.trim(input);
-            commands = DASH_LINES_SPLITTER.parse(input);
-          } else {
-            commands = [];
-          }
-          logTrace('input: {0}'.format(input));
+          BDA_DASH.stackInput(input);
 
-          BDA_DASH.QUEUE = []; //clear
           try {
-            for (var i = 0; i < commands.length; i++) {
-              var stringCmd = commands[i];
-              stringCmd = $.trim(stringCmd);
-              if (!isNull(stringCmd) && stringCmd.length > 0) {
-                var command = BDA_DASH.parse(stringCmd);
-                BDA_DASH.QUEUE.push([stringCmd, command]);
-              }
-            }
-            BDA_DASH.resetProgress(BDA_DASH.QUEUE.length);
             //start handling the queue
-            BDA_DASH.handleNextQueuedElem();
-
+            BDA_DASH.handleNextStackElem();
           } catch (e) {
             BDA_DASH.handleError(input, e);
           }
@@ -1178,11 +1371,38 @@ jQuery(document).ready(function() {
         }
       },
 
-      handleNextQueuedElem: function() {
-        var cmd = BDA_DASH.QUEUE.shift();
+      stackInput: function(input) {
+        if (isNull(input)) {
+          input = BDA_DASH.$input.val();
+        }
+        var commands;
+        if (!isNull(input)) {
+          input = $.trim(input);
+          commands = DASH_LINES_SPLITTER.parse(input);
+        } else {
+          commands = [];
+        }
+        logTrace('input: {0}'.format(input));
+
+        try {
+          //loop in reverse, so that we can use a stack
+          for (var i = commands.length - 1; i >= 0; i--) {
+            var stringCmd = commands[i];
+            stringCmd = $.trim(stringCmd);
+            if (!isNull(stringCmd) && stringCmd.length > 0) {
+              var command = BDA_DASH.parse(stringCmd);
+              BDA_DASH.STACK.push([stringCmd, command]);
+              BDA_DASH.pushProgress(1);
+            }
+          }
+        } catch (e) {
+          BDA_DASH.handleError(input, e);
+        }
+      },
+
+      handleNextStackElem: function() {
+        var cmd = BDA_DASH.STACK.pop();
         if (!isNull(cmd)) {
-
-
           try {
             BDA_DASH.executeCommand(cmd[0], cmd[1]);
 
@@ -1200,18 +1420,39 @@ jQuery(document).ready(function() {
         }
       },
 
-      executeCommand: function(val, command) {
+      executeCommand: function(stringCmd, command) {
         logTrace('executeCommand:');
         logTrace(JSON.stringify(command));
 
-        BDA_DASH.saveHistory(val, true);
+        //get the flags even before we parsed the params.
+        //used to skip history for the help command used on modal build
+        if (command.params.length == 0 || command.params[0].type != 'flags' || command.params[0].values.indexOf(BDA_DASH.flags.SKIP_HISTORY) == -1) {
+          BDA_DASH.saveHistory(stringCmd, true);
+        }
 
         var fct = BDA_DASH.FCT[command.funct]
         if (!isNull(fct) && !isNull(fct.main)) {
           // 1 extract params
           var parsedParams = BDA_DASH.parseParams(fct.paramDef, command.params);
           // 2 exec function
-          fct.main(val, parsedParams);
+          fct.main(
+            parsedParams,
+            function(result) {
+              var textResult = "";
+              if (  !BDA_DASH.settings.silent && !BDA_DASH.hasFlag(parsedParams, BDA_DASH.flags.SILENT)) {
+                if (isNull(fct.responseToString)) {
+                  textResult = JSON.stringify(result);
+                } else {
+                  textResult = fct.responseToString(parsedParams, result);
+                }
+              }
+              BDA_DASH.handleOutput(stringCmd, parsedParams, result, textResult, "success");
+            },
+            function(err) {
+              BDA_DASH.handleError(stringCmd, err);
+            });
+
+
 
         } else {
           throw {
@@ -1241,20 +1482,19 @@ jQuery(document).ready(function() {
       //end method, should be always called at the end of a shell function
       handleOutput: function(cmd, params, result, textResult, level) {
 
-        var silent = false;
-        if (BDA_DASH.hasFlag(params, 's')) {
-          silent = true;
-          textResult = "";
-        }
-
         logTrace('handleOutput ' + textResult);
         logTrace(params);
         if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
           BDA_DASH.saveOutput(result, params.output);
         }
+        var logMsg = "";
+        if (BDA_DASH.settings.verbose || BDA_DASH.hasFlag(params, BDA_DASH.flags.VERBOSE)) {
+          logMsg = BDA_DASH.LOG.join('<br/>');
+        }
+        BDA_DASH.LOG = []; //reset
 
         var msgClass = BDA_DASH.styles[level];
-        var $entry = $(BDA_DASH.templates.screenLine.format(textResult, msgClass));
+        var $entry = $(BDA_DASH.templates.screenLine.format(textResult, msgClass, logMsg));
         $entry.find('.cmd').text(cmd);
         $entry.attr('data-command', cmd);
         $entry.appendTo(BDA_DASH.$screen);
@@ -1263,7 +1503,7 @@ jQuery(document).ready(function() {
         //next step is persist the history
         BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
         BDA_DASH.updateProgress();
-        BDA_DASH.handleNextQueuedElem();
+        BDA_DASH.handleNextStackElem();
         return $entry;
       },
 
@@ -1588,6 +1828,7 @@ jQuery(document).ready(function() {
         switch (componentParam.type) {
           case "this":
             path = getCurrentComponentPath();
+            BDA_DASH.log('input <em>{0}</em> translated to <em>{1}</em>'.format('this', path));
             break;
           case "varRef":
             path = BDA_DASH.getVarValue(componentParam);
@@ -1621,6 +1862,7 @@ jQuery(document).ready(function() {
                 message: "Reference {0} is ambiguous. Specify index.<br/> <pre>{1}</pre>".format(componentParam.name, JSON.stringify(ref, null, 2))
               }
             }
+            BDA_DASH.log('input <em>{0}#{1}</em> translated to <em>{2}</em>'.format(shortname, idx, path));
             break;
           default:
             throw {
@@ -1709,6 +1951,17 @@ jQuery(document).ready(function() {
         }
       },
 
+      pushProgress: function(size) {
+        if (isNull(size)) {
+          size = 1;
+        }
+        var $bar = $('#dashProgressBar');
+        BDA_DASH.progress.total += size;
+        if (BDA_DASH.progress.total > 1) {
+          $bar.parent().fadeIn();
+        }
+      },
+
       updateProgress: function() {
         BDA_DASH.progress.current++;
         var $bar = $('#dashProgressBar');
@@ -1720,6 +1973,10 @@ jQuery(document).ready(function() {
         $bar.text('{0}/{1}'.format(BDA_DASH.progress.current, BDA_DASH.progress.total));
         //move to bottom
         var $progress = $bar.parent().detach().appendTo(BDA_DASH.$screen);
+      },
+
+      log: function(msg) {
+        BDA_DASH.LOG.push(msg);
       },
 
     };

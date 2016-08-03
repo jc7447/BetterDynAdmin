@@ -263,14 +263,16 @@ try {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  this.buildSimpleTable = function($item, tableTemplate, rowTemplate) {
-    var itemDesc = $item.attr('item-descriptor');
-    var id = $item.attr('id');
+  this.buildSimpleTable = function(item, tableTemplate, rowTemplate) {
+    var itemDesc = item.itemDescriptor;
+    var id = item.id;
     var rows = [];
-    $item.find('set-property').each(function() {
-      var $row = $(this);
-      rows.push(rowTemplate.format($row.attr('name'), $row.text()));
-    });
+    var val;
+    for(key in item){
+      if(key != 'id' && key != 'itemDescriptor'){
+        rows.push(rowTemplate.format(key, item[key]));
+      }
+    }
     var table = tableTemplate.format(itemDesc, id, rows.join(''));
 
     return table;
