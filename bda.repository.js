@@ -1403,6 +1403,8 @@
         var start = new Date().getTime();
         var $cacheUsage = $(this.cacheUsageSelector);
         var $cacheTable = $cacheUsage.next().next().find('table');
+        BDA_REPOSITORY.$cacheTable = $cacheTable;
+
         var size = $cacheTable.find('th').first().find('th').length;
 
         console.log('cache section size ' + size);
@@ -1434,6 +1436,10 @@
             var cacheMode = match[2];
             var cacheLocality = match[3];
             var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc, cacheMode, cacheLocality);
+
+            $tr.attr('data-item-desc', itemDesc)
+              .attr('data-cache-mode', cacheMode)
+              .attr('data-cache-locality', cacheLocality);
 
             var $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-right"></i></span>' + newText);
             $td.html($arrow);
@@ -1474,6 +1480,17 @@
           })
           .appendTo($buttons);
 
+        var $collapseAll = $('<button></button>', {
+            id: 'exportCSV',
+            class: 'cache export',
+            value: 'exportCSV',
+            html: 'Export as CSV'
+          })
+          .on('click', function() {
+            BDA_REPOSITORY.exportCacheStatsAsCSV();
+          })
+          .appendTo($buttons);
+
         var end = new Date().getTime();
         console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
       } catch (err) {
@@ -1490,6 +1507,64 @@
       $tr.next().next().toggle();
       rotateArrowQuarter($tr.find('.cacheArrow i'));
     },
+
+    exportCacheStatsAsCSV: function() {
+      var data = [];
+      var line, $tr, $dataTr;
+      //header
+      data.push([
+        'Item Descriptor',
+        'Cache Mode',
+        'Cache locality',
+        'localEntries',
+        'externEntries',
+        'weakEntries',
+        'localCacheSize',
+        'usedRatio',
+        'totalHits',
+        'totalMisses',
+        'ratio',
+        'localHits',
+        'localMisses',
+        'externalHits',
+        'externalMisses',
+        'weakHits',
+        'weakMisses',
+        'cacheInvalidations',
+        'entryInvalidations',
+        'localCulls',
+        'localItemsCulled',
+        'localMaxCulled',
+        'weakCulls',
+        'weakItemsCulled',
+        'weakMaxCulled'
+      ]);
+
+      BDA_REPOSITORY.$cacheTable.find('tr.cache-subheader').each(function(idx,elem) {
+        $tr = $(elem);
+        $dataTr = $tr.next();
+        line=[];
+        line.push($tr.attr('data-item-desc'));
+        line.push($tr.attr('data-cache-mode'));
+        line.push($tr.attr('data-cache-locality'));
+
+        $tr.next().children('td').each(function() {
+          line.push($(this).text());
+        });
+
+        data.push(line);
+      });
+
+      var linesText=[];
+      for (var i = 0; i < data.length; i++) {
+        linesText.push(data[i].join(';'));
+      }
+
+      var csv = linesText.join('\n');
+
+      copyToClipboard(csv);
+
+    }
   };
 
   // Reference to BDA_STORAGE
