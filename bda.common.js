@@ -242,7 +242,7 @@ try {
 
   this.copyToClipboard = function(text) {
     GM_setClipboard(text);
-    window.alert("Data have been added to your clipboard");
+    window.alert("Data has been added to your clipboard");
   };
 
   this.rotateArrow = function($arrow) {

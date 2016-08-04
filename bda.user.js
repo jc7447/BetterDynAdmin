@@ -132,8 +132,12 @@ jQuery(document).ready(function() {
         {
           // Change page title
           BDA.setupPageTitle();
+
           // Setup find class link
           BDA.setupFindClassLink();
+          
+          BDA.setupCopyClipboardButtons();
+
           // Make search field visible
           $("#search").css("display", "inline");
         }
@@ -179,6 +183,37 @@ jQuery(document).ready(function() {
         var className = $classLink.text();
         $("<span style='margin-left : 25px'><a href='/dyn/admin/atg/dynamo/admin/en/findclass.jhtml?className="+className+"&debug=true'>Find Class</a></span>")
         .insertAfter($classLink);
+      },
+
+
+      setupCopyClipboardButtons: function() {
+        console.log('setupCopyClipboardButtons');
+        var $componentBreadCrumb = null;
+        if (BDA.isOldDynamo)
+          $componentBreadCrumb = $("h1:eq(0)");
+        else
+          $componentBreadCrumb = $("h1:eq(1)");
+
+        if (!isNull($componentBreadCrumb)) {
+          $componentBreadCrumb
+            .attr('id', 'breadcrumb')
+            .append($('<button></button', {
+                class: 'bda-button bda-button-clipboard',
+                html: '<i class="fa fa-files-o"></i>'
+              })
+              .on('click', function() {
+                copyToClipboard(getCurrentComponentPath());
+              })
+            )
+          var $classLink = $componentBreadCrumb.next();
+          $('<button></button', {
+              class: 'bda-button bda-button-clipboard',
+              html: '<i class="fa fa-files-o"></i>'
+            })
+            .on('click', function() {
+              copyToClipboard($classLink.text());
+            }).insertAfter($classLink);
+        }
       },
 
       loadExternalCss : function(url)

@@ -428,6 +428,7 @@ a {
    border-radius: 3px;
    font-size: 12px;
    padding: 0px 6px 0px 0px;
+   cursor: pointer;
 }
 
 .bda-button label, .bda-button input, .bda-button button{
@@ -439,6 +440,14 @@ a {
   width: 22px;
   padding: 0px 0px 0px 0px;
   vertical-align: middle;
+}
+
+.bda-button-clipboard{
+  margin-left:10px;
+  padding: 3px;
+  color:black;
+  vertical-align: middle;
+  border-radius: 5px;
 }
 
 .tag-filter-button{
