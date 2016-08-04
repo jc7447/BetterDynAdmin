@@ -8,12 +8,12 @@ jQuery(document).ready(function() {
     var BDA_DASH = {
 
       devMode: false,
-      version:0.7,
+      version: 0.7,
 
       settings: {
         domain: "",
         verbose: false,
-        silent:false
+        silent: false,
       },
       // dom elements
       $screen: null,
@@ -30,9 +30,11 @@ jQuery(document).ready(function() {
       histIdxOffset: 0,
 
       styles: {
+        debug: "muted",
+        info: "info",
         success: "success",
-        error: "danger",
         warning: "warning",
+        error: "danger",
         hidden: "hidden"
       },
       keyword_this: "this",
@@ -196,6 +198,25 @@ jQuery(document).ready(function() {
       //to sync multiple methods
       STACK: [],
       LOG: [],
+      logLevels: {
+        debug: {
+          name: 'debug',
+          value: 0
+        },
+        info: {
+          name: 'info',
+          value: 1
+        },
+        warning: {
+          name: 'warning',
+          value: 2
+        },
+        error: {
+          name: 'error',
+          value: 3
+        },
+
+      },
       progress: {
         total: 0,
         current: 0
@@ -225,6 +246,7 @@ jQuery(document).ready(function() {
           main: function(params, callback, errCallback) {
 
             BDA_COMPONENT.getProperty(
+              BDA_DASH.settings.domain,
               params.componentProperty.path,
               params.componentProperty.property,
               function(value) {
@@ -256,7 +278,7 @@ jQuery(document).ready(function() {
             type: "value"
           }],
           main: function(params, callback, errCallback) {
-
+            BDA_DASH.settings.domain,
             BDA_COMPONENT.setProperty(
               params.componentProperty.path,
               params.componentProperty.property,
@@ -337,7 +359,11 @@ jQuery(document).ready(function() {
             type: "value"
           }],
           main: function(params, callback, errCallback) {
+            if (BDA_DASH.settings.domain !== "") {
+              BDA_DASH.log("Using other domain {0}".format(BDA_DASH.settings.domain), BDA_DASH.logLevels.info);
+            }
             $().executePrintItem(
+              BDA_DASH.settings.domain,
               params.itemDesc,
               params.id,
               params.repo,
@@ -440,7 +466,12 @@ jQuery(document).ready(function() {
             logTrace('repo : ' + repo);
             logTrace('xmlText : ' + xmlText);
 
+            if (BDA_DASH.settings.domain !== "") {
+              BDA_DASH.log("Using other domain {0}".format(BDA_DASH.settings.domain), BDA_DASH.logLevels.info);
+            }
+
             $().executeRql(
+              BDA_DASH.settings.domain,
               xmlText,
               repo,
               function($xmlDoc, head) {
@@ -503,12 +534,19 @@ jQuery(document).ready(function() {
                 ret = "setting global silent to {0}".format(BDA_DASH.settings.silent);
                 break;
               case 'verbose':
-                BDA_DASH.settings.verbose = (params.value == "true"? true : false);
+                BDA_DASH.settings.verbose = (params.value == "true" ? true : false);
                 ret = "setting global verbose to {0}".format(BDA_DASH.settings.verbose);
                 break;
               case 'domain':
-                BDA_DASH.settings.domain = ((isNull(params.value) || params.value.length == 0) ? "" : params.value);
-                ret = "setting global verbose to {0}".format(BDA_DASH.settings.verbose);
+                var val = ((isNull(params.value) || params.value.length == 0) ? "" : params.value);
+                if (val !="" && !val.startsWith("http")) {
+                  throw {
+                    name: "InvalidFormat",
+                    message: "Domain must include protocol"
+                  }
+                }
+                BDA_DASH.settings.domain = val;
+                ret = "setting global domain to {0}".format(BDA_DASH.settings.domain);
                 break;
               default:
                 throw {
@@ -645,7 +683,12 @@ jQuery(document).ready(function() {
           }],
 
           main: function(params, callback, errCallback) {
+            if (BDA_DASH.settings.domain !== "") {
+              BDA_DASH.log("Using other domain {0}".format(BDA_DASH.settings.domain), BDA_DASH.logLevels.info);
+            }
+
             BDA_COMPONENT.call(
+              BDA_DASH.settings.domain,
               params.component,
               params.method,
               function(value) {
@@ -829,6 +872,8 @@ jQuery(document).ready(function() {
       build: function() {
         logTrace('actually initialize dash');
 
+        BDA_DASH.logLevel = BDA_DASH.logLevels.info;
+
         BDA_DASH.initialized = true;
 
         logTrace('init modal start');
@@ -846,7 +891,7 @@ jQuery(document).ready(function() {
         } else {
           consoleHtml = BDA_DASH.templates.consoleModal;
         }
-        consoleHtml=consoleHtml.format(BDA_DASH.version);
+        consoleHtml = consoleHtml.format(BDA_DASH.version);
 
         $(consoleHtml).insertAfter(BDA.logoSelector);
         if (BDA_DASH.devMode) {
@@ -1439,7 +1484,7 @@ jQuery(document).ready(function() {
             parsedParams,
             function(result) {
               var textResult = "";
-              if (  !BDA_DASH.settings.silent && !BDA_DASH.hasFlag(parsedParams, BDA_DASH.flags.SILENT)) {
+              if (!BDA_DASH.settings.silent && !BDA_DASH.hasFlag(parsedParams, BDA_DASH.flags.SILENT)) {
                 if (isNull(fct.responseToString)) {
                   textResult = JSON.stringify(result);
                 } else {
@@ -1482,15 +1527,24 @@ jQuery(document).ready(function() {
       //end method, should be always called at the end of a shell function
       handleOutput: function(cmd, params, result, textResult, level) {
 
+        //save the result
         logTrace('handleOutput ' + textResult);
         logTrace(params);
         if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
           BDA_DASH.saveOutput(result, params.output);
         }
-        var logMsg = "";
-        if (BDA_DASH.settings.verbose || BDA_DASH.hasFlag(params, BDA_DASH.flags.VERBOSE)) {
-          logMsg = BDA_DASH.LOG.join('<br/>');
+
+        //print the logs
+        var logs = [];
+        var globalVerbose = BDA_DASH.settings.verbose || BDA_DASH.hasFlag(params, BDA_DASH.flags.VERBOSE);
+        for (var i = 0; i < BDA_DASH.LOG.length; i++) {
+          var l = BDA_DASH.LOG[i];
+          if (globalVerbose || l.level.value >= BDA_DASH.logLevel.value) {
+            logs.push('<p class="text-{0}">{1}</p>'.format(BDA_DASH.styles[l.level.name], l.message));
+          }
         }
+
+        var logMsg = logs.join('');
         BDA_DASH.LOG = []; //reset
 
         var msgClass = BDA_DASH.styles[level];
@@ -1499,8 +1553,6 @@ jQuery(document).ready(function() {
         $entry.attr('data-command', cmd);
         $entry.appendTo(BDA_DASH.$screen);
 
-        //add to history after the command is done - not rly clean but will do for now
-        //next step is persist the history
         BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
         BDA_DASH.updateProgress();
         BDA_DASH.handleNextStackElem();
@@ -1828,7 +1880,7 @@ jQuery(document).ready(function() {
         switch (componentParam.type) {
           case "this":
             path = getCurrentComponentPath();
-            BDA_DASH.log('input <em>{0}</em> translated to <em>{1}</em>'.format('this', path));
+            BDA_DASH.log('input <em>{0}</em> translated to <em>{1}</em>'.format('this', path), BDA_DASH.logLevels.debug);
             break;
           case "varRef":
             path = BDA_DASH.getVarValue(componentParam);
@@ -1862,7 +1914,7 @@ jQuery(document).ready(function() {
                 message: "Reference {0} is ambiguous. Specify index.<br/> <pre>{1}</pre>".format(componentParam.name, JSON.stringify(ref, null, 2))
               }
             }
-            BDA_DASH.log('input <em>{0}#{1}</em> translated to <em>{2}</em>'.format(shortname, idx, path));
+            BDA_DASH.log('input <em>{0}#{1}</em> translated to <em>{2}</em>'.format(shortname, idx, path),BDA_DASH.logLevels.debug);
             break;
           default:
             throw {
@@ -1975,8 +2027,14 @@ jQuery(document).ready(function() {
         var $progress = $bar.parent().detach().appendTo(BDA_DASH.$screen);
       },
 
-      log: function(msg) {
-        BDA_DASH.LOG.push(msg);
+      log: function(msg, level) {
+        if (isNull(level)) {
+          level = BDA_DASH.logLevels.info;
+        }
+        BDA_DASH.LOG.push({
+          message: msg,
+          level: level
+        });
       },
 
     };

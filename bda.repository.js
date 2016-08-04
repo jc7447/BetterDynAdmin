@@ -1357,11 +1357,16 @@
     // xmltext : full xml text
     // repository : only the strict nucleus path
     // callback : take 1 param : array of add-items
-    executeQuery: function(xmltext, repository, callback, errCallback) {
+    executeQuery: function(domain, xmltext, repository, callback, errCallback) {
+
+      if (isNull(domain)) {
+        domain = "";
+      }
+      var url = '{0}/dyn/admin/nucleus/{1}/'.format(domain, repository);
 
       $.ajax({
         type: "POST",
-        url: "/dyn/admin/nucleus/{0}/".format(repository),
+        url: url,
         data: {
           xmltext: xmltext
         },
@@ -1385,9 +1390,9 @@
       })
     },
 
-    executePrintItem: function(itemDescriptor, id, repository, callback, errCallback) {
+    executePrintItem: function(domain, itemDescriptor, id, repository, callback, errCallback) {
       var xmlText = BDA_REPOSITORY.templates.printItem.format(itemDescriptor, id);
-      BDA_REPOSITORY.executeQuery(xmlText, repository, callback, errCallback);
+      BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
     },
 
 
@@ -1406,14 +1411,13 @@
         var index = 0;
         $cacheTable.find('tr').each(function() {
           var $tr = $(this);
-               //if header
-          if(index == 0){ //first
+          //if header
+          if (index == 0) { //first
             //set first cell so that it doesn't change size when the rest collapse
             var $first = $tr.find('th').first();
             var color = $first.css('background-color');
-            $first.css('color',color).text('Items');
-          }
-          else if ((index-1) % 3 == 0) { //if sub-header
+            $first.css('color', color).text('Items');
+          } else if ((index - 1) % 3 == 0) { //if sub-header
 
             //highlight per item
             $tr.addClass('odd cache-subheader collapsed');
@@ -1429,9 +1433,9 @@
             var itemDesc = match[1];
             var cacheMode = match[2];
             var cacheLocality = match[3];
-            var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc,cacheMode,cacheLocality);
+            var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc, cacheMode, cacheLocality);
 
-            var $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-right"></i></span>'+newText);
+            var $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-right"></i></span>' + newText);
             $td.html($arrow);
 
             //collapse items
@@ -1505,16 +1509,13 @@
       BDA_REPOSITORY.reloadQueryList();
   };
 
-  $.fn.executePrintItem = function(itemDescriptor, id, repository, callback, errCallback) {
-    BDA_REPOSITORY.executePrintItem(itemDescriptor, id, repository, callback, errCallback);
+  $.fn.executePrintItem = function(domain, itemDescriptor, id, repository, callback, errCallback) {
+    BDA_REPOSITORY.executePrintItem(domain, itemDescriptor, id, repository, callback, errCallback);
   };
 
-  $.fn.executePrintItem = function(itemDescriptor, id, repository, callback, errCallback) {
-    BDA_REPOSITORY.executePrintItem(itemDescriptor, id, repository, callback, errCallback);
-  };
 
-  $.fn.executeRql = function(xmlText, repository, callback, errCallback) {
-    BDA_REPOSITORY.executeQuery(xmlText, repository, callback, errCallback);
+  $.fn.executeRql = function(domain, xmlText, repository, callback, errCallback) {
+    BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
   };
 
 

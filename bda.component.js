@@ -7,9 +7,11 @@ Utility library to access component properties
 BDA_COMPONENT = {
 
   propertiesSelector: 'h1:contains("Properties")',
-  setProperty: function(component, property, value, callback, errCallback) {
-    var url = '/dyn/admin/nucleus{0}/'.format(component);
-
+  setProperty: function(domain, component, property, value, callback, errCallback) {
+    if (isNull(domain)) {
+      domain = "";
+    }
+    var url = '{0}/dyn/admin/nucleus{1}/?propertyName={2}'.format(domain, component, property);
     $.ajax({
       type: 'POST',
       url: url,
@@ -23,10 +25,12 @@ BDA_COMPONENT = {
       error: errCallback
     })
   },
-  getProperty: function(component, property, callback, errCallback) {
+  getProperty: function(domain, component, property, callback, errCallback) {
     console.log('getProperty {0} {1}'.format(component, property));
-
-    var url = '/dyn/admin/nucleus{0}/?propertyName={1}'.format(component, property);
+    if (isNull(domain)) {
+      domain = "";
+    }
+    var url = '{0}/dyn/admin/nucleus{1}/?propertyName={2}'.format(domain, component, property);
     $.ajax({
       type: 'GET',
       url: url,
@@ -37,8 +41,11 @@ BDA_COMPONENT = {
     })
   },
 
-  call: function(component, method, callback, errCallback) {
-    var url = '/dyn/admin/nucleus{0}/'.format(component);
+  call: function(domain, component, method, callback, errCallback) {
+    if (isNull(domain)) {
+      domain = "";
+    }
+    var url = '{0}/dyn/admin/nucleus{1}/'.format(domain, component);
 
     $.ajax({
       type: 'POST',
