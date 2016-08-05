@@ -1420,12 +1420,13 @@
           var $tr = $(this);
           //if header
           if ((index - 1) % 3 == 0) { //if sub-header
-
             //highlight per item
             $tr.addClass('odd cache-subheader');
           }
           index++;
         });
+        var $tBody = $cacheTable.find('tbody:first');
+
 
         BDA_REPOSITORY.setupCacheCollapse($header, $cacheTable);
 
@@ -1468,6 +1469,7 @@
           .appendTo($buttons);
 
         BDA_REPOSITORY.setupCacheTableHeaderFixed($header, $cacheTable);
+
 
         //collapse all (after setup fixed header because we need full width)
         $cacheTable.find('.cache-subheader').each(function() {
@@ -1573,6 +1575,24 @@
 
       //make the header fixed with css
       $cacheTable.addClass('fixed_headers');
+
+      //wrap each 3 lines in a div for snapping
+
+      //detach them and wrap 3 lines in a div
+      var $tBody = $cacheTable.find('tbody:first');
+      var l1, l2, l3, wrapper, wrapArray;
+      wrapArray = [];
+      $('.cache-subheader').each(function(idx, l) {
+        l1 = $(l);
+        l2 = l1.next()
+        l3 = l2.next();
+        wrapper = $('<div class="snap"></div>');
+
+        l1.detach().appendTo(wrapper);
+        l2.detach().appendTo(wrapper);
+        l3.detach().appendTo(wrapper);
+        wrapper.appendTo($tBody);
+      });
     },
 
     toggleCacheLines: function() {
