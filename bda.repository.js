@@ -1578,21 +1578,27 @@
 
       //wrap each 3 lines in a div for snapping
 
-      //detach them and wrap 3 lines in a div
-      var $tBody = $cacheTable.find('tbody:first');
-      var l1, l2, l3, wrapper, wrapArray;
-      wrapArray = [];
-      $('.cache-subheader').each(function(idx, l) {
-        l1 = $(l);
-        l2 = l1.next()
-        l3 = l2.next();
-        wrapper = $('<div class="snap"></div>');
+      //only if snapping is supported
 
-        l1.detach().appendTo(wrapper);
-        l2.detach().appendTo(wrapper);
-        l3.detach().appendTo(wrapper);
-        wrapper.appendTo($tBody);
-      });
+      if ('scroll-snap-type' in document.body.style) {
+        //detach them and wrap 3 lines in a div
+        var $tBody = $cacheTable.find('tbody:first');
+        var l1, l2, l3, wrapper, wrapArray;
+        wrapArray = [];
+        $('.cache-subheader').each(function(idx, l) {
+          l1 = $(l);
+          l2 = l1.next()
+          l3 = l2.next();
+          wrapper = $('<div class="snap"></div>');
+
+          l1.detach().appendTo(wrapper);
+          l2.detach().appendTo(wrapper);
+          l3.detach().appendTo(wrapper);
+          wrapper.appendTo($tBody);
+        });
+
+      }
+
     },
 
     toggleCacheLines: function() {

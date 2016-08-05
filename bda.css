@@ -977,8 +977,8 @@ button.cache{
   overflow-x: hidden;
   width: 100%;
   height: 500px;
-  scroll-snap-type: proximity;
-  -webkit-scroll-snap-type: proximity
+  scroll-snap-type: mandatory;
+  -webkit-scroll-snap-type: mandatory;
 }
 .fixed_headers .snap{
   scroll-snap-coordinate: 0% 0%;
