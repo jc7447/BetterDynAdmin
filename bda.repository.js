@@ -1516,6 +1516,7 @@
         'Item Descriptor',
         'Cache Mode',
         'Cache locality',
+        'type',
         'localEntries',
         'externEntries',
         'weakEntries',
@@ -1540,22 +1541,38 @@
         'weakMaxCulled'
       ]);
 
-      BDA_REPOSITORY.$cacheTable.find('tr.cache-subheader').each(function(idx,elem) {
+      BDA_REPOSITORY.$cacheTable.find('tr.cache-subheader').each(function(idx, elem) {
         $tr = $(elem);
-        $dataTr = $tr.next();
-        line=[];
+        line = [];
         line.push($tr.attr('data-item-desc'));
         line.push($tr.attr('data-cache-mode'));
         line.push($tr.attr('data-cache-locality'));
+        line.push('item-cache');
 
         $tr.next().children('td').each(function() {
           line.push($(this).text());
         });
 
         data.push(line);
+
+        var $queryTr = $tr.next().next();
+        var $cols = $queryTr.children('td');
+        if ($cols.length > 1) {
+          //query caching available
+          line = [];
+          line.push($tr.attr('data-item-desc'));
+          line.push($tr.attr('data-cache-mode'));
+          line.push($tr.attr('data-cache-locality'));
+          line.push('query-cache');
+
+          $cols.each(function() {
+            line.push($(this).text());
+          });
+           data.push(line);
+        }
       });
 
-      var linesText=[];
+      var linesText = [];
       for (var i = 0; i < data.length; i++) {
         linesText.push(data[i].join(';'));
       }
