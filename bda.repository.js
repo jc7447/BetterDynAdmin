@@ -191,6 +191,10 @@
       $("#showMoreRepositoryView").click(function() {
         BDA_REPOSITORY.toggleRepositoryView();
       });
+
+//setup cache section before hidding it
+  BDA_REPOSITORY.setupRepositoryCacheSection();
+
       // Auto hide Cache usage
       $(BDA_REPOSITORY.cacheUsageSelector).append(cacheUsage);
       if (toggleObj.showMoreCacheUsage != 1)
@@ -220,7 +224,7 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
-      BDA_REPOSITORY.setupRepositoryCacheSection();
+    
 
       $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
         var $target = $(item.target).parent();
