@@ -367,8 +367,6 @@ try {
     return h;
   }
 
-
-
   $.fn.setHeightAndMax = function(value) {
     this.css('max-height', value + 'px');
     this.css('height', value + 'px');

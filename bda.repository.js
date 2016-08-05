@@ -1477,6 +1477,7 @@
             .next().css('display', 'none')
             .next().css('display', 'none');
         });
+
         var end = new Date().getTime();
         console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
       } catch (err) {
@@ -1519,6 +1520,7 @@
 
         //collapse items
         $tr.bind('click', BDA_REPOSITORY.toggleCacheLines);
+
 
 
       });
@@ -1570,17 +1572,14 @@
               .css('max-width', cellWiths[idx]);
           });
         }
-
       });
 
       //make the header fixed with css
       $cacheTable.addClass('fixed_headers');
 
-      //wrap each 3 lines in a div for snapping
-
       //only if snapping is supported
-
       if ('scroll-snap-type' in document.body.style) {
+        //wrap each 3 lines in a div for snapping
         //detach them and wrap 3 lines in a div
         var $tBody = $cacheTable.find('tbody:first');
         var l1, l2, l3, wrapper, wrapArray;
@@ -1598,6 +1597,51 @@
         });
 
       }
+      //make the header stick to top
+      //add a div after the table to handle the bottom anchor
+      var left = $cacheTable.offset().left;
+      $(window).scroll(function() { // scroll event
+        var $window = $(window);
+        var windowTop = $window.scrollTop();
+        //get the value now because it changes on show/hide/collapse
+        var top = $cacheTable.offset().top;
+        var bot = top + $cacheTable.height();
+
+        try {
+
+          if (top < windowTop && bot > windowTop) {
+            $header.addClass('sticky-top');
+            var windowLeft = $window.scrollLeft();
+            $header.css('left', -windowLeft + left);
+          } else {
+            $header.removeClass('sticky-top');
+            $header.css('left', 0);
+          }
+
+        } catch (e) {
+          console.error(e);
+        }
+
+      });
+
+
+/*      //only attach this event if snaping available
+      if ('scroll-snap-type' in document.body.style) {
+        //sticky scrolling
+        //only sticky scroll inside 80% of the table, else we cannot scroll out :)
+        $(window).scroll(function() { // scroll event
+          var $window = $(window);
+          var windowTop = $window.scrollTop();
+          var top = $cacheTable.offset().top;
+          var bot = top + $cacheTable.height();
+          if (top * 1.1 < windowTop && bot * 0.9 > windowTop) {
+            $('body').addClass('scroller');
+          } else {
+            $('body').removeClass('scroller');
+          }
+        })
+      }
+*/
 
     },
 
