@@ -941,7 +941,7 @@ background-color: #000;
 
 table.cache{
   border-spacing: 0;
-border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 .cache tr.cache-subheader {
@@ -959,4 +959,29 @@ border-collapse: collapse;
 button.cache{
    cursor:pointer;
 }
+
+.fixed_headers {
+  table-layout: fixed;
+  border-collapse: collapse;
 }
+.fixed_headers th,
+.fixed_headers td {
+  text-align: left;
+}
+.fixed_headers thead tr {
+  display: block;
+}
+.fixed_headers tbody {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  height: 500px;
+}
+
+
+/*.old_ie_wrapper {
+  overflow-x: hidden;
+  overflow-y: auto;
+  tbody { height: auto; }
+}*/

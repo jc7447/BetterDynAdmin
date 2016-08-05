@@ -343,7 +343,7 @@ try {
   $.fn.adjustToFit = function($parent, targetTotalSize, minSize) {
     var curSize = $parent.fullHeight();
     var delta = targetTotalSize - curSize;
-    var hThis = parseInt(this.css('height').replace('px', ''));
+    var hThis = parseFloat(this.css('height').replace('px', ''));
     hThis += delta;
     if (!isNull(minSize)) {
       hThis = Math.max(minSize, hThis);
@@ -353,22 +353,21 @@ try {
   }
 
   $.fn.fullHeight = function() {
-    var h = parseInt(this.css('height').replace('px', ''));
-    var mBot = parseInt(this.css('margin-bottom').replace('px', ''));
-    var mTop = parseInt(this.css('margin-top').replace('px', ''));
+    var h = parseFloat(this.css('height').replace('px', ''));
+    var mBot = parseFloat(this.css('margin-bottom').replace('px', ''));
+    var mTop = parseFloat(this.css('margin-top').replace('px', ''));
     var total = h + mTop + mBot;
 
     return total;
   }
 
+
   $.fn.innerHeight = function() {
     var h = parseInt(this.css('height').replace('px', ''));
-    var pBot = parseInt(this.css('padding-bottom').replace('px', ''));
-    var pTop = parseInt(this.css('padding-top').replace('px', ''));
-    var total = h - pTop - pBot;
-
-    return total;
+    return h;
   }
+
+
 
   $.fn.setHeightAndMax = function(value) {
     this.css('max-height', value + 'px');

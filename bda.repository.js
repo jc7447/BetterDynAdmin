@@ -1401,61 +1401,37 @@
       try {
 
         var start = new Date().getTime();
+
+        //global css setups to aid further customisation
         var $cacheUsage = $(this.cacheUsageSelector);
         var $cacheTable = $cacheUsage.next().next().find('table');
         BDA_REPOSITORY.$cacheTable = $cacheTable;
+        $cacheTable.addClass('cache').removeAttr('border'); //remove border - will be handled by css
 
-        var size = $cacheTable.find('th').first().find('th').length;
 
-        console.log('cache section size ' + size);
-        $cacheTable.addClass('cache');
+        //move the header in a thead
+        var $header = $cacheTable.find('tr').first();
+        $header.detach();
+        var $thead = $('<thead></thead>').prependTo($cacheTable).append($header);
 
+        //mark the sub-headers
         var index = 0;
         $cacheTable.find('tr').each(function() {
           var $tr = $(this);
           //if header
-          if (index == 0) { //first
-            //set first cell so that it doesn't change size when the rest collapse
-            var $first = $tr.find('th').first();
-            var color = $first.css('background-color');
-            $first.css('color', color).text('Items');
-          } else if ((index - 1) % 3 == 0) { //if sub-header
+          if ((index - 1) % 3 == 0) { //if sub-header
 
             //highlight per item
-            $tr.addClass('odd cache-subheader collapsed');
-            //expand the cell width
-            var $td = $tr.find('td').first();
-            $td.attr('colspan', 23)
-
-            //$td.insert($arrow);
-            //enhance the title line
-            var text = $td.find('b:contains("item-descriptor")').first().text();
-
-            var match = BDA_REPOSITORY.CACHE_STAT_TITLE_REGEXP.exec(text);
-            var itemDesc = match[1];
-            var cacheMode = match[2];
-            var cacheLocality = match[3];
-            var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc, cacheMode, cacheLocality);
-
-            $tr.attr('data-item-desc', itemDesc)
-              .attr('data-cache-mode', cacheMode)
-              .attr('data-cache-locality', cacheLocality);
-
-            var $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-right"></i></span>' + newText);
-            $td.html($arrow);
-
-            //collapse items
-            $tr.bind('click', BDA_REPOSITORY.toggleCacheLines);
-          } else {
-            $tr.css('display', 'none');
+            $tr.addClass('odd cache-subheader');
           }
-
           index++;
         });
 
+        BDA_REPOSITORY.setupCacheCollapse($header, $cacheTable);
+
+
         //collapse all button
         var $resetLink = $cacheUsage.next();
-
         var $buttons = $('<div></div>').appendTo($resetLink);
 
         var $expandAll = $('<button></button>', {
@@ -1491,12 +1467,112 @@
           })
           .appendTo($buttons);
 
+        BDA_REPOSITORY.setupCacheTableHeaderFixed($header, $cacheTable);
+
+        //collapse all (after setup fixed header because we need full width)
+        $cacheTable.find('.cache-subheader').each(function() {
+          $(this).addClass('collapsed')
+            .next().css('display', 'none')
+            .next().css('display', 'none');
+        });
         var end = new Date().getTime();
         console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
       } catch (err) {
         console.error(err);
       }
 
+    },
+
+    setupCacheCollapse: function($header, $cacheTable) {
+
+
+      $cacheTable.find('.cache-subheader').each(function() {
+        var $tr = $(this);
+
+        //expand the cell width
+        var $td = $tr.find('td').first();
+        $td.attr('colspan', 23) //extend to full with
+          //query cache line
+        var $queryCols = $tr.next().next().children('td');
+        if ($queryCols.length == 1) {
+          $queryCols.attr('colspan', 23);
+        }
+
+        //enhance the title line
+        var text = $td.find('b:contains("item-descriptor")').first().text();
+
+        var match = BDA_REPOSITORY.CACHE_STAT_TITLE_REGEXP.exec(text);
+        var itemDesc = match[1];
+        var cacheMode = match[2];
+        var cacheLocality = match[3];
+        var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc, cacheMode, cacheLocality);
+
+        //add as attr for easier handling
+        $tr.attr('data-item-desc', itemDesc)
+          .attr('data-cache-mode', cacheMode)
+          .attr('data-cache-locality', cacheLocality);
+
+        var $arrow = $('<span class="cacheArrow"><i class="up fa fa-arrow-right"></i></span>' + newText);
+        $td.html($arrow);
+
+        //collapse items
+        $tr.bind('click', BDA_REPOSITORY.toggleCacheLines);
+
+
+      });
+    },
+
+    setupCacheTableHeaderFixed: function($header, $cacheTable) {
+      //save the size of the headers when the table is fully extended
+      var cellWiths = [];
+      var w, $child;
+      $header.children('th').each(function(idx, child) {
+        //save the value
+        $child = $(child);
+        w = $child.width() + 'px';
+        cellWiths.push(w);
+        //fix the size
+        $child.css('width', w)
+          .css('min-width', w)
+          .css('max-width', w);
+      });
+
+      //calc the size required to keep the subheader lines 100%
+      var $firstSubHeader = $cacheTable.find('.cache-subheader td:first');
+      var offset = parseFloat($firstSubHeader.css('padding-left').replace('px', '')) + parseFloat($firstSubHeader.css('padding-right').replace('px', ''))
+
+      var fullWidth = ($header.width() - offset - 1) + 'px'; //1px other offset. maybe the border?
+
+      //set all size fixed
+      $cacheTable.find('.cache-subheader').each(function() {
+        var $tr = $(this);
+
+        $tr.children('td:first').css('width', fullWidth)
+          .css('min-width', fullWidth)
+          .css('max-width', fullWidth);
+
+        var $itemCacheTr = $tr.next();
+        $itemCacheTr.css('width', fullWidth)
+          .children().each(function(idx, child) {
+            $(child).css('width', cellWiths[idx])
+              .css('min-width', cellWiths[idx])
+              .css('max-width', cellWiths[idx])
+          });
+
+        var $queryCache = $itemCacheTr.next();
+        var $queryCacheCols = $queryCache.children();
+        if ($queryCacheCols.length > 1) {
+          $queryCacheCols.each(function(idx, child) {
+            $(child).css('width', cellWiths[idx])
+              .css('min-width', cellWiths[idx])
+              .css('max-width', cellWiths[idx]);
+          });
+        }
+
+      });
+
+      //make the header fixed with css
+      $cacheTable.addClass('fixed_headers');
     },
 
     toggleCacheLines: function() {
@@ -1568,7 +1644,7 @@
           $cols.each(function() {
             line.push($(this).text());
           });
-           data.push(line);
+          data.push(line);
         }
       });
 
