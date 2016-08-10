@@ -992,3 +992,9 @@ button.cache{
   overflow-y: auto;
   tbody { height: auto; }
 }*/
+
+/* SCHEDULER */
+
+#timeline-wrapper{
+  margin-bottom: 20px;
+}

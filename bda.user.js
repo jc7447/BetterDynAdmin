@@ -62,6 +62,7 @@
 // @require parser/bda.dash.line.splitter.js
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
+// @require bda.scheduler.js
 
 
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -127,6 +128,8 @@ jQuery(document).ready(function() {
         $().bdaMenu({});
         // Setup DASH
         $().initDASH(BDA);
+
+        $().bdaScheduler();
 
         if (this.isComponentPage)
         {
