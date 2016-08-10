@@ -39,14 +39,15 @@ jQuery(document).ready(function() {
         //extract the data
          BDA_SCHEDULER.$table.find('tr').each(function(idx, child) {
           //after header and 1 blank row
-          if (idx > 1) {
             $tr = $(child);
             $tdList = $tr.find('td');
+          if (idx > 1 && $tdList.length >0) {
             src = $tdList.eq(6).text();
             //next
             dateString = $tdList.eq(4).text();
             if(!isNull(src) && dateString !="not yet run"){
               dataArray.push({
+                id:'n'+idx,
                 content: src,
                 start: new Date(dateString)
               })
@@ -55,6 +56,7 @@ jQuery(document).ready(function() {
             dateString = $tdList.eq(3).text();
             if(!isNull(src) && dateString !="not yet run"){
               dataArray.push({
+                id:'p'+idx,
                 content: src,
                 start: new Date(dateString)
               })
@@ -73,7 +75,7 @@ jQuery(document).ready(function() {
         // Configuration for the Timeline
         var now = Date.now();
         var options = {
-          height: '500px',
+          height: '80%',
           moment: function(date) {
             return vis.moment(date).utc();
           },
@@ -85,6 +87,7 @@ jQuery(document).ready(function() {
           },
           start: now - 1000 * 3600,
           end: now + 1000 * 3600 * 12,
+          dataAttributes:'all'
         };
 
         // Create a Timeline
