@@ -52,6 +52,9 @@
       var $this = $(this);
       $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
     });
+
+
+    
     $tabSelector.tablesorter({
                               'theme' : 'blue',
                               'widgets' : ["zebra"],

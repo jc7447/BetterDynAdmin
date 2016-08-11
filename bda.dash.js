@@ -745,7 +745,7 @@ jQuery(document).ready(function() {
 
           },
           responseToString: function(params, retval) {
-            return '<pre>{0}</pre>'.format(JSON.stringify(retval, null, 2));
+            return '<pre>{0}</pre>'.format(vkbeautify.json(retval));
           }
         },
 
