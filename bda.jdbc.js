@@ -36,8 +36,15 @@
        "<p>Go to <a href='/dyn/admin/nucleus"+ BDA_JDBC.connectionPoolPointerComp+"'>ConnectionPoolPointer</a></p>")
       .insertAfter($("h1:contains('Execute Query')"));
       $("textarea").prop("id", "sqltext");
-      if ($("table").length > 0)
-        $("table").prop("id", "sqlResult");
+      if ($("table").length > 0) {
+        $("table").prop("id", "sqlResult").after(
+          $('<button></button>', {
+            text: 'toCSV'
+          }).on('click', function() {
+            var csv = $('#sqlResult').toCSV();
+            copyToClipboard(csv);
+          }));
+      }
 
       $("#switchDataSourceBtn").click(function(){
         var selectedDataSource = $("#newDataSource").val();

@@ -268,8 +268,8 @@ try {
     var id = item.id;
     var rows = [];
     var val;
-    for(key in item){
-      if(key != 'id' && key != 'itemDescriptor'){
+    for (key in item) {
+      if (key != 'id' && key != 'itemDescriptor') {
         rows.push(rowTemplate.format(key, item[key]));
       }
     }
@@ -373,6 +373,33 @@ try {
     return this;
   }
 
+  $.fn.toCSV = function() {
+    var data = [];
+    $(this).find('tr').each(function(idx, elem) {
+      $tr = $(elem);
+      line = [];
+       $tr.children('th').each(function() {
+        line.push($(this).text());
+      });
+
+      $tr.children('td').each(function() {
+        line.push($(this).text());
+      });
+      if(line.length >0){
+        data.push(line);
+      }
+
+    });
+
+    var linesText = [];
+    for (var i = 0; i < data.length; i++) {
+      linesText.push(data[i].join(';'));
+    }
+
+    var csv = linesText.join('\n');
+
+    return csv;
+  }
 
 
   console.log('bda.common.js initialized');
