@@ -30,6 +30,24 @@ jQuery(document).ready(function() {
         $container.append(BDA_SCHEDULER.$timeline);
 
         $title.after($container);
+
+        BDA_SCHEDULER.$table.addClass("tablesorter")
+        .removeAttr("border")
+    .removeAttr("cellpadding").prepend("<thead class='thead' />");
+    // Put first tr into a thead tag
+  BDA_SCHEDULER.$table.find("tr:eq(0)").appendTo(".thead");
+    // Replace td by th
+    $('.thead td').each(function() {
+      var $this = $(this);
+      $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
+    });
+       BDA_SCHEDULER.$table .tablesorter({
+                              'theme' : 'blue',
+                              'widgets' : ["zebra"],
+                              'widgetOptions' : {
+                                zebra : [ "normal-row", "alt-row" ]
+                              }
+    });
       },
 
       build: function() {
