@@ -34,7 +34,7 @@ jQuery(document).ready(function() {
 
       build: function() {
         BDA_SCHEDULER.initialized = true;
-        var $tr, $tdList,src,dateString;
+        var $tr, $tdList,dst,dateString;
         var dataArray = [];
         //extract the data
          BDA_SCHEDULER.$table.find('tr').each(function(idx, child) {
@@ -42,22 +42,22 @@ jQuery(document).ready(function() {
             $tr = $(child);
             $tdList = $tr.find('td');
           if (idx > 1 && $tdList.length >0) {
-            src = $tdList.eq(6).text();
+            dst = $tdList.eq(7).text();
             //next
             dateString = $tdList.eq(4).text();
-            if(!isNull(src) && dateString !="not yet run"){
+            if(!isNull(dst) && dateString !="not yet run"){
               dataArray.push({
                 id:'n'+idx,
-                content: src,
+                content: dst,
                 start: new Date(dateString)
               })
             }
             //previous
             dateString = $tdList.eq(3).text();
-            if(!isNull(src) && dateString !="not yet run"){
+            if(!isNull(dst) && dateString !="not yet run"){
               dataArray.push({
                 id:'p'+idx,
-                content: src,
+                content: dst,
                 start: new Date(dateString)
               })
             }
