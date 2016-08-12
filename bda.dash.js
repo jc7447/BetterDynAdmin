@@ -346,7 +346,7 @@ jQuery(document).ready(function() {
         //print @OR order p92133231
         print: {
 
-          commandPattern: 'print /some/Repo|@SHORT itemDescriptor id',
+          commandPattern: ' /some/Repo|@SHORT itemDescriptor id',
           help: 'return the result of a print-item',
           paramDef: [{
             name: "repo",
@@ -405,6 +405,71 @@ jQuery(document).ready(function() {
             return res;
           }
         },
+
+         //print @OR order p92133231
+        query: {
+
+          commandPattern: ' /some/Repo|@SHORT itemDescriptor {query}',
+          help: 'return the result of a query-items',
+          paramDef: [{
+            name: "repo",
+            type: "component"
+          }, {
+            name: "itemDesc",
+            type: "value"
+          }, {
+            name: "query",
+            type: "value"
+          }],
+          main: function(params, callback, errCallback) {
+            if (BDA_DASH.settings.domain !== "") {
+              BDA_DASH.log("Using other domain {0}".format(BDA_DASH.settings.domain), BDA_DASH.logLevels.info);
+            }
+            $().executeQueryItems(
+              BDA_DASH.settings.domain,
+              params.itemDesc,
+              params.query,
+              params.repo,
+              function($xmlDoc) {
+                try {
+                  var res = "";
+                  var items = []
+                  if (!isNull($xmlDoc)) {
+                    var $itemXml;
+                    $xmlDoc.find('add-item').each(function() {
+                      $itemXml = $(this);
+                      items.push(convertAddItemToPlainObject($itemXml));
+                    })
+                    callback(items);
+                  } else {
+                    throw {
+                      name: "Not Found",
+                      message: "No value"
+                    }
+                  }
+                } catch (e) {
+                  errCallback(e);
+                }
+              },
+              function(jqXHR, textStatus, errorThrown) {
+                errCallback({
+                  name: textStatus,
+                  message: errorThrown
+                });
+              }
+            );
+          },
+          responseToString: function(params, retval) {
+            var res = "";
+            for (var i = 0; i < retval.length; i++) {
+              var item = retval[i];
+              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+            }
+            return res;
+          }
+        },
+
+        
 
         rql: {
 

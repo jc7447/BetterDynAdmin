@@ -1399,6 +1399,10 @@
       BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
     },
 
+    executeQueryItems: function(domain, itemDescriptor, query, repository, callback, errCallback) {
+      var xmlText = BDA_REPOSITORY.templates.queryItems.format(itemDescriptor,query);
+      BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
+    },
 
     setupRepositoryCacheSection: function() {
 
@@ -1753,6 +1757,10 @@
 
   $.fn.executePrintItem = function(domain, itemDescriptor, id, repository, callback, errCallback) {
     BDA_REPOSITORY.executePrintItem(domain, itemDescriptor, id, repository, callback, errCallback);
+  };
+
+   $.fn.executeQueryItems = function(domain, itemDescriptor, query, repository,  callback, errCallback) {
+    BDA_REPOSITORY.executeQueryItems(domain, itemDescriptor, query, repository,callback, errCallback);
   };
 
 
