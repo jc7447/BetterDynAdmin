@@ -278,8 +278,8 @@ jQuery(document).ready(function() {
             type: "value"
           }],
           main: function(params, callback, errCallback) {
-            BDA_DASH.settings.domain,
             BDA_COMPONENT.setProperty(
+              BDA_DASH.settings.domain,
               params.componentProperty.path,
               params.componentProperty.property,
               params.value,
