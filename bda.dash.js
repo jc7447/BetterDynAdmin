@@ -925,6 +925,7 @@ jQuery(document).ready(function() {
               }
             } else {
               $.fn.bdaToolbar.saveFavorite(path, [], [], []);
+              BDA_DASH.initCompRefs();
               callback(path);
             }
           },
@@ -2005,7 +2006,7 @@ jQuery(document).ready(function() {
       },
 
       initCompRefs: function() {
-
+        BDA_DASH.COMP_REFS = [];
         var comps = BDA_STORAGE.getStoredComponents();
         var fav, compRefList, key;
         for (var i = 0; i < comps.length; i++) {
