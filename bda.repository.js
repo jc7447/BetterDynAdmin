@@ -228,7 +228,7 @@
 
       $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
         var $target = $(item.target).parent();
-        $target.html('<input type="text" value="' + $target.text().replace('●', ' ') + '"/>');
+        $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
         var $input = $($target.children()[0]);
         $input.focus().blur(function(item) {
           if (confirm('do you really want to update that value ?')) {
@@ -660,7 +660,7 @@
     renderProperty: function(curProp, propValue, itemId, isItemTree) {
       var html = "";
       if (propValue !== null && propValue !== undefined) {
-        propValue = propValue.replace(' ', '●');
+        propValue = propValue.replace(/ /g, '●');
         // Remove "_"
         if (curProp.name == "descriptor")
           propValue = propValue.substr(1);
