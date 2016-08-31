@@ -698,7 +698,7 @@
       return html;
     },
 
-    renderTab: function(types, datas, tabId, isItemTree) {
+    renderTab: function(types, datas, tabId, isItemTree, $xmlDef) {
       var html = "";
       html += "<table class='dataTable' ";
       if (isItemTree)
@@ -728,8 +728,18 @@
 
         for (var a = 0; a < datas.length; a++) {
           var propValue = datas[a][curProp.name];
+
+if(false){
+          var descriptor = datas[a]["descriptor"].substr(1);
+	        var $itemDesc = $xmlDef.find("item-descriptor[name='" + descriptor + "']");
+	        var $itemProperty = $('property[name=' + curProp.name + ']', $itemDesc);
+	        var itemPropertyDefaultValue = $itemProperty.attr('default');
+	        console.log(itemPropertyDefaultValue);
+	    }
+
           html += BDA_REPOSITORY.renderProperty(curProp, propValue, datas[a].id, isItemTree);
         }
+
         html += "</tr>";
       }
       html += "</table>";
@@ -769,6 +779,7 @@
           curData[$curProp.attr("name")] = $curProp.text();
           var type = {};
           type.name = $curProp.attr("name");
+          //add new property line when discovered through data
           if ($.inArray(type.name, typesNames[curItemDesc]) == -1) {
             type.rdonly = $curProp.attr("rdonly");
             type.derived = $curProp.attr("derived");
@@ -783,6 +794,20 @@
             types[curItemDesc].push(type);
             typesNames[curItemDesc].push(type.name);
           }
+
+        //fill here default values
+
+        var $itemDesc = $xmlDef.find("item-descriptor[name='" + curItemDesc.substr(1) + "']");
+        var $itemProperty = $('property[name=' + type.name + ']', $itemDesc);
+        var itemPropertyDefaultValue = $itemProperty.attr('default');
+        if($curProp.text() && itemPropertyDefaultValue !== undefined)
+        {
+        	//add new property line ?
+            //types[curItemDesc].push(type);
+            //typesNames[curItemDesc].push(type.name);
+    	  curData[$curProp.attr("name")] = itemPropertyDefaultValue;
+        }
+        //TODO inheritance
         });
         if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) {
           var typeDescriptor = {};
@@ -808,12 +833,14 @@
         splitValue = 0;
       else
         splitValue = parseInt(splitObj.splitValue);
+    console.dir(datas);
       for (var itemDesc in datas) {
         if (splitValue === 0)
           splitValue = datas[itemDesc].length;
         var nbTab = 0;
+        console.dir(datas[itemDesc]);
         if (datas[itemDesc].length <= splitValue) {
-          html += BDA_REPOSITORY.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
+          html += BDA_REPOSITORY.renderTab(types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree, $xmlDef);
         } else {
           while ((splitValue * nbTab) < datas[itemDesc].length) {
             var start = splitValue * nbTab;
@@ -821,7 +848,7 @@
             if (end > datas[itemDesc].length)
               end = datas[itemDesc].length;
             var subDatas = datas[itemDesc].slice(start, end);
-            html += BDA_REPOSITORY.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, isItemTree);
+            html += BDA_REPOSITORY.renderTab(types[itemDesc], subDatas, itemDesc + "_" + nbTab, isItemTree, $xmlDef);
             nbTab++;
           }
         }
