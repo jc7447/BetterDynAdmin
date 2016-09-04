@@ -97,8 +97,15 @@
 
       $("#RQLToolbar").after("<div id='RQLText'></div>");
       $("#xmltext").appendTo("#RQLText");
-      $("#RQLText").after("<div id='storedQueries'></div>");
-      $("#RQLText").after("<div id='descProperties'></div>");
+      $("#RQLText").after("<div id='tabs'>"
+                        + "<ul id='navbar'>"
+                        + "<li id='propertiesTab'>Properties</li>"
+                        +"<li id='queriesTab'>Stored Queries</li>"
+                        +"</ul>"
+                        + "<div id='storedQueries'></div>"
+                        + "<div id='descProperties'></div>"
+                        +"</div>");
+
       $("#RQLForm input[type=submit]").remove();
 
       var splitObj = BDA_STORAGE.getStoredSplitObj();
@@ -114,7 +121,7 @@
         checkboxSplit += " checked ";
       checkboxSplit += "/> don't split.";
 
-      $("#storedQueries").after("<div id='RQLSave'>"
+      $("#tabs").after("<div id='RQLSave'>"
          + "<div style='display:inline-block;width:200px'><button id='clearQuery' type='button'>Clear <i class='fa fa-ban fa-x'></i></button></div>"
          + "<div style='display:inline-block;width:530px'>Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. "
          + checkboxSplit + "</div>"
@@ -153,6 +160,23 @@
       var defaultDescriptor = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath(getCurrentComponentPath())];
       if(defaultDescriptor !== undefined)
         BDA_REPOSITORY.showItemPropertyList(defaultDescriptor);
+
+      $("#queriesTab").click(function() {
+        console.log("show stored queries");
+        $("#descProperties").css("display", "none");
+        $("#storedQueries").css("display", "inline-block");
+        $(this).addClass("selected");
+        $("#propertiesTab").removeClass("selected");
+      });
+
+      $("#propertiesTab").click(function() {
+        console.log("show properties");
+        $("#descProperties").css("display", "inline-block");
+        $("#storedQueries").css("display", "none");
+        $(this).addClass("selected");
+        $("#queriesTab").removeClass("selected");
+
+      });
 
       $("#RQLAction").change(function() {
         var action = $(this).val();
@@ -363,7 +387,24 @@
       $.get(url, function(data) {
         var $pTable = $(data).find("a[name='showProperties']").next();
         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
-        $pTable.find('tr > td:first-child').append('<input type="button" class="itemPropertyBtn" value="set-prop"></input>');
+        // $pTable.find('tr > td:first-child').prepend('<input type="button" class="itemPropertyBtn" value="set-prop"></input>');
+        //console.log($pTable.html());
+        $pTable.find("tr").each(function(index) {
+          $tr = $(this);
+            $tr.find("td").each(function(i) {
+              $td = $(this);
+              if (i === 0)
+              {
+                var content = $td.html();
+                var req = /[\w\s']+\((\w+)\)$/i;
+                content = content.replace(req, "<a class='itemPropertyBtn' href='javascript:void(0)'> $1 </a>");
+                $td.html(content);
+              }
+              else if (i === 1)
+                $td.text($td.text().replace("Class", ""));
+            });
+        });
+
         $("#storedQueries").css("display", "none");
         var $scrollDiv = $("<div class='scrollableTab'></div>").append($pTable);
         $("#descProperties")
@@ -373,20 +414,8 @@
         .css("display", "inline-block");
 
         $('.itemPropertyBtn').click(function(item){
-          var $property = $($(item.target).parent());
-          var regExp = /\(([^)]+)\)/;
-          var matches = regExp.exec($property.text());
-          if (matches !== undefined && matches.length === 2) {
-              BDA_REPOSITORY.addToQueryEditor('<set-property name="' + matches[1] + '"><![CDATA[]]></set-property>\n');
-          }
+              BDA_REPOSITORY.addToQueryEditor('<set-property name="' + $(this).text().trim() + '"><![CDATA[]]></set-property>\n');
         });
-
-        $("#showStoredQueries").click(function() {
-          console.log("show stored queries");
-          $("#descProperties").css("display", "none");
-          $("#storedQueries").css("display", "inline-block");
-        });
-
       });
     },
 

@@ -204,10 +204,36 @@ a {
   font-weight: bold;
 }
 
-#descProperties {
-  display: none;
+
+#tabs {
+  display: inline-block;
   vertical-align: top;
   margin-left: 5px;
+}
+
+#navbar {
+  list-style-type: none;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+#navbar li {
+  float : left;
+  background-color: #ccc;
+  color: #000;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #eee;
+}
+
+#navbar li.selected {
+  background-color: #fff;
+}
+
+#descProperties {
+  display: none;
 }
 
 #descProperties tbody tr:nth-child(odd) {
