@@ -19,16 +19,32 @@
       return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
     },
 
+
+     isJdbcHomePage : function()
+    {
+      console.log($(location).attr('pathname'));
+      return $(location).attr('pathname').indexOf("jdbcbrowser/index.jhtml") != -1;
+    },
+
     setupExecuteQueryPage : function()
     {
       console.log("Setup execute query page");
       $("<div  id='switchDataSource'/>")
       .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + BDA_JDBC.getCurrentDataSource() + " </span></p>")
-      .append("<p>Switch data source to : <select id='newDataSource'>" + BDA_JDBC.getAvailableDataSource() + "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>")
+      .append("<p>Switch data source to : <select id='newDataSource'>" + BDA_JDBC.getAvailableDataSource() +
+       "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>"+
+       "<p>Go to <a href='/dyn/admin/nucleus"+ BDA_JDBC.connectionPoolPointerComp+"'>ConnectionPoolPointer</a></p>")
       .insertAfter($("h1:contains('Execute Query')"));
       $("textarea").prop("id", "sqltext");
-      if ($("table").length > 0)
-        $("table").prop("id", "sqlResult");
+      if ($("table").length > 0) {
+        $("table").prop("id", "sqlResult").after(
+          $('<button></button>', {
+            text: 'toCSV'
+          }).on('click', function() {
+            var csv = $('#sqlResult').toCSV();
+            copyToClipboard(csv);
+          }));
+      }
 
       $("#switchDataSourceBtn").click(function(){
         var selectedDataSource = $("#newDataSource").val();
@@ -82,6 +98,16 @@
       return datasource;
     },
 
+    setupJdbcHomePage: function(){
+      var $currentDataSourceLink = $('h2:contains("Database"):first').next();
+      var $connectionPoolPointerLink = $currentDataSourceLink.next();
+
+      var curDS = $currentDataSourceLink.text();
+       $currentDataSourceLink.html('<a href="/dyn/admin/nucleus{0}">{0}</a>'.format(curDS));
+       $connectionPoolPointerLink.html('<a href="/dyn/admin/nucleus{0}">{0}</a>'.format(BDA_JDBC.connectionPoolPointerComp));
+    },
+
+
   };
   // Reference to BDA
   var BDA;
@@ -94,5 +120,10 @@
     BDA_JDBC.build();
     return this;
   };
+
+//init here
+  if(BDA_JDBC.isJdbcHomePage()){
+    BDA_JDBC.setupJdbcHomePage();
+  }
 
 })(jQuery);

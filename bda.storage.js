@@ -5,6 +5,7 @@
     GMValue_MonoInstance: "monoInstance",
     GMValue_Backup:"backup",
     STORED_CONFIG : "BdaConfiguration",
+    scripts : 'DashScripts',
 
   build : function()
   {
@@ -58,7 +59,7 @@
 
   storeConfiguration : function (name, value)
   {
-    console.log("Try to store config: " + name + ", value : " + JSON.stringify(value));
+    logTrace("Try to store config: " + name + ", value : " + JSON.stringify(value));
     var storedConfig = BDA_STORAGE.getStoredConfiguration();
     storedConfig[name] = value;
     BDA_STORAGE.storeItem(BDA_STORAGE.STORED_CONFIG, JSON.stringify(storedConfig));
@@ -82,6 +83,7 @@
         BDA_STORAGE.storeItem('Components', JSON.stringify(dataObj.components));
         BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(dataObj.queries));
         BDA_STORAGE.storeItem(this.STORED_CONFIG, JSON.stringify(dataObj.configuration));
+        BDA_STORAGE.storeItem(this.scripts, JSON.stringify(dataObj.scripts));
         if (reloadUI)
           this.reloadData();
       }
@@ -98,6 +100,7 @@
     dataObj.components = BDA_STORAGE.getStoredComponents();
     dataObj.queries = BDA_STORAGE.getStoredRQLQueries();
     dataObj.configuration = BDA_STORAGE.getStoredConfiguration();
+    dataObj.scripts  =BDA_STORAGE.getScripts();
     return dataObj;
   },
 
@@ -138,6 +141,19 @@
     return rqlQueries;
   },
 
+  getQueryByName: function(repo, name) {
+    var res = null;
+    var shortRepoName =  getComponentNameFromPath(repo);
+    var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
+    for (var i = 0; i != rqlQueries.length; i++) {
+      var query = rqlQueries[i];
+      if ( query.repo == shortRepoName && query.name == name) {
+        res = query;
+      }
+    }
+    return res;
+  },
+
   storeSplitValue : function ()
   {
     var splitObj = {};
@@ -146,28 +162,36 @@
     BDA_STORAGE.storeItem('splitObj', JSON.stringify(splitObj));
   },
 
-  storeRQLQuery : function (name, query)
+  storeRQLQuery : function (name, query,componentPath)
   {
     console.log("Try to store : " + name + ", query : " + query);
     var storeQuery = {};
     storeQuery.name = name;
     storeQuery.query = query;
-    storeQuery.repo = getComponentNameFromPath(getCurrentComponentPath());
+    var path = componentPath;
+    if(isNull(path)){
+      path= getCurrentComponentPath();
+    }
+    storeQuery.repo = getComponentNameFromPath(path);
     var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
     rqlQueries.push(storeQuery);
     console.log(rqlQueries);
     BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(rqlQueries));
   },
 
-  deleteRQLQuery : function (index)
-  {
-    var queries = BDA_STORAGE.getStoredRQLQueries();
-    if (queries.length >  index)
-    {
-      queries.splice(index, 1);
-      BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(queries));
-    }
-  },
+    deleteRQLQuery: function(index) {
+      try {
+
+        var queries = BDA_STORAGE.getStoredRQLQueries();
+        if (queries.length > index) {
+          queries.splice(index, 1);
+             logTrace(queries);
+          BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(queries));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
 
   getStoredComponents : function ()
   {
@@ -224,6 +248,22 @@
     BDA_STORAGE.storeConfiguration('tags', tags);
   },
 
+  getScripts : function()
+  {
+      var scripts = localStorage.getItem(BDA_STORAGE.scripts);
+      if(isNull(scripts) || scripts == "undefined"){
+        scripts = {};
+      }else{
+        scripts = JSON.parse(scripts);
+      }
+      return scripts;
+  },
+
+  saveScripts : function(scripts)
+  {
+    BDA_STORAGE.storeItem('DashScripts', JSON.stringify(scripts));
+  },
+
 };
 
   var initalized = false;
@@ -237,7 +277,6 @@
        BDA_STORAGE.build();
        initalized = true;
      }
-     console.log(this);
     return this;
   };
 

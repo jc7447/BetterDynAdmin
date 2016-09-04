@@ -584,5 +584,15 @@
     BDA_TOOLBAR.reloadToolbar();
   };
 
+  //expose as public
+  $.fn.bdaToolbar.saveFavorite = function(componentPath, methods, vars,tags){
+      BDA_TOOLBAR.storeComponent(componentPath, methods, vars,tags);
+      BDA_TOOLBAR.reloadToolbar();
+  } ;
+
+  $.fn.bdaToolbar.isComponentAlreadyStored = function (path){
+    return BDA_TOOLBAR.isComponentAlreadyStored(path);
+  };
+
   console.log('bda.toolbar.js end');
 })(jQuery);

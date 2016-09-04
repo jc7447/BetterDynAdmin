@@ -311,6 +311,7 @@ a {
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
+  background-color: #007bb8;
   border-top: none;
   padding: 3px;
   text-align: center;
@@ -435,7 +436,6 @@ a {
   clear: left;
   margin-left: 5px;
   margin-top: 3px;
-  height: 18px;
 }
 
 
@@ -454,6 +454,7 @@ a {
    border-radius: 3px;
    font-size: 12px;
    padding: 0px 6px 0px 0px;
+   cursor: pointer;
 }
 
 .bda-button label, .bda-button input, .bda-button button{
@@ -465,6 +466,14 @@ a {
   width: 22px;
   padding: 0px 0px 0px 0px;
   vertical-align: middle;
+}
+
+.bda-button-clipboard{
+  margin-left:10px;
+  padding: 3px;
+  color:black;
+  vertical-align: middle;
+  border-radius: 5px;
 }
 
 .tag-filter-button{
@@ -490,6 +499,9 @@ a {
   margin: 0;
   padding: 0;
   list-style-type: none;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .favline div{
@@ -757,15 +769,57 @@ table.tablesorter tr.alt-row:hover td {
 
 }
 
+.fullscreen .modal-dialog.modal-lg{
+  width: 95%;
+
+}
+
+#dashModal .modal-content{
+}
+
+#dashModal .modal-footer .tab-pane{
+  text-align: left;
+}
+
+
 #dashInput{
    font-family: monospace;
 }
 
+#dashForm{
+   font-family: monospace;
+}
+
+#dashForm .tt-hint{
+  color : #ccc;
+
+}
+
+#dashForm .form-group{
+  margin-bottom: 0;
+}
+
+#dashEditorForm{
+  font-size: 14px;
+}
+
+#dashEditor{
+  resize: none;
+ /* min-height: 100px; */
+}
+
 #dashScreen {
   font-family: monospace;
-  height: 300px;
-  max-height: 300px;
-  overflow-y:scroll; 
+  overflow-y: auto; 
+  max-height: 250px;
+  height: 250px;
+  margin-bottom: 15px;
+}
+
+.fullscreen #dashScreen{
+  margin-bottom: 0;
+  height: 100%;
+  max-height: 100%;
 }
 
 #dashScreen .alert{
@@ -774,6 +828,7 @@ table.tablesorter tr.alt-row:hover td {
   margin-bottom: 5px;
 }
 
+
 #dashScreen pre{
   background-color: inherit;
   font-family: inherit;
@@ -781,6 +836,191 @@ table.tablesorter tr.alt-row:hover td {
   color:inherit;
 }
 
+#dashScreen .dl-horizontal dt{
+  width: 80px;
+}
+
+#dashScreen .dl-horizontal dd{
+  margin-left: 90px;
+}
+
 .typeahead.dropdown-menu{
   text-align: left;
+}
+
+#dashModal textarea.form-control{
+  height: inherit;
+}
+
+#dashModal panel{
+  background-color: white;
+}
+
+table.table{
+  background-color: white;
+}
+
+/* Override dyn/admin style */
+.table th{
+  background-color: inherit;
+  border-style: inherit;
+}
+
+#dashModal .alert .btn-group{
+  float:right;
+   opacity: 0.8;
+}
+
+#dashModal .alert button.btn{
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+#dashModal .alert button.btn:hover,#dashModal .alert button.btn:focus{
+    opacity: 1;
+}
+
+.printItem{
+  margin-top: 15px;
+}
+
+#dashModal .modal-footer  .panel{
+  margin-bottom: 0;
+}
+
+#dashSaveForm{
+  margin-bottom: 0;
+}
+
+.no-padding{
+  padding: 0 !important;
+}
+
+#bdaDashMenuElem .menuArrow{
+  padding-top: 2px;
+}
+
+kbd{
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #fff;
+  background-color: #333;
+  border-radius: 3px;
+  -webkit-box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
+}
+
+
+#dashModal .modal-footer{
+  margin-top: 0;
+  border-top: 0;
+  padding: 5px 20px 5px;
+}
+
+#dashModal .modal-body{
+  padding-bottom: 0;
+}
+
+/* recopy bootstrap without wrapper*/
+.modal-backdrop.fade {
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+.twbs .fade.in {
+    opacity: 1;
+}
+.modal-backdrop.in {
+    opacity: .5;
+    filter: alpha(opacity=50);
+}
+.modal-backdrop{
+  position: fixed;
+top: 0;
+right: 0;
+bottom: 0;
+left: 0;
+z-index: 1030;
+background-color: #000;
+}
+.fade {
+    opacity: 0;
+    -webkit-transition: opacity .15s linear;
+    transition: opacity .15s linear;
+}
+
+#dashTips{
+  margin-top:10px;
+  margin-bottom:5px;
+}
+
+.footer-right{
+  cursor: pointer;
+}
+
+.footer-right a {
+  border: 1px solid transparent;
+}
+
+
+
+/** CACHE STATS **/
+
+table.cache{
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.cache tr.cache-subheader {
+  cursor:pointer;
+}
+
+.cache td, .cache th
+{
+  padding: 6px;
+}
+
+.cache td, .cache th{
+    border: 1px solid #ddd;
+}
+button.cache{
+   cursor:pointer;
+}
+
+.fixed_headers {
+  table-layout: fixed;
+}
+.fixed_headers thead tr {
+  display: block;
+}
+.fixed_headers tbody {
+  display: block;
+
+}
+
+.sticky-top{
+  position: fixed;
+  top:0;
+}
+
+.scroller{
+    scroll-snap-type: proximity;
+}
+
+.snap{
+ scroll-snap-align: start none;
+ scroll-snap-padding: 25px 0 0 0 ;
+}
+
+
+
+/*.old_ie_wrapper {
+  overflow-x: hidden;
+  overflow-y: auto;
+  tbody { height: auto; }
+}*/
+
+/* SCHEDULER */
+
+#timeline-wrapper{
+  margin-bottom: 20px;
 }

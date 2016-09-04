@@ -13,13 +13,15 @@ try {
           {
             console.log('bda menu.build');
             var $menuBar = $("<div id='menuBar'></div>").appendTo("body");
+            BDA_MENU.$menuBar=$menuBar;
             BDA_MENU.createBugReportPanel($menuBar);
             BDA_MENU.createBackupPanel($menuBar);
             BDA_MENU.createConfigurationPanel($menuBar);
             BDA_MENU.createWhatsnewPanel($menuBar);
             BDA_MENU.createSearchBox($menuBar);
 
-            $(".menu").bind("click",function() {
+            //generic bind so that new elems are automatically binded
+            $menuBar.on("click",".menu",function(event) {
               var $thisParent = $(this);
               var $panel;
               $('.menu').each(function() {
@@ -27,8 +29,8 @@ try {
                 $panel = $('#' + $this.attr('data-panel'));
                 if($this.attr('id') != $thisParent.attr('id') && $panel.css('display') != "none")
                 {
-                      $panel.slideToggle();
-                      rotateArrow($this.find(".menuArrow i"));
+                  $panel.slideToggle();
+                  rotateArrow($this.find(".menuArrow i"));
                 }
               });
 
@@ -120,6 +122,7 @@ try {
 
             $("#bdaDataBackup").click(function (){
               var data = BDA_STORAGE.getData();
+              console.log('bdaDataBackup ' + data);
               copyToClipboard(JSON.stringify(data));
             });
 
@@ -227,6 +230,12 @@ try {
               );
             $config.append($submitTags);
           },
+
+           createMenuElement : function($element){
+            logTrace('createMenuElement');
+            logTrace($element);
+            $element.addClass('menu').appendTo(BDA_MENU.$menuBar)
+          },
         };
 
         var defaults = {};
@@ -239,6 +248,11 @@ try {
           settings = $.extend({}, defaults, options);
           BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
           BDA_MENU.build();
+          return this;
+        };
+
+        $.fn.bdaAddMenuElem = function($elem)  {
+          BDA_MENU.createMenuElement($elem);
           return this;
         };
 
