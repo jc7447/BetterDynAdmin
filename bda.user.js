@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -30,7 +30,7 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // custom bootstrap
-// @require lib/bootstrap/js/bootstrap.min.js 
+// @require lib/bootstrap/js/bootstrap.min.js
 // @require http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.min.js
 //  https://raw.githubusercontent.com/bassjobsen/Bootstrap-3-Typeahead/master/bootstrap3-typeahead.min.js
 // @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
@@ -138,7 +138,7 @@ jQuery(document).ready(function() {
 
           // Setup find class link
           BDA.setupFindClassLink();
-          
+
           BDA.setupCopyClipboardButtons();
 
           // Make search field visible
@@ -184,8 +184,7 @@ jQuery(document).ready(function() {
         else
          $classLink = $("h1:eq(1)").next();
         var className = $classLink.text();
-        $("<span style='margin-left : 25px'><a href='/dyn/admin/atg/dynamo/admin/en/findclass.jhtml?className="+className+"&debug=true'>Find Class</a></span>")
-        .insertAfter($classLink);
+        $("<span style='margin-left : 25px'><a href='/dyn/dyn/findclass.jhtml?className="+className+"&debug=true'>Find Class</a></span>") .insertAfter($classLink);
       },
 
 
