@@ -224,14 +224,13 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
-    
+
 
       $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
         var $target = $(item.target).parent();
         $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
         var $input = $($target.children()[0]);
         $input.focus().blur(function(item) {
-          if (confirm('do you really want to update that value ?')) {
             var $target = $(item.target);
             var $table = $target.parents(".dataTable");
             var column = $target.parent().parent().children().index($target.parent());
@@ -249,23 +248,28 @@
                   className: "error"
                 }
               );
-            } else {
-              console.log(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
-              jQuery.post(document.location.href, 'xmltext=<update-item id="' + itemId + '" item-descriptor="' + descriptor + '"><set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]></set-property></update-item>', function() {
+              return ;
+            }
+            console.log(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
+            var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]></set-property>\n</update-item>';
+            if (confirm('You are about to execute this query : \n' + query)) {
+              jQuery.post(document.location.href, 'xmltext=' + query, function() {
                 $.notify(
-                  "value changed", {
+                  "Value succesfully changed", {
                     position: "top center",
                     className: "success"
                   }
                 );
-                $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
               });
+              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' +  $input.val());
             }
-          } else
-            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
+            else {
+              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.attr("value")); // reset inital value
+
+            }
+          });
         });
-      });
-    },
+      },
 
     addToQueryEditor: function(query) {
       var editor = BDA_REPOSITORY.queryEditor;
@@ -669,12 +673,12 @@
 
         if (curProp.name == "id")
           html += "<td id='" + base_id + "'>" + propValue + "</td>";
-        else if (propValue.length > 25) {
+        else if (propValue.length > 25) { // Hide long value
           var link_id = "link_" + base_id;
           var field_id = "text_" + base_id;
           propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >" + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "...</a>" + "</span><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
           html += "<td>" + propValue + "</td>";
-        } else if (curProp.isId === true) {
+        } else if (curProp.isId === true) { // Make IDs clickable
           propValue = BDA_REPOSITORY.parseRepositoryId(propValue);
           html += "<td>";
           for (var b = 0; b != propValue.length; b++) {
@@ -687,10 +691,11 @@
               html += propValue[b];
           }
           html += "</td>";
-        } else if (curProp.name == "descriptor")
+        }
+        else if (curProp.name == "descriptor" || curProp.rdonly == "true" || curProp.derived == "true") // descriptor, Read only and derived porperty are not editable
           html += '<td>' + propValue + "</td>";
         else
-          html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
+            html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
       } else {
         html += "<td>&nbsp;</td>";
         //console.log("propValue not found : " + curProp.name + ", descriptor : " + itemDesc);
@@ -1391,7 +1396,7 @@
             errCallback(jqXHR, textStatus, errorThrown);
           }
         }
-      })
+      });
     },
 
     executePrintItem: function(domain, itemDescriptor, id, repository, callback, errCallback) {
@@ -1465,7 +1470,7 @@
           })
           .appendTo($buttons);
 
-        var $collapseAll = $('<button></button>', {
+        $collapseAll = $('<button></button>', {
             id: 'exportCSV',
             class: 'cache export',
             value: 'exportCSV',
@@ -1502,7 +1507,7 @@
 
         //expand the cell width
         var $td = $tr.find('td').first();
-        $td.attr('colspan', 23) //extend to full with
+        $td.attr('colspan', 23); //extend to full with
           //query cache line
         var $queryCols = $tr.next().next().children('td');
         if ($queryCols.length == 1) {
@@ -1551,7 +1556,7 @@
 
       //calc the size required to keep the subheader lines 100%
       var $firstSubHeader = $cacheTable.find('.cache-subheader td:first');
-      var offset = parseFloat($firstSubHeader.css('padding-left').replace('px', '')) + parseFloat($firstSubHeader.css('padding-right').replace('px', ''))
+      var offset = parseFloat($firstSubHeader.css('padding-left').replace('px', '')) + parseFloat($firstSubHeader.css('padding-right').replace('px', ''));
 
       var fullWidth = ($header.width() - offset - 1) + 'px'; //1px other offset. maybe the border?
 
@@ -1568,7 +1573,7 @@
           .children().each(function(idx, child) {
             $(child).css('width', cellWiths[idx])
               .css('min-width', cellWiths[idx])
-              .css('max-width', cellWiths[idx])
+              .css('max-width', cellWiths[idx]);
           });
 
         var $queryCache = $itemCacheTr.next();
@@ -1594,7 +1599,7 @@
         wrapArray = [];
         $('.cache-subheader').each(function(idx, l) {
           l1 = $(l);
-          l2 = l1.next()
+          l2 = l1.next();
           l3 = l2.next();
           wrapper = $('<div class="snap"></div>');
 
@@ -1656,8 +1661,8 @@
     toggleCacheLines: function() {
       $tr = $(this);
       $tr.toggleClass('collapsed')
-        .toggleClass('expanded')
-      $tr.next().toggle()
+        .toggleClass('expanded');
+      $tr.next().toggle();
       $tr.next().next().toggle();
       rotateArrowQuarter($tr.find('.cacheArrow i'));
     },
