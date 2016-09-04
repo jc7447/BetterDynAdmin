@@ -84,11 +84,11 @@
       $("#xmltext").appendTo("#RQLText");
       $("#RQLText").after("<div id='tabs'>"
                         + "<ul id='navbar'>"
-                        + "<li id='propertiesTab'>Properties</li>"
+                        + "<li id='propertiesTab' class='selected'>Properties</li>"
                         +"<li id='queriesTab'>Stored Queries</li>"
                         +"</ul>"
-                        + "<div id='storedQueries'></div>"
-                        + "<div id='descProperties'></div>"
+                        + "<div id='storedQueries'><i>No stored query for this repository</i></div>"
+                        + "<div id='descProperties'><i>Select a descriptor to see his properties</i></i></div>"
                         +"</div>");
 
       $("#RQLForm input[type=submit]").remove();
@@ -147,6 +147,10 @@
       var defaultDescriptor = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath(getCurrentComponentPath())];
       if (defaultDescriptor !== undefined)
         BDA_REPOSITORY.showItemPropertyList(defaultDescriptor);
+
+        // Default tab position
+        $("#descProperties").css("display", "inline-block");
+        $("#storedQueries").css("display", "none");
 
       $("#queriesTab").click(function() {
         console.log("show stored queries");
@@ -388,13 +392,9 @@
             });
         });
 
-        $("#storedQueries").css("display", "none");
-        var $scrollDiv = $("<div class='scrollableTab'></div>").append($pTable);
         $("#descProperties")
           .empty()
-          .append($scrollDiv)
-          .append("<p class='showQueriesLabel'><a href='javascript:void(0)' id='showStoredQueries'>Show stored queries</a></p>")
-          .css("display", "inline-block");
+          .append($pTable);
 
         $('.itemPropertyBtn').click(function(item){
               BDA_REPOSITORY.addToQueryEditor('<set-property name="' + $(this).text().trim() + '"><![CDATA[]]></set-property>\n');
@@ -1266,15 +1266,13 @@
       // we need to keep original index
       var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
       var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
+      var nbQuery = 0;
       if (rqlQueries && rqlQueries.length > 0) {
-        html += "<span class='storedQueriesTitle'>Stored queries :</span>";
         html += "<ul>";
         for (var i = 0; i != rqlQueries.length; i++) {
           var storeQuery = rqlQueries[i];
           if (!storeQuery.hasOwnProperty("repo") || storeQuery.repo == currComponentName) {
-
             var escapedQuery = $("<div>").text(storeQuery.query).html();
-
             html += "<li class='savedQuery'>";
             html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
             html += "<span id='previewQuery" + i + "'class='previewQuery'>";
@@ -1287,11 +1285,13 @@
             html += "<pre>" + escapedQuery + "</pre>";
             html += "</span>";
             html += "</li>";
+            nbQuery++;
           }
         }
         html += "</ul>";
+        if (nbQuery > 0)
+          $("#storedQueries").html(html);
       }
-      $("#storedQueries").html(html);
 
       $('#storedQueries .queryView').each(function(i, block) {
         hljs.highlightBlock(block);

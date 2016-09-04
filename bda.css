@@ -211,6 +211,10 @@ a {
   margin-left: 5px;
 }
 
+#tabs i {
+  font-size: 80%;
+}
+
 #navbar {
   list-style-type: none;
   margin: 0;
@@ -220,12 +224,13 @@ a {
 
 #navbar li {
   float : left;
-  background-color: #ccc;
+  background-color: #ddd;
   color: #000;
   padding: 4px 8px;
   font-size: 13px;
   cursor: pointer;
-  border: 1px solid #eee;
+  border: 1px solid #bbb;
+  border-bottom: none;
 }
 
 #navbar li.selected {
@@ -234,6 +239,10 @@ a {
 
 #descProperties {
   display: none;
+  border: 1px solid #bbb;
+  max-width: 600px;
+  max-height: 224px;
+  overflow-x: auto;
 }
 
 #descProperties tbody tr:nth-child(odd) {
@@ -251,16 +260,11 @@ a {
   padding: 5px 0px 0px 0px;
 }
 
-.scrollableTab {
-  max-width: 600px;
-  max-height: 230px;
-  overflow-x: auto;
-  border: 1px solid #CCC;
-}
-
 #storedQueries {
   display: inline-block;
   vertical-align: top;
+  border: 1px solid #bbb;
+  min-width: 350px;
 }
 
 .error {
@@ -810,7 +814,7 @@ table.tablesorter tr.alt-row:hover td {
 
 #dashScreen {
   font-family: monospace;
-  overflow-y: auto; 
+  overflow-y: auto;
   max-height: 250px;
   height: 250px;
   margin-bottom: 15px;
