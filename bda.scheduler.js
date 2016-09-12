@@ -5,7 +5,7 @@ jQuery(document).ready(function() {
 
     var BDA_SCHEDULER = {
 
-      initialized:false,
+      initialized: false,
 
       SCHEDULED_JOBS_SELECTOR: 'h2:contains("Scheduled jobs")',
 
@@ -14,17 +14,17 @@ jQuery(document).ready(function() {
         return $(BDA_SCHEDULER.SCHEDULED_JOBS_SELECTOR).length > 0;
       },
 
-      init: function(){
+      init: function() {
         var $title = $(BDA_SCHEDULER.SCHEDULED_JOBS_SELECTOR);
 
         BDA_SCHEDULER.$table = $title.next().children('table:first');
         var $container = $('<div id="timeline-wrapper"></div>');
-        $container.append($('<button>Show Timeline</button>').on('click',function(){
-          if(!BDA_SCHEDULER.initialized){
+        $container.append($('<button>Show Timeline</button>').on('click', function() {
+          if (!BDA_SCHEDULER.initialized) {
             BDA_SCHEDULER.build();
           }
-            BDA_SCHEDULER.$timeline.slideToggle();
-          
+          BDA_SCHEDULER.$timeline.slideToggle();
+
         }))
         BDA_SCHEDULER.$timeline = $('<div id="timeline" style="display:none;"></div>')
         $container.append(BDA_SCHEDULER.$timeline);
@@ -32,51 +32,51 @@ jQuery(document).ready(function() {
         $title.after($container);
 
         BDA_SCHEDULER.$table.addClass("tablesorter")
-        .removeAttr("border")
-    .removeAttr("cellpadding").prepend("<thead class='thead' />");
-    // Put first tr into a thead tag
-  BDA_SCHEDULER.$table.find("tr:eq(0)").appendTo(".thead");
-    // Replace td by th
-    $('.thead td').each(function() {
-      var $this = $(this);
-      $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
-    });
-       BDA_SCHEDULER.$table .tablesorter({
-                              'theme' : 'blue',
-                              'widgets' : ["zebra"],
-                              'widgetOptions' : {
-                                zebra : [ "normal-row", "alt-row" ]
-                              }
-    });
+          .removeAttr("border")
+          .removeAttr("cellpadding").prepend("<thead class='thead' />");
+        // Put first tr into a thead tag
+        BDA_SCHEDULER.$table.find("tr:eq(0)").appendTo(".thead");
+        // Replace td by th
+        $('.thead td').each(function() {
+          var $this = $(this);
+          $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
+        });
+        BDA_SCHEDULER.$table.tablesorter({
+          'theme': 'blue',
+          'widgets': ["zebra"],
+          'widgetOptions': {
+            zebra: ["normal-row", "alt-row"]
+          }
+        });
       },
 
       build: function() {
         BDA_SCHEDULER.initialized = true;
-        var $tr, $tdList,dst,dateString;
+        var $tr, $tdList, dst, dateString;
         var dataArray = [];
         //extract the data
-         BDA_SCHEDULER.$table.find('tr').each(function(idx, child) {
+        BDA_SCHEDULER.$table.find('tr').each(function(idx, child) {
           //after header and 1 blank row
-            $tr = $(child);
-            $tdList = $tr.find('td');
-          if (idx > 1 && $tdList.length >0) {
+          $tr = $(child);
+          $tdList = $tr.find('td');
+          if (idx > 1 && $tdList.length > 0) {
             dst = $tdList.eq(7).text();
             //next
             dateString = $tdList.eq(4).text();
-            if(!isNull(dst) && dateString !="not yet run"){
+            if (!isNull(dst) && dateString != "not yet run") {
               dataArray.push({
-                id:'n'+idx,
+                id: 'n' + idx,
                 content: dst,
-                start: new Date(dateString)
+                start:  Date(dateString)
               })
             }
             //previous
             dateString = $tdList.eq(3).text();
-            if(!isNull(dst) && dateString !="not yet run"){
+            if (!isNull(dst) && dateString != "not yet run") {
               dataArray.push({
-                id:'p'+idx,
+                id: 'p' + idx,
                 content: dst,
-                start: new Date(dateString)
+                start:  Date(dateString)
               })
             }
           }
@@ -99,13 +99,13 @@ jQuery(document).ready(function() {
           },
           type: 'point',
           selectable: false,
-          clickToUse :true,
-          orientation:{
-            axis:'both'
+          clickToUse: true,
+          orientation: {
+            axis: 'both'
           },
           start: now - 1000 * 3600,
           end: now + 1000 * 3600 * 12,
-          dataAttributes:'all'
+          dataAttributes: 'all'
         };
 
         // Create a Timeline
