@@ -388,7 +388,14 @@
     "modals.less"
   ],
   "js": [
-    "modal.js"
+    "alert.js",
+    "button.js",
+    "dropdown.js",
+    "modal.js",
+    "tooltip.js",
+    "popover.js",
+    "affix.js",
+    "scrollspy.js"
   ],
-  "customizerUrl": "http://getbootstrap.com/customize/?id=06e61d680b84f5d76341ec2b6495e276"
+  "customizerUrl": "http://getbootstrap.com/customize/?id=a31eb3ea2236fc1bf45a9810da4e8f35"
 }

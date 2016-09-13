@@ -1028,3 +1028,57 @@ button.cache{
 #timeline-wrapper{
   margin-bottom: 20px;
 }
+
+.twbs caption {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  color: #777;
+  text-align: left;
+}
+
+.item-descriptor-table th{
+  text-transform:capitalize;
+}
+
+
+.table-def th, .table-def td{
+  text-transform: none;
+  background-color: #d9edf7;
+}
+
+.item-descriptor-table .highlight {
+  background-color: yellow;
+}
+
+/* XML DEF */
+
+#xmlDefAsTable{
+  margin-top: 15px;
+}
+
+
+.item-descriptor-table .property:hover{
+  background-color: #f5f5f5;
+}
+
+.item-descriptor{
+   cursor:pointer;
+}
+.table-def{
+   cursor:pointer;
+}
+
+#quickNavLinks{
+  margin-top:10px;
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#xmlDefQuickNav h3.panel-title{
+  padding-top:4px;
+}
+
+#definitionsContainer{
+      max-width: inherit;
+}
