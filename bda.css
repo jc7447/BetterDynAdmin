@@ -1082,3 +1082,9 @@ button.cache{
 #definitionsContainer{
       max-width: inherit;
 }
+
+/** AUTOCOMPLETE **/
+
+#searchField{
+  width: 300px;
+}

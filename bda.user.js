@@ -48,6 +48,7 @@
 
 // -- BDA plugins after all the libraries --
 // @require bda.common.js
+// @require bda.search.js
 // @require bda.menu.js
 // @require bda.toolbar.js
 // @require bda.repository.js
@@ -65,7 +66,8 @@
 // @require bda.scheduler.js
 
 
-// @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+
+// @updateUrl http://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
@@ -130,6 +132,12 @@ jQuery(document).ready(function() {
         $().initDASH(BDA);
 
         $().bdaScheduler();
+
+        var autocomplete = $.fn.bdaStorage.getBdaStorage().getConfigurationValue('search_autocomplete');
+        autocomplete = (autocomplete == true) ? true : false;
+        if (autocomplete) {
+          $("#searchField").bdaSearch();
+        }
 
         if (this.isComponentPage)
         {
