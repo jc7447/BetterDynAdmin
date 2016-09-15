@@ -1,0 +1,78 @@
+#parser unit tests
+
+foo
+foo bar
+foo bar toto tata
+foo @BAR
+foo $bar
+foo @BAR >bar
+
+rql @PAR.query [foo\@gmail\.com, bar]
+go /atg/commerce/jdbc/ProductCatalogSwitchingDataSource_production
+
+a { 
+e
+b
+c
+}
+
+a 
+{ 
+e
+b
+c
+}
+
+a { a/b\\\{c\} }
+
+
+clear
+
+#define variables
+
+echo -s M40671 >skuId
+echo -s US >country
+echo -s en >lang
+
+
+rql -s @SR.pSiteConfig [$country] >siteConfig
+
+echo -s $siteConfig:inventoryManagementUnit >invMgtUnit
+echo -s $siteConfig:priceList >priceList
+
+rql  -s @SR {<query-items item-descriptor="zone">countries contains "$0"</query-items>} [$country] >zoneId:id
+echo $zoneId
+
+#get sku infos
+print -s @PC sku $skuId >sku
+echo -s $sku:parentProducts >productId
+print  -s @PC product $productId >product
+
+rql -s @IR.pInventory [$invMgtUnit,$skuId] >stock:stockLevel
+rql -s @PL.pPrice [$priceList,$skuId] >price:listPrice
+
+rql  -s @CIOR.pSkuOverridePerZone [$skuId,$zoneId,$country,$lang] >overrideZone
+rql -s  @CIOR.pSkuOverridePerZoneCountry [$skuId,$zoneId,$country,$lang] >overrideZoneCountry
+rql -s @CIOR.pSkuOverridePerZoneCountryLang [$skuId,$zoneId,$country,$lang] >overrideZoneCountryLang
+
+#print results
+
+clear
+
+echo $productId
+echo $skuId
+
+echo $stock
+echo $price
+
+echo $sku:viewOnline
+
+echo $sku:sellable
+echo $overrideZone:sellable
+echo $overrideZoneCountry:sellable
+echo $overrideZoneCountryLang:sellable
+
+echo $overrideZone:cscSellable
+echo $overrideZoneCountry:cscSellable
+echo $overrideZoneCountryLang:cscSellable
+echo $sku:cscSellable

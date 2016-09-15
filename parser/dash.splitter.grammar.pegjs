@@ -28,7 +28,7 @@ singleElem=
    
     
 multWrapper=
-  $ ("{" multLines "}")
+  $ ( eol? "{" multLines "}")
  
   
 multLines=

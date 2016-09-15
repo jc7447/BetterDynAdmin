@@ -1,5 +1,5 @@
 command=
-    funct:litteral params:(_ param)* end?
+    funct:litteral params:(_ param)* eol?
     {
          var res = {
              funct:funct,
@@ -15,7 +15,7 @@ command=
         return res;
     }
 
-param=
+param "param" =
   simpleParam
   / composedParam
 
@@ -26,20 +26,19 @@ simpleParam=
     /   flags
     /   componentPath
     /   componentRef
-    /   complexValue
     /   value
     /   output
     /   varRef
    
-comment=
-  "#".*
-    {return null}
+comment "comment" =
+"#" [^\n;]* eol
+    { return ''}
     
 composedParam=
-     multilineWrapper
+     multiline
     / array
 
-keywords=
+keywords "keyword" =
       thisRef
     / lastOutput
 
@@ -68,17 +67,25 @@ flags=
         }
     }
 
-value=
-    value:litteralPath
+value "value" =
+    value:(litteral/quotedValue)
     {
         return {
             type:'value',
             value:value
         }
     }
+    
+quotedValue "quotedValue" =
+  "\"" inVal:(escapedQuote/[^"])+ "\""
+    {return inVal.join('')}
+    
+escapedQuote=
+  "\\\"" {return "\""}
+    
 
 complexValue=
-    value:complexLitteral
+    value:litteral
     {
         return {
             type:'value',
@@ -157,17 +164,9 @@ componentPath=
 componentName=
      $("/"litteral)+
      
-multilineWrapper=
-  "{" lines:multiline "}"
-    {
-      return {
-          type: 'multiline',
-            value: lines
-          }
-    }
 multiline=
-  lines:line*
-  {
+  eol? "{" lines:line* "}"
+    {
       var linesArray = []
         for (var i = 0; i < lines.length; i++) {
           var l = lines[i];
@@ -175,14 +174,20 @@ multiline=
               linesArray.push(l);
             }
         }
-      return linesArray.join('\n'); 
+      return {
+          type: 'multiline',
+            value: linesArray.join('\n')
+          }
     }
+
 line=
-  end
-  /value:[^{}\n]+ end?
+  eol
+  /value:lineChar+ eol?
     {
       return value.join('');
     }
+lineChar=
+  escapedKeyword / [^{}\n]
     
 objectDef=
   "("  l1:objectLine l2:("," objectLine)* ")"
@@ -197,7 +202,7 @@ objectDef=
   }
     
 objectLine= 
-     __? v:(litteral __ ":" __ litteralPath) _?
+     __? v:(litteral __ ":" __ litteral) _?
     {
       if(v!=null){
           return {name:v[0],path:v[4]}
@@ -222,27 +227,25 @@ array=
     }
    
     
-complexLitteral=
-  withspace
-    / spacelessCplx
-
-withspace=
-  "\"" _? value:$( complexLitteral (_ complexLitteral)*) _? "\""
-  {
-      return value;
-    }
    
 litteral=
-    $[a-zA-Z0-9\-]+
+  val:(normChar/escapedKeyword)+
+    {
+      return val.join('');
+    }
     
-litteralPath=
-    $[a-zA-Z0-9\-.]+
+normChar "normal char" =
+    $[^\n @$\.\\#">;{}[\],:]
     
-spacelessCplx=
-    $[a-zA-Z0-9\-:/?#._]+    
-
-Integer "integer"
-  = [0-9]+ { return parseInt(text(), 10); }
+Integer "integer" =
+  [0-9]+ { return parseInt(text(), 10); }
+  
+keychar "keychar" =
+  $[@$\.\\#">;{}[\],:]
+    
+escapedKeyword "escaped special char" =
+  "\\" keychar:keychar
+    {return keychar}
     
 _ "whitespace"
   = [ \t]+
@@ -250,5 +253,5 @@ _ "whitespace"
 __ "extended whitespace"
   =[ \t\n]*
 
-end
+eol "eol"
   =[;\n]
