@@ -1083,6 +1083,52 @@ button.cache{
       max-width: inherit;
 }
 
+#quickNavLinks .nav > li > a {
+  padding: 5px 15px
+} 
+
+ol.itemDescAttributes{
+  text-transform: none;
+  margin: 0;
+  padding: 0;
+  font-weight: 500;
+}
+
+.itemDescAttributes > li {
+  display: inline-block;
+}
+.itemDescAttributes > li + li:before {
+  content: "/\00a0";
+  padding: 0 5px;
+  color: #cccccc;
+}
+
+.attr-value{
+  font-weight: 600;
+}
+
+.table-name{
+  font-weight: 600;
+  text-transform: none;
+}
+
+.property-type, .enum{
+  text-decoration: underline;
+}
+
+.data-type, .component-data-type{
+  text-transform: capitalize;
+}
+
+
+#xmlDefAsTable .tooltip-inner{
+  max-width: inherit;
+}
+
+.popover ul{
+  padding-left: 10px;
+}
+
 /** AUTOCOMPLETE **/
 
 #searchField{

@@ -7,14 +7,96 @@
     xmlDefinitionMaxSize: 150000, // 150 Ko
     templates: {
       itemDescTable: '<div id="item_{0}" class="item-panel panel panel-default" data-item-descriptor="{0}">' +
-        '<table class="table item-descriptor-table" >' +
+        '<table class="table item-descriptor-table table-condensed " >' +
         '{1}' +
         '</table>' +
         '</div>',
-      tableHeader: ['name', 'type', 'id-column-name', 'shared-table-sequence'],
-      tableColumns: [
-        'name', 'data-type', 'item-type', 'column-name', 'required', 'cache-mode', 'queryable'
+      itemHeader: [ //other properties than name
+        'sub-type-property',
+        'super-type',
+        'cache-mode',
+        'item-cache-timeout',
+        'item-cache-size'
       ],
+      tableHeader: ['type', 'id-column-name', 'shared-table-sequence'],
+      tableColumns: [{
+        name: 'name',
+      }, {
+        name: 'data/item-type',
+        build: function($prop) {
+          var val;
+          var dataType = $prop.attr('data-type');
+          var itemType = val = $prop.attr('item-type');
+
+          if (!isNull(dataType)) {
+            val = dataType
+          } else if (!isNull(itemType)) {
+            val = '<a href="#item_{0}">{0}</a>'.format(val);
+          }
+
+          var componentDataType = $prop.attr('component-data-type');
+          var componentItemType = $prop.attr('component-item-type');
+          var componentType;
+          if (!isNull(componentDataType)) {
+            componentType = componentDataType;
+          } else if (!isNull(componentItemType)) {
+            componentType = '<a href="#item_{0}">{0}</a>'.format(componentItemType);
+          }
+
+          if (!isNull(componentType)) {
+            val = '{0} [<span class="component-data-type"> {1}</span> ]'.format(val, componentType);
+          }
+
+          var tooltip = "";
+          var $opt;
+          var enumClass = "";
+          if ('enumerated' == dataType) {
+            enumClass = "enum"
+            var opts = ['<ul>'];
+            $prop.find('option').each(function(idx, opt) {
+              $opt = $(opt);
+              opts.push('<li>{0} : {1}</li>'.format($opt.attr('value'), $opt.attr('code')))
+            })
+            opts.push('</ul>');
+            var useCode = true;
+            var $useCodeForValue = $prop.find('attribute[name=useCodeForValue]:first');
+            if ($useCodeForValue.length > 0) {
+              useCode = $useCodeForValue.attr('value') == 'true';
+            }
+            var popoverTitle = 'useCodeForValue : {0}'.format(useCode);
+            tooltip = 'data-html="true" data-trigger="hover focus" data-toggle="popover" ' +
+              'data-placement="top" data-content="{0}" data-title="{1}"'
+              .format(opts.join(''), popoverTitle);
+          }
+
+          if (!isNull(val)) {
+            val = '<span class="data-type {2}" {1}>{0}</span>'.format(val, tooltip, enumClass);
+          }
+          return val;
+        }
+      }, {
+        name: 'column-name',
+      }, {
+        name: 'required',
+      }, {
+        name: 'property-type',
+        build: function($prop) {
+          var full = $prop.attr('property-type');
+          var val;
+          if (!isNull(full) && full !== "") {
+            var slices = full.split('.');
+            var val = '<span class="property-type" data-toggle="tooltip" data-placement="top" title="{1}">{0}</span>'.format(slices[slices.length - 1], full);
+          }
+
+          return val;
+        }
+      }, {
+        name: 'default',
+      }, {
+        name: 'cache-mode',
+      }, {
+        name: 'queryable'
+      }],
       quickNavSearch: '<div class="input-group"><input id="xmlDefSearchBox" type="text" placeholder="Search : item, table, column..." class="form-control"/>' +
         ' <span class="input-group-btn">' +
         '<button id="clearQuickNavSearch" class="btn btn-default" type="button">x</button>' +
@@ -93,6 +175,8 @@
       });
     },
 
+    //doesn't use processRepositoryXmlDef because no need for Ajax call
+    //might need to refactor later for dual use.
     buildXmlDefAsTable: function() {
 
       try {
@@ -107,8 +191,6 @@
 
         $('pre').each(function(idx, pre) {
 
-
-
           var escapeXML = $(pre).html();
           console.log("xml: " + escapeXML);
           var unescapeXML = $('<div/>').html(escapeXML).text();
@@ -116,7 +198,7 @@
           unescapeXML = unescapeXML.replace(new RegExp(/table/, 'g'), 'div');
 
           var $xmlDef = $(unescapeXML);
-          var $panel, $itemDesc, $table, caption, headerFields, attr, rows, cols, $propertyDesc, val, itemDescName;
+          var $panel, $itemDesc, $table, caption, headerFields, attr, attrDef, rows, cols, $propertyDesc, val, itemDescName;
 
           var itemSize = {};
 
@@ -127,24 +209,16 @@
             itemSize[itemDescName] = 0;
             //header row 
             rows = [];
-            rows.push('<tr id="header_{1}" data-target="{1}" class="item-descriptor success open"><th colspan="{0}">{1}</th></tr>'.format(BDA_XML_DEF.templates.tableColumns.length, itemDescName));
+            //header values:
+            var itemHeader = BDA_XML_DEF.buildItemHeader($itemDesc);
+
+            rows.push('<tr id="header_{1}" data-target="{1}" class="item-descriptor success open"><th>{1}<th colspan="{0}">{2}</th></tr>'.format(BDA_XML_DEF.templates.tableColumns.length - 1, itemDescName, itemHeader));
             //
             $itemDesc.find('div').each(function(idx, table) {
               $table = $(table);
-
+              tableName = $table.attr('name');
               //table def
-              cols = [];
-              for (var i = 0; i < BDA_XML_DEF.templates.tableHeader.length; i++) {
-                attr = BDA_XML_DEF.templates.tableHeader[i];
-                val = $table.attr(attr);
-                if (isNull(val)) {
-                  val = "";
-                }
-                cols.push('<th>{0} : {1}</th>'.format(attr, val));
-              }
-              cols.push('<td  colspan="{0}"></td>'.format(BDA_XML_DEF.templates.tableColumns.length - BDA_XML_DEF.templates.tableHeader.length));
-              var tableName = $table.attr('name');
-              rows.push('<tr id="tabledef_{1}" class="table-def open">{0}</tr>'.format(cols.join(''), tableName));
+              rows.push(BDA_XML_DEF.buildTableHeader($table));
 
               rows.push(BDA_XML_DEF.buildSubTableHeader(tableName));
 
@@ -153,8 +227,12 @@
                   $propertyDesc = $(propertyDesc);
                   cols = [];
                   for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
-                    attr = BDA_XML_DEF.templates.tableColumns[i];
-                    val = $propertyDesc.attr(attr);
+                    attrDef = BDA_XML_DEF.templates.tableColumns[i];
+                    if (!isNull(attrDef.build)) {
+                      val = attrDef.build($propertyDesc)
+                    } else {
+                      val = $propertyDesc.attr(attrDef.name);
+                    }
                     if (isNull(val)) {
                       val = "";
                     }
@@ -178,8 +256,12 @@
                   $propertyDesc = $(propertyDesc);
                   cols = [];
                   for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
-                    attr = BDA_XML_DEF.templates.tableColumns[i];
-                    val = $propertyDesc.attr(attr);
+                    attrDef = BDA_XML_DEF.templates.tableColumns[i];
+                    if (!isNull(attrDef.build)) {
+                      val = attrDef.build($propertyDesc)
+                    } else {
+                      val = $propertyDesc.attr(attrDef.name);
+                    }
                     if (isNull(val)) {
                       val = "";
                     }
@@ -237,6 +319,10 @@
         })
 
         $row.prepend(BDA_XML_DEF.buildQuickNav());
+
+        //activate
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="popover"]').popover();
 
         console.log('bdaXmlDef build end')
 
@@ -297,9 +383,27 @@
       var attr;
       for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
         attr = BDA_XML_DEF.templates.tableColumns[i];
-        cols.push('<th>{0}</th>'.format(attr));
+        cols.push('<th>{0}</th>'.format(attr.name));
       }
       return '<tr class="active" data-table="tabledef_{1}">{0}</tr>'.format(cols.join(''), tableName);
+    },
+
+    buildTableHeader: function($table) {
+
+      var cols = ['<ol class="itemDescAttributes">'];
+      var tableName = $table.attr('name');
+      var attr, val;
+      cols.push('<li class="table-name">{0}</li>'.format(tableName));
+      for (var i = 0; i < BDA_XML_DEF.templates.tableHeader.length; i++) {
+        attr = BDA_XML_DEF.templates.tableHeader[i];
+        val = $table.attr(attr);
+        if (!isNull(val)) {
+          cols.push('<li>{0} : <span class="attr-value">{1}</span></li>'.format(attr, val));
+        }
+      }
+      cols.push('</ol>');
+      return '<tr id="tabledef_{1}" class="table-def open"><th colspan="{2}">{0}</th></tr>'.format(cols.join(''), tableName, BDA_XML_DEF.templates.tableColumns.length);
+
     },
 
     buildQuickNav: function() {
@@ -428,6 +532,21 @@
       })
 
       return $container;
+    },
+
+    buildItemHeader: function($itemDesc) {
+      var values = [],
+        attrDef, val;
+      values.push('<ol class="itemDescAttributes">')
+      for (var i = 0; i < BDA_XML_DEF.templates.itemHeader.length; i++) {
+        attrDef = BDA_XML_DEF.templates.itemHeader[i];
+        val = $itemDesc.attr(attrDef);
+        if (val) {
+          values.push('<li>{0} : <span class="attr-value">{1}</span></li>'.format(attrDef, val));
+        }
+      }
+      values.push('</ol>');
+      return values.join('');
     },
 
     resizeQuickNav: function() {
