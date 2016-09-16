@@ -21,6 +21,7 @@
       tableHeader: ['type', 'id-column-name', 'shared-table-sequence'],
       tableColumns: [{
         name: 'name',
+        width: '15%'
       }, {
         name: 'data/item-type',
         build: function($prop) {

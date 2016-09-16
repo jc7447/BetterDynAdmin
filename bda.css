@@ -1125,6 +1125,18 @@ ol.itemDescAttributes{
   max-width: inherit;
 }
 
+table.item-descriptor-table{
+  table-layout: fixed;
+}
+
+.item-descriptor-table th,.item-descriptor-table td{
+   width: 12.5%;
+}
+
+.item-descriptor-table td[colspan],.item-descriptor-table th[colspan]{
+  width: auto;
+}
+
 .popover ul{
   padding-left: 10px;
 }
