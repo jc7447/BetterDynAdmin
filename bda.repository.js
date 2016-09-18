@@ -15,7 +15,6 @@
     defaultItemByTab: "10",
     nbItemReceived: 0,
     itemTree: new Map(),
-    startGettingTree: 0,
     defaultDescriptor: {
       "OrderRepository": "order",
       "CsrRepository": "returnRequest",
@@ -393,28 +392,30 @@
 
 
     showItemPropertyList: function(item) {
-      console.log("showItemPropertyList");
+      logTrace("showItemPropertyList");
       var componentURI = window.location.pathname;
       var url = componentURI + "?action=seetmpl&itemdesc=" + item + "#showProperties";
       $.get(url, function(data) {
+        logTrace("Enter showItemPropertyList callback");
         var $pTable = $(data).find("a[name='showProperties']").next();
         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
         $pTable.find("tr").each(function(index) {
-          $tr = $(this);
-            $tr.find("td").each(function(i) {
-              $td = $(this);
-              if (i === 0)
-              {
-                var content = $td.html();
-                var req = /[\w\s']+\((\w+)\)$/i;
-                content = content.replace(req, "<a class='itemPropertyBtn' href='javascript:void(0)'> $1 </a>");
-                $td.html(content);
-              }
-              else if (i === 1)
-                $td.text($td.text().replace("Class", ""));
-            });
-        });
+          var $tr = $(this);
+          $tr.find("td").each(function(i) {
+            var $td = $(this);
+            if (i === 0)
+            {
+              var content = $td.html();
+              var req = /[\w\s']+\((\w+)\)$/i;
+              content = content.replace(req, "<a class='itemPropertyBtn' href='javascript:void(0)'> $1 </a>");
+              $td.html(content);
+            }
+            else if (i === 1)
+              $td.text($td.text().replace("Class", ""));
 
+          });
+        });
+        logTrace($pTable);
         $("#descProperties")
           .empty()
           .append($pTable);
@@ -863,7 +864,6 @@
         curData.id = $(this).attr("id");
         datas[curItemDesc].push(curData);
       });
-      var startRenderingtab = new Date().getTime();
       var html = "<p class='nbResults'>" + $addItems.length + " items in " + nbTypes + " descriptor(s)</p>";
       var splitValue;
       var splitObj = BDA_STORAGE.getStoredSplitObj();
@@ -896,12 +896,11 @@
         // reuse $outputDiv in case we have several results set on the page (RQL query + get item tool)
         $outputDiv.find("p.nbResults").append("<br><a href='javascript:void(0)' class='showFullTextLink'>Show full text</a>");
         $outputDiv.find(".showFullTextLink").click(function() {
-          var dateStart = new Date().getTime();
+          console.time("showFullText");
           $(".copyField").each(function() {
             $(this).parent().html($(this).html());
           });
-          var dateFullText = new Date();
-          logTrace("time to show full text : " + (dateFullText.getTime() - dateStart) + "ms");
+          console.timeEnd("showFullText");
           $(this).hide();
         });
       }
@@ -1166,8 +1165,7 @@
         return;
       }
 
-      BDA_REPOSITORY.startGettingTree = new Date().getTime();
-
+      console.time("getItemTree");
       // Get XML definition of the repository
       $("#itemTreeInfo").html("<p>Getting XML definition of this repository...</p>");
       var $xmlDef = processRepositoryXmlDef("definitionFiles", function($xmlDef) {
@@ -1236,9 +1234,7 @@
         $("#itemTreeResult pre").text(res);
       }
 
-      var endGettingTree = new Date();
-      var time = endGettingTree.getTime() - BDA_REPOSITORY.startGettingTree;
-      console.log("time to get item tree : " + time + "ms");
+      console.timeEnd("getItemTree");
     },
 
     createSpeedbar: function() {
@@ -1463,7 +1459,7 @@
 
       try {
 
-        var start = new Date().getTime();
+        console.time("setupRepositoryCacheSection");
 
         //global css setups to aid further customisation
         var $cacheUsage = $(this.cacheUsageSelector);
@@ -1541,8 +1537,7 @@
             .next().css('display', 'none');
         });
 
-        var end = new Date().getTime();
-        console.log('setupRepositoryCacheSection took ' + (end - start) + 'ms');
+        console.timeEnd("setupRepositoryCacheSection");
       } catch (err) {
         console.error(err);
       }

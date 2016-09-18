@@ -139,7 +139,7 @@ try {
   };
 
   this.highlightAndIndentXml = function($elm) {
-    var dateStart = new Date().getTime();
+    console.time("highlightAndIndentXml");
     console.log("Start highlightAndIndentXml");
 
     $elm.each(function(index) {
@@ -159,7 +159,7 @@ try {
         .text(unescapeXML);
 
       // Run highlight.js on each XML block
-      console.log($codeBlock.get(0));
+      logTrace($codeBlock.get(0));
       hljs.highlightBlock($codeBlock.get(0));
       // Make component path clickable
       $codeBlock.find("span.hljs-attribute:contains('jndi'), span.hljs-attribute:contains('repository')")
@@ -171,9 +171,7 @@ try {
         });
     });
 
-    var dateEnd = new Date();
-    var time = dateEnd.getTime() - dateStart;
-    console.log("time to highlight and indent : " + time + "ms");
+    console.timeEnd("highlightAndIndentXml");
   };
 
   this.getComponentNameFromPath = function(componentPath) {
@@ -303,7 +301,7 @@ try {
 
 
   this.sanitizeXml = function(xmlContent) {
-    var start = new Date().getTime();
+    console.time("sanitizeXml");
 
     var regexp = /<\!--(.*)(<set\-property.*><\!\[CDATA\[[\S\s]*?\]\]\><\/set\-property\>).*-->/ig;
     var xmlStr = xmlContent.replace(regexp, function(str, p1, p2, offset, s) {
@@ -318,9 +316,7 @@ try {
       var newLine = p2.replace("set-property", attributes);
       return newLine;
     });
-    var endTime = new Date();
-    var time = endTime.getTime() - start;
-    console.log("time to sanitize : " + time + "ms");
+    console.timeEnd("sanitizeXml");
     return xmlStr;
   };
 

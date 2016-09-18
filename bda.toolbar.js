@@ -358,7 +358,7 @@
         var componentPath = purgeSlashes(document.location.pathname);
         if (!BDA_TOOLBAR.isComponentAlreadyStored(componentPath))
         {
-          console.log('adding fav button');
+          logTrace('adding fav button');
           $("<div class='toolbar-elem newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
           .appendTo("#toolbar");
 
@@ -499,7 +499,7 @@
 
     addFavTagList : function()
     {
-      console.log('addfavTagList');
+      logTrace('addfavTagList');
       var tags = BDA_STORAGE.getTags();
 
       var $favline = $('<div id="favTagList" class="favline">').appendTo('#toolbar');
