@@ -469,7 +469,7 @@ jQuery(document).ready(function() {
           }
         },
 
-        
+
 
         rql: {
 
@@ -936,6 +936,7 @@ jQuery(document).ready(function() {
         }
       },
       build: function() {
+        console.time("dashBuild");
         logTrace('actually initialize dash');
 
         BDA_DASH.logLevel = BDA_DASH.logLevels.info;
@@ -1032,7 +1033,7 @@ jQuery(document).ready(function() {
             BDA_DASH.histIdxOffset = 0;
             //close suggestions
             BDA_DASH.$input.typeahead('close');
-            BDA_DASH.handleInput()
+            BDA_DASH.handleInput();
             return false;
           }
           //ctrl+C
@@ -1102,7 +1103,7 @@ jQuery(document).ready(function() {
         });
 
         BDA_DASH.handleInput('help -k'); //skip history..
-
+        console.timeEnd("dashBuild");
       },
 
       submitSaveScriptForm: function() {

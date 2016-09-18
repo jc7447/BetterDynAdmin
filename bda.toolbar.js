@@ -1,17 +1,16 @@
-  console.log('bda.toolbar.js before start');
 (function($) {
   "use strict";
-  console.log('bda.toolbar.js start');
-
   var BDA_TOOLBAR = {
 
     build : function()
     {
+        console.time("bdaToolbar");
         BDA_TOOLBAR.showComponentHsitory();
         BDA_TOOLBAR.createToolbar();
         // Collect history
         if (BDA.isComponentPage)
           BDA_TOOLBAR.collectHistory();
+      console.timeEnd("bdaToolbar");
     },
 
     // -- TAGS management function
@@ -20,17 +19,17 @@
     {
       console.log('add tags:');
       var existingTags = BDA_STORAGE.getTags();
-      console.log('existingTags = ' + JSON.stringify(existingTags));
+      logTrace('existingTags = ' + JSON.stringify(existingTags));
       for (var name in newTags)
       {
-        console.log('name : ' + name);
+        logTrace('name : ' + name);
         var newTag = newTags[name];
-        console.log('newTag = ' + JSON.stringify(newTag));
+        logTrace('newTag = ' + JSON.stringify(newTag));
         if(existingTags[newTag.name] === null || existingTags[newTag.name] === undefined){
           existingTags[newTag.name] = newTag;
         }
       }
-      console.log('existingTags = ' + JSON.stringify(existingTags));
+      logTrace('existingTags = ' + JSON.stringify(existingTags));
       BDA_STORAGE.saveTags(existingTags);
     },
 
@@ -44,7 +43,7 @@
              sTag.selected = false;
           }
 
-        console.log('savedtags = ' + JSON.stringify(savedtags));
+        logTrace('savedtags = ' + JSON.stringify(savedtags));
         BDA_STORAGE.saveTags(savedtags);
         BDA_TOOLBAR.reloadToolbar();
     },
@@ -61,7 +60,7 @@
       var componentHistory =  JSON.parse(localStorage.getItem('componentHistory')) || [];
       if ($.inArray(componentPath, componentHistory) == -1)
       {
-        console.log("Collect : " + componentPath);
+        logTrace("Collect : " + componentPath);
         componentHistory.unshift(componentPath);
         if (componentHistory.length >= 10)
           componentHistory = componentHistory.slice(0, 9);
@@ -98,7 +97,7 @@
           break;
         }
       }
-      console.log(components);
+      logTrace(components);
       BDA_STORAGE.storeItem('Components', JSON.stringify(components));
       BDA_TOOLBAR.reloadToolbar();
     },
@@ -113,16 +112,16 @@
       var storedComp = BDA_STORAGE.getStoredComponents();
       if (storedComp.length > 0)
         compObj.id = storedComp[storedComp.length - 1].id + 1;
-      console.log("id : " + compObj.id);
+      logTrace("id : " + compObj.id);
 
       compObj.methods = methods;
       compObj.vars = vars;
       compObj.tags = tags;
       storedComp.push(compObj);
-      console.log("About to store : " + storedComp);
+      logTrace("About to store : " + storedComp);
       BDA_STORAGE.storeItem('Components', JSON.stringify(storedComp));
       var tagMap = buildTagsFromArray(tags,false);
-      console.log("tag map : " + tagMap);
+      logTrace("tag map : " + tagMap);
       BDA_TOOLBAR.addTags(tagMap);
     },
 
@@ -348,7 +347,7 @@
         console.log("Click on logdebug");
         var componentName = this.id.replace("logDebug", "");
         var logDebugState = this.innerHTML;
-        console.log("component : " + componentName + ", logDebugState : " + logDebugState);
+        logTrace("component : " + componentName + ", logDebugState : " + logDebugState);
         $("#logDebugForm" + componentName + " input[name=newValue]").val(logDebugState);
         $("#logDebugForm" + componentName).submit();
       });
@@ -386,9 +385,9 @@
                 //remove dupes
                 tags=unique(tags);
 
-                console.log("methods : " + methods);
-                console.log("vars : " + vars);
-                console.log("tags : " + tags);
+                logTrace("methods : " + methods);
+                logTrace("vars : " + vars);
+                logTrace("tags : " + tags);
                 BDA_TOOLBAR.storeComponent(componentPath, methods, vars,tags);
                 BDA_TOOLBAR.reloadToolbar();
             });
@@ -413,7 +412,7 @@
 
             //handle default methods
             var defMethods = BDA_STORAGE.getConfigurationValue('default_methods');
-            console.log('savedMethods: ' + defMethods);
+            logTrace('savedMethods: ' + defMethods);
             if (defMethods)
             {
                 defMethods.forEach(function(methodName){
@@ -433,7 +432,7 @@
             });
 
             var defProperties = BDA_STORAGE.getConfigurationValue('default_properties');
-            console.log('savedProperties: ' + defProperties);
+            logTrace('savedProperties: ' + defProperties);
             if(defProperties)
             {
               defProperties.forEach(function(name){
@@ -541,7 +540,7 @@
          )
          .on('change', function() {
             var name = $(this).attr('name');
-            console.log('applyFavFilter : '+ name);
+            logTrace('applyFavFilter : '+ name);
             var tags = BDA_STORAGE.getTags();
             var tag = tags[name];
             if(tag !== null)
@@ -570,7 +569,7 @@
 
   $.fn.bdaToolbar = function(pBDA)
   {
-    console.log('Init plugin {0}'.format('bdaRepository'));
+    console.log('Init plugin {0}'.format('bdaToolbar'));
     //settings = $.extend({}, defaults, options);
     BDA = pBDA;
     BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
@@ -594,5 +593,4 @@
     return BDA_TOOLBAR.isComponentAlreadyStored(path);
   };
 
-  console.log('bda.toolbar.js end');
 })(jQuery);

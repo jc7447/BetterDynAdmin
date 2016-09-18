@@ -30,7 +30,7 @@
           var itemType = val = $prop.attr('item-type');
 
           if (!isNull(dataType)) {
-            val = dataType
+            val = dataType;
           } else if (!isNull(itemType)) {
             val = '<a href="#item_{0}">{0}</a>'.format(val);
           }
@@ -52,12 +52,12 @@
           var $opt;
           var enumClass = "";
           if ('enumerated' == dataType) {
-            enumClass = "enum"
+            enumClass = "enum";
             var opts = ['<ul>'];
             $prop.find('option').each(function(idx, opt) {
               $opt = $(opt);
-              opts.push('<li>{0} : {1}</li>'.format($opt.attr('value'), $opt.attr('code')))
-            })
+              opts.push('<li>{0} : {1}</li>'.format($opt.attr('value'), $opt.attr('code')));
+            });
             opts.push('</ul>');
             var useCode = true;
             var $useCodeForValue = $prop.find('attribute[name=useCodeForValue]:first');
@@ -86,7 +86,7 @@
           var val;
           if (!isNull(full) && full !== "") {
             var slices = full.split('.');
-            var val = '<span class="property-type" data-toggle="tooltip" data-placement="top" title="{1}">{0}</span>'.format(slices[slices.length - 1], full);
+            val = '<span class="property-type" data-toggle="tooltip" data-placement="top" title="{1}">{0}</span>'.format(slices[slices.length - 1], full);
           }
 
           return val;
@@ -119,11 +119,12 @@
 
 
     build: function() {
+      console.time("bdaXmlDef");
       BDA_XML_DEF.isXMLDefinitionFilePage = BDA_XML_DEF.isXMLDefinitionFilePageFct();
 
       if (BDA_XML_DEF.isXMLDefinitionFilePage)
         BDA_XML_DEF.setupXMLDefinitionFilePage();
-
+      console.timeEnd("bdaXmlDef");
     },
 
     isXMLDefinitionFilePageFct: function() {
@@ -138,7 +139,7 @@
       $("pre").each(function(index) {
         xmlSize += $(this).html().length;
       });
-      console.log("Xml size : " + xmlSize);
+      logTrace("Xml size : " + xmlSize);
       if (xmlSize < BDA_XML_DEF.xmlDefinitionMaxSize) {
         highlightAndIndentXml($("pre"));
       } else {
@@ -187,13 +188,13 @@
         var $row = $('<div id="xmlDefAsTable" class="row" style="display:none;" ></div>');
         $wrapper.append($row);
         var $container = $('<div  id="definitionsContainer" class="container col-lg-10">');
-        $row.append($container)
+        $row.append($container);
         BDA_XML_DEF.$xmlDefTable = $container;
 
         $('pre').each(function(idx, pre) {
 
           var escapeXML = $(pre).html();
-          console.log("xml: " + escapeXML);
+          logTrace("xml: " + escapeXML);
           var unescapeXML = $('<div/>').html(escapeXML).text();
           //hack: if we keep table, jquery doesn't like it as it's not a proper html table
           unescapeXML = unescapeXML.replace(new RegExp(/table/, 'g'), 'div');
@@ -208,7 +209,7 @@
             var subTables = [];
             itemDescName = $itemDesc.attr('name');
             itemSize[itemDescName] = 0;
-            //header row 
+            //header row
             rows = [];
             //header values:
             var itemHeader = BDA_XML_DEF.buildItemHeader($itemDesc);
@@ -230,7 +231,7 @@
                   for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
                     attrDef = BDA_XML_DEF.templates.tableColumns[i];
                     if (!isNull(attrDef.build)) {
-                      val = attrDef.build($propertyDesc)
+                      val = attrDef.build($propertyDesc);
                     } else {
                       val = $propertyDesc.attr(attrDef.name);
                     }
@@ -240,10 +241,10 @@
                     cols.push('<td>{0}</td>'.format(val));
                   }
                   rows.push('<tr class="property" data-table="tabledef_{1}">{0}</tr>'.format(cols.join(''), tableName));
-                })
+                });
                 //
 
-            })
+            });
 
             if ($itemDesc.children('property').length > 0) {
 
@@ -259,7 +260,7 @@
                   for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
                     attrDef = BDA_XML_DEF.templates.tableColumns[i];
                     if (!isNull(attrDef.build)) {
-                      val = attrDef.build($propertyDesc)
+                      val = attrDef.build($propertyDesc);
                     } else {
                       val = $propertyDesc.attr(attrDef.name);
                     }
@@ -269,20 +270,20 @@
                     cols.push('<td>{0}</td>'.format(val));
                   }
                   rows.push('<tr class="property" data-table="tabledef_{1}">{0}</tr>'.format(cols.join(''), tableName));
-                })
+                });
                 //
             }
 
             $panel = $(
               BDA_XML_DEF.templates.itemDescTable.format(itemDescName, rows.join(''))
-            )
+            );
             itemSize[itemDescName] = rows.length;
             // $panel.find('#header_'+itemDescName).prepend($(BDA_XML_DEF.templates.collapserColumn.format(rows.length,itemDescName)));
 
             $container.append($panel);
 
 
-          })
+          });
 
         });
 
@@ -296,14 +297,14 @@
             $this.removeClass('open').addClass('closed');
             $('#item_' + target).find('tr')
               .filter(function() {
-                return !$(this).hasClass('item-descriptor')
+                return !$(this).hasClass('item-descriptor');
               })
               .hide();
           } else {
             $this.removeClass('closed').addClass('open');
             $('#item_' + target).find('tr').show();
           }
-        })
+        });
 
         $('.table-def').on('click', function() {
           var $this = $(this);
@@ -317,7 +318,7 @@
             $('tr[data-table=' + id + ']').show();
 
           }
-        })
+        });
 
         $row.prepend(BDA_XML_DEF.buildQuickNav());
 
@@ -325,7 +326,7 @@
         $('[data-toggle="tooltip"]').tooltip();
         $('[data-toggle="popover"]').popover();
 
-        console.log('bdaXmlDef build end')
+        logTrace('bdaXmlDef build end');
 
       } catch (e) {
         console.error(e);
@@ -341,7 +342,7 @@
         .removeHighlight()
         .highlight(val)
         .filter(function() {
-          var text = $(this).text() //.replace(/\s+/g, ' ').toLowerCase();
+          var text = $(this).text(); //.replace(/\s+/g, ' ').toLowerCase();
           return !~text.indexOf(val);
         })
         .hide();
@@ -353,7 +354,7 @@
           return $(this).attr('id');
         })
         .get();
-      logTrace(JSON.stringify(ids))
+      logTrace(JSON.stringify(ids));
 
       try {
 
@@ -444,10 +445,10 @@
         $body.find('#xmlDefSearchBox').val('');
         clearTimeout(searchTimeOut);
         searchTimeOut = setTimeout(BDA_XML_DEF.searchInTable, 200);
-      })
+      });
 
       $quickNav.find('#quickNavCollapse').on('click', function() {
-        BDA_XML_DEF.showXmlDefAsTable()
+        BDA_XML_DEF.showXmlDefAsTable();
         $('html, body').animate({
           scrollTop: $('#xmlDefAsTableSection').offset().top - 5
         }, 0);
@@ -456,12 +457,12 @@
         $('html, body').animate({
           scrollTop: BDA_XML_DEF.$xmlDefTable.offset().top - 5
         }, 0);
-      })
+      });
       $quickNav.find('#quickNavMoveBot').on('click', function() {
         $('html, body').animate({
           scrollTop: BDA_XML_DEF.$xmlDefTable.offset().top + BDA_XML_DEF.$xmlDefTable.height() + 10 //outside the sticky zone
         }, 0);
-      })
+      });
 
       var menuItems = items.find('a');
 
@@ -530,7 +531,7 @@
 
       $(window).resize(function() {
         BDA_XML_DEF.resizeQuickNav();
-      })
+      });
 
       return $container;
     },
@@ -538,7 +539,7 @@
     buildItemHeader: function($itemDesc) {
       var values = [],
         attrDef, val;
-      values.push('<ol class="itemDescAttributes">')
+      values.push('<ol class="itemDescAttributes">');
       for (var i = 0; i < BDA_XML_DEF.templates.itemHeader.length; i++) {
         attrDef = BDA_XML_DEF.templates.itemHeader[i];
         val = $itemDesc.attr(attrDef);

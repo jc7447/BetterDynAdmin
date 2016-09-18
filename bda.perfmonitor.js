@@ -7,6 +7,7 @@
 
 	build : function()
 	{
+    console.time("bdaPerfMonitor");
     console.log("isPerfMonitorPage : " + BDA_PERF_MONITOR.isPerfMonitorPage + ", isPerfMonitorTimePage : " + BDA_PERF_MONITOR.isPerfMonitorTimePage);
     BDA_PERF_MONITOR.isPerfMonitorPage = BDA_PERF_MONITOR.isPerfMonitorPageFct();
     BDA_PERF_MONITOR.isPerfMonitorTimePage = BDA_PERF_MONITOR.isPerfMonitorTimePageFct();
@@ -16,7 +17,7 @@
     // Setup performance monitor time page
     if (BDA_PERF_MONITOR.isPerfMonitorTimePage)
       BDA_PERF_MONITOR.setupPerfMonitorTimePage();
-
+    console.timeEnd("bdaPerfMonitor");
 	},
 
   setupPerfMonitorPage : function()
@@ -53,8 +54,6 @@
       $this.replaceWith('<th class="' + this.className + '">' + $this.text() + '</th>');
     });
 
-
-    
     $tabSelector.tablesorter({
                               'theme' : 'blue',
                               'widgets' : ["zebra"],

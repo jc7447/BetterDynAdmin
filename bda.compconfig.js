@@ -6,6 +6,7 @@
 
     build : function()
     {
+      console.time("bdaCompConfig");
       BDA_COMP_CONFIG.isServiceConfigurationPage = BDA_COMP_CONFIG.isServiceConfigurationPageFct();
       BDA_COMP_CONFIG.isPropertyPage = BDA_COMP_CONFIG.isPropertyPage();
 
@@ -13,6 +14,7 @@
         BDA_COMP_CONFIG.setupServiceConfigurationPage();
       if (BDA_COMP_CONFIG.isPropertyPage)
         BDA_COMP_CONFIG.setupPropertyPage();
+      console.timeEnd("bdaCompConfig");
     },
 
     isServiceConfigurationPageFct : function()
@@ -38,7 +40,7 @@
       submitBtn.click(function()
       {
         $.post(
-        form.attr('action'), 
+        form.attr('action'),
         form.serializeArray(),
         function(data)
         {

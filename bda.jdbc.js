@@ -8,21 +8,21 @@
 
     build : function()
     {
+      console.time("bdaJdbc");
       BDA_JDBC.isExecuteQueryPage = BDA_JDBC.isExecuteQueryPageFct();
       if (BDA_JDBC.isExecuteQueryPage)
         BDA_JDBC.setupExecuteQueryPage();
+      console.timeEnd("bdaJdbc");
     },
 
     isExecuteQueryPageFct : function()
     {
-      console.log($(location).attr('pathname'));
       return $(location).attr('pathname').indexOf("executeQuery.jhtml") != -1;
     },
 
 
      isJdbcHomePage : function()
     {
-      console.log($(location).attr('pathname'));
       return $(location).attr('pathname').indexOf("jdbcbrowser/index.jhtml") != -1;
     },
 
@@ -91,7 +91,7 @@
           .next()
           .find("span")
           .text();
-          console.log(datasource);
+          logTrace(datasource);
         },
         "async" : false
       });

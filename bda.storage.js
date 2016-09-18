@@ -1,5 +1,4 @@
 (function($) {
-  console.log("bda.storage.js start");
   var BDA_STORAGE = {
 
     GMValue_MonoInstance: "monoInstance",
@@ -9,10 +8,12 @@
 
   build : function()
   {
+    console.time("bdaStorage");
     console.log("BDA monoInstance mode : " + (GM_getValue(BDA_STORAGE.GMValue_MonoInstance) === true));
 
     if(GM_getValue(BDA_STORAGE.GMValue_MonoInstance) === true)
       BDA_STORAGE.restoreData(GM_getValue(BDA_STORAGE.GMValue_Backup), false);
+    console.timeEnd("bdaStorage");
   },
 
   //--- Stored configuration functions  -----------------------------------------------------------------
@@ -67,7 +68,6 @@
 
   storeItem : function(itemName, itemValue)
   {
-    //console.log("Storing item : " + itemName + " : " + itemValue);
     localStorage.setItem(itemName, itemValue);
     if(GM_getValue(BDA_STORAGE.GMValue_MonoInstance) === true)
       GM_setValue(BDA_STORAGE.GMValue_Backup, JSON.stringify(BDA_STORAGE.getData()));
@@ -95,7 +95,7 @@
 
   getData : function()
   {
-    console.log("Getting all data from localstorage");
+    logTrace("Getting all data from localstorage");
     var dataObj = {};
     dataObj.components = BDA_STORAGE.getStoredComponents();
     dataObj.queries = BDA_STORAGE.getStoredRQLQueries();
@@ -175,7 +175,7 @@
     storeQuery.repo = getComponentNameFromPath(path);
     var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
     rqlQueries.push(storeQuery);
-    console.log(rqlQueries);
+    logTrace(rqlQueries);
     BDA_STORAGE.storeItem('RQLQueries', JSON.stringify(rqlQueries));
   },
 
@@ -272,7 +272,7 @@
    {
      if (!initalized)
      {
-       console.log('Init plugin {0}'.format('bdaconfig'));
+       console.log('Init plugin {0}'.format('bdaStorage'));
        //settings = $.extend({}, defaults, options);
        BDA_STORAGE.build();
        initalized = true;
@@ -283,6 +283,5 @@
   $.fn.bdaStorage.getBdaStorage = function() {
     return BDA_STORAGE;
   };
-  console.log("bda.storage.js end");
 
 })(jQuery);

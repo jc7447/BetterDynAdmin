@@ -2,7 +2,6 @@
 
 try {
 
-  console.log('bda.common.js start');
   var isLoggingTrace = false;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
@@ -276,7 +275,7 @@ try {
     var table = tableTemplate.format(itemDesc, id, rows.join(''));
 
     return table;
-  }
+  };
 
   this.convertAddItemToPlainObject = function($item) {
     var o = {};
@@ -291,16 +290,16 @@ try {
     });
 
     return o;
-  }
+  };
 
   this.index = function(obj, i) {
-    return obj[i]
-  }
+    return obj[i];
+  };
 
-  // if s = a.b.c, return o.a.b.c 
+  // if s = a.b.c, return o.a.b.c
   this.subProp = function(o, s) {
     return s.split('.').reduce(index, o);
-  }
+  };
 
 
   this.sanitizeXml = function(xmlContent) {
@@ -327,7 +326,7 @@ try {
 
   $.fn.outerHTML = function(s) {
     return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
-  }
+  };
 
   this.extendComponentPath = function(path) {
     var res = path;
@@ -350,7 +349,7 @@ try {
     }
     this.setHeightAndMax(hThis);
     return this;
-  }
+  };
 
   $.fn.fullHeight = function() {
     var h = parseFloat(this.css('height').replace('px', ''));
@@ -359,19 +358,19 @@ try {
     var total = h + mTop + mBot;
 
     return total;
-  }
+  };
 
 
   $.fn.innerHeight = function() {
     var h = parseInt(this.css('height').replace('px', ''));
     return h;
-  }
+  };
 
   $.fn.setHeightAndMax = function(value) {
     this.css('max-height', value + 'px');
     this.css('height', value + 'px');
     return this;
-  }
+  };
 
   $.fn.toCSV = function() {
     var data = [];
@@ -399,7 +398,7 @@ try {
     var csv = linesText.join('\n');
 
     return csv;
-  }
+  };
 
   /*
 
@@ -454,7 +453,6 @@ Johann Burkard
     }).end();
   };
 
-  console.log('bda.common.js initialized');
 } catch (e) {
   console.log(e);
 }

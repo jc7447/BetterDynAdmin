@@ -1,8 +1,7 @@
-"use strict";
-jQuery(document).ready(function() {
-  (function($) {
-    console.log('bda.scheduler.js');
 
+jQuery(document).ready(function() {
+  "use strict";
+  (function($) {
     var BDA_SCHEDULER = {
 
       initialized: false,
@@ -15,6 +14,7 @@ jQuery(document).ready(function() {
       },
 
       init: function() {
+        console.time("bdaScheduler");
         var $title = $(BDA_SCHEDULER.SCHEDULED_JOBS_SELECTOR);
 
         BDA_SCHEDULER.$table = $title.next().children('table:first');
@@ -25,8 +25,8 @@ jQuery(document).ready(function() {
           }
           BDA_SCHEDULER.$timeline.slideToggle();
 
-        }))
-        BDA_SCHEDULER.$timeline = $('<div id="timeline" style="display:none;"></div>')
+        }));
+        BDA_SCHEDULER.$timeline = $('<div id="timeline" style="display:none;"></div>');
         $container.append(BDA_SCHEDULER.$timeline);
 
         $title.after($container);
@@ -48,6 +48,7 @@ jQuery(document).ready(function() {
             zebra: ["normal-row", "alt-row"]
           }
         });
+        console.timeEnd("bdaScheduler");
       },
 
       build: function() {
@@ -68,7 +69,7 @@ jQuery(document).ready(function() {
                 id: 'n' + idx,
                 content: dst,
                 start:  Date(dateString)
-              })
+              });
             }
             //previous
             dateString = $tdList.eq(3).text();
@@ -77,7 +78,7 @@ jQuery(document).ready(function() {
                 id: 'p' + idx,
                 content: dst,
                 start:  Date(dateString)
-              })
+              });
             }
           }
         });
@@ -126,7 +127,7 @@ jQuery(document).ready(function() {
         BDA_SCHEDULER.init();
       }
 
-    }
+    };
 
   })(jQuery);
 });

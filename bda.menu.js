@@ -1,7 +1,6 @@
 try {
   jQuery(document).ready(function() {
     (function($) {
-      console.log('bda.menu.js start');
       try {
 
         var templates = {
@@ -10,7 +9,7 @@ try {
         };
         var BDA_MENU = {
           build: function() {
-            console.log('bda menu.build');
+            console.time("bdaMenu");
             var $menuBar = $("<div id='menuBar'></div>").appendTo("body");
             BDA_MENU.$menuBar = $menuBar;
             BDA_MENU.createBugReportPanel($menuBar);
@@ -35,6 +34,7 @@ try {
               $panel.slideToggle();
               rotateArrow($thisParent.find(".menuArrow i"));
             });
+            console.timeEnd("bdaMenu");
           },
 
           //--- Config Panel
@@ -101,7 +101,7 @@ try {
 
             $("#bdaDataBackup").click(function() {
               var data = BDA_STORAGE.getData();
-              console.log('bdaDataBackup ' + data);
+              logTrace('bdaDataBackup ' + data);
               copyToClipboard(JSON.stringify(data));
             });
 
@@ -151,16 +151,16 @@ try {
           createSearchAutocompleteConfig: function(parentPanel) {
 
             var autocomplete = BDA_STORAGE.getConfigurationValue('search_autocomplete');
-            console.log('autocomplete ' + autocomplete);
+            logTrace('autocomplete ' + autocomplete);
             autocomplete = (autocomplete == true) ? true : false;
             var checked = autocomplete ? 'checked="true"' : '';
 
             parentPanel.append('<p class="config">Search AutoComplete : <input type="checkbox" id="searchAutocompleteConfig" {0}/></p><p>Be aware of perfs impacts. Reload dyn/admin to take into account</p>'.format(checked));
             $('#searchAutocompleteConfig').on('change', function() {
               var val = $(this).is(':checked');
-              console.log('save autocomplete ' + val);
+              logTrace('save autocomplete ' + val);
               BDA_STORAGE.storeConfiguration("search_autocomplete", val);
-            })
+            });
           },
 
           createDefaultMethodsConfig: function(parentPanel) {
@@ -234,7 +234,7 @@ try {
           createMenuElement: function($element) {
             logTrace('createMenuElement');
             logTrace($element);
-            $element.addClass('menu').appendTo(BDA_MENU.$menuBar)
+            $element.addClass('menu').appendTo(BDA_MENU.$menuBar);
           },
         };
 
@@ -259,11 +259,8 @@ try {
       } catch (e) {
         console.log(e);
       }
-
     })(jQuery);
   });
-
-  console.log('bda.menu.js end');
 
 } catch (e) {
   console.log(e);

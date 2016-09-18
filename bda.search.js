@@ -11,6 +11,7 @@
     },
 
     build: function($searchField, options) {
+      console.time("bdaSearch");
       try {
         BDA_SEARCH.$searchField = $searchField;
         //wrap the field in twbs class for the bootstrap css to work
@@ -53,11 +54,12 @@
                 .map(function() {
                   return {
                     value: $(this).attr('href').replace(/\/dyn\/admin\/nucleus\/?/, '') //remove the beginning
-                  }
+                  };
                 }).get();
               return res;
             }
           }
+
         });
 
 
@@ -77,13 +79,13 @@
         BDA_SEARCH.$searchField.bind('typeahead:select', function(ev, suggestion) {
           window.location = '/dyn/admin/nucleus' + suggestion.value;
         });
-        console.log(JSON.stringify(options))
+        logTrace(JSON.stringify(options));
         if (options.align == 'right') {
-          console.log('setup right alignment');
+          logTrace('setup right alignment');
           var $menu = $wrapper.find('.tt-menu');
           //adjust the offset
           BDA_SEARCH.$searchField.bind('typeahead:render ', function(ev) {
-            console.log('open');
+            logTrace('open');
             var $field = $(this);
             //reset
             $menu.css('left','0');
@@ -101,14 +103,11 @@
           .css('display', 'inherit');
         BDA_SEARCH.$searchField.css('vertical-align', 'baseline');
 
-
+        console.timeEnd("bdaSearch");
       } catch (e) {
         console.error(e);
       }
     },
-
-
-
   };
   // Reference to BDA
   // Jquery plugin creation

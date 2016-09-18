@@ -23,7 +23,7 @@ BDA_COMPONENT = {
         BDA_COMPONENT.extractValueFromPropertyPage(data, callback);
       },
       error: errCallback
-    })
+    });
   },
   getProperty: function(domain, component, property, callback, errCallback) {
     console.log('getProperty {0} {1}'.format(component, property));
@@ -38,7 +38,7 @@ BDA_COMPONENT = {
         BDA_COMPONENT.extractValueFromPropertyPage(result, callback, errCallback);
       },
       error: errCallback
-    })
+    });
   },
 
   call: function(domain, component, method, callback, errCallback) {
@@ -57,11 +57,11 @@ BDA_COMPONENT = {
         BDA_COMPONENT.extractMethodCallReturnValue(data, callback, errCallback);
       },
       error: errCallback
-    })
+    });
   },
 
   extractValueFromPropertyPage: function(result, callback) {
-    var newvalue = $('<div></div>').html(result).find('h3:contains("Value")').next().text()
+    var newvalue = $('<div></div>').html(result).find('h3:contains("Value")').next().text();
     console.log(newvalue);
     callback(newvalue);
   },
@@ -92,4 +92,4 @@ BDA_COMPONENT = {
     }
 
   }
-}
+};

@@ -3,10 +3,12 @@
   var BDA_ACTOR = {
     build : function()
     {
+      console.time("bdaActor");
       BDA_ACTOR.isActorChainPage = BDA_ACTOR.isActorChainPageFct();
 
       if (BDA_ACTOR.isActorChainPage)
           BDA_ACTOR.createActorCaller();
+      console.timeEnd("bdaActor");
     },
 
     isActorChainPageFct : function()
@@ -53,7 +55,7 @@
           inputsHTML += inputs[input] + " <textarea name='" + inputs[input] + "'></textarea><br />";
       }
       var url = window.location.origin + '/rest/model' + componentPathName + actorChainIdValue;
-      console.log(url);
+      logTrace(url);
       var actorChainCallHtml = "<div id='actorChainCall' border>"
           + "<h2>Call actor</h2>"
           + "<a href='javascript:void(0)' id='copyChainUrl'>Copy URL to clipboard</a>";

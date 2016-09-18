@@ -41,9 +41,11 @@
 
     build : function()
     {
+      console.time("bdaPipeline");
       BDA_PIPELINE.isPipelineManagerPage = BDA_PIPELINE.isPipelineManagerPageFct();
       if(BDA_PIPELINE.isPipelineManagerPage)
         BDA_PIPELINE.setupPipelineManagerPage();
+      console.timeEnd("bdaPipeline");
     },
 
     isPipelineManagerPageFct : function()
@@ -135,13 +137,13 @@
 
       $('#schemeOrientation').unbind( "click" );
       $('#schemeOrientation').click(function(){
-        console.log("Swith orientation, current : " + BDA_PIPELINE.options.layout.hierarchical.direction);
+        logTrace("Swith orientation, current : " + BDA_PIPELINE.options.layout.hierarchical.direction);
         BDA_PIPELINE.network.destroy();
         if(BDA_PIPELINE.options.layout.hierarchical.direction === "LR")
             BDA_PIPELINE.options.layout.hierarchical.direction = "UD";
         else
             BDA_PIPELINE.options.layout.hierarchical.direction = "LR";
-        console.log("Swith orientation, new : " + BDA_PIPELINE.options.layout.hierarchical.direction);
+        logTrace("Swith orientation, new : " + BDA_PIPELINE.options.layout.hierarchical.direction);
         BDA_PIPELINE.drawGraph(container, data);
       });
     },
@@ -153,16 +155,16 @@
         // Make node clickable
         BDA_PIPELINE.network.on("click", function (params) {
           console.log("click on the network");
-          console.log(params);
+          logTrace(params);
           var id = params.nodes[0];
           if (id !== undefined)
           {
-            console.log(data.nodes.get(id).pipelineLinkPath);
+            logTrace(data.nodes.get(id).pipelineLinkPath);
             var url = "/dyn/admin/nucleus/" + data.nodes.get(id).pipelineLinkPath;
             window.open(url, '_blank');
           }
           else
-            console.log("Not clicked on a node");
+            logTrace("Not clicked on a node");
         });
     },
 
@@ -173,7 +175,7 @@
       var edges = new vis.DataSet();
       $chainDef.find('pipelinelink').each(function(pipelinelinkIndex, pipelinelinkElement){
           var pipelineLinkName = $(pipelinelinkElement).attr('name');
-          console.log("link : "  + pipelineLinkName);
+          logTrace("link : "  + pipelineLinkName);
           var processor = $(pipelinelinkElement).find('processor');
           var pipelineLinkPath = $(processor).attr('jndi');
           if(pipelineLinkPath === undefined)
@@ -191,7 +193,7 @@
 
         });
 
-      console.log({"edges" : edges, "nodes" : nodes});
+      logTrace({"edges" : edges, "nodes" : nodes});
       return {"edges" : edges, "nodes" : nodes};
     },
 
@@ -214,8 +216,7 @@
   // Jquery plugin creation
   $.fn.bdaPipeline = function(pBDA)
    {
-    console.log('Init plugin {0}'.format('bdaRepository'));
-    //settings = $.extend({}, defaults, options);
+    console.log('Init plugin {0}'.format('bdaPipeline'));
     BDA = pBDA;
     BDA_PIPELINE.build();
     return this;
