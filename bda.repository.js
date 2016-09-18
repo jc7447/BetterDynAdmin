@@ -1704,7 +1704,7 @@
     },
 
     toggleCacheLines: function() {
-      $tr = $(this);
+      var $tr = $(this);
       $tr.toggleClass('collapsed')
         .toggleClass('expanded');
       $tr.next().toggle();
