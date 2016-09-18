@@ -11,7 +11,6 @@ Installation
  * Install Grease Monkey extension : https://addons.mozilla.org/fr/firefox/addon/greasemonkey/
  * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
  * Accept installation 
- * Copy ${DYNAMO_ROOT}/home/doc/findclass.jhtml to ${DYNAMO_ROOT}/DAS/admin/atg/dynamo/admin/en/
  * Enjoy :)
  
 If you're not happy with BDA behaviour, you can simply disable it by clicking on the monkey head of Greasemonkey.
@@ -20,12 +19,24 @@ If you're not happy with BDA behaviour, you can simply disable it by clicking on
 
 * Install Tampermonkey extension : https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
 * Go to this url : https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
-* Copy ${DYNAMO_ROOT}/home/doc/findclass.jhtml to ${DYNAMO_ROOT}/DAS/admin/atg/dynamo/admin/en/
 * Accept installation 
 * Enjoy :)
 
 Change logs
 ------
+
+### 2.0
+
+BDA 2.0 is finally out ! It comes with a lot of new features and also a huge technical refactor.
+
+* [#72](../../issues/72) Introducing DASH : the dyn admin shell (thanks to [@troussej](https://github.com/troussej))
+* [#48](../../issues/48) Result table are editable in repositories pages (thanks to  [@onewingedfallen59](https://github.com/onewingedfallen59))
+* [#92](../../issues/92) Repository definition can be displayed as tab (thanks to [@troussej](https://github.com/troussej))
+* [#96](../../issues/89) New tabs for saved queries and properties in repository pages
+* [#42](../../issues/42) Cache stat table has been improved to be more readable (thanks to  [@troussej](https://github.com/troussej))
+* [#93](../../issues/93) New timeline mode for the sheduler page (thanks to [@troussej](https://github.com/troussej))
+
+Check the [2.0 milestone](https://github.com/jc7447/BetterDynAdmin/milestone/10) of more details
 
 ### 1.17
 * [#77](../../issues/77) New hashtags system for component in the toolbar. Component can now be filter by tags. (thanks to [@troussej](https://github.com/troussej))
