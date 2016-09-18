@@ -73,21 +73,56 @@
 // ==/UserScript==
 
 // Insert CSS before domready event to speed the page rendering and avoid blink effect
-insertCss("cmCSS");
-insertCss("hlCSS");
-insertCss("hljsThemeCSS");
-insertCss("tablesorterCSS");
-insertCss("fontAwsomeCSS");
-insertCss("select2CSS");
-insertCss("select2BootCSS");
-insertCss("bootstrapCSS");
-insertCss("typeahead-bootstrapCSS");
-insertCss("bdaCSS");
-insertCss("visCSS");
-
+var is_chrome = window.chrome;
+// For FF, insert CSS as <link> tag
+if (!is_chrome) {
+    insertCss("cmCSS");
+    insertCss("hlCSS");
+    insertCss("hljsThemeCSS");
+    insertCss("tablesorterCSS");
+    insertCss("fontAwsomeCSS");
+    insertCss("select2CSS");
+    insertCss("select2BootCSS");
+    insertCss("bootstrapCSS");
+    insertCss("typeahead-bootstrapCSS");
+    insertCss("bdaCSS");
+    insertCss("visCSS");
+}
+// For Chrome inject <style> tag : this better because of the implemention of GM_getResourceURL in Tampermonkey (base64 transformation)
+else {
+    injectCss();
+}
 function insertCss(resourceName) {
+  console.log(GM_getResourceURL(resourceName));
   $("<link />").attr("href", GM_getResourceURL(resourceName)).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
 }
+
+function injectCss()
+{
+    var cmCSS = GM_getResourceText("cmCSS");
+    GM_addStyle(cmCSS);
+    var hlCSS = GM_getResourceText("hlCSS");
+    GM_addStyle(hlCSS);
+    var hljsThemeCSS = GM_getResourceText("hljsThemeCSS");
+    GM_addStyle(hljsThemeCSS);
+    var tablesorterCSS = GM_getResourceText("tablesorterCSS");
+    GM_addStyle(tablesorterCSS);
+    var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
+    GM_addStyle(fontAwsomeCSS);
+    var select2CSS = GM_getResourceText("select2CSS");
+    GM_addStyle(select2CSS);
+    var select2BootCSS = GM_getResourceText("select2BootCSS");
+    GM_addStyle(select2BootCSS);
+    var bootstrapCSS = GM_getResourceText("bootstrapCSS");
+    GM_addStyle(bootstrapCSS);
+    var typeaheadbootstrapCSS = GM_getResourceText("typeahead-bootstrapCSS");
+    GM_addStyle(typeaheadbootstrapCSS);
+    var bdaCSS = GM_getResourceText("bdaCSS");
+    GM_addStyle(bdaCSS);
+    var visCSS = GM_getResourceText("visCSS");
+    GM_addStyle(visCSS);
+}
+
 jQuery(document).ready(function() {
   (function($) {
     var BDA = {
