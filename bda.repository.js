@@ -1,6 +1,5 @@
 (function($) {
-  console.log("bda.repository.js started");
-  //  "use strict";
+  "use strict";
   var BDA_REPOSITORY = {
     MAP_SEPARATOR: "=",
     LIST_SEPARATOR: ",",
@@ -39,6 +38,7 @@
     CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
 
     build: function() {
+      console.time("bdaRepository");
       BDA_REPOSITORY.isRepositoryPage = BDA_REPOSITORY.isRepositoryPageFct();
       BDA_REPOSITORY.hasErrors = BDA_REPOSITORY.hasErrorsFct();
       BDA_REPOSITORY.hasResults = BDA_REPOSITORY.hasResultsFct(BDA_REPOSITORY.hasErrors);
@@ -46,6 +46,7 @@
       // Setup repository page
       if (BDA_REPOSITORY.isRepositoryPage)
         BDA_REPOSITORY.setupRepositoryPage();
+      console.timeEnd("bdaRepository");
     },
 
     isRepositoryPageFct: function() {
@@ -54,7 +55,6 @@
 
     setupRepositoryPage: function() {
       // Move RQL editor to the top of the page
-      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>" + " <optgroup label='Empty queries'>" + "<option value='print-item'>print-item</option>" + "<option value='query-items'>query-items</option>" + "<option value='remove-item'>remove-item</option>" + "<option value='add-item'>add-item</option>" + "<option value='update-item'>update-item</option>" + "</optgroup>" + " <optgroup label='Predefined queries'>" + "<option value='all'>query-items ALL</option>" + "<option value='last_10'>query-items last 10</option>" + "</optgroup>" + "</select>";
 
       $(BDA_REPOSITORY.descriptorTableSelector).attr("id", "descriptorTable");
 
@@ -70,17 +70,33 @@
       var $children = $("#RQLForm").children();
       $("#RQLForm").empty().append($children);
       $("textarea[name=xmltext]").attr("id", "xmltext");
-      $("<div id='RQLToolbar'></div>").insertBefore("#RQLEditor textarea");
 
-      $("#RQLToolbar").append("<div> Action : " + actionSelect + " <span id='editor'>" + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>" + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>" + "</span>" + BDA_REPOSITORY.getsubmitButton() + "</div>");
+      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>"
+      + " <optgroup label='Empty queries'>" + "<option value='print-item'>print-item</option>"
+      + "<option value='query-items'>query-items</option>"
+      + "<option value='remove-item'>remove-item</option>"
+      + "<option value='add-item'>add-item</option>"
+      + "<option value='update-item'>update-item</option>"
+      + "</optgroup>"
+      + " <optgroup label='Predefined queries'>"
+      + "<option value='all'>query-items ALL</option>"
+      + "<option value='last_10'>query-items last 10</option>"
+      + "</optgroup>"
+      + "</select>";
 
+      $("<div id='RQLToolbar'></div>").append("<div> Action : "
+      + actionSelect
+      + " <span id='editor'>"
+      + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
+      + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >"
+      + BDA_REPOSITORY.getDescriptorOptions()
+      + "</select></span>"
+      + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>" + "</span>"
+      + BDA_REPOSITORY.getsubmitButton()
+      + "</div>")
+      .insertBefore("#RQLEditor textarea")
+      .after("<div id='RQLText'></div>");
 
-      $("#RQLAction").select2({
-        width: "style",
-        minimumResultsForSearch: -1
-      });
-
-      $("#RQLToolbar").after("<div id='RQLText'></div>");
       $("#xmltext").appendTo("#RQLText");
       $("#RQLText").after("<div id='tabs'>"
                         + "<ul id='navbar'>"
@@ -116,34 +132,10 @@
 
 
       BDA_REPOSITORY.showQueryList();
-      BDA_REPOSITORY.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
-        lineNumbers: false
-      });
       BDA_REPOSITORY.setupItemTreeForm();
       BDA_REPOSITORY.setupItemDescriptorTable();
       BDA_REPOSITORY.setupPropertiesTables();
 
-      $(".itemDescriptor").select2({
-        placeholder: "Select a descriptor",
-        allowClear: false,
-        width: "element",
-        matcher: function(params, data) {
-          // If there are no search terms, return all of the data
-          if ($.trim(params) === '') {
-            return data;
-          }
-          data = data.toUpperCase();
-          params = params.toUpperCase();
-          // `params.term` should be the term that is used for searching
-          // `data.text` is the text that is displayed for the data object
-          if (data.indexOf(params) != -1)
-            return true;
-          return false;
-        }
-      });
-      $("#itemDescriptor").on("select2-selecting", function(e) {
-        BDA_REPOSITORY.showItemPropertyList(e.val);
-      });
       var defaultDescriptor = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath(getCurrentComponentPath())];
       if (defaultDescriptor !== undefined)
         BDA_REPOSITORY.showItemPropertyList(defaultDescriptor);
@@ -228,8 +220,8 @@
         BDA_REPOSITORY.toggleRepositoryView();
       });
 
-//setup cache section before hidding it
-  BDA_REPOSITORY.setupRepositoryCacheSection();
+      //setup cache section before hidding it
+      BDA_REPOSITORY.setupRepositoryCacheSection();
 
       // Auto hide Cache usage
       $(BDA_REPOSITORY.cacheUsageSelector).append(cacheUsage);
@@ -260,8 +252,6 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
-
-
       $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
         var $target = $(item.target).parent();
         $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
@@ -286,7 +276,7 @@
               );
               return ;
             }
-            console.log(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
+            logTrace(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
             var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]></set-property>\n</update-item>';
             if (confirm('You are about to execute this query : \n' + query)) {
               jQuery.post(document.location.href, 'xmltext=' + query, function() {
@@ -305,6 +295,41 @@
             }
           });
         });
+
+        // Init code mirror
+        BDA_REPOSITORY.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
+          lineNumbers: false
+        });
+
+        // Init select2 plugin
+        $("#RQLAction").select2({
+          width: "style",
+          minimumResultsForSearch: -1
+        });
+
+        $(".itemDescriptor").select2({
+          placeholder: "Select a descriptor",
+          allowClear: false,
+          width: "element",
+          matcher: function(params, data) {
+            // If there are no search terms, return all of the data
+            if ($.trim(params) === '') {
+              return data;
+            }
+            data = data.toUpperCase();
+            params = params.toUpperCase();
+            // `params.term` should be the term that is used for searching
+            // `data.text` is the text that is displayed for the data object
+            if (data.indexOf(params) != -1)
+              return true;
+            return false;
+          }
+        });
+
+        $("#itemDescriptor").on("select2-selecting", function(e) {
+          BDA_REPOSITORY.showItemPropertyList(e.val);
+        });
+
       },
 
     addToQueryEditor: function(query) {
@@ -374,8 +399,6 @@
       $.get(url, function(data) {
         var $pTable = $(data).find("a[name='showProperties']").next();
         $pTable.find('th:nth-child(2), td:nth-child(2),th:nth-child(4), td:nth-child(4),th:nth-child(5), td:nth-child(5),th:nth-child(6), td:nth-child(6)').remove();
-        // $pTable.find('tr > td:first-child').prepend('<input type="button" class="itemPropertyBtn" value="set-prop"></input>');
-        //console.log($pTable.html());
         $pTable.find("tr").each(function(index) {
           $tr = $(this);
             $tr.find("td").each(function(i) {
@@ -654,14 +677,12 @@
         var superType = $itemDesc.attr("super-type");
         while (superType !== undefined && isId === null) {
           var $parentDesc = $xmlDef.find("item-descriptor[name='" + superType + "']");
-          //console.log("Search in super type : " + $parentDesc.attr("name"));
           isId = BDA_REPOSITORY.isPropertyId(propertyName, $parentDesc);
           superType = $parentDesc.attr("super-type");
         }
         if (isId == "FOUND_NOT_ID")
           return null;
       }
-      //console.log("Property : " + propertyName + " of item " + itemDesc + " is ID : " + isId);
       return isId;
     },
 
@@ -735,7 +756,6 @@
             html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
       } else {
         html += "<td>&nbsp;</td>";
-        //console.log("propValue not found : " + curProp.name + ", descriptor : " + itemDesc);
       }
       return html;
     },
@@ -779,6 +799,7 @@
     },
 
     showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree) {
+      console.time("renderTab");
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
@@ -876,12 +897,11 @@
         $outputDiv.find("p.nbResults").append("<br><a href='javascript:void(0)' class='showFullTextLink'>Show full text</a>");
         $outputDiv.find(".showFullTextLink").click(function() {
           var dateStart = new Date().getTime();
-          console.log("Start showFullText");
           $(".copyField").each(function() {
             $(this).parent().html($(this).html());
           });
           var dateFullText = new Date();
-          console.log("time to show full text : " + (dateFullText.getTime() - dateStart) + "ms");
+          logTrace("time to show full text : " + (dateFullText.getTime() - dateStart) + "ms");
           $(this).hide();
         });
       }
@@ -900,14 +920,12 @@
       if (isItemTree)
         BDA_REPOSITORY.createSpeedbar();
 
-      var endRenderingTab = new Date();
-      var time = endRenderingTab.getTime() - startRenderingtab;
-      console.log("time to render tab : " + time + "ms");
+      console.timeEnd("renderTab");
       return log;
     },
 
     showRQLLog: function(log, error) {
-      console.log("Execution log : " + log);
+      logTrace("Execution log : " + log);
       if (log && log.length > 0) {
         $("<h3>Execution log</h3><div id='RQLLog'></div>").insertAfter("#RQLResults");
         var cleanLog = log.replace(/\n{2,}/g, '\n').replace(/------ /g, "").trim();
@@ -918,7 +936,7 @@
     },
 
     showRQLResults: function() {
-      console.log("Start showRQLResults");
+      logTrace("Start showRQLResults");
       // Add 'show raw xml' link
       var html = "<p>" + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>" + "</p>\n";
       html += "<p id='rawXml'></p>";
@@ -937,8 +955,8 @@
         $("#rawXmlLink").click(function() {
           BDA_REPOSITORY.toggleRawXml();
           var xmlSize = $("#rawXml pre").html().length;
-          console.log("raw XML size : " + xmlSize);
-          console.log("XML max size : " + BDA_REPOSITORY.xmlDefinitionMaxSize);
+          logTrace("raw XML size : " + xmlSize);
+          logTrace("XML max size : " + BDA_REPOSITORY.xmlDefinitionMaxSize);
           if (xmlSize < BDA_REPOSITORY.xmlDefinitionMaxSize) {
             $('#rawXml').each(function(i, block) {
               hljs.highlightBlock(block);
@@ -967,14 +985,14 @@
     showRqlErrors: function() {
       var error = "";
       if ($(BDA_REPOSITORY.errorsSelector1).length > 0) {
-        console.log("Case of error  : 1");
+        logTrace("Case of error  : 1");
         error = $(BDA_REPOSITORY.errorsSelector1).next().text();
         $(BDA_REPOSITORY.resultsSelector).next().remove();
         $(BDA_REPOSITORY.resultsSelector).remove();
         $(BDA_REPOSITORY.errorsSelector1).next().remove();
         $(BDA_REPOSITORY.errorsSelector1).remove();
       } else {
-        console.log("Case of error  : 2");
+        logTrace("Case of error  : 2");
         error = $(BDA_REPOSITORY.errorsSelector2).text();
       }
       error = BDA_REPOSITORY.purgeXml(error);
@@ -986,7 +1004,7 @@
     },
 
     propertiesDef: function(hljs) {
-      console.log("propertiesDef");
+      logTrace("propertiesDef");
       return {
         case_insensitive: true,
         contains: [{
@@ -1025,7 +1043,7 @@
         var maxItem = parseInt($("#itemTreeMax").val());
         var outputType = $("#itemTreeOutput").val();
         var printRepoAttr = $("#printRepositoryAttr").is(':checked');
-        console.log("max item : " + maxItem);
+        logTrace("max item : " + maxItem);
         BDA_REPOSITORY.getItemTree(id, descriptor, maxItem, outputType, printRepoAttr);
       });
 
@@ -1033,7 +1051,7 @@
 
     getSubItems: function(items, $xmlDef, maxItem, outputType, printRepoAttr) {
       var nbItem = BDA_REPOSITORY.itemTree.size;
-      console.log("maxItem : " + maxItem + ", nbItem : " + nbItem);
+      logTrace("maxItem : " + maxItem + ", nbItem : " + nbItem);
 
       // Ensure that getSubItems is not call more than maxItem times
       if (nbItem >= maxItem) {
@@ -1048,8 +1066,8 @@
           break;
         xmlText += "<print-item id='" + items[batchSize].id + "' item-descriptor='" + items[batchSize].desc + "' />\n";
       }
-      console.log(xmlText);
-      console.log("batch size : " + batchSize);
+      logTrace(xmlText);
+      logTrace("batch size : " + batchSize);
       // Only request if the batchSize contains something
       if (batchSize > 0) {
         $.ajax({
@@ -1078,14 +1096,12 @@
               var itemId = $itemXml.attr("id");
               if (BDA_REPOSITORY.itemTree.get(itemId) === undefined) {
                 var rawItemXml = $itemXml[0].outerHTML;
-                // console.log("Add item to item tree : " + rawItemXml + " with ID : " + itemId);
                 BDA_REPOSITORY.itemTree.set(itemId, rawItemXml);
                 var descriptor = $itemXml.attr("item-descriptor");
                 var $itemDesc = $xmlDef.find("item-descriptor[name=" + descriptor + "]");
                 var superType = $itemDesc.attr("super-type");
                 while (superType !== undefined) {
                   var $parentDesc = $xmlDef.find("item-descriptor[name=" + $itemDesc.attr("super-type") + "]");
-                  // console.log("Add super type : " + $parentDesc.attr("name"));
                   $itemDesc = $itemDesc.add($parentDesc);
                   superType = $parentDesc.attr("super-type");
                 }
@@ -1094,12 +1110,10 @@
                   .each(function(index, elm) {
                     var $elm = $(elm);
                     var subProperty = $elm.attr("name");
-                    //console.log(subProperty);
                     var subId = $itemXml.find("set-property[name=" + subProperty + "]").text();
                     if ($elm.attr("repository") === undefined && subId.length > 0) {
                       // avoid infinite recursion
                       if (BDA_REPOSITORY.itemTree.get(subId) === undefined) {
-                        //console.log({'id' : subId, 'desc' : $elm.attr("item-type")});
                         subItems.push({
                           'id': subId,
                           'desc': $elm.attr("item-type")
@@ -1113,7 +1127,6 @@
                   .each(function(index, elm) {
                     var $elm = $(elm);
                     var subProperty = $elm.attr("name");
-                    // console.log(subProperty);
                     var subId = $itemXml.find("set-property[name=" + subProperty + "]").text();
                     if ($elm.attr("repository") === undefined && subId.length > 0) {
                       var desc = $elm.attr("component-item-type");
@@ -1131,7 +1144,7 @@
               }
             });
 
-            console.log(subItems.length + " items to retrieved in next request. Limit reach : " + (BDA_REPOSITORY.nbItemReceived >= maxItem));
+            logTrace(subItems.length + " items to retrieved in next request. Limit reach : " + (BDA_REPOSITORY.nbItemReceived >= maxItem));
             if (subItems.length > 0 && BDA_REPOSITORY.nbItemReceived < maxItem)
               BDA_REPOSITORY.getSubItems(subItems, $xmlDef, maxItem, outputType, printRepoAttr);
             else
@@ -1139,7 +1152,7 @@
           },
         });
       } else
-        console.log("Request is empty, nothing to do.");
+          logTrace("Request is empty, nothing to do.");
     },
 
     getItemTree: function(id, descriptor, maxItem, outputType, printRepoAttr) {
@@ -1162,7 +1175,7 @@
           $("#itemTreeInfo").html("<p>Unable to parse XML definition of this repository !</p>");
           return;
         }
-        console.log("descriptor : " + $xmlDef.find("item-descriptor").length);
+        logTrace("descriptor : " + $xmlDef.find("item-descriptor").length);
         // get tree
         BDA_REPOSITORY.itemTree = new Map();
         BDA_REPOSITORY.nbItemReceived = 0;
@@ -1179,7 +1192,7 @@
       $("#itemTreeResult").empty();
       var res = "";
       if (outputType !== "HTMLtab") {
-        console.log("Render copy button");
+        logTrace("Render copy button");
         $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
         $('#itemTreeCopyButton').click(function() {
           copyToClipboard($('#itemTreeResult').text());
@@ -1312,7 +1325,7 @@
         .click(function() {
           var index = this.id.replace("deleteQuery", "");
           console.log("Delete query #" + index);
-          console.log(BDA_STORAGE.deleteRQLQuery);
+          logTrace(BDA_STORAGE.deleteRQLQuery);
           BDA_STORAGE.deleteRQLQuery(index);
           BDA_REPOSITORY.reloadQueryList();
         });
@@ -1338,7 +1351,7 @@
     printStoredQuery: function(name) {
       console.log("printStoredQuery : " + name);
       var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
-      console.log(rqlQueries);
+      logTrace(rqlQueries);
       if (rqlQueries) {
         for (var i = 0; i != rqlQueries.length; i++) {
           if (rqlQueries[i].name == name)
@@ -1518,7 +1531,7 @@
           })
           .appendTo($buttons);
 
-        BDA_REPOSITORY.setupCacheTableHeaderFixed($header, $cacheTable);
+        // BDA_REPOSITORY.setupCacheTableHeaderFixed($header, $cacheTable);
 
 
         //collapse all (after setup fixed header because we need full width)
@@ -1805,11 +1818,8 @@
     BDA_REPOSITORY.executeQueryItems(domain, itemDescriptor, query, repository,callback, errCallback);
   };
 
-
   $.fn.executeRql = function(domain, xmlText, repository, callback, errCallback) {
     BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
   };
 
-
-  console.log("bda.repository.js end");
 })(jQuery);

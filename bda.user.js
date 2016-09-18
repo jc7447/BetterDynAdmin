@@ -9,6 +9,7 @@
 // @supportURL   https://github.com/jc7447/BetterDynAdmin/issues
 // @description  Refreshing ATG Dyn Admin
 // @grant GM_getResourceText
+// @grant GM_getResourceURL
 // @grant GM_addStyle
 // @grant window.focus
 // @grant GM_setClipboard
@@ -17,8 +18,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 1.18
-// @resource bdaCSS bda.css?version=1.18
+// @version 2.0
+// @resource bdaCSS bda.css?version=2.0
 
 // @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -71,10 +72,24 @@
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
 
+// Insert CSS before domready event to speed the page rendering and avoid blink effect
+insertCss("cmCSS");
+insertCss("hlCSS");
+insertCss("hljsThemeCSS");
+insertCss("tablesorterCSS");
+insertCss("fontAwsomeCSS");
+insertCss("select2CSS");
+insertCss("select2BootCSS");
+insertCss("bootstrapCSS");
+insertCss("typeahead-bootstrapCSS");
+insertCss("bdaCSS");
+insertCss("visCSS");
+
+function insertCss(resourceName) {
+  $("<link />").attr("href", GM_getResourceURL(resourceName)).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+}
 jQuery(document).ready(function() {
   (function($) {
-    console.log('before BDA');
-
     var BDA = {
       componentBrowserPageSelector : "h1:contains('Component Browser')",
       logoSelector : "div#oracleATGbrand",
@@ -85,9 +100,8 @@ jQuery(document).ready(function() {
 
       init : function()
       {
-        var start = new Date().getTime();
+        console.time('bda');
         console.log("Start BDA script");
-        BDA.loadExternalCss();
         BDA.isOldDynamo = this.isOldDynamoFct();
         BDA.isComponentPage = this.isComponentPageFct();
 
@@ -154,12 +168,7 @@ jQuery(document).ready(function() {
         }
         BDA.bindEscapeKey();
         // Monitor execution time
-        var endTime = new Date();
-        var time = endTime.getTime() - start;
-        if (time > 1000)
-          console.log("BDA takes : " + (time / 1000) + "sec");
-        else
-          console.log("BDA takes : " + time + "ms");
+        console.timeEnd('bda');
       },
 
       bindEscapeKey : function()
@@ -197,7 +206,7 @@ jQuery(document).ready(function() {
 
 
       setupCopyClipboardButtons: function() {
-        console.log('setupCopyClipboardButtons');
+        logTrace('setupCopyClipboardButtons');
         var $componentBreadCrumb = null;
         if (BDA.isOldDynamo)
           $componentBreadCrumb = $("h1:eq(0)");
@@ -214,7 +223,7 @@ jQuery(document).ready(function() {
               .on('click', function() {
                 copyToClipboard(getCurrentComponentPath());
               })
-            )
+            );
           var $classLink = $componentBreadCrumb.next();
           $('<button></button', {
               class: 'bda-button bda-button-clipboard',
@@ -226,31 +235,31 @@ jQuery(document).ready(function() {
         }
       },
 
-      loadExternalCss : function(url)
+      loadCssAsLink : function()
       {
-        var cmCSS = GM_getResourceText("cmCSS");
-        GM_addStyle(cmCSS);
-        var hlCSS = GM_getResourceText("hlCSS");
-        GM_addStyle(hlCSS);
-        var hljsThemeCSS = GM_getResourceText("hljsThemeCSS");
-        GM_addStyle(hljsThemeCSS);
-        var tablesorterCSS = GM_getResourceText("tablesorterCSS");
-        GM_addStyle(tablesorterCSS);
-        var fontAwsomeCSS = GM_getResourceText("fontAwsomeCSS");
-        GM_addStyle(fontAwsomeCSS);
-        var select2CSS = GM_getResourceText("select2CSS");
-        GM_addStyle(select2CSS);
-        var select2BootCSS = GM_getResourceText("select2BootCSS");
-        GM_addStyle(select2BootCSS);
-        var bootstrapCSS = GM_getResourceText("bootstrapCSS");
-        GM_addStyle(bootstrapCSS);
-        var typeaheadbootstrapCSS = GM_getResourceText("typeahead-bootstrapCSS");
-        GM_addStyle(typeaheadbootstrapCSS);
-        var bdaCSS = GM_getResourceText("bdaCSS");
-        GM_addStyle(bdaCSS);
-        var visCSS = GM_getResourceText("visCSS");
-        GM_addStyle(visCSS);
+        console.time('loadLinkCSS');
+        $("<link />").attr("href", GM_getResourceURL("cmCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
 
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("hlCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("hljsThemeCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("tablesorterCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("fontAwsomeCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("select2CSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("select2BootCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("bootstrapCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("typeahead-bootstrapCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("bdaCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+
+        $("<link />").append("<link />").attr("href", GM_getResourceURL("visCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
+        console.timeEnd('loadLinkCSS');
       },
 
       //--- Page informations ------------------------------------------------------------------------
