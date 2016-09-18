@@ -1,0 +1,89 @@
+'<div class="twbs">'+
+'<div id="dashModal" class="modal fade" tabindex="-1" role="dialog" data-fullscreen="false">'+
+'<div id="dashModalDialog" class="modal-dialog modal-lg">'+
+'<div class="modal-content">'+
+'<div class="modal-header">'+
+'<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span >&times;</span></button>'+
+'<h4 class="modal-title">DASH - DynAdmin SHell</h4>'+
+'</div>'+
+'<div class="modal-body">'+
+'<div class="container-fluid">'+
+'<div id="dashInnerBody" class="row">'+
+'<div id="dashScreen" class="dashcol col-lg-12" >'+
+''+
+'<div id="" class="progress" style="display:none;" >'+
+'<div id="dashProgressBar" class="progress-bar  progress-bar-success" " role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="">'+
+'</div>'+
+'</div>'+
+'</div>'+
+'<div id="dashControl" class="tab-content dashcol col-lg-12">'+
+'<div role="tabpanel" class="tab-pane fade in active" id="dash-console-tab">'+
+'<form id="dashForm" class="">'+
+'<div class="form-group">'+
+'<div class="input-group">'+
+'<div class="input-group-addon"><span id="dash_dollar">$</span><i class="fa fa-spinner fa-spin" id="dash_spinner" style="display: none;"></i></div>'+
+'<input type="text" class="form-control dash-input main-input" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"/>'+
+'<span  class="input-group-btn"><button type="button" id="dashCleanInput" class="btn btn-default">&times;</button></span>'+
+'</div>'+
+'</div>'+
+'</form>'+
+'</div>'+
+'<div role="tabpanel" class="tab-pane fade" id="dash-editor-tab">'+
+'<form id="dashEditorForm" class="form-horizontal">'+
+'<div class="form-group top-row">'+
+'<div class="col-sm-3">'+
+'<select id="dashEditorScriptList" class="form-control">'+
+'</select>'+
+'</div>'+
+'<div class="col-sm-5">'+
+'<div class="btn-group" role="group" >'+
+'<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">'+
+'<i class="fa fa-folder-open" />&nbsp;'+
+'</i>'+
+'</button>'+
+'<button type="button" id="dashDeleteScript" class="btn btn-primary" title="delete">'+
+'<i class="fa fa-trash-o" />&nbsp;'+
+'</i>'+
+'</button>'+
+'<button type="button" id="dashRunEditor" class="btn btn-primary" title="run">'+
+'<i class="fa fa-play" />&nbsp;'+
+'</i>'+
+'</button>'+
+'<button type="button" id="dashSaveEditor" class="btn btn-primary" title="save">'+
+'<i class="fa fa-floppy-o" />&nbsp;'+
+'</i>'+
+'</button>'+
+'<button type="button" id="dashClearEditor" class="btn btn-primary" title="clear">'+
+'<i class="fa fa-eraser" />&nbsp;'+
+'</i>'+
+'</button>'+
+'</div>'+
+'</div>'+
+'<label for="dashSaveScriptName" class="col-sm-1 control-label">Name</label>'+
+'<div class="col-sm-3">'+
+'<input type="text" class="form-control dash-input main-input" id="dashSaveScriptName" placeholder="Name" name="save" autocomplete="off"></input>'+
+'</div>'+
+'</div>'+
+'<div class="form-group middle-row">'+
+'<div class="col-sm-12">'+
+'<textarea id="dashEditor" class="form-control dash-input main-input" rows="12  " placeholder=""></textarea>'+
+'</div>'+
+'</div>'+
+'</form>'+
+'</div>'+
+'</div>'+
+'</div>'+
+'</div>'+
+'</div>'+
+'<div id="dashFooter" class="modal-footer">'+
+'<ul class="nav nav-pills">'+
+'<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab" data-fs-mode="false">Console</a></li>'+
+'<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab"  data-fs-mode="true">Editor</a></li>'+
+'<li role="presentation" class="pull-right footer-right" ><a id="dashClearScreen" class="btn-default"   role="tab" aria-controls="clearScreen" >Clear Screen <i class="fa fa-ban" ></i></a></li>'+
+'</ul>'+
+'<div id="dashTips"></div>'+
+'</div>'+
+'</div>'+
+'</div>'+
+'</div>'+
+'</div>',
