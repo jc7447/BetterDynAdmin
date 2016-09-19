@@ -5,4 +5,5 @@
   <li>Repository definition can be displayed as tab (thanks to @troussej)</li>
   <li>The cache statistics table as been be rework to be way more readable (thanks to @troussej)</li>
   <li>New timeline graph in the scheduler page (thanks to @troussej)</li>
+  <li>Autocomplete search of nucleus components (thanks to @troussej)</li>
 </ul>
