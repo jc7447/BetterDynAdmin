@@ -35,6 +35,7 @@ BDA 2.0 is finally out ! It comes with a lot of new features and also a huge tec
 * [#96](../../issues/89) New tabs for saved queries and properties in repository pages
 * [#42](../../issues/42) Cache stat table has been improved to be more readable (thanks to  [@troussej](https://github.com/troussej))
 * [#93](../../issues/93) New timeline mode for the sheduler page (thanks to [@troussej](https://github.com/troussej))
+* [#86](../../issues/86) Autocomplete search of nucleus components (thanks to [@troussej](https://github.com/troussej))
 
 Check the [2.0 milestone](https://github.com/jc7447/BetterDynAdmin/milestone/10) of more details
 
