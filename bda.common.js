@@ -335,6 +335,17 @@ try {
     return purgeSlashes(res);
   };
 
+  this.traceTime = function(name) {
+    if (isLoggingTrace) {
+      console.time(name)
+    }
+  }
+  this.traceTimeEnd = function(name) {
+    if (isLoggingTrace) {
+      console.timeEnd(name)
+    }
+  }
+
   $.fn.adjustToFit = function($parent, targetTotalSize, minSize) {
     var curSize = $parent.fullHeight();
     var delta = targetTotalSize - curSize;
@@ -373,14 +384,14 @@ try {
     $(this).find('tr').each(function(idx, elem) {
       $tr = $(elem);
       line = [];
-       $tr.children('th').each(function() {
+      $tr.children('th').each(function() {
         line.push($(this).text());
       });
 
       $tr.children('td').each(function() {
         line.push($(this).text());
       });
-      if(line.length >0){
+      if (line.length > 0) {
         data.push(line);
       }
 
@@ -395,6 +406,8 @@ try {
 
     return csv;
   };
+
+
 
   /*
 
@@ -448,6 +461,8 @@ Johann Burkard
       }
     }).end();
   };
+
+
 
 } catch (e) {
   console.log(e);

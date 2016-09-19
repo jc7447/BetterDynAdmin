@@ -996,14 +996,33 @@ button.cache{
 
 .fixed_headers {
   table-layout: fixed;
+  width: 100%;
 }
-.fixed_headers thead tr {
+
+.fixed_headers thead{
+  width: 100%;
+}
+
+
+.fixed_headers thead th {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px;
+  overflow:hidden;
+}
+
+.fixed_headers th, .fixed_headers td {
+  width: 4%;
+}
+
+
+/*.fixed_headers .sticky-top thead {
   display: block;
 }
-.fixed_headers tbody {
+.fixed_headers .sticky-top tbody {
   display: block;
 
-}
+}*/
 
 .sticky-top{
   position: fixed;

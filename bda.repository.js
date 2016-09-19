@@ -70,41 +70,14 @@
       $("#RQLForm").empty().append($children);
       $("textarea[name=xmltext]").attr("id", "xmltext");
 
-      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>"
-      + " <optgroup label='Empty queries'>" + "<option value='print-item'>print-item</option>"
-      + "<option value='query-items'>query-items</option>"
-      + "<option value='remove-item'>remove-item</option>"
-      + "<option value='add-item'>add-item</option>"
-      + "<option value='update-item'>update-item</option>"
-      + "</optgroup>"
-      + " <optgroup label='Predefined queries'>"
-      + "<option value='all'>query-items ALL</option>"
-      + "<option value='last_10'>query-items last 10</option>"
-      + "</optgroup>"
-      + "</select>";
+      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>" + " <optgroup label='Empty queries'>" + "<option value='print-item'>print-item</option>" + "<option value='query-items'>query-items</option>" + "<option value='remove-item'>remove-item</option>" + "<option value='add-item'>add-item</option>" + "<option value='update-item'>update-item</option>" + "</optgroup>" + " <optgroup label='Predefined queries'>" + "<option value='all'>query-items ALL</option>" + "<option value='last_10'>query-items last 10</option>" + "</optgroup>" + "</select>";
 
-      $("<div id='RQLToolbar'></div>").append("<div> Action : "
-      + actionSelect
-      + " <span id='editor'>"
-      + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>"
-      + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >"
-      + BDA_REPOSITORY.getDescriptorOptions()
-      + "</select></span>"
-      + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>" + "</span>"
-      + BDA_REPOSITORY.getsubmitButton()
-      + "</div>")
-      .insertBefore("#RQLEditor textarea")
-      .after("<div id='RQLText'></div>");
+      $("<div id='RQLToolbar'></div>").append("<div> Action : " + actionSelect + " <span id='editor'>" + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>" + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>" + "</span>" + BDA_REPOSITORY.getsubmitButton() + "</div>")
+        .insertBefore("#RQLEditor textarea")
+        .after("<div id='RQLText'></div>");
 
       $("#xmltext").appendTo("#RQLText");
-      $("#RQLText").after("<div id='tabs'>"
-                        + "<ul id='navbar'>"
-                        + "<li id='propertiesTab' class='selected'>Properties</li>"
-                        +"<li id='queriesTab'>Stored Queries</li>"
-                        +"</ul>"
-                        + "<div id='storedQueries'><i>No stored query for this repository</i></div>"
-                        + "<div id='descProperties'><i>Select a descriptor to see his properties</i></i></div>"
-                        +"</div>");
+      $("#RQLText").after("<div id='tabs'>" + "<ul id='navbar'>" + "<li id='propertiesTab' class='selected'>Properties</li>" + "<li id='queriesTab'>Stored Queries</li>" + "</ul>" + "<div id='storedQueries'><i>No stored query for this repository</i></div>" + "<div id='descProperties'><i>Select a descriptor to see his properties</i></i></div>" + "</div>");
 
       $("#RQLForm input[type=submit]").remove();
 
@@ -120,14 +93,7 @@
         checkboxSplit += " checked ";
       checkboxSplit += "/> don't split.";
 
-      $("#tabs").after("<div id='RQLSave'>"
-         + "<div style='display:inline-block;width:200px'><button id='clearQuery' type='button'>Clear <i class='fa fa-ban fa-x'></i></button></div>"
-         + "<div style='display:inline-block;width:530px'>Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. "
-         + checkboxSplit + "</div>"
-         + "<button type='submit' id='RQLSubmit'>Enter <i class='fa fa-play fa-x'></i></button>"
-         + "</div>"
-         + "<div><input placeholder='Name this query' type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save <i class='fa fa-save fa-x'></i></button></div>"
-         );
+      $("#tabs").after("<div id='RQLSave'>" + "<div style='display:inline-block;width:200px'><button id='clearQuery' type='button'>Clear <i class='fa fa-ban fa-x'></i></button></div>" + "<div style='display:inline-block;width:530px'>Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. " + checkboxSplit + "</div>" + "<button type='submit' id='RQLSubmit'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>" + "<div><input placeholder='Name this query' type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save <i class='fa fa-save fa-x'></i></button></div>");
 
 
       BDA_REPOSITORY.showQueryList();
@@ -139,9 +105,9 @@
       if (defaultDescriptor !== undefined)
         BDA_REPOSITORY.showItemPropertyList(defaultDescriptor);
 
-        // Default tab position
-        $("#descProperties").css("display", "inline-block");
-        $("#storedQueries").css("display", "none");
+      // Default tab position
+      $("#descProperties").css("display", "inline-block");
+      $("#storedQueries").css("display", "none");
 
       $("#queriesTab").click(function() {
         console.log("show stored queries");
@@ -256,80 +222,79 @@
         $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
         var $input = $($target.children()[0]);
         $input.focus().blur(function(item) {
-            var $target = $(item.target);
-            var $table = $target.parents(".dataTable");
-            var column = $target.parent().parent().children().index($target.parent());
-            var line = $table.find("tbody > tr").index($target.parent().parent());
-            var columnId = $table.find(".id").index();
-            var columnDescriptor = $table.find(".descriptor").index();
-            var itemId = jQuery($table.find("tbody > tr:eq(" + columnId + ")").find("> *")[column]).text();
-            var descriptor = jQuery($table.find("tbody > tr:eq(" + columnDescriptor + ")").find("> *")[column]).text();
-            var propertyName = jQuery($table.find("tbody > tr > *:first-child")[line]).text();
-            if (propertyName == "id" || propertyName == "descriptor") {
-              $input.parent().html($input.val());
+          var $target = $(item.target);
+          var $table = $target.parents(".dataTable");
+          var column = $target.parent().parent().children().index($target.parent());
+          var line = $table.find("tbody > tr").index($target.parent().parent());
+          var columnId = $table.find(".id").index();
+          var columnDescriptor = $table.find(".descriptor").index();
+          var itemId = jQuery($table.find("tbody > tr:eq(" + columnId + ")").find("> *")[column]).text();
+          var descriptor = jQuery($table.find("tbody > tr:eq(" + columnDescriptor + ")").find("> *")[column]).text();
+          var propertyName = jQuery($table.find("tbody > tr > *:first-child")[line]).text();
+          if (propertyName == "id" || propertyName == "descriptor") {
+            $input.parent().html($input.val());
+            $.notify(
+              "You can't change value of id or descriptor this way.", {
+                position: "top center",
+                className: "error"
+              }
+            );
+            return;
+          }
+          logTrace(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
+          var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]></set-property>\n</update-item>';
+          if (confirm('You are about to execute this query : \n' + query)) {
+            jQuery.post(document.location.href, 'xmltext=' + query, function() {
               $.notify(
-                "You can't change value of id or descriptor this way.", {
+                "Value succesfully changed", {
                   position: "top center",
-                  className: "error"
+                  className: "success"
                 }
               );
-              return ;
-            }
-            logTrace(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
-            var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]></set-property>\n</update-item>';
-            if (confirm('You are about to execute this query : \n' + query)) {
-              jQuery.post(document.location.href, 'xmltext=' + query, function() {
-                $.notify(
-                  "Value succesfully changed", {
-                    position: "top center",
-                    className: "success"
-                  }
-                );
-              });
-              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' +  $input.val());
-            }
-            else {
-              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.attr("value")); // reset inital value
+            });
+            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
+          } else {
+            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.attr("value")); // reset inital value
 
-            }
-          });
-        });
-
-        // Init code mirror
-        BDA_REPOSITORY.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
-          lineNumbers: false
-        });
-
-        // Init select2 plugin
-        $("#RQLAction").select2({
-          width: "style",
-          minimumResultsForSearch: -1
-        });
-
-        $(".itemDescriptor").select2({
-          placeholder: "Select a descriptor",
-          allowClear: false,
-          width: "element",
-          matcher: function(params, data) {
-            // If there are no search terms, return all of the data
-            if ($.trim(params) === '') {
-              return data;
-            }
-            data = data.toUpperCase();
-            params = params.toUpperCase();
-            // `params.term` should be the term that is used for searching
-            // `data.text` is the text that is displayed for the data object
-            if (data.indexOf(params) != -1)
-              return true;
-            return false;
           }
         });
+      });
 
-        $("#itemDescriptor").on("select2-selecting", function(e) {
-          BDA_REPOSITORY.showItemPropertyList(e.val);
-        });
+      // Init code mirror
+      BDA_REPOSITORY.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
+        lineNumbers: false
+      });
 
-      },
+      // Init select2 plugin
+      $("#RQLAction").select2({
+        width: "style",
+        minimumResultsForSearch: -1
+      });
+
+      $(".itemDescriptor").select2({
+        placeholder: "Select a descriptor",
+        allowClear: false,
+        width: "element",
+        matcher: function(params, data) {
+          // If there are no search terms, return all of the data
+          if ($.trim(params) === '') {
+            return data;
+          }
+          data = data.toUpperCase();
+          params = params.toUpperCase();
+          // `params.term` should be the term that is used for searching
+          // `data.text` is the text that is displayed for the data object
+          if (data.indexOf(params) != -1)
+            return true;
+          return false;
+        }
+      });
+
+      $("#itemDescriptor").on("select2-selecting", function(e) {
+        BDA_REPOSITORY.showItemPropertyList(e.val);
+      });
+
+    },
 
     addToQueryEditor: function(query) {
       var editor = BDA_REPOSITORY.queryEditor;
@@ -403,14 +368,12 @@
           var $tr = $(this);
           $tr.find("td").each(function(i) {
             var $td = $(this);
-            if (i === 0)
-            {
+            if (i === 0) {
               var content = $td.html();
               var req = /[\w\s']+\((\w+)\)$/i;
               content = content.replace(req, "<a class='itemPropertyBtn' href='javascript:void(0)'> $1 </a>");
               $td.html(content);
-            }
-            else if (i === 1)
+            } else if (i === 1)
               $td.text($td.text().replace("Class", ""));
 
           });
@@ -420,8 +383,8 @@
           .empty()
           .append($pTable);
 
-        $('.itemPropertyBtn').click(function(item){
-              BDA_REPOSITORY.addToQueryEditor('<set-property name="' + $(this).text().trim() + '"><![CDATA[]]></set-property>\n');
+        $('.itemPropertyBtn').click(function(item) {
+          BDA_REPOSITORY.addToQueryEditor('<set-property name="' + $(this).text().trim() + '"><![CDATA[]]></set-property>\n');
         });
       });
     },
@@ -750,11 +713,10 @@
               html += propValue[b];
           }
           html += "</td>";
-        }
-        else if (curProp.name == "descriptor" || curProp.rdonly == "true" || curProp.derived == "true") // descriptor, Read only and derived porperty are not editable
+        } else if (curProp.name == "descriptor" || curProp.rdonly == "true" || curProp.derived == "true") // descriptor, Read only and derived porperty are not editable
           html += '<td>' + propValue + "</td>";
         else
-            html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
+          html += '<td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
       } else {
         html += "<td>&nbsp;</td>";
       }
@@ -1151,7 +1113,7 @@
           },
         });
       } else
-          logTrace("Request is empty, nothing to do.");
+        logTrace("Request is empty, nothing to do.");
     },
 
     getItemTree: function(id, descriptor, maxItem, outputType, printRepoAttr) {
@@ -1451,7 +1413,7 @@
     },
 
     executeQueryItems: function(domain, itemDescriptor, query, repository, callback, errCallback) {
-      var xmlText = BDA_REPOSITORY.templates.queryItems.format(itemDescriptor,query);
+      var xmlText = BDA_REPOSITORY.templates.queryItems.format(itemDescriptor, query);
       BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
     },
 
@@ -1527,7 +1489,7 @@
           })
           .appendTo($buttons);
 
-        // BDA_REPOSITORY.setupCacheTableHeaderFixed($header, $cacheTable);
+        BDA_REPOSITORY.setupCacheTableHeaderFixed($header, $cacheTable);
 
 
         //collapse all (after setup fixed header because we need full width)
@@ -1553,7 +1515,7 @@
         //expand the cell width
         var $td = $tr.find('td').first();
         $td.attr('colspan', 23); //extend to full with
-          //query cache line
+        //query cache line
         var $queryCols = $tr.next().next().children('td');
         if ($queryCols.length == 1) {
           $queryCols.attr('colspan', 23);
@@ -1585,79 +1547,20 @@
     },
 
     setupCacheTableHeaderFixed: function($header, $cacheTable) {
-      //save the size of the headers when the table is fully extended
-      var cellWiths = [];
-      var w, $child;
-      $header.children('th').each(function(idx, child) {
-        //save the value
-        $child = $(child);
-        w = $child.width() + 'px';
-        cellWiths.push(w);
-        //fix the size
-        $child.css('width', w)
-          .css('min-width', w)
-          .css('max-width', w);
-      });
 
-      //calc the size required to keep the subheader lines 100%
-      var $firstSubHeader = $cacheTable.find('.cache-subheader td:first');
-      var offset = parseFloat($firstSubHeader.css('padding-left').replace('px', '')) + parseFloat($firstSubHeader.css('padding-right').replace('px', ''));
-
-      var fullWidth = ($header.width() - offset - 1) + 'px'; //1px other offset. maybe the border?
-
-      //set all size fixed
-      $cacheTable.find('.cache-subheader').each(function() {
-        var $tr = $(this);
-
-        $tr.children('td:first').css('width', fullWidth)
-          .css('min-width', fullWidth)
-          .css('max-width', fullWidth);
-
-        var $itemCacheTr = $tr.next();
-        $itemCacheTr.css('width', fullWidth)
-          .children().each(function(idx, child) {
-            $(child).css('width', cellWiths[idx])
-              .css('min-width', cellWiths[idx])
-              .css('max-width', cellWiths[idx]);
-          });
-
-        var $queryCache = $itemCacheTr.next();
-        var $queryCacheCols = $queryCache.children();
-        if ($queryCacheCols.length > 1) {
-          $queryCacheCols.each(function(idx, child) {
-            $(child).css('width', cellWiths[idx])
-              .css('min-width', cellWiths[idx])
-              .css('max-width', cellWiths[idx]);
-          });
-        }
-      });
+      traceTime('setupCacheTableHeaderFixed')
 
       //make the header fixed with css
       $cacheTable.addClass('fixed_headers');
 
-      //only if snapping is supported
-      if ('scroll-snap-type' in document.body.style) {
-        //wrap each 3 lines in a div for snapping
-        //detach them and wrap 3 lines in a div
-        var $tBody = $cacheTable.find('tbody:first');
-        var l1, l2, l3, wrapper, wrapArray;
-        wrapArray = [];
-        $('.cache-subheader').each(function(idx, l) {
-          l1 = $(l);
-          l2 = l1.next();
-          l3 = l2.next();
-          wrapper = $('<div class="snap"></div>');
+      //clone the header
 
-          l1.detach().appendTo(wrapper);
-          l2.detach().appendTo(wrapper);
-          l3.detach().appendTo(wrapper);
-          wrapper.appendTo($tBody);
-        });
+      var $copy = $header.clone().addClass('sticky-header-copy');
+      $header.addClass('sticky-header-original');
+      $copy.insertAfter($header).hide();
 
-      }
-      //make the header stick to top
-      //add a div after the table to handle the bottom anchor
-      var left = $cacheTable.offset().left;
+      var left = null;
+      var setupDone = false;
       $(window).scroll(function() { // scroll event
         var $window = $(window);
         var windowTop = $window.scrollTop();
@@ -1668,12 +1571,19 @@
         try {
 
           if (top < windowTop && bot > windowTop) {
-            $header.addClass('sticky-top');
+            $copy.addClass('sticky-top');
             var windowLeft = $window.scrollLeft();
-            $header.css('left', -windowLeft + left);
+            if (!setupDone) {
+              left = $cacheTable.offset().left;
+              BDA_REPOSITORY.setupCacheHeaderWidth($header, $copy);
+              setupDone = true;
+            }
+            $copy.css('left', -windowLeft + left);
+            $copy.show();
           } else {
-            $header.removeClass('sticky-top');
-            $header.css('left', 0);
+            $copy.removeClass('sticky-top');
+            $copy.css('left', 0);
+            $copy.hide();
           }
 
         } catch (e) {
@@ -1681,30 +1591,32 @@
         }
 
       });
+      traceTimeEnd('setupCacheTableHeaderFixed')
 
+    },
 
-/*      //only attach this event if snaping available
-      if ('scroll-snap-type' in document.body.style) {
-        //sticky scrolling
-        //only sticky scroll inside 80% of the table, else we cannot scroll out :)
-        $(window).scroll(function() { // scroll event
-          var $window = $(window);
-          var windowTop = $window.scrollTop();
-          var top = $cacheTable.offset().top;
-          var bot = top + $cacheTable.height();
-          if (top * 1.1 < windowTop && bot * 0.9 > windowTop) {
-            $('body').addClass('scroller');
-          } else {
-            $('body').removeClass('scroller');
-          }
+    setupCacheHeaderWidth: function($header, $copy) {
+      traceTime('setupCacheHeaderWidth.getWidth')
+      //since we set all column with the same width we can use only the first cell as reference
+      var w = $('th:first', $header).width() + "px"; // .width() is very slow :( 
+      //var w =first.width()
+      traceTimeEnd('setupCacheHeaderWidth.getWidth')
+
+      var $child;
+      traceTime('setupCacheHeaderWidth.setFixedWidth')
+      $copy.children('th').each(function(idx, child) {
+        $child = $(child);
+        $child.css({
+          'max-width': w,
+          'min-width': w,
         })
-      }
-*/
+      });
+      traceTimeEnd('setupCacheHeaderWidth.setFixedWidth')
 
     },
 
     toggleCacheLines: function() {
-      $tr = $(this);
+      var $tr = $(this);
       $tr.toggleClass('collapsed')
         .toggleClass('expanded');
       $tr.next().toggle();
@@ -1809,8 +1721,8 @@
     BDA_REPOSITORY.executePrintItem(domain, itemDescriptor, id, repository, callback, errCallback);
   };
 
-   $.fn.executeQueryItems = function(domain, itemDescriptor, query, repository,  callback, errCallback) {
-    BDA_REPOSITORY.executeQueryItems(domain, itemDescriptor, query, repository,callback, errCallback);
+  $.fn.executeQueryItems = function(domain, itemDescriptor, query, repository, callback, errCallback) {
+    BDA_REPOSITORY.executeQueryItems(domain, itemDescriptor, query, repository, callback, errCallback);
   };
 
   $.fn.executeRql = function(domain, xmlText, repository, callback, errCallback) {
