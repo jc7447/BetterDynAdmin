@@ -63,7 +63,7 @@ jQuery(document).ready(function() {
           '<div class="form-group">' +
           '<div class="input-group">' +
           '<div class="input-group-addon"><span id="dash_dollar">$</span><i class="fa fa-spinner fa-spin" id="dash_spinner" style="display: none;"></i></div>' +
-          '<input type="text" class="form-control dash-input main-input" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"/>' +
+          '<input type="text" class="form-control dash-input main-input dash-autocomplete" id="dashInput" placeholder="" name="cmd" data-provide="typeahead" autocomplete="off"/>' +
           '<span  class="input-group-btn"><button type="button" id="dashCleanInput" class="btn btn-default">&times;</button></span>' +
           '</div>' +
           '</div>' +
@@ -107,7 +107,7 @@ jQuery(document).ready(function() {
           '</div>' +
           '<div class="form-group middle-row">' +
           '<div class="col-sm-12">' +
-          '<textarea id="dashEditor" class="form-control dash-input main-input" rows="12  " placeholder=""></textarea>' +
+          '<textarea id="dashEditor" class="form-control dash-input main-input dash-autocomplete" rows="12  " placeholder=""></textarea>' +
           '</div>' +
           '</div>' +
           '</form>' +
@@ -406,7 +406,7 @@ jQuery(document).ready(function() {
           }
         },
 
-         //print @OR order p92133231
+        //print @OR order p92133231
         query: {
 
           commandPattern: ' /some/Repo|@SHORT itemDescriptor {query}',
@@ -604,7 +604,7 @@ jQuery(document).ready(function() {
                 break;
               case 'domain':
                 var val = ((isNull(params.value) || params.value.length == 0) ? "" : params.value);
-                if (val !="" && !val.startsWith("http")) {
+                if (val != "" && !val.startsWith("http")) {
                   throw {
                     name: "InvalidFormat",
                     message: "Domain must include protocol"
@@ -815,13 +815,10 @@ jQuery(document).ready(function() {
         },
 
         comprefs: {
-
           commandPattern: '',
           help: 'lists all the available component references',
           main: function(params, callback, errCallback) {
-
             callback(BDA_DASH.COMP_REFS);
-
           },
           responseToString: function(params, retval) {
             return '<pre>{0}</pre>'.format(JSON.stringify(retval, null, 2));
@@ -926,6 +923,7 @@ jQuery(document).ready(function() {
             } else {
               $.fn.bdaToolbar.saveFavorite(path, [], [], []);
               BDA_DASH.initCompRefs();
+              BDA_DASH.refreshComprefsSuggestionEngine();
               callback(path);
             }
           },
@@ -1020,46 +1018,12 @@ jQuery(document).ready(function() {
           }
         });
 
-        BDA_DASH.initTypeahead();
-
         BDA_DASH.loadHistory();
+        BDA_DASH.initCompRefs();
 
         //bind console input
         logTrace('bind enter');
-        BDA_DASH.$input.keydown(function(e) {
-          //ENTER
-          if (e.which == 13 && !e.altKey && !e.shiftKey) {
-            e.preventDefault();
-            BDA_DASH.histIdxOffset = 0;
-            //close suggestions
-            BDA_DASH.$input.typeahead('close');
-            BDA_DASH.handleInput();
-            return false;
-          }
-          //ctrl+C
-          if (e.which == 67 && !e.altKey && !e.shiftKey && e.ctrlKey) {
-            var input = BDA_DASH.$input[0];
-            var selected = false;
-            if (typeof input.selectionStart == "number") {
-              //if selection length is not null
-              selected = input.selectionStart < input.selectionEnd;
-            }
-            //only clear if nothing is selected
-            if (!selected) {
-              e.preventDefault();
-              BDA_DASH.$input.typeahead('val', '');
-              BDA_DASH.$input.typeahead('close');
-              return false;
-            }
-          }
-          //ctrl+K or ctrl+L
-          if ((e.which == 75 || e.which == 76) && !e.altKey && !e.shiftKey && e.ctrlKey) {
-            e.preventDefault();
-            BDA_DASH.$screen.find('.alert').alert('close');
-            return false;
-          }
-        });
-
+ 
         $('#dashClearScreen').on('click', function() {
           BDA_DASH.$screen.find('.alert').alert('close');
         });
@@ -1079,15 +1043,63 @@ jQuery(document).ready(function() {
         logTrace('bind clear');
         $('#dashCleanInput').on('click', function(e) {
           e.preventDefault();
-          BDA_DASH.$input.typeahead('val', '');
-          BDA_DASH.$input.typeahead('close');
+          BDA_DASH.$input.val('');
           return false;
         });
 
-
-        BDA_DASH.initCompRefs();
-
         BDA_DASH.initEditor();
+
+        BDA_DASH.initAllAutocomplete();
+
+        //bind all actions on input
+        BDA_DASH.$input.keydown(function(e) {
+
+          //if textcomplete is not opened:
+          if($('.dash-textcomplete-dropdown:visible').length == 0){
+            //ENTER
+            if (e.which == 13 && !e.altKey && !e.shiftKey) {
+              e.preventDefault();
+              BDA_DASH.histIdxOffset = 0;
+              //close suggestions
+              BDA_DASH.handleInput();
+              return false;
+            }
+                //up
+            if (e.which == 38) {
+              BDA_DASH.moveInHistory(true);
+            }
+            //down
+            if (e.which == 40) {
+              BDA_DASH.moveInHistory(false);
+            }
+          }
+
+          //ctrl+C
+          if (e.which == 67 && !e.altKey && !e.shiftKey && e.ctrlKey) {
+            var input = BDA_DASH.$input[0];
+            var selected = false;
+            if (typeof input.selectionStart == "number") {
+              //if selection length is not null
+              selected = input.selectionStart < input.selectionEnd;
+            }
+            //only clear if nothing is selected
+            if (!selected) {
+              e.preventDefault();
+              BDA_DASH.$input.val('');
+              return false;
+            }
+          }
+          //ctrl+K or ctrl+L
+          if ((e.which == 75 || e.which == 76) && !e.altKey && !e.shiftKey && e.ctrlKey) {
+            e.preventDefault();
+            BDA_DASH.$screen.find('.alert').alert('close');
+            return false;
+          }
+
+       
+        });
+
+
 
         BDA_DASH.$modal.on("click", ".dash_redo", function(event) {
           BDA_DASH.redo($(this).parent().parent().attr('data-command'));
@@ -1312,13 +1324,10 @@ jQuery(document).ready(function() {
             if (!isNull(inputText) && inputText.length > 0 && typeof input.selectionStart == "number") {
               var start = input.selectionStart
               var end = input.selectionEnd;
-              console.log(start);
-              console.log(end);
               //if selection length is not null
               if (end > start) {
                 inputText = inputText.substring(start, end);
               }
-              console.log(inputText);
             }
 
             BDA_DASH.handleInput(inputText);
@@ -1336,8 +1345,7 @@ jQuery(document).ready(function() {
             //only clear if nothing is selected
             if (!selected) {
               e.preventDefault();
-              BDA_DASH.$input.typeahead('val', '');
-              BDA_DASH.$input.typeahead('close');
+              BDA_DASH.$input.val('');
               return false;
             }
           }
@@ -1356,15 +1364,10 @@ jQuery(document).ready(function() {
 
       },
 
-      clearEditor: function() {
-        $('#dashSaveScriptName').val('');
-        BDA_DASH.$editor.val('');
-      },
-
-      initTypeahead: function() {
+      initAllAutocomplete: function() {
 
         try {
-          logTrace('init typeahead');
+          logTrace('init textcomplete');
           //init type ahead with all the existing functions
           BDA_DASH.typeahead_base = [];
           for (var funcName in BDA_DASH.FCT) {
@@ -1376,8 +1379,6 @@ jQuery(document).ready(function() {
             };
             BDA_DASH.typeahead_base.push(e);
           }
-
-          logTrace(JSON.stringify(BDA_DASH.typeahead_base));
 
           BDA_DASH.suggestionEngine = new Bloodhound({
             initialize: true,
@@ -1392,51 +1393,98 @@ jQuery(document).ready(function() {
 
           });
 
-          BDA_DASH.$input.typeahead({
-            minLength: 1,
-            highlight: true,
+          //COMPREFS
 
-          }, {
-            name: 'dash',
-            hint: true,
-            //highlight: true,
-            minLength: 1,
-            source: BDA_DASH.suggestionEngine,
-            displayKey: 'value',
-            templates: {
-              suggestion: function(data) {
-                var pattern = data.pattern;
-                if (isNull(pattern)) {
-                  pattern = "";
-                }
-                return '<div><strong>{0}</strong>{1}</div>'.format(data.value, pattern);
-              }
+          BDA_DASH.comprefSuggestionEngine = new Bloodhound({
+            initialize: true,
+            local: BDA_DASH.FLAT_COMP_REFS,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            datumTokenizer: function(datum) {
+              return Bloodhound.tokenizers.whitespace(datum.value);
+            },
+            identify: function(obj) {
+              return obj.value;
             }
+
           });
 
-          //ability to delete entries from typeahead
-          BDA_DASH.$input.keydown(function(e) {
+          //VARS
+            BDA_DASH.variablesSuggestionEngine = new Bloodhound({
+            initialize: true,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            datumTokenizer: function(datum) {
+              return Bloodhound.tokenizers.whitespace(datum.value);
+            },
+            identify: function(obj) {
+              return obj.value;
+            }
 
-            //up
-            if (e.which == 38) {
-              BDA_DASH.moveInHistory(true);
+          });
+
+
+          $('.dash-autocomplete').textcomplete([{ // tech companies
+            id: 'commands',
+            match: /^\b(\w{1,})$/, //1 letter or more
+            search: function(term, callback) {
+              BDA_DASH.suggestionEngine.search(term, callback, callback);
+            },
+            index: 1,
+            replace: function(data) {
+              return data.value + ' ';
+            },
+            template: function(data, term) {
+              var pattern = data.pattern;
+              if (isNull(pattern)) {
+                pattern = '';
+              }
+              return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
             }
-            //down
-            if (e.which == 40) {
-              BDA_DASH.moveInHistory(false);
+          }, { 
+            id: 'comprefs',
+            match: /@(t|th|thi|this|([A-Z][A-Z0-9#]*))?$/, //@ and 0 letter or more or 'this'
+            search: function(term, callback) {
+              console.log(term);
+              if (isNull(term)) {
+                //show all
+                callback(BDA_DASH.FLAT_COMP_REFS)
+              } else {
+                BDA_DASH.comprefSuggestionEngine.search(term, callback, callback);
+              }
+            },
+            index: 1,
+            replace: function(data) {
+              return '@{0} '.format(data.value)
+            },
+            template: function(data, term) {
+              var path = data.path;
+              if(data.value == 'this'){
+                path = getCurrentComponentPath();
+              }
+              return '<strong>@{0}&nbsp</strong>:&nbsp{1}'.format(data.value, path);
             }
-            //suppr /del
-            //  console.log(e.which);
-            /* if(e.which == 46){
-               var text = $('.tt-menu .tt-cursor').text();
-               console.log(text);
-               var idx = BDA_DASH.HIST.indexOf(text);
-               while(idx >-1){
-                 BDA_DASH.HIST.splice(idx,1);
-                 idx = BDA_DASH.HIST.indexOf(text);
-               }
-               BDA_DASH.clearHistory();
-             }*/
+          }, { 
+            id: 'variables',
+            match: /\$(\w*)?$/, //$ and any letters
+            search: function(term, callback) {
+              console.log(term);
+             // if (isNull(term)) {
+                //show all
+                //callback(BDA_DASH.VARS)
+             // } else {
+                BDA_DASH.variablesSuggestionEngine.search(term, callback, callback);
+              //}
+            },
+            index: 1,
+            replace: function(data) {
+              return '${0} '.format(data.value)
+            },
+            template: function(data, term) {
+              return '<strong>${0}&nbsp</strong>:&nbsp{1}'.format(data.value, data.preview);
+            }
+          }], {
+            zIndex: '10000',
+            appendTo: '#dashModal',
+            dropdownClassName: 'dropdown-menu textcomplete-dropdown dash-textcomplete-dropdown'
           });
 
         } catch (e) {
@@ -1444,6 +1492,17 @@ jQuery(document).ready(function() {
         }
 
       },
+
+      refreshComprefsSuggestionEngine: function(){
+        BDA_DASH.comprefSuggestionEngine.clear();
+        BDA_DASH.comprefSuggestionEngine.add(BDA_DASH.FLAT_COMP_REFS);
+      },
+
+      clearEditor: function() {
+        $('#dashSaveScriptName').val('');
+        BDA_DASH.$editor.val('');
+      },
+
 
       openDash: function() {
         try {
@@ -1524,7 +1583,7 @@ jQuery(document).ready(function() {
         } else {
           $('#dash_dollar').show();
           $('#dash_spinner').hide();
-          BDA_DASH.$input.typeahead('val', '');
+          BDA_DASH.$input.val('');
           setTimeout(function() {
               $('#dashProgressBar').parent().fadeOut();
             }, 2000)
@@ -1685,6 +1744,14 @@ jQuery(document).ready(function() {
         logTrace('output:');
         logTrace(out);
         BDA_DASH.VARS[outputDef.name] = out;
+
+        try{
+          //textcomplete
+          BDA_DASH.variablesSuggestionEngine.add({value:outputDef.name,preview:JSON.stringify(out).trunc('80')})
+        }catch(e){
+          //dont break the rest
+          console.error(e);
+        }
       },
 
       //
@@ -1697,7 +1764,7 @@ jQuery(document).ready(function() {
       },
 
       moveInHistory: function(up) {
-        console.log('moveInHistory ' + up);
+        logTrace('moveInHistory ' + up);
         var offset = BDA_DASH.histIdxOffset;
         if (up) {
           offset++;
@@ -1709,8 +1776,6 @@ jQuery(document).ready(function() {
         if (idx >= 0 && idx < BDA_DASH.HIST.length) {
           var val = BDA_DASH.HIST[idx];
           BDA_DASH.$input.val(val);
-          BDA_DASH.$input.typeahead('val', val);
-          BDA_DASH.$input.typeahead('close');
         }
         var newoffset = BDA_DASH.HIST.length - idx;
         //clamp the idx after
@@ -1721,7 +1786,7 @@ jQuery(document).ready(function() {
           newoffset = BDA_DASH.HIST.length;
         }
         BDA_DASH.histIdxOffset = newoffset;
-        console.log('BDA_DASH.histIdxOffset = ' + BDA_DASH.histIdxOffset);
+        logTrace('BDA_DASH.histIdxOffset = ' + BDA_DASH.histIdxOffset);
       },
 
       clearHistory: function(newValue) {
@@ -1751,16 +1816,6 @@ jQuery(document).ready(function() {
             tosave = BDA_DASH.HIST.slice(BDA_DASH.HIST.length - maxSize, BDA_DASH.HIST.length);
           }
           BDA_STORAGE.storeConfiguration('dashHistory', tosave);
-        }
-      },
-
-      suggestionEngineWithDefault: function(q, sync) {
-        if (q === '') {
-          var clone = BDA_DASH.HIST.slice(0);
-          clone.reverse();
-          sync(clone);
-        } else {
-          BDA_DASH.suggestionEngine.search(q, sync);
         }
       },
 
@@ -1942,7 +1997,7 @@ jQuery(document).ready(function() {
       },
 
       getComponent: function(componentParam) {
-        console.log('componentParam : ' + JSON.stringify(componentParam));
+        logTrace('componentParam : ' + JSON.stringify(componentParam));
         var path = "";
         switch (componentParam.type) {
           case "this":
@@ -1958,6 +2013,7 @@ jQuery(document).ready(function() {
           case "componentRef":
             var shortname = componentParam.name;
             var ref = BDA_DASH.COMP_REFS[shortname];
+            logTrace(ref);
             var idx = componentParam.index;
             if (isNull(ref)) {
               throw {
@@ -1967,6 +2023,7 @@ jQuery(document).ready(function() {
             }
             if (ref.length == 1) {
               path = ref[0];
+              logTrace(path);
             } else if (!isNull(idx)) {
               if (idx >= ref.length) {
                 throw {
@@ -1981,7 +2038,7 @@ jQuery(document).ready(function() {
                 message: "Reference {0} is ambiguous. Specify index.<br/> <pre>{1}</pre>".format(componentParam.name, JSON.stringify(ref, null, 2))
               }
             }
-            BDA_DASH.log('input <em>{0}#{1}</em> translated to <em>{2}</em>'.format(shortname, idx, path),BDA_DASH.logLevels.debug);
+            BDA_DASH.log('input <em>{0}#{1}</em> translated to <em>{2}</em>'.format(shortname, idx, path), BDA_DASH.logLevels.debug);
             break;
           default:
             throw {
@@ -2007,20 +2064,44 @@ jQuery(document).ready(function() {
       },
 
       initCompRefs: function() {
-        BDA_DASH.COMP_REFS = [];
+        logTrace('initCompRefs')
+        BDA_DASH.COMP_REFS = {};
         var comps = BDA_STORAGE.getStoredComponents();
         var fav, compRefList, key;
         for (var i = 0; i < comps.length; i++) {
           fav = comps[i];
           key = getComponentShortName(fav.componentName);
+          logTrace('path= {0} key = {1}'.format(fav.componentName, key));
           compRefList = BDA_DASH.COMP_REFS[key];
           if (isNull(compRefList)) {
+            logTrace('list is null for key {0}'.format(key))
             compRefList = [];
           }
           //only keep the nucleus path for consistency
           compRefList.push(fav.componentPath.replace(/\/dyn\/admin\/nucleus/g, '').replace(/\/$/g, ''));
+          logTrace('updating list {0}'.format(JSON.stringify(compRefList)));
           BDA_DASH.COMP_REFS[key] = compRefList;
         }
+        logTrace('init flat comprefs')
+        BDA_DASH.FLAT_COMP_REFS = [{value:'this',path:'current component'}];
+        for (var key in BDA_DASH.COMP_REFS) {
+          var list = BDA_DASH.COMP_REFS[key];
+          if (list.length == 1) {
+            BDA_DASH.FLAT_COMP_REFS.push({
+              value: key,
+              path: list[0]
+            });
+          } else {
+            for (var i = 0; i < list.length; i++) {
+              var path = list[i];
+              BDA_DASH.FLAT_COMP_REFS.push({
+                value: key + '#' + i,
+                path: list[i]
+              });
+            }
+          }
+        }
+        logTrace('flattened comprefs : {0}'.format(JSON.stringify(BDA_DASH.FLAT_COMP_REFS)))
       },
 
       createMenuElem: function() {
