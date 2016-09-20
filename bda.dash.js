@@ -217,6 +217,23 @@ jQuery(document).ready(function() {
         },
 
       },
+      repoXmlSource: [{
+          value: 'add-item',
+          pattern: ['<add-item item-descriptor="','" id="">\n\n</add-item>']
+        },{
+          value: 'print-item',
+          pattern: ['<print-item item-descriptor="','" id=""/>\n']
+        },{
+          value: 'query-items',
+           pattern: ['<query-items item-descriptor="','" >\n\n</query-items>']
+        },{
+         value: 'remove-item',
+          pattern: ['<remove-item item-descriptor="','" id=""/>\n']
+        },{
+          value:'set-property',
+          pattern: ['<set-property name="','"/> </set-property>']
+        }
+      ],
       progress: {
         total: 0,
         current: 0
@@ -1023,7 +1040,7 @@ jQuery(document).ready(function() {
 
         //bind console input
         logTrace('bind enter');
- 
+
         $('#dashClearScreen').on('click', function() {
           BDA_DASH.$screen.find('.alert').alert('close');
         });
@@ -1055,7 +1072,7 @@ jQuery(document).ready(function() {
         BDA_DASH.$input.keydown(function(e) {
 
           //if textcomplete is not opened:
-          if($('.dash-textcomplete-dropdown:visible').length == 0){
+          if ($('.dash-textcomplete-dropdown:visible').length == 0) {
             //ENTER
             if (e.which == 13 && !e.altKey && !e.shiftKey) {
               e.preventDefault();
@@ -1064,7 +1081,7 @@ jQuery(document).ready(function() {
               BDA_DASH.handleInput();
               return false;
             }
-                //up
+            //up
             if (e.which == 38) {
               BDA_DASH.moveInHistory(true);
             }
@@ -1096,7 +1113,7 @@ jQuery(document).ready(function() {
             return false;
           }
 
-       
+
         });
 
 
@@ -1409,9 +1426,22 @@ jQuery(document).ready(function() {
           });
 
           //VARS
-            BDA_DASH.variablesSuggestionEngine = new Bloodhound({
+          BDA_DASH.variablesSuggestionEngine = new Bloodhound({
             initialize: true,
             queryTokenizer: Bloodhound.tokenizers.whitespace,
+            datumTokenizer: function(datum) {
+              return Bloodhound.tokenizers.whitespace(datum.value);
+            },
+            identify: function(obj) {
+              return obj.value;
+            }
+
+          });
+
+          BDA_DASH.xmlSuggestionEngine = new Bloodhound({
+            initialize: true,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            local: BDA_DASH.repoXmlSource,
             datumTokenizer: function(datum) {
               return Bloodhound.tokenizers.whitespace(datum.value);
             },
@@ -1439,7 +1469,7 @@ jQuery(document).ready(function() {
               }
               return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
             }
-          }, { 
+          }, {
             id: 'comprefs',
             match: /@(t|th|thi|this|([A-Z][A-Z0-9#]*))?$/, //@ and 0 letter or more or 'this'
             search: function(term, callback) {
@@ -1457,22 +1487,16 @@ jQuery(document).ready(function() {
             },
             template: function(data, term) {
               var path = data.path;
-              if(data.value == 'this'){
+              if (data.value == 'this') {
                 path = getCurrentComponentPath();
               }
               return '<strong>@{0}&nbsp</strong>:&nbsp{1}'.format(data.value, path);
             }
-          }, { 
+          }, {
             id: 'variables',
             match: /\$(\w*)?$/, //$ and any letters
             search: function(term, callback) {
-              console.log(term);
-             // if (isNull(term)) {
-                //show all
-                //callback(BDA_DASH.VARS)
-             // } else {
-                BDA_DASH.variablesSuggestionEngine.search(term, callback, callback);
-              //}
+              BDA_DASH.variablesSuggestionEngine.search(term, callback, callback);
             },
             index: 1,
             replace: function(data) {
@@ -1481,6 +1505,25 @@ jQuery(document).ready(function() {
             template: function(data, term) {
               return '<strong>${0}&nbsp</strong>:&nbsp{1}'.format(data.value, data.preview);
             }
+          }, {
+            id: 'xml',
+            match: /<(\w*)$/,
+            index:1,
+            search: function(term, callback) {
+              if (isNull(term)) {
+                callback(BDA_DASH.repoXmlSource)
+              } else {
+                BDA_DASH.xmlSuggestionEngine.search(term, callback, callback);
+              }
+            },
+            replace: function(data) {
+              return data.pattern;
+            },
+            template: function(data, term) {
+              return data.value;
+            }
+
+
           }], {
             zIndex: '10000',
             appendTo: '#dashModal',
@@ -1493,7 +1536,7 @@ jQuery(document).ready(function() {
 
       },
 
-      refreshComprefsSuggestionEngine: function(){
+      refreshComprefsSuggestionEngine: function() {
         BDA_DASH.comprefSuggestionEngine.clear();
         BDA_DASH.comprefSuggestionEngine.add(BDA_DASH.FLAT_COMP_REFS);
       },
@@ -1745,10 +1788,13 @@ jQuery(document).ready(function() {
         logTrace(out);
         BDA_DASH.VARS[outputDef.name] = out;
 
-        try{
+        try {
           //textcomplete
-          BDA_DASH.variablesSuggestionEngine.add({value:outputDef.name,preview:JSON.stringify(out).trunc('80')})
-        }catch(e){
+          BDA_DASH.variablesSuggestionEngine.add({
+            value: outputDef.name,
+            preview: JSON.stringify(out).trunc('80')
+          })
+        } catch (e) {
           //dont break the rest
           console.error(e);
         }
@@ -2083,7 +2129,10 @@ jQuery(document).ready(function() {
           BDA_DASH.COMP_REFS[key] = compRefList;
         }
         logTrace('init flat comprefs')
-        BDA_DASH.FLAT_COMP_REFS = [{value:'this',path:'current component'}];
+        BDA_DASH.FLAT_COMP_REFS = [{
+          value: 'this',
+          path: 'current component'
+        }];
         for (var key in BDA_DASH.COMP_REFS) {
           var list = BDA_DASH.COMP_REFS[key];
           if (list.length == 1) {
