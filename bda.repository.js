@@ -1,5 +1,48 @@
 (function($) {
   "use strict";
+
+  var tags = {
+  '!top': ['add-item', 'query-items', 'print-item', 'remove-item'],
+  '!attrs': {},
+  'toto': {
+
+  },
+  'add-item': {
+    attrs: {
+      'id': null,
+      'item-descriptor': null
+    },
+    children: ['set-property']
+  },
+  'print-item': {
+    attrs: {
+      'id': null,
+      'item-descriptor': null
+    },
+    children: []
+  },
+  'remove-item': {
+    attrs: {
+      'id': null,
+      'item-descriptor': null
+    },
+    children: ['set-property']
+  },
+  'query-items': {
+    attrs: {
+      'item-descriptor': null,
+      'id-only': ['true', 'false']
+    },
+    children: []
+  },
+  'set-property': {
+    attrs: {
+      name: null
+    },
+    children: []
+  }
+};
+
   var BDA_REPOSITORY = {
     MAP_SEPARATOR: "=",
     LIST_SEPARATOR: ",",
@@ -33,6 +76,38 @@
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
       queryItems: '<query-items item-descriptor="{0}">{1}</query-items>'
     },
+    cmAutocomplete: {
+      tags: {
+        '!top': ['add-item', 'query-items', 'print-item', 'remove-item'],
+        '!attrs': {},
+        'toto':{
+
+        },
+        'add-item': {
+          attrs: {'id' : null, 'item-descriptor' : null},
+          children: ['set-property']
+        },
+        'print-item': {
+           attrs: {'id' : null, 'item-descriptor' : null},
+          children: []
+        },
+        'remove-item': {
+           attrs: {'id' : null, 'item-descriptor' : null},
+          children: ['set-property']
+        },
+        'query-items': {
+           attrs: { 'item-descriptor' : null, 'id-only':['true','false']},
+          children: []
+        },
+        'set-property': {
+          attrs: {
+            name: null
+          },
+          children:[]
+        }
+      },
+    },
+    
 
     CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
 
@@ -260,10 +335,60 @@
         });
       });
 
+
+      //inner functions for auto-complete
+      function completeAfter(cm, pred) {
+        var cur = cm.getCursor();
+        if (!pred || pred()) setTimeout(function() {
+          if (!cm.state.completionActive)
+            cm.showHint({completeSingle: false});
+        }, 100);
+        return CodeMirror.Pass;
+      }
+
+      function completeIfAfterLt(cm) {
+        return completeAfter(cm, function() {
+          var cur = cm.getCursor();
+          return cm.getRange(CodeMirror.Pos(cur.line, cur.ch - 1), cur) == "<";
+        });
+      }
+
+      function completeIfInTag(cm) {
+        return completeAfter(cm, function() {
+          var tok = cm.getTokenAt(cm.getCursor());
+          if (tok.type == "string" && (!/['"]/.test(tok.string.charAt(tok.string.length - 1)) || tok.string.length == 1)) return false;
+          var inner = CodeMirror.innerMode(cm.getMode(), tok.state).state;
+          return inner.tagName;
+        });
+      }
+
       // Init code mirror
       BDA_REPOSITORY.queryEditor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
-        lineNumbers: false
+        lineNumbers: false,
+        mode:'xml',
+        extraKeys: {
+          "'<'": completeAfter,
+          "'/'": completeIfAfterLt,
+          "' '": completeIfInTag,
+          "'='": completeIfInTag,
+          "Ctrl-Space": "autocomplete"
+        },
+        hintOptions: {schemaInfo: tags}
       });
+
+
+      //on FF + greasemonkey, the hint is not updated when it's already open
+
+      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+        CodeMirror.on(BDA_REPOSITORY.queryEditor, "cursorActivity", function(cm, object) {
+          if (cm.state.completionActive) {
+            cm.showHint({
+              completeSingle: false
+            });
+          }
+        })
+      }
+
 
       // Init select2 plugin
       $("#RQLAction").select2({
