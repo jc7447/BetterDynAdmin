@@ -6,24 +6,34 @@
     isXMLDefinitionFilePage: false,
     xmlDefinitionMaxSize: 150000, // 150 Ko
     templates: {
-      itemDescTable: '<div id="item_{0}" class="item-panel panel panel-default" data-item-descriptor="{0}">' +
-        '<table class="table item-descriptor-table table-condensed " >' +
+      itemDescTable: '<div id="item_{0}" class="panel panel-default item-panel" data-item-descriptor="{0}">' +
+        '<div class="panel-heading item-descriptor-heading open" data-target="{0}">' +
         '{1}' +
-        '</table>' +
+        '</div>' +
+        '<div class="panel-body" >' +
+        '{2}' +
+        '</div>' +
         '</div>',
-      itemHeader: [ //other properties than name
+      itemHeader: [ 
         'sub-type-property',
         'super-type',
         'cache-mode',
         'item-cache-timeout',
         'item-cache-size'
       ],
+      colgroup: 
+        '<colgroup>' +
+        '<col class="col-1" />' +
+        '<col span="8" class="col-bda-12" />' +
+        '</colgroup>'
+      ,
       tableHeader: ['type', 'id-column-name', 'shared-table-sequence'],
       tableColumns: [{
         name: 'name',
-        width: '15%'
+        class: 'col-lg-3'
       }, {
-        name: 'data/item-type',
+        name: 'data / item-type',
+        class: 'col-lg-2',
         build: function($prop) {
           var val;
           var dataType = $prop.attr('data-type');
@@ -77,10 +87,13 @@
         }
       }, {
         name: 'column-name',
+        class: 'col-lg-1'
       }, {
         name: 'required',
+        class: 'col-lg-1'
       }, {
         name: 'property-type',
+        class: 'col-lg-2',
         build: function($prop) {
           var full = $prop.attr('property-type');
           var val;
@@ -93,12 +106,15 @@
         }
       }, {
         name: 'default',
+        class: 'col-lg-1'
       }, {
         name: 'cache-mode',
+        class: 'col-lg-1'
       }, {
-        name: 'queryable'
+        name: 'queryable',
+        class: 'col-lg-1'
       }],
-      quickNavSearch: '<div class="input-group"><input id="xmlDefSearchBox" type="text" placeholder="Search : item, table, column..." class="form-control"/>' +
+      quickNavSearch: '<div class="input-group"><input id="xmlDefSearchBox" type="text" placeholder="Search : table, column,  item ..." class="form-control"/>' +
         ' <span class="input-group-btn">' +
         '<button id="clearQuickNavSearch" class="btn btn-default" type="button">x</button>' +
         '</span></div>',
@@ -212,9 +228,9 @@
             //header row
             rows = [];
             //header values:
-            var itemHeader = BDA_XML_DEF.buildItemHeader($itemDesc);
+            var itemHeader = BDA_XML_DEF.buildItemHeader(itemDescName,$itemDesc);
 
-            rows.push('<tr id="header_{1}" data-target="{1}" class="item-descriptor success open"><th>{1}<th colspan="{0}">{2}</th></tr>'.format(BDA_XML_DEF.templates.tableColumns.length - 1, itemDescName, itemHeader));
+         //   rows.push('<div id="header_{0}" data-target="{0}" class="row item-descriptor bg-success open"><div class="col-lg-12">{1}</div></div>'.format( itemDescName, itemHeader));
             //
             $itemDesc.find('div').each(function(idx, table) {
               $table = $(table);
@@ -235,12 +251,12 @@
                     } else {
                       val = $propertyDesc.attr(attrDef.name);
                     }
-                    if (isNull(val)) {
-                      val = "";
+                    if (isNull(val) || val==="") {
+                      val = "&nbsp;";
                     }
-                    cols.push('<td>{0}</td>'.format(val));
+                    cols.push('<div class="{1}">{0}</div>'.format(val,attrDef.class));
                   }
-                  rows.push('<tr class="property" data-table="tabledef_{1}">{0}</tr>'.format(cols.join(''), tableName));
+                  rows.push('<div class="row property" data-table="tabledef_{1}">{0}</div>'.format(cols.join(''), tableName));
                 });
                 //
 
@@ -251,7 +267,7 @@
               //non table properties (transient/dynamic)
               //headers
               var tableName = 'nontabledef_' + itemDescName;
-              rows.push('<tr id="tabledef_{1}" class="table-def open"><th colspan="{0}">Non table properties</th></tr>'.format(BDA_XML_DEF.templates.tableColumns.length, tableName));
+              rows.push('<div id="tabledef_{1}" class="row table-def open"><div class="col-lg-12">Non table properties</div></div>'.format(BDA_XML_DEF.templates.tableColumns.length, tableName));
               rows.push(BDA_XML_DEF.buildSubTableHeader(tableName));
 
               $itemDesc.children('property').each(function(idx, propertyDesc) {
@@ -264,18 +280,18 @@
                     } else {
                       val = $propertyDesc.attr(attrDef.name);
                     }
-                    if (isNull(val)) {
-                      val = "";
+                    if (isNull(val) || val==="") {
+                      val = "&nbsp;";
                     }
-                    cols.push('<td>{0}</td>'.format(val));
+                    cols.push('<div class="{1}">{0}</div>'.format(val,attrDef.class));
                   }
-                  rows.push('<tr class="property" data-table="tabledef_{1}">{0}</tr>'.format(cols.join(''), tableName));
+                  rows.push('<div class="row property" data-table="tabledef_{1}">{0}</div>'.format(cols.join(''), tableName));
                 });
                 //
             }
 
             $panel = $(
-              BDA_XML_DEF.templates.itemDescTable.format(itemDescName, rows.join(''))
+              BDA_XML_DEF.templates.itemDescTable.format(itemDescName,itemHeader, rows.join(''))
             );
             itemSize[itemDescName] = rows.length;
             // $panel.find('#header_'+itemDescName).prepend($(BDA_XML_DEF.templates.collapserColumn.format(rows.length,itemDescName)));
@@ -290,19 +306,15 @@
         BDA_XML_DEF.$ITEMS = $container.find('.panel');
         var searchTimeOut;
 
-        $('.item-descriptor').on('click', function() {
+        $('.item-descriptor-heading').on('click', function() {
           var $this = $(this);
           var target = $this.attr('data-target');
           if ($this.hasClass('open')) {
             $this.removeClass('open').addClass('closed');
-            $('#item_' + target).find('tr')
-              .filter(function() {
-                return !$(this).hasClass('item-descriptor');
-              })
-              .hide();
+            $('#item_' + target).find('.panel-body .row').hide();
           } else {
             $this.removeClass('closed').addClass('open');
-            $('#item_' + target).find('tr').show();
+            $('#item_' + target).find('.panel-body .row').show();
           }
         });
 
@@ -311,11 +323,11 @@
           var id = $this.attr('id');
           if ($this.hasClass('open')) {
             $this.removeClass('open').addClass('closed');
-            $('tr[data-table=' + id + ']').hide();
+            $('.row[data-table=' + id + ']').hide();
 
           } else {
             $this.removeClass('closed').addClass('open');
-            $('tr[data-table=' + id + ']').show();
+            $('.row[data-table=' + id + ']').show();
 
           }
         });
@@ -385,9 +397,9 @@
       var attr;
       for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
         attr = BDA_XML_DEF.templates.tableColumns[i];
-        cols.push('<th>{0}</th>'.format(attr.name));
+        cols.push('<div class="{1}">{0}</div>'.format(attr.name,attr.class));
       }
-      return '<tr class="active" data-table="tabledef_{1}">{0}</tr>'.format(cols.join(''), tableName);
+      return '<div class="row subtableHeader" data-table="tabledef_{1}">{0}</div>'.format(cols.join(''), tableName);
     },
 
     buildTableHeader: function($table) {
@@ -404,7 +416,7 @@
         }
       }
       cols.push('</ol>');
-      return '<tr id="tabledef_{1}" class="table-def open"><th colspan="{2}">{0}</th></tr>'.format(cols.join(''), tableName, BDA_XML_DEF.templates.tableColumns.length);
+      return '<div id="tabledef_{1}" class="row table-def open"><div class="col-lg-12">{0}</div></div>'.format(cols.join(''), tableName);
 
     },
 
@@ -536,10 +548,10 @@
       return $container;
     },
 
-    buildItemHeader: function($itemDesc) {
+    buildItemHeader: function(itemDescName,$itemDesc) {
       var values = [],
         attrDef, val;
-      values.push('<ol class="itemDescAttributes">');
+      values.push('<ol class="itemDescAttributes"><li><span class="attr-value">{0}</span></li>'.format(itemDescName));
       for (var i = 0; i < BDA_XML_DEF.templates.itemHeader.length; i++) {
         attrDef = BDA_XML_DEF.templates.itemHeader[i];
         val = $itemDesc.attr(attrDef);
