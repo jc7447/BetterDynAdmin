@@ -1152,7 +1152,8 @@ ol.itemDescAttributes {
 }
 
 .property-type,
-.enum {
+.enum,
+.derivation {
   text-decoration: underline;
 }
 
@@ -1165,8 +1166,14 @@ ol.itemDescAttributes {
   max-width: inherit;
 }
 
-.popover ul {
+#xmlDefAsTable  .popover ul {
   padding-left: 10px;
+}
+
+#xmlDefAsTable .popover{
+  max-width: inherit;
+  width: 600px;
+  width: -moz-max-content;
 }
 
 /*

@@ -48,7 +48,17 @@ try {
               .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA_STORAGE.GMValue_MonoInstance + "'>");
 
 
-            BDA_MENU.createSearchAutocompleteConfig($bdaConfigPanel);
+            BDA_MENU.createCheckBoxConfig($bdaConfigPanel,{
+              name:'search_autocomplete',
+              description: 'Search AutoComplete',
+              message: '<p>Be aware of perfs impacts. Reload dyn/admin to take into account</p>'
+            });
+
+            BDA_MENU.createCheckBoxConfig($bdaConfigPanel,
+              {
+                description:'Display xmlDef as table by default',
+                name:'defaultOpenXmlDefAsTable'
+            });
 
             BDA_MENU.createDefaultMethodsConfig($bdaConfigPanel);
 
@@ -148,20 +158,30 @@ try {
 
           // advanced config
 
-          createSearchAutocompleteConfig: function(parentPanel) {
 
-            var autocomplete = BDA_STORAGE.getConfigurationValue('search_autocomplete');
-            logTrace('autocomplete ' + autocomplete);
-            autocomplete = (autocomplete == true) ? true : false;
-            var checked = autocomplete ? 'checked="true"' : '';
+          createCheckBoxConfig: function(parentPanel,inOptions) {
 
-            parentPanel.append('<p class="config">Search AutoComplete : <input type="checkbox" id="searchAutocompleteConfig" {0}/></p><p>Be aware of perfs impacts. Reload dyn/admin to take into account</p>'.format(checked));
-            $('#searchAutocompleteConfig').on('change', function() {
+            var options = $.extend(
+              {
+                name:null,
+                description:null,
+                message:''
+              },
+              inOptions);
+
+            var value = BDA_STORAGE.getConfigurationValue(options.name);
+            value = (value == true) ? true : false;
+            logTrace('value of {0} = {1}',name  ,value);
+            var checked = value ? 'checked="true"' : '';
+
+            parentPanel.append('<p class="config">{0} : <input type="checkbox" id="{1}_config" {2}/></p>{3}'.format(options.description,options.name,checked,options.message));
+            $('#{0}_config'.format(options.name)).on('change', function() {
               var val = $(this).is(':checked');
-              logTrace('save autocomplete ' + val);
-              BDA_STORAGE.storeConfiguration("search_autocomplete", val);
+              logTrace('save {0} {1} '.format( options.name, val));
+              BDA_STORAGE.storeConfiguration(options.name, val);
             });
           },
+
 
           createDefaultMethodsConfig: function(parentPanel) {
             var $config = $('<div id="advancedConfig"></div>');

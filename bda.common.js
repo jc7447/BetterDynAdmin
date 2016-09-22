@@ -145,8 +145,8 @@ try {
   };
 
   this.highlightAndIndentXml = function($elm) {
-    console.time("highlightAndIndentXml");
-    console.log("Start highlightAndIndentXml");
+    traceTime("highlightAndIndentXml");
+    logTrace("Start highlightAndIndentXml");
 
     $elm.each(function(index) {
       var escapeXML = $(this).html();
@@ -154,7 +154,7 @@ try {
       // vkbeautify needs unescape XML to works
       unescapeXML = vkbeautify.xml(unescapeXML, 2);
       var dateIndent = new Date();
-      console.log("time to indent : " + (dateIndent.getTime() - dateStart) + "ms");
+   //   console.log("time to indent : " + (dateIndent.getTime() - dateStart) + "ms");
       var $codeBlock = $(this)
         // remove previous XML content
         .empty()
@@ -177,7 +177,7 @@ try {
         });
     });
 
-    console.timeEnd("highlightAndIndentXml");
+    traceTimeEnd("highlightAndIndentXml");
   };
 
   this.getComponentNameFromPath = function(componentPath) {

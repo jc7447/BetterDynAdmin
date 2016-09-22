@@ -75,7 +75,7 @@
               useCode = $useCodeForValue.attr('value') == 'true';
             }
             var popoverTitle = 'useCodeForValue : {0}'.format(useCode);
-            tooltip = 'data-html="true" data-trigger="hover focus" data-toggle="popover" ' +
+            tooltip = 'data-html="true" data-trigger="hover focus click" data-toggle="popover" ' +
               'data-placement="top" data-content="{0}" data-title="{1}"'
               .format(opts.join(''), popoverTitle);
           }
@@ -92,17 +92,31 @@
         name: 'required',
         class: 'col-lg-1'
       }, {
-        name: 'property-type',
+        name: 'property-type / derivation',
         class: 'col-lg-2',
-        build: function($prop) {
+        build: function($prop,itemName) {
+          //property descriptor
           var full = $prop.attr('property-type');
-          var val;
+          var values = [];
           if (!isNull(full) && full !== "") {
             var slices = full.split('.');
-            val = '<span class="property-type" data-toggle="tooltip" data-placement="top" title="{1}">{0}</span>'.format(slices[slices.length - 1], full);
+            var propertyType = '<span class="property-type" data-toggle="tooltip"  data-trigger="hover focus click" data-placement="top" title="{1}">{0}</span>'
+              .format(slices[slices.length - 1], full);
+            values.push(propertyType);
           }
+          //derivation
+          var derivation = "", drvText;
+          $prop.find('derivation').each(function(idx,drv){
+            drvText = $(drv).outerHTML();
+         //   drvText = $("<div>").text(drvText).html().replace(/"/g,'&quot;');
 
-          return val;
+            derivation+='<span class="derivation" data-html="true" data-trigger="hover focus click" data-toggle="popover" ' +
+              'data-placement="top" data-target="#pop_derivation_{1}_{2}" >Derivation</span><div id="pop_derivation_{1}_{2}" class="hide">{0}</div>'
+              .format(drvText,itemName,$prop.attr('name'));
+              values.push(derivation);
+          })
+
+          return values.join('<br/>');
         }
       }, {
         name: 'default',
@@ -177,7 +191,13 @@
 
       .insertAfter($("h3:contains('Value')"))
         .append($('<button id="showXmlAsTable" class="">Display as table</button>').on('click', BDA_XML_DEF.showXmlDefAsTable));
+         //temp
 
+      var  BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
+      var defaultOpenXmlDefAsTable = BDA_STORAGE.getConfigurationValue('defaultOpenXmlDefAsTable');
+      if(defaultOpenXmlDefAsTable){
+        BDA_XML_DEF.showXmlDefAsTable();
+      }
     },
 
     showXmlDefAsTable: function() {
@@ -196,6 +216,7 @@
     //doesn't use processRepositoryXmlDef because no need for Ajax call
     //might need to refactor later for dual use.
     buildXmlDefAsTable: function() {
+      console.time('buildXmlDefAsTable');
 
       try {
 
@@ -242,7 +263,7 @@
 
               //properties that are tables:
               $table.find('property').each(function(idx, propertyDesc) {
-                  $propertyDesc = $(propertyDesc);
+                  $propertyDesc = $(propertyDesc,itemDescName);
                   cols = [];
                   for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
                     attrDef = BDA_XML_DEF.templates.tableColumns[i];
@@ -276,7 +297,7 @@
                   for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
                     attrDef = BDA_XML_DEF.templates.tableColumns[i];
                     if (!isNull(attrDef.build)) {
-                      val = attrDef.build($propertyDesc);
+                      val = attrDef.build($propertyDesc,itemDescName);
                     } else {
                       val = $propertyDesc.attr(attrDef.name);
                     }
@@ -336,13 +357,29 @@
 
         //activate
         $('[data-toggle="tooltip"]').tooltip();
-        $('[data-toggle="popover"]').popover();
+
+        $('[data-toggle="popover"]').each(function(){
+          var $this = $(this);
+          var targetId = $this.attr('data-target');
+          if(isNull(targetId)){
+            $this.popover();
+          }else{
+            var xml = $(targetId).html();
+            var codeBlock = $("<pre></pre>").text(xml);
+            //hightlight the content
+            highlightAndIndentXml(codeBlock);
+            $this.popover({
+              content:codeBlock.outerHTML()
+            })
+          }
+        });
 
         logTrace('bdaXmlDef build end');
 
       } catch (e) {
         console.error(e);
       }
+       console.timeEnd('buildXmlDefAsTable');
     },
 
     searchInTable: function() {
