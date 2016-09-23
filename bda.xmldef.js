@@ -32,7 +32,7 @@
         name: 'name',
         class: 'col-lg-3'
       }, {
-        name: 'data / item-type',
+        title: 'data / item-type',
         class: 'col-lg-2',
         build: function($prop) {
           var val;
@@ -87,12 +87,12 @@
         }
       }, {
         name: 'column-name',
-        class: 'col-lg-1'
+        class: 'col-lg-2'
       }, {
         name: 'required',
         class: 'col-lg-1'
       }, {
-        name: 'property-type / derivation',
+        title: 'property-type / derivation',
         class: 'col-lg-2',
         build: function($prop,itemName) {
           //property descriptor
@@ -123,10 +123,12 @@
         class: 'col-lg-1'
       }, {
         name: 'cache-mode',
-        class: 'col-lg-1'
+        title: 'Cache-mode',
+        class: 'col-lg-05'
       }, {
         name: 'queryable',
-        class: 'col-lg-1'
+        title: 'Queryable',
+        class: 'col-lg-05'
       }],
       quickNavSearch: '<div class="input-group"><input id="xmlDefSearchBox" type="text" placeholder="Search : table, column,  item ..." class="form-control"/>' +
         ' <span class="input-group-btn">' +
@@ -431,10 +433,14 @@
     buildSubTableHeader: function(tableName) {
       //headers
       var cols = [];
-      var attr;
+      var attr,title;
       for (var i = 0; i < BDA_XML_DEF.templates.tableColumns.length; i++) {
         attr = BDA_XML_DEF.templates.tableColumns[i];
-        cols.push('<div class="{1}">{0}</div>'.format(attr.name,attr.class));
+        title = attr.title;
+        if(isNull(title)){
+          title=attr.name;
+        }
+        cols.push('<div class="{1}">{0}</div>'.format(title,attr.class));
       }
       return '<div class="row subtableHeader" data-table="tabledef_{1}">{0}</div>'.format(cols.join(''), tableName);
     },

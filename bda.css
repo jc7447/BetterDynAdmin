@@ -1056,6 +1056,10 @@ button.cache {
 /* XML DEF */
 #xmlDefAsTable {
   margin-top: 15px;
+  /* for whatever reason on some pages 
+  the whole section is inside an <a> tag
+  on native dyn/admin : need to reset color*/
+  color: black;
 }
 
 .item-descriptor-heading,
@@ -1162,6 +1166,13 @@ ol.itemDescAttributes {
   text-transform: capitalize;
 }
 
+.row.subtableHeader .col-lg-05{
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 8px;
+  text-align: center;
+}
+
 #xmlDefAsTable .tooltip-inner {
   max-width: inherit;
 }
@@ -1173,7 +1184,9 @@ ol.itemDescAttributes {
 #xmlDefAsTable .popover{
   max-width: inherit;
   width: 600px;
-  width: -moz-max-content;
+  width: intrinsic;           /* Safari/WebKit uses a non-standard name */
+  width: -moz-max-content;    /* Firefox/Gecko */
+  width: -webkit-max-content; /* Chrome */
 }
 
 /*
