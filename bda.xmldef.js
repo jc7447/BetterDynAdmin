@@ -608,8 +608,24 @@
 
     resizeQuickNav: function() {
       var $quickNav = BDA_XML_DEF.$quickNav;
+      //reset the style and stickyness to reset to normal size
+      var sticky = false;
+      if($quickNav.hasClass('sticky-top')){
+        $quickNav.removeClass('sticky-top');
+        sticky=true;
+      }
       $quickNav.removeAttr('style');
-      $quickNav.css('width', $quickNav.css('width'));
+      var windowH = window.innerHeight ;
+      $quickNav.find('#quickNavLinks').adjustToFit($quickNav, windowH);
+      //fix the values so that it behaves correctly when sticky
+      $quickNav.css({
+        'width': $quickNav.css('width'),
+      });
+      
+      if(sticky){
+        //reaply
+        $quickNav.addClass('sticky-top');
+      }
     }
 
   };
