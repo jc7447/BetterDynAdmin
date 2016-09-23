@@ -1112,6 +1112,10 @@ button.cache {
   overflow-x: hidden;
 }
 
+#xmlDefQuickNav .btn.sorted{
+  background-color: #dff0d8;
+}
+
 #xmlDefQuickNav h3.panel-title {
   padding-top: 4px;
 }
