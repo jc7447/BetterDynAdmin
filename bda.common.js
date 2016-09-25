@@ -147,8 +147,6 @@ try {
       var unescapeXML = $('<div/>').html(escapeXML).text();
       // vkbeautify needs unescape XML to works
       unescapeXML = vkbeautify.xml(unescapeXML, 2);
-      var dateIndent = new Date();
-      console.log("time to indent : " + (dateIndent.getTime() - dateStart) + "ms");
       var $codeBlock = $(this)
         // remove previous XML content
         .empty()
