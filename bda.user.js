@@ -1,4 +1,4 @@
-﻿// ==UserScript==
+﻿﻿// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -18,8 +18,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 2.0
-// @resource bdaCSS bda.css?version=2.0
+// @version 2.0.2
+// @resource bdaCSS bda.css?version=2.0.2
 
 // @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -280,33 +280,6 @@ jQuery(document).ready(function() {
               copyToClipboard($classLink.text());
             }).insertAfter($classLink);
         }
-      },
-
-      loadCssAsLink : function()
-      {
-        console.time('loadLinkCSS');
-        $("<link />").attr("href", GM_getResourceURL("cmCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("hlCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("hljsThemeCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("tablesorterCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("fontAwsomeCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("select2CSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("select2BootCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("bootstrapCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("typeahead-bootstrapCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("bdaCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-
-        $("<link />").append("<link />").attr("href", GM_getResourceURL("visCSS")).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
-        console.timeEnd('loadLinkCSS');
       },
 
       //--- Page informations ------------------------------------------------------------------------
