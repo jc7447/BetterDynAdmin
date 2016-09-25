@@ -313,7 +313,7 @@
           }
           logTrace(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
           var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n'
-                    + '  <set-proerty name="' + propertyName + '"><![CDATA[' + $target.val() + ']]>'
+                    + '  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]>'
                     + '</set-property>\n</update-item>';
           if (confirm('You are about to execute this query : \n' + query)) {
             jQuery.post(document.location.href, 'xmltext=' + query, function(res) {
