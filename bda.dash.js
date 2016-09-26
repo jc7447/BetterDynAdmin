@@ -13,7 +13,7 @@ jQuery(document).ready(function() {
       settings: {
         domain: "",
         verbose: false,
-        silent: false,
+        silent: false
       },
       // dom elements
       $screen: null,
@@ -249,6 +249,26 @@ jQuery(document).ready(function() {
       VARS: {},
       //shell fonctions
       FCT: {
+
+        wait:{
+           commandPattern: 'time',
+          help: 'Wait for X ms',
+          paramDef: [{
+            name: "time",
+            type: "value"
+          }],
+         
+          main: function(params, callback, errCallback) {
+            var time = parseInt(params.time)
+            setTimeout(function(){
+              callback(time);
+            },time);
+
+          },
+          responseToString: function(params, returnValue) {
+            return returnValue;
+          }
+        },
 
         //get /atg/commerce/order/OrderRepository.repositoryName >toto
         get: {
