@@ -2,46 +2,46 @@
   "use strict";
 
   var tags = {
-  '!top': ['add-item', 'query-items', 'print-item', 'remove-item'],
-  '!attrs': {},
-  'toto': {
+    '!top': ['add-item', 'query-items', 'print-item', 'remove-item'],
+    '!attrs': {},
+    'toto': {
 
-  },
-  'add-item': {
-    attrs: {
-      'id': null,
-      'item-descriptor': null
     },
-    children: ['set-property']
-  },
-  'print-item': {
-    attrs: {
-      'id': null,
-      'item-descriptor': null
+    'add-item': {
+      attrs: {
+        'id': null,
+        'item-descriptor': null
+      },
+      children: ['set-property']
     },
-    children: []
-  },
-  'remove-item': {
-    attrs: {
-      'id': null,
-      'item-descriptor': null
+    'print-item': {
+      attrs: {
+        'id': null,
+        'item-descriptor': null
+      },
+      children: []
     },
-    children: ['set-property']
-  },
-  'query-items': {
-    attrs: {
-      'item-descriptor': null,
-      'id-only': ['true', 'false']
+    'remove-item': {
+      attrs: {
+        'id': null,
+        'item-descriptor': null
+      },
+      children: ['set-property']
     },
-    children: []
-  },
-  'set-property': {
-    attrs: {
-      name: null
+    'query-items': {
+      attrs: {
+        'item-descriptor': null,
+        'id-only': ['true', 'false']
+      },
+      children: []
     },
-    children: []
-  }
-};
+    'set-property': {
+      attrs: {
+        name: null
+      },
+      children: []
+    }
+  };
 
   var BDA_REPOSITORY = {
     MAP_SEPARATOR: "=",
@@ -80,34 +80,46 @@
       tags: {
         '!top': ['add-item', 'query-items', 'print-item', 'remove-item'],
         '!attrs': {},
-        'toto':{
+        'toto': {
 
         },
         'add-item': {
-          attrs: {'id' : null, 'item-descriptor' : null},
+          attrs: {
+            'id': null,
+            'item-descriptor': null
+          },
           children: ['set-property']
         },
         'print-item': {
-           attrs: {'id' : null, 'item-descriptor' : null},
+          attrs: {
+            'id': null,
+            'item-descriptor': null
+          },
           children: []
         },
         'remove-item': {
-           attrs: {'id' : null, 'item-descriptor' : null},
+          attrs: {
+            'id': null,
+            'item-descriptor': null
+          },
           children: ['set-property']
         },
         'query-items': {
-           attrs: { 'item-descriptor' : null, 'id-only':['true','false']},
+          attrs: {
+            'item-descriptor': null,
+            'id-only': ['true', 'false']
+          },
           children: []
         },
         'set-property': {
           attrs: {
             name: null
           },
-          children:[]
+          children: []
         }
       },
     },
-    
+
 
     CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
 
@@ -335,7 +347,7 @@
         });
       });
 
-      BDA_REPOSITORY.queryEditor =  BDA_REPOSITORY.initCodeMirror(true);
+      BDA_REPOSITORY.queryEditor = BDA_REPOSITORY.initCodeMirror(true);
 
 
       // Init select2 plugin
@@ -373,65 +385,65 @@
       var editor;
       if (autocomplete) {
 
-      }
-
-      //inner functions for auto-complete
-      //taken from CM XML hint demo
-      //tryed to define them elsewhere but it broke the completion...
-      function completeAfter(cm, pred) {
-        var cur = cm.getCursor();
-        if (!pred || pred()) setTimeout(function() {
-          if (!cm.state.completionActive)
-            cm.showHint({
-              completeSingle: false
-            });
-        }, 100);
-        return CodeMirror.Pass;
-      }
-
-      function completeIfAfterLt(cm) {
-        return completeAfter(cm, function() {
+        //inner functions for auto-complete
+        //taken from CM XML hint demo
+        //tryed to define them elsewhere but it broke the completion...
+        function completeAfter(cm, pred) {
           var cur = cm.getCursor();
-          return cm.getRange(CodeMirror.Pos(cur.line, cur.ch - 1), cur) == "<";
-        });
-      }
-
-      function completeIfInTag(cm) {
-        return completeAfter(cm, function() {
-          var tok = cm.getTokenAt(cm.getCursor());
-          if (tok.type == "string" && (!/['"]/.test(tok.string.charAt(tok.string.length - 1)) || tok.string.length == 1)) return false;
-          var inner = CodeMirror.innerMode(cm.getMode(), tok.state).state;
-          return inner.tagName;
-        });
-      }
-
-      // Init code mirror
-      editor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
-        lineNumbers: false,
-        mode: 'xml',
-        extraKeys: {
-          "'<'": completeAfter,
-          "'/'": completeIfAfterLt,
-          "' '": completeIfInTag,
-          "'='": completeIfInTag,
-          "Ctrl-Space": "autocomplete"
-        },
-        hintOptions: {
-          schemaInfo: tags
+          if (!pred || pred()) setTimeout(function() {
+            if (!cm.state.completionActive)
+              cm.showHint({
+                completeSingle: false
+              });
+          }, 100);
+          return CodeMirror.Pass;
         }
-      });
 
-      // HACK
-      // on FF + greasemonkey, the hint is not updated when it's already open
-      // mostly working, yet a bit clunky 
-      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
-        CodeMirror.on(editor, "cursorActivity", function(cm, object) {
-          if (cm.state.completionActive) {
-            cm.showHint({
-              completeSingle: false
-            });
+        function completeIfAfterLt(cm) {
+          return completeAfter(cm, function() {
+            var cur = cm.getCursor();
+            return cm.getRange(CodeMirror.Pos(cur.line, cur.ch - 1), cur) == "<";
+          });
+        }
+
+        function completeIfInTag(cm) {
+          return completeAfter(cm, function() {
+            var tok = cm.getTokenAt(cm.getCursor());
+            if (tok.type == "string" && (!/['"]/.test(tok.string.charAt(tok.string.length - 1)) || tok.string.length == 1)) return false;
+            var inner = CodeMirror.innerMode(cm.getMode(), tok.state).state;
+            return inner.tagName;
+          });
+        }
+
+
+        // Init code mirror
+        editor = CodeMirror.fromTextArea(document.getElementById("xmltext"), {
+          lineNumbers: false,
+          mode: 'xml',
+          extraKeys: {
+            "'<'": completeAfter,
+            "'/'": completeIfAfterLt,
+            "' '": completeIfInTag,
+            "'='": completeIfInTag,
+            "Ctrl-Space": "autocomplete"
+          },
+          hintOptions: {
+            schemaInfo: tags
           }
-        })
+        });
+
+        // HACK
+        // on FF + greasemonkey, the hint is not updated when it's already open
+        // mostly working, yet a bit clunky 
+        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+          CodeMirror.on(editor, "cursorActivity", function(cm, object) {
+            if (cm.state.completionActive) {
+              cm.showHint({
+                completeSingle: false
+              });
+            }
+          })
+        }
       } else {
 
         // Init code mirror
@@ -1744,7 +1756,7 @@
 
     setupCacheHeaderWidth: function($header, $copy) {
       traceTime('setupCacheHeaderWidth.getWidth')
-      //since we set all column with the same width we can use only the first cell as reference
+        //since we set all column with the same width we can use only the first cell as reference
       var w = $('th:first', $header).width() + "px"; // .width() is very slow :( 
       //var w =first.width()
       traceTimeEnd('setupCacheHeaderWidth.getWidth')
