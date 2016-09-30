@@ -5,6 +5,9 @@
     tableInitialized: false,
     isXMLDefinitionFilePage: false,
     xmlDefinitionMaxSize: 150000, // 150 Ko
+    repositoryRootNode:'gsa-template',
+    dtdTitle: 'System Id (DTD name)',
+    repositoryDTDId:'gsa',
     templates: {
       itemDescTable: '<div id="item_{0}" class="panel panel-default item-panel" data-item-descriptor="{0}">' +
         '<div class="panel-heading item-descriptor-heading open" data-target="{0}">' +
@@ -165,7 +168,9 @@
 
     setupXMLDefinitionFilePage: function() {
 
-      BDA_XML_DEF.addDisplayXmlAsTableButton();
+      if(BDA_XML_DEF.isRepositoryDefinition()){
+        BDA_XML_DEF.addDisplayXmlAsTableButton();
+      }
 
       var xmlSize = 0;
       $("pre").each(function(index) {
@@ -185,6 +190,13 @@
       }
 
 
+    },
+
+    isRepositoryDefinition:function(){
+      var dtdName = $('td:contains("{0}")'.format(BDA_XML_DEF.dtdTitle)).next().text();
+      console.log('dtdName %s',dtdName);
+      return !isNull(dtdName) && dtdName.indexOf(BDA_XML_DEF.repositoryDTDId) !== -1;
+//repositoryRootNode
     },
 
     addDisplayXmlAsTableButton: function() {
