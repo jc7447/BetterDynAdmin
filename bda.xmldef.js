@@ -18,11 +18,20 @@
         '</div>' +
         '</div>',
       itemHeader: [ 
-        'sub-type-property',
-        'super-type',
-        'cache-mode',
-        'item-cache-timeout',
-        'item-cache-size'
+
+        {name: 'sub-type-property'},
+        {name: 'super-type' ,
+          build: function($itemDesc){
+            var superType = $itemDesc.attr('super-type');
+            var val;
+            if(!isNull(superType)){
+              val =  '<a href="#item_{0}">{0}</a>'.format(superType);
+            }
+            return val;
+          }},
+        {name: 'cache-mode' },
+        {name: 'item-cache-timeout'},
+        {name: 'item-cache-size' },
       ],
       colgroup: 
         '<colgroup>' +
@@ -603,15 +612,22 @@
       return $container;
     },
 
+
+
     buildItemHeader: function(itemDescName,$itemDesc) {
       var values = [],
-        attrDef, val;
+        attrConf, val;
       values.push('<ol class="itemDescAttributes"><li><span class="attr-value">{0}</span></li>'.format(itemDescName));
       for (var i = 0; i < BDA_XML_DEF.templates.itemHeader.length; i++) {
-        attrDef = BDA_XML_DEF.templates.itemHeader[i];
-        val = $itemDesc.attr(attrDef);
+        attrConf = BDA_XML_DEF.templates.itemHeader[i];
+        if(!isNull(attrConf.build)){
+          val = attrConf.build($itemDesc);
+        }else{
+          val = $itemDesc.attr(attrConf.name);
+          
+        }
         if (val) {
-          values.push('<li>{0} : <span class="attr-value">{1}</span></li>'.format(attrDef, val));
+          values.push('<li>{0} : <span class="attr-value">{1}</span></li>'.format(attrConf.name, val));
         }
       }
       values.push('</ol>');
