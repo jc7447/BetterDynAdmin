@@ -1107,9 +1107,13 @@ button.cache {
 
 #quickNavLinks {
   margin-top: 10px;
-  max-height: 600px;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+#xmlDefQuickNav .btn.sorted{
+  background-color: #dff0d8;
 }
 
 #xmlDefQuickNav h3.panel-title {

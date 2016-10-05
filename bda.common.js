@@ -224,9 +224,7 @@ try {
     return r;
   };
 
-  this.sort = function(array) {
-    logTrace('beforeSort : ' + array);
-    var sorted = array.sort(function(a, b) {
+  this.stringCompare =function(a, b) {
       if (a !== null)
         return a.localeCompare(b, 'en', {
           caseFirst: 'upper'
@@ -235,7 +233,23 @@ try {
         return -1;
       else
         return 0;
-    });
+    };
+
+  this.compareAttr = function(a,b,attr){
+    var aVal =  $(a).attr(attr);
+    var bVal =  $(b).attr(attr);
+    return stringCompare(aVal,bVal);
+  }
+
+  this.compareAttrFc = function(attr){
+    return function(a,b){
+      return compareAttr(a,b,attr);
+    }
+  }
+
+  this.sort = function(array) {
+    logTrace('beforeSort : ' + array);
+    var sorted = array.sort(this.stringCompare);
     logTrace('after sort : ' + sorted);
     return sorted;
   };
@@ -411,7 +425,15 @@ try {
     return csv;
   };
 
-
+  $.fn.sortContent = function(selector,sortFunction){
+    var $this = $(this);
+    var $elems = $this.find(selector);
+    console.log('selector ' + selector);
+    console.log($elems.length);
+   $elems = $elems.sort(sortFunction);
+    $elems.detach().appendTo($this);
+    return this;
+  } 
 
   /*
 
