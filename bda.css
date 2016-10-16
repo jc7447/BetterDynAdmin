@@ -1,9 +1,8 @@
-
 tr.even td {
   background-color: #FFF;
 }
 
-#itemTreeId{
+#itemTreeId {
   width: 100px;
 }
 
@@ -16,21 +15,25 @@ a {
 }
 
 .fa-pencil-square-o {
-  cursor : pointer;
+  cursor: pointer;
 }
 
 #RQLToolbar {
   margin-bottom: 10px;
-
 }
-.select2-container .select2-choices .select2-search-field input, .select2-container .select2-choice, .select2-container .select2-choices {
+
+.select2-container .select2-choices .select2-search-field input,
+.select2-container .select2-choice,
+.select2-container .select2-choices {
   font-family: "Arial";
   font-size: 13px;
   color: black;
 }
 
-.select2-chosen, .select2-choice > span:first-child, .select2-container .select2-choices .select2-search-field input {
-    padding: 4px 6px;
+.select2-chosen,
+.select2-choice > span:first-child,
+.select2-container .select2-choices .select2-search-field input {
+  padding: 4px 6px;
 }
 
 #select2-drop {
@@ -41,8 +44,9 @@ a {
   height: 24px;
 }
 
-.select2-container .select2-choice .select2-arrow b, .select2-container .select2-choice div b {
-    background-position: 0 0;
+.select2-container .select2-choice .select2-arrow b,
+.select2-container .select2-choice div b {
+  background-position: 0 0;
 }
 
 .select2-results {
@@ -61,16 +65,17 @@ a {
   overflow-x: scroll;
   overflow-x: hidden;
   max-height: 100px;
-  padding : 5px;
+  padding: 5px;
   border: 1px dashed #CCC;
-   width:800px;
-   white-space: pre-wrap;
-   font-family: monospace;
+  width: 800px;
+  white-space: pre-wrap;
+  font-family: monospace;
 }
+
 #rawXml {
   display: none;
-  margin : 0px;
-  padding : 0px;
+  margin: 0px;
+  padding: 0px;
 }
 
 .dataTable {
@@ -116,7 +121,8 @@ a {
   display: none;
 }
 
-.dataTable td, .dataTable th {
+.dataTable td,
+.dataTable th {
   padding: 3px;
 }
 
@@ -145,7 +151,7 @@ a {
 #RQLText .CodeMirror {
   border: 1px solid #aaa;
   height: 250px;
-  width:800px;
+  width: 800px;
   cursor: text;
 }
 
@@ -179,17 +185,16 @@ a {
   border: 1px solid #dcdcdc;
   padding: 5px;
   font-size: 14px;
-  margin-right : 20px;
+  margin-right: 20px;
 }
 
-#repoToolbar
-{
+#repoToolbar {
   margin-bottom: 20px;
 }
 
 .btn-toolbar:hover {
-  color : black;
-  }
+  color: black;
+}
 
 .red {
   color: #880000;
@@ -207,7 +212,6 @@ a {
   font-size: 13px;
   font-weight: bold;
 }
-
 
 #tabs {
   display: inline-block;
@@ -227,7 +231,7 @@ a {
 }
 
 #navbar li {
-  float : left;
+  float: left;
   background-color: #ddd;
   color: #000;
   padding: 4px 8px;
@@ -307,8 +311,7 @@ a {
 }
 
 /** MENU **/
-
-#menuBar{
+#menuBar {
   position: absolute;
   top: 0px;
   right: 30px;
@@ -323,13 +326,13 @@ a {
   border-top: none;
   padding: 3px;
   text-align: center;
-  float:right;
+  float: right;
   margin-top: 0px;
   margin-right: 3px;
 }
 
 .menu p {
-   margin: 0;
+  margin: 0;
 }
 
 .menuPanel {
@@ -339,13 +342,13 @@ a {
   width: 296px;
   font-size: 11px;
   color: white;
-  border : 1px solid #00486c;
+  border: 1px solid #00486c;
   border-top: none;
   padding: 3px;
   display: none;
 }
 
-.menuPanel a{
+.menuPanel a {
   text-decoration: underline;
   color: white;
 }
@@ -374,18 +377,18 @@ a {
   background-color: #007bb8;
 }
 
-#bdaSearch input{
+#bdaSearch input {
   margin-top: 1px;
   height: 20px;
 }
 
 #whatsnew {
   background-color: #62A03E;
-  border-color : #44702B;
+  border-color: #44702B;
 }
 
 #whatsnewPanel {
-  border-color : #44702B;
+  border-color: #44702B;
   background-color: #62A03E;
 }
 
@@ -406,7 +409,7 @@ a {
 }
 
 .toolbar-elem {
-  float:left;
+  float: left;
 }
 
 .newFav {
@@ -420,32 +423,31 @@ a {
   cursor: pointer;
 }
 
-.favFilter{
+.favFilter {
   border: 1px dashed #AAAAAA;
   height: 54px;
   width: 50px;
   margin: 4px;
   cursor: pointer;
-   text-align: center;
+  text-align: center;
   font-size: 20px;
   margin: 4px;
   line-height: 48px;
 }
 
-#favFilter{
+#favFilter {
   margin-top: 15px;
 }
 
-.fav-chevron{
+.fav-chevron {
   line-height: 48px;
 }
 
-#favTagList{
+#favTagList {
   clear: left;
   margin-left: 5px;
   margin-top: 3px;
 }
-
 
 #addComponent {
   color: #AAAAAA;
@@ -456,54 +458,55 @@ a {
   margin-bottom: 5px;
 }
 
-.bda-button{
-   color:white;
-   border: 1px solid #ccc;
-   border-radius: 3px;
-   font-size: 12px;
-   padding: 0px 6px 0px 0px;
-   cursor: pointer;
+.bda-button {
+  color: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 12px;
+  padding: 0px 6px 0px 0px;
+  cursor: pointer;
 }
 
-.bda-button label, .bda-button input, .bda-button button{
-   vertical-align: middle;
+.bda-button label,
+.bda-button input,
+.bda-button button {
+  vertical-align: middle;
 }
 
-.bda-button-icon{
+.bda-button-icon {
   height: 22px;
   width: 22px;
   padding: 0px 0px 0px 0px;
   vertical-align: middle;
 }
 
-.bda-button-clipboard{
-  margin-left:10px;
+.bda-button-clipboard {
+  margin-left: 10px;
   padding: 3px;
-  color:black;
+  color: black;
   vertical-align: middle;
   border-radius: 5px;
 }
 
-.tag-filter-button{
-   color:black;
+.tag-filter-button {
+  color: black;
 }
 
-
-.tag-filter{
+.tag-filter {
   cursor: pointer;
 }
 
-.tag-filter label{
-  margin-left:5px;
+.tag-filter label {
+  margin-left: 5px;
   cursor: pointer;
 }
 
-.favline{
+.favline {
   margin-bottom: 5px;
   display: block;
 }
 
-.favline ul{
+.favline ul {
   margin: 0;
   padding: 0;
   list-style-type: none;
@@ -512,17 +515,17 @@ a {
   white-space: nowrap;
 }
 
-.favline div{
-  display:inline-block;
+.favline div {
+  display: inline-block;
 }
 
-.favline li{
-    display: inline-block;
-    list-style: none; /* pour enlever les puces sur IE7 */
-    margin: 2px;
+.favline li {
+  display: inline-block;
+  list-style: none; /* pour enlever les puces sur IE7 */
+  margin: 2px;
 }
 
-.newtags{
+.newtags {
   width: 85%;
 }
 
@@ -535,7 +538,7 @@ a {
 }
 
 .fav a {
-  color:white;
+  color: white;
 }
 
 .favLink {
@@ -543,7 +546,8 @@ a {
   line-height: 16px;
 }
 
-.favLink a, .logdebug {
+.favLink a,
+.logdebug {
   color: white;
   text-decoration: none;
 }
@@ -569,7 +573,7 @@ a {
 .favTitle {
   font-size: 14px;
   font-weight: bold;
-  margin-bottom: 5px;;
+  margin-bottom: 5px;
   text-align: center;
 }
 
@@ -584,11 +588,10 @@ a {
   cursor: pointer;
 }
 
-.fav-button{
- cursor: pointer;
- margin-right: 5px;
+.fav-button {
+  cursor: pointer;
+  margin-right: 5px;
 }
-
 
 .favLogDebug form {
   margin: 0;
@@ -604,38 +607,35 @@ a {
   font-size: 13px;
 }
 
-#oracleATGbrand
-{
+#oracleATGbrand {
   width: 120px;
   cursor: pointer;
 }
 
-#xmlHighlight
-{
+#xmlHighlight {
   margin-bottom: 0px;
 }
 
-#rawXml pre
-{
-  margin : 0;
+#rawXml pre {
+  margin: 0;
 }
 
-#sqltext
-{
+#sqltext {
   display: block;
 }
-#curDataSourceName
-{
+
+#curDataSourceName {
   font-weight: bold;
 }
 
 #sqlResult {
   border-collapse: collapse;
   width: 100%;
-  border : 1px solid #ccc;
+  border: 1px solid #ccc;
 }
 
-#sqlResult td, #sqlResult th {
+#sqlResult td,
+#sqlResult th {
   text-align: center;
   border-right: 1px solid #ccc;
   background: none;
@@ -645,12 +645,12 @@ a {
   background-color: #F0F0F6;
 }
 
-
 /* Extra selectors needed to override the default styling */
 table.tablesorter tbody tr.normal-row td {
   background: #fff;
   color: #3d3d3d;
 }
+
 table.tablesorter tbody tr.alt-row td {
   background: #EAF2FA;
   color: #3d3d3d;
@@ -658,84 +658,86 @@ table.tablesorter tbody tr.alt-row td {
 
 table.tablesorter tr.normal-row:hover td,
 table.tablesorter tr.alt-row:hover td {
-    background-color: #eee;
+  background-color: #eee;
 }
 
 .clickable:hover {
-  color : #d14;
+  color: #d14;
   text-decoration: underline;
 }
 
 .popup_block {
-   background: #fff none repeat scroll 0 0;
-   border: 5px solid #ddd;
-   box-shadow: 0 0 5px #000;
-   display: none;
-   font-size: 0.9em;
-   padding: 10px;
-   position: fixed;
-   left: 50%;
-   transform: translate(-50%, 0);
-   z-index:1;
-   height: 400px;
-   width: 700px;
-   top : 30px;
+  background: #fff none repeat scroll 0 0;
+  border: 5px solid #ddd;
+  box-shadow: 0 0 5px #000;
+  display: none;
+  font-size: 0.9em;
+  padding: 10px;
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 1;
+  height: 400px;
+  width: 700px;
+  top: 30px;
 }
 
 #pipelinePopup {
-   height: 600px;
-   width: 90%;
-   font-size: 14px;
+  height: 600px;
+  width: 90%;
+  font-size: 14px;
 }
 
 #pipelineTable {
-	font-size: 14px;
+  font-size: 14px;
 }
 
 .popup_title {
-  margin-top : 0;
+  margin-top: 0;
 }
 
 #addComponentToolbarPopupContent {
-  height:58%;
-  overflow:auto;
+  height: 58%;
+  overflow: auto;
 }
 
-.close, #submitComponent {
+.close,
+#submitComponent {
   float: right;
-  color : black;
+  color: black;
 }
 
 .fav-submit-button {
   float: right;
-  color : black;
+  color: black;
 }
 
-#methods, #vars {
-  float:left;
+#methods,
+#vars {
+  float: left;
   width: 50%;
 }
 
-#methods li, #vars li{
-  list-style-position:inside;
+#methods li,
+#vars li {
+  list-style-position: inside;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
 }
 
 #speedbar {
-  float:right;
-  width:210px;
+  float: right;
+  width: 210px;
   margin-right: 100px;
-  margin-top : 100px;
+  margin-top: 100px;
 }
 
 #speedbar #widget {
-  width:240px;
-  border :1px solid #999;
+  width: 240px;
+  border: 1px solid #999;
   font-size: 13px;
-  padding : 10px;
+  padding: 10px;
 }
 
 #widget i {
@@ -750,70 +752,64 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #widget p {
-  margin-top : 0;
+  margin-top: 0;
 }
 
 #widget li {
-  margin-top : 5px;
+  margin-top: 5px;
 }
 
 .link {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 #pipelineTable pre {
-	margin : 0;
+  margin: 0;
 }
 
 .clickable_property {
-  text-decoration : underline;
+  text-decoration: underline;
   cursor: pointer;
 }
 
 /* DASH */
-
-.modal-dialog.modal-lg{
+.modal-dialog.modal-lg {
   width: 60%;
-
 }
 
-.fullscreen .modal-dialog.modal-lg{
+.fullscreen .modal-dialog.modal-lg {
   width: 95%;
-
 }
 
-#dashModal .modal-content{
+#dashModal .modal-content {
 }
 
-#dashModal .modal-footer .tab-pane{
+#dashModal .modal-footer .tab-pane {
   text-align: left;
 }
 
-
-#dashInput{
-   font-family: monospace;
+#dashInput {
+  font-family: monospace;
 }
 
-#dashForm{
-   font-family: monospace;
+#dashForm {
+  font-family: monospace;
 }
 
-#dashForm .tt-hint{
-  color : #ccc;
-
+#dashForm .tt-hint {
+  color: #ccc;
 }
 
-#dashForm .form-group{
+#dashForm .form-group {
   margin-bottom: 0;
 }
 
-#dashEditorForm{
+#dashEditorForm {
   font-size: 14px;
 }
 
-#dashEditor{
-  resize: none;
- /* min-height: 100px; */
+#dashEditor {
+  resize: none; /* min-height: 100px; */
 }
 
 #dashScreen {
@@ -824,144 +820,147 @@ table.tablesorter tr.alt-row:hover td {
   margin-bottom: 15px;
 }
 
-.fullscreen #dashScreen{
+.fullscreen #dashScreen {
   margin-bottom: 0;
   height: 100%;
   max-height: 100%;
 }
 
-#dashScreen .alert{
+#dashScreen .alert {
   padding-top: 5px;
   padding-bottom: 5px;
   margin-bottom: 5px;
 }
 
-
-#dashScreen pre{
+#dashScreen pre {
   background-color: inherit;
   font-family: inherit;
   border: 0;
-  color:inherit;
+  color: inherit;
 }
 
-#dashScreen .dl-horizontal dt{
+#dashScreen .dl-horizontal dt {
   width: 80px;
 }
 
-#dashScreen .dl-horizontal dd{
+#dashScreen .dl-horizontal dd {
   margin-left: 90px;
 }
 
-.typeahead.dropdown-menu{
+.typeahead.dropdown-menu {
   text-align: left;
 }
 
-#dashModal textarea.form-control{
+#dashModal textarea.form-control {
   height: inherit;
 }
 
-#dashModal panel{
+#dashModal panel {
   background-color: white;
 }
 
-table.table{
+table.table {
   background-color: white;
 }
 
 /* Override dyn/admin style */
-.table th{
+.table th {
   background-color: inherit;
   border-style: inherit;
 }
 
-#dashModal .alert .btn-group{
-  float:right;
-   opacity: 0.8;
+#dashModal .alert .btn-group {
+  float: right;
+  opacity: 0.8;
 }
 
-#dashModal .alert button.btn{
-    cursor: pointer;
-    opacity: 0.8;
+#dashModal .alert button.btn {
+  cursor: pointer;
+  opacity: 0.8;
 }
 
-#dashModal .alert button.btn:hover,#dashModal .alert button.btn:focus{
-    opacity: 1;
+#dashModal .alert button.btn:hover,
+#dashModal .alert button.btn:focus {
+  opacity: 1;
 }
 
-.printItem{
+.printItem {
   margin-top: 15px;
 }
 
-#dashModal .modal-footer  .panel{
+#dashModal .modal-footer  .panel {
   margin-bottom: 0;
 }
 
-#dashSaveForm{
+#dashSaveForm {
   margin-bottom: 0;
 }
 
-.no-padding{
+.no-padding {
   padding: 0 !important;
 }
 
-#bdaDashMenuElem .menuArrow{
+#bdaDashMenuElem .menuArrow {
   padding-top: 2px;
 }
 
-kbd{
+kbd {
   padding: 2px 4px;
   font-size: 90%;
   color: #fff;
   background-color: #333;
   border-radius: 3px;
-  -webkit-box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
-  box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
+  -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .25);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .25);
 }
 
-
-#dashModal .modal-footer{
+#dashModal .modal-footer {
   margin-top: 0;
   border-top: 0;
   padding: 5px 20px 5px;
 }
 
-#dashModal .modal-body{
+#dashModal .modal-body {
   padding-bottom: 0;
 }
 
 /* recopy bootstrap without wrapper*/
 .modal-backdrop.fade {
-    opacity: 0;
-    filter: alpha(opacity=0);
+  opacity: 0;
+  filter: alpha(opacity=0);
 }
-.twbs .fade.in {
-    opacity: 1;
+
+.fade.in {
+  opacity: 1;
 }
+
 .modal-backdrop.in {
-    opacity: .5;
-    filter: alpha(opacity=50);
+  opacity: .5;
+  filter: alpha(opacity=50);
 }
-.modal-backdrop{
+
+.modal-backdrop {
   position: fixed;
-top: 0;
-right: 0;
-bottom: 0;
-left: 0;
-z-index: 1030;
-background-color: #000;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1030;
+  background-color: #000;
 }
+
 .fade {
-    opacity: 0;
-    -webkit-transition: opacity .15s linear;
-    transition: opacity .15s linear;
+  opacity: 0;
+  -webkit-transition: opacity .15s linear;
+  transition: opacity .15s linear;
 }
 
-#dashTips{
-  margin-top:10px;
-  margin-bottom:5px;
+#dashTips {
+  margin-top: 10px;
+  margin-bottom: 5px;
 }
 
-.footer-right{
+.footer-right {
   cursor: pointer;
 }
 
@@ -969,57 +968,71 @@ background-color: #000;
   border: 1px solid transparent;
 }
 
-
-
 /** CACHE STATS **/
-
-table.cache{
+table.cache {
   border-spacing: 0;
   border-collapse: collapse;
 }
 
 .cache tr.cache-subheader {
-  cursor:pointer;
+  cursor: pointer;
 }
 
-.cache td, .cache th
-{
+.cache td,
+.cache th {
   padding: 6px;
 }
 
-.cache td, .cache th{
-    border: 1px solid #ddd;
+.cache td,
+.cache th {
+  border: 1px solid #ddd;
 }
-button.cache{
-   cursor:pointer;
+
+button.cache {
+  cursor: pointer;
 }
 
 .fixed_headers {
   table-layout: fixed;
-}
-.fixed_headers thead tr {
-  display: block;
-}
-.fixed_headers tbody {
-  display: block;
-
+  width: 100%;
 }
 
-.sticky-top{
+.fixed_headers thead {
+  width: 100%;
+}
+
+.fixed_headers thead th {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.fixed_headers th,
+.fixed_headers td {
+  width: 4%;
+}
+
+/*.fixed_headers .sticky-top thead {
+  display: block;
+}
+.fixed_headers .sticky-top tbody {
+  display: block;
+
+}*/
+.sticky-top {
   position: fixed;
-  top:0;
+  top: 0;
 }
 
-.scroller{
-    scroll-snap-type: proximity;
+.scroller {
+  scroll-snap-type: proximity;
 }
 
-.snap{
- scroll-snap-align: start none;
- scroll-snap-padding: 25px 0 0 0 ;
+.snap {
+  scroll-snap-align: start none;
+  scroll-snap-padding: 25px 0 0 0;
 }
-
-
 
 /*.old_ie_wrapper {
   overflow-x: hidden;
@@ -1029,7 +1042,7 @@ button.cache{
 
 /* SCHEDULER */
 
-#timeline-wrapper{
+#timeline-wrapper {
   margin-bottom: 20px;
 }
 
@@ -1040,58 +1053,86 @@ button.cache{
   text-align: left;
 }
 
-.item-descriptor-table th{
-  text-transform:capitalize;
+/* XML DEF */
+#xmlDefAsTable {
+  margin-top: 15px;
+  /* for whatever reason on some pages
+  the whole section is inside an <a> tag
+  on native dyn/admin : need to reset color*/
+  color: black;
 }
 
+.item-descriptor-heading,
+.table-def {
+  text-transform: capitalize;
+  cursor: pointer;
+}
 
-.table-def th, .table-def td{
+#xmlDefAsTable .item-panel .panel-heading {
+  background-color: #dff0d8;
+}
+
+.subtableHeader {
+  background-color: #f5f5f5;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.item-panel .panel-heading {
+  padding: 10px;
+}
+
+/* Remove pading top/bot */
+.item-panel .panel-body {
+  padding: 0 15px;
+}
+
+.item-panel .row > [class^="col-"] {
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.table-def [class^="col-"] {
   text-transform: none;
   background-color: #d9edf7;
 }
 
-.item-descriptor-table .highlight {
+.item-panel .highlight {
   background-color: yellow;
 }
 
-/* XML DEF */
-
-#xmlDefAsTable{
-  margin-top: 15px;
-}
-
-
-.item-descriptor-table .property:hover{
+.item-panel .property:hover {
   background-color: #f5f5f5;
 }
 
-.item-descriptor{
-   cursor:pointer;
-}
-.table-def{
-   cursor:pointer;
-}
-
-#quickNavLinks{
-  margin-top:10px;
-  max-height: 600px;
+#quickNavLinks {
+  margin-top: 10px;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-#xmlDefQuickNav h3.panel-title{
-  padding-top:4px;
+#xmlDefQuickNav .btn.sorted{
+  background-color: #dff0d8;
 }
 
-#definitionsContainer{
-      max-width: inherit;
+#xmlDefQuickNav h3.panel-title {
+  padding-top: 4px;
+}
+
+#definitionsContainer {
+  max-width: inherit;
 }
 
 #quickNavLinks .nav > li > a {
   padding: 5px 15px
 }
 
-ol.itemDescAttributes{
+#xmlDefSearchBox {
+  font-size: 0.9em;
+}
+
+ol.itemDescAttributes {
   text-transform: none;
   margin: 0;
   padding: 0;
@@ -1100,53 +1141,85 @@ ol.itemDescAttributes{
 
 .itemDescAttributes > li {
   display: inline-block;
+  padding-right: 5px;
 }
+
 .itemDescAttributes > li + li:before {
   content: "/\00a0";
   padding: 0 5px;
   color: #cccccc;
 }
 
-.attr-value{
+.attr-value {
   font-weight: 600;
 }
 
-.table-name{
+.table-name {
   font-weight: 600;
   text-transform: none;
 }
 
-.property-type, .enum{
+.property-type,
+.enum,
+.derivation {
   text-decoration: underline;
 }
 
-.data-type, .component-data-type{
+.data-type,
+.component-data-type {
   text-transform: capitalize;
 }
 
+.row.subtableHeader .col-lg-05{
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 8px;
+  text-align: center;
+}
 
-#xmlDefAsTable .tooltip-inner{
+#xmlDefAsTable .tooltip-inner {
   max-width: inherit;
 }
 
-table.item-descriptor-table{
-  table-layout: fixed;
-}
-
-.item-descriptor-table th,.item-descriptor-table td{
-   width: 12.5%;
-}
-
-.item-descriptor-table td[colspan],.item-descriptor-table th[colspan]{
-  width: auto;
-}
-
-.popover ul{
+#xmlDefAsTable  .popover ul {
   padding-left: 10px;
 }
 
+#xmlDefAsTable .popover{
+  max-width: inherit;
+  width: 600px;
+  width: intrinsic;           /* Safari/WebKit uses a non-standard name */
+  width: -moz-max-content;    /* Firefox/Gecko */
+  width: -webkit-max-content; /* Chrome */
+}
+
+/*
+.item-panel [class^="col-"] {
+    background-color: rgba(86,61,124,.15);
+    border: 1px solid rgba(86,61,124,.2);
+}
+*/
+
 /** AUTOCOMPLETE **/
 
-#searchField{
+#searchField {
   width: 300px;
+}
+
+/** extend grid system**/
+
+/** 0.5 **/
+.twbs .col-xs-05,
+.twbs .col-sm-05,
+.twbs .col-md-05,
+.twbs .col-lg-05 {
+  width: 4.166666665%;
+  position: relative;
+  min-height: 1px;
+  padding-left: 15px;
+  padding-right: 15px;
+  float: left;
+}
+.notifyjs-bootstrap-base {
+  font-size: 12px;
 }

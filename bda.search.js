@@ -30,24 +30,14 @@
           remote: {
             url: BDA_SEARCH.searchUrl,
             wildcard: '%QUERY',
-            //custom transport as search respones is not JSON
-            transport: function(settings, onSuccess, onError) {
-              //change the type to post, and let jquery assert the return type (instead of defaut JSON)
-              $.ajax({
-                url: settings.url,
-                type: 'POST'
-              }).done(done).fail(fail);
-
-              function done(data, textStatus, request) {
-                onSuccess(data);
-              }
-
-              function fail(request, textStatus, errorThrown) {
-                onError(errorThrown);
-              }
+            prepare :function(query,settings){
+              console.log('prepare')
+              return {url:settings.url.replace('%QUERY',query),type:'POST'};
             },
             //transform the returned html to extract the search results:
             transform: function(response) {
+              console.log('transform')
+              console.log(response);
               var searchResultsTable = $('<div></div>').html(response).find('th:contains("Search Results:")').closest('table');
               var res = searchResultsTable
                 .find('td > a')

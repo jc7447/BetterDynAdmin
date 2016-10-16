@@ -18,13 +18,15 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 2.0.2
-// @resource bdaCSS bda.css?version=2.0.2
+// @version 2.0.3
+// @resource bdaCSS bda.css?version=2.0.3
 
 // @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/codemirror.min.js
-// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/4.8.0/mode/xml/xml.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/mode/xml/xml.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/addon/hint/show-hint.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/addon/hint/xml-hint.min.js
 // @require https://raw.githubusercontent.com/vkiryukhin/vkBeautify/master/vkbeautify.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js
@@ -33,8 +35,9 @@
 // custom bootstrap
 // @require lib/bootstrap/js/bootstrap.min.js
 // @require http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.min.js
-//  https://raw.githubusercontent.com/bassjobsen/Bootstrap-3-Typeahead/master/bootstrap3-typeahead.min.js
-// @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.7.2/jquery.textcomplete.min.js
+
+// @resource cmCSS https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.css
 // @resource tablesorterCSS https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/css/theme.blue.min.css
 // @resource hljsThemeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/highlight.js/github_custom.css
 // @resource hlCSS https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/default.min.css
@@ -42,6 +45,7 @@
 // @resource select2BootCSS https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.css
 // @resource fontAwsomeCSS https://raw.githubusercontent.com/jc7447/BetterDynAdmin/master/lib/font-awsome/font-awesome.min.css
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
+// @resource cmHint https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/addon/hint/show-hint.css
 // scoped bootstrap
 // @resource bootstrapCSS lib/bootstrap/scoped-twbs.min.css
 // @resource typeahead-bootstrapCSS https://raw.githubusercontent.com/bassjobsen/typeahead.js-bootstrap-css/master/typeaheadjs.css
@@ -66,8 +70,6 @@
 // @require bda.dash.js
 // @require bda.scheduler.js
 
-
-
 // @updateUrl http://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -87,13 +89,13 @@ if (!is_chrome) {
     insertCss("typeahead-bootstrapCSS");
     insertCss("bdaCSS");
     insertCss("visCSS");
+    insertCss("cmHint");
 }
 // For Chrome inject <style> tag : this better because of the implemention of GM_getResourceURL in Tampermonkey (base64 transformation)
 else {
     injectCss();
 }
 function insertCss(resourceName) {
-  console.log(GM_getResourceURL(resourceName));
   $("<link />").attr("href", GM_getResourceURL(resourceName)).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
 }
 
@@ -121,6 +123,13 @@ function injectCss()
     GM_addStyle(bdaCSS);
     var visCSS = GM_getResourceText("visCSS");
     GM_addStyle(visCSS);
+    try{
+
+     var cmHint = GM_getResourceText("cmHint");
+    GM_addStyle(cmHint);
+    }catch(e){
+      console.error(e);
+    }
 }
 
 jQuery(document).ready(function() {

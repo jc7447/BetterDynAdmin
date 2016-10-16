@@ -35,6 +35,12 @@ try {
     };
   }
 
+
+  String.prototype.trunc =
+    function(n) {
+      return this.substr(0, n - 1) + (this.length > n ? '&hellip;' : '');
+    };
+
   // simple is Null fct
   this.isNull = function(object) {
     if (null === object || undefined === object) {
@@ -139,8 +145,8 @@ try {
   };
 
   this.highlightAndIndentXml = function($elm) {
-    console.time("highlightAndIndentXml");
-    console.log("Start highlightAndIndentXml");
+    traceTime("highlightAndIndentXml");
+    logTrace("Start highlightAndIndentXml");
 
     $elm.each(function(index) {
       var escapeXML = $(this).html();
@@ -169,7 +175,7 @@ try {
         });
     });
 
-    console.timeEnd("highlightAndIndentXml");
+    traceTimeEnd("highlightAndIndentXml");
   };
 
   this.getComponentNameFromPath = function(componentPath) {
@@ -218,9 +224,7 @@ try {
     return r;
   };
 
-  this.sort = function(array) {
-    logTrace('beforeSort : ' + array);
-    var sorted = array.sort(function(a, b) {
+  this.stringCompare =function(a, b) {
       if (a !== null)
         return a.localeCompare(b, 'en', {
           caseFirst: 'upper'
@@ -229,7 +233,23 @@ try {
         return -1;
       else
         return 0;
-    });
+    };
+
+  this.compareAttr = function(a,b,attr){
+    var aVal =  $(a).attr(attr);
+    var bVal =  $(b).attr(attr);
+    return stringCompare(aVal,bVal);
+  }
+
+  this.compareAttrFc = function(attr){
+    return function(a,b){
+      return compareAttr(a,b,attr);
+    }
+  }
+
+  this.sort = function(array) {
+    logTrace('beforeSort : ' + array);
+    var sorted = array.sort(this.stringCompare);
     logTrace('after sort : ' + sorted);
     return sorted;
   };
@@ -333,6 +353,17 @@ try {
     return purgeSlashes(res);
   };
 
+  this.traceTime = function(name) {
+    if (isLoggingTrace) {
+      console.time(name)
+    }
+  }
+  this.traceTimeEnd = function(name) {
+    if (isLoggingTrace) {
+      console.timeEnd(name)
+    }
+  }
+
   $.fn.adjustToFit = function($parent, targetTotalSize, minSize) {
     var curSize = $parent.fullHeight();
     var delta = targetTotalSize - curSize;
@@ -371,14 +402,14 @@ try {
     $(this).find('tr').each(function(idx, elem) {
       $tr = $(elem);
       line = [];
-       $tr.children('th').each(function() {
+      $tr.children('th').each(function() {
         line.push($(this).text());
       });
 
       $tr.children('td').each(function() {
         line.push($(this).text());
       });
-      if(line.length >0){
+      if (line.length > 0) {
         data.push(line);
       }
 
@@ -393,6 +424,16 @@ try {
 
     return csv;
   };
+
+  $.fn.sortContent = function(selector,sortFunction){
+    var $this = $(this);
+    var $elems = $this.find(selector);
+    console.log('selector ' + selector);
+    console.log($elems.length);
+   $elems = $elems.sort(sortFunction);
+    $elems.detach().appendTo($this);
+    return this;
+  } 
 
   /*
 
@@ -446,6 +487,8 @@ Johann Burkard
       }
     }).end();
   };
+
+
 
 } catch (e) {
   console.log(e);
