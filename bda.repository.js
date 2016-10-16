@@ -392,7 +392,7 @@
 
         // HACK
         // on FF + greasemonkey, the hint is not updated when it's already open
-        // mostly working, yet a bit clunky 
+        // mostly working, yet a bit clunky
         if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
           CodeMirror.on(editor, "cursorActivity", function(cm, object) {
             if (cm.state.completionActive) {
@@ -440,18 +440,23 @@
           var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n'
                     + '  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]>'
                     + '</set-property>\n</update-item>';
+          var initialValue = $input.attr("value");
           if (confirm('You are about to execute this query : \n' + query)) {
             jQuery.post(document.location.href, 'xmltext=' + query, function(res) {
               var $res = $(res);
               var errorsSelector1 = "Errors:";
               if($res.text().indexOf(errorsSelector1) != -1)
               {
+                var errorMsg = $res.find("code").text().trim();
                 $.notify(
-                  "Error", {
-                    position: "top center",
-                    className: "error"
+                  "Error : " + errorMsg, {
+                    position: "top left",
+                    className: "error",
+                    autoHide: true,
+                    autoHideDelay: 15000
                   }
                 );
+                $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + initialValue); // reset inital value
               }
               else
               {
@@ -462,11 +467,11 @@
                   }
                 );
               }
+              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' +  $input.val());
             });
-            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' +  $input.val());
           }
           else
-            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.attr("value")); // reset inital value
+            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + initialValue); // reset inital value
         });
       });
 
@@ -1787,7 +1792,7 @@
     setupCacheHeaderWidth: function($header, $copy) {
       traceTime('setupCacheHeaderWidth.getWidth')
         //since we set all column with the same width we can use only the first cell as reference
-      var w = $('th:first', $header).width() + "px"; // .width() is very slow :( 
+      var w = $('th:first', $header).width() + "px"; // .width() is very slow :(
       //var w =first.width()
       traceTimeEnd('setupCacheHeaderWidth.getWidth')
 

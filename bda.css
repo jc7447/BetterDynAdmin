@@ -1056,7 +1056,7 @@ button.cache {
 /* XML DEF */
 #xmlDefAsTable {
   margin-top: 15px;
-  /* for whatever reason on some pages 
+  /* for whatever reason on some pages
   the whole section is inside an <a> tag
   on native dyn/admin : need to reset color*/
   color: black;
@@ -1219,4 +1219,7 @@ ol.itemDescAttributes {
   padding-left: 15px;
   padding-right: 15px;
   float: left;
+}
+.notifyjs-bootstrap-base {
+  font-size: 12px;
 }

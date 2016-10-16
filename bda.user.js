@@ -18,8 +18,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 2.0.2
-// @resource bdaCSS bda.css?version=2.0.2
+// @version 2.0.3
+// @resource bdaCSS bda.css?version=2.0.3
 
 // @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -70,8 +70,6 @@
 // @require bda.dash.js
 // @require bda.scheduler.js
 
-
-
 // @updateUrl http://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // ==/UserScript==
@@ -98,7 +96,6 @@ else {
     injectCss();
 }
 function insertCss(resourceName) {
-  console.log(GM_getResourceURL(resourceName));
   $("<link />").attr("href", GM_getResourceURL(resourceName)).attr("rel", "stylesheet").attr("type","text/css").appendTo("head");
 }
 
