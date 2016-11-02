@@ -30,12 +30,17 @@
     {
       console.log("Setup execute query page");
       $("<div  id='switchDataSource'/>")
-      .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + BDA_JDBC.getCurrentDataSource() + " </span></p>")
+      .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + " </span></p>")
       .append("<p>Switch data source to : <select id='newDataSource'>" + BDA_JDBC.getAvailableDataSource() +
        "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>" +
        "<p>If you are using a custom data source folder, please add it in the configuration panel of BDA.</p>" +
        "<p>Go to <a href='/dyn/admin/nucleus"+ BDA_JDBC.connectionPoolPointerComp+"'>ConnectionPoolPointer</a></p>")
       .insertAfter($("h1:contains('Execute Query')"));
+
+      BDA_JDBC.getCurrentDataSource(function(data){
+        $('#curDataSourceName').html(data);
+      })
+
       $("textarea").prop("id", "sqltext");
       if ($("table").length > 0) {
         $("table").prop("id", "sqlResult").after(
@@ -68,10 +73,12 @@
       if (customDataSources)
         datasourcesDir = datasourcesDir.concat(customDataSources);
       console.log("Folders : " + datasourcesDir);
-      for (var i = 0; i != datasourcesDir.length; i++)
+      console.log(datasourcesDir.length)
+      for (var i = 0; i < datasourcesDir.length; i++)
       {
         var datasourceDir = datasourcesDir[i];
         var url = "/dyn/admin/nucleus" + datasourceDir;
+        console.log(datasourceDir)
         $.ajax({
           url : url,
           success : function(data) {
@@ -91,7 +98,7 @@
       return datasources;
     },
 
-    getCurrentDataSource : function()
+    getCurrentDataSource : function(callback)
     {
       var datasource;
       var url = "/dyn/admin/nucleus" + BDA_JDBC.connectionPoolPointerComp;
@@ -105,10 +112,9 @@
           .find("span")
           .text();
           logTrace(datasource);
-        },
-        "async" : false
+          callback(datasource)
+        }
       });
-      return datasource;
     },
 
     setupJdbcHomePage: function(){
