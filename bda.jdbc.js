@@ -31,11 +31,13 @@
       console.log("Setup execute query page");
       $("<div  id='switchDataSource'/>")
       .append("<p>Query will be execute in data source : <span id='curDataSourceName' > " + " </span></p>")
-      .append("<p>Switch data source to : <select id='newDataSource'>" + BDA_JDBC.getAvailableDataSource() +
-       "</select><button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>" +
+      .append("<p>Switch data source to : <select id='newDataSource'></select>" +
+       "<button id='switchDataSourceBtn'>Enter <i class='fa fa-play fa-x'></i></button></p>" +
        "<p>If you are using a custom data source folder, please add it in the configuration panel of BDA.</p>" +
        "<p>Go to <a href='/dyn/admin/nucleus"+ BDA_JDBC.connectionPoolPointerComp+"'>ConnectionPoolPointer</a></p>")
       .insertAfter($("h1:contains('Execute Query')"));
+
+      BDA_JDBC.getAvailableDataSources();
 
       BDA_JDBC.getCurrentDataSource(function(data){
         $('#curDataSourceName').html(data);
@@ -64,9 +66,8 @@
       });
     },
 
-    getAvailableDataSource : function()
+    getAvailableDataSources : function()
     {
-      var datasources = [];
       var datasourcesDir = [];
       datasourcesDir.push(BDA_JDBC.defaultDataSourceDir);
       var customDataSources = BDA_STORAGE.getConfigurationValue('data_source_folder');
@@ -74,28 +75,26 @@
         datasourcesDir = datasourcesDir.concat(customDataSources);
       console.log("Folders : " + datasourcesDir);
       console.log(datasourcesDir.length)
-      for (var i = 0; i < datasourcesDir.length; i++)
+      for (var i = 0; i != datasourcesDir.length; i++)
       {
         var datasourceDir = datasourcesDir[i];
         var url = "/dyn/admin/nucleus" + datasourceDir;
-        console.log(datasourceDir)
+        console.log(datasourceDir);
         $.ajax({
           url : url,
           success : function(data) {
+            var $newDataSource = $("#newDataSource");
             $(data)
             .find("h3 a")
             .each(function(index, value) {
               var strValue = $(value).text();
+              console.log(strValue);
               if (strValue !== null && strValue != "DataSourceInfoCache" && strValue.indexOf("DataSource") != -1)
-                datasources += "<option>" + strValue + "</option>";
+                $newDataSource.html($newDataSource.html() + "\n<option>" + strValue + "</option>");
             });
           },
-          async : false
         });
-        i++;
       }
-      console.log(datasources)
-      return datasources;
     },
 
     getCurrentDataSource : function(callback)

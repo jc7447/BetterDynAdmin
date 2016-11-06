@@ -1,5 +1,4 @@
 (function($) {
-  "use strict";
 
   var tags = {
     '!top': ['add-item', 'query-items', 'print-item', 'remove-item'],
@@ -42,7 +41,7 @@
       children: []
     }
   };
-
+  "use strict";
   var BDA_REPOSITORY = {
     MAP_SEPARATOR: "=",
     LIST_SEPARATOR: ",",
