@@ -257,7 +257,12 @@ try {
 
   this.copyToClipboard = function(text) {
     GM_setClipboard(text);
-    window.alert("Data has been added to your clipboard");
+    $.notify(
+      "Data has been added to your clipboard", {
+        position: "top center",
+        className: "success"
+      }
+    );
   };
 
   this.rotateArrow = function($arrow) {
@@ -433,7 +438,7 @@ try {
    $elems = $elems.sort(sortFunction);
     $elems.detach().appendTo($this);
     return this;
-  } 
+  }
 
   /*
 
