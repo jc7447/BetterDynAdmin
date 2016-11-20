@@ -62,6 +62,8 @@ try {
 
             BDA_MENU.createDefaultMethodsConfig($bdaConfigPanel);
 
+            BDA_MENU.createDataSourceFolderConfig($bdaConfigPanel);
+
             $('#' + BDA_STORAGE.GMValue_MonoInstance).prop("checked", (GM_getValue(BDA_STORAGE.GMValue_MonoInstance) === true))
               .click(function() {
                 var isMonoInstance = $(this).prop('checked');
@@ -249,6 +251,30 @@ try {
                 BDA_TOOLBAR.reloadToolbar();
               });
             $config.append($submitTags);
+          },
+
+          createDataSourceFolderConfig: function(parentPanel) {
+            var $config = $('<div id="advancedConfig"></div>');
+            $config.appendTo(parentPanel);
+            // Default folders
+            var savedFolders = BDA_STORAGE.getConfigurationValue('data_source_folder');
+            if (!savedFolders) {
+              savedFolders = "";
+            }
+
+            $config.append(
+              "<p>Folders for JDBC data source :</p>" + "<textarea id='config-data-source-folders-data' class='' placeholder='List of folder path, comma separated'>" + savedFolders + "</textarea>"
+            );
+
+            //save folders
+            var $submitMethods = $('<button id="config-data-source-folders-submit">Save</button>')
+              .bind('click', function() {
+                var folders = $('#config-data-source-folders-data').val().trim();
+                var foldersArray = folders.replace(/ /g, '').split(",");
+                console.log('storing folders  : ' + foldersArray);
+                BDA_STORAGE.storeConfiguration("data_source_folder", foldersArray);
+              });
+            $config.append($submitMethods);
           },
 
           createMenuElement: function($element) {
