@@ -1186,9 +1186,23 @@
       $("<div id='itemTree' />").insertAfter("#RQLEditor");
       var $itemTree = $("#itemTree");
       $itemTree.append("<h2>Get Item Tree</h2>");
-      $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output." + "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order" + "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
+      $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output."
+      + "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order"
+      + "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
 
-      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
+      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;"
+      + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>"
+      + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>"
+      + "output format :  <select id='itemTreeOutput'>"
+      + "<option value='HTMLtab'>HTML tab</option>"
+      + "<option value='addItem'>add-item XML</option>"
+      + "<option value='removeItem'>remove-item XML</option>"
+      + "<option value='printItem'>print-item XML</option>"
+      + "</select>&nbsp;"
+      + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>"
+      + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>"
+      + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>"
+      + "</div>");
       $itemTree.append("<div id='itemTreeInfo' />");
       $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
@@ -1302,7 +1316,7 @@
             if (subItems.length > 0 && BDA_REPOSITORY.nbItemReceived < maxItem)
               BDA_REPOSITORY.getSubItems(subItems, $xmlDef, maxItem, outputType, printRepoAttr);
             else
-              BDA_REPOSITORY.renderItemTreeTab(outputType, printRepoAttr, $xmlDef);
+              BDA_REPOSITORY.renderItemTreeTab(outputType, printRepoAttr, $xmlDef, maxItem);
           },
         });
       } else
@@ -1339,8 +1353,20 @@
       });
     },
 
-    renderItemTreeTab: function(outputType, printRepoAttr, $xmlDef) {
+    renderItemTreeTab: function(outputType, printRepoAttr, $xmlDef, maxItem) {
       console.log("Render item tree tab : " + outputType);
+
+      //  If the max item is reached before recursion ended, we notify the user
+      if (BDA_REPOSITORY.nbItemReceived >= maxItem) {
+        $.notify(
+          "Item tree stopped because the maximum items limit was reached : " + maxItem + ".",
+          {
+            className: "warn",
+            position:"top center"
+          }
+        );
+      }
+
       $("#itemTreeInfo").empty();
       $("#itemTreeResult").empty();
       var res = "";
@@ -1365,12 +1391,14 @@
         res = "<import-items>\n" + res + "\n</import-items>";
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
-      } else if (outputType == "HTMLtab") {
+      }
+      else if (outputType == "HTMLtab") {
         BDA_REPOSITORY.itemTree.forEach(function(data, id) {
           res += data;
         }, BDA_REPOSITORY.itemTree);
         BDA_REPOSITORY.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
-      } else if (outputType == "removeItem" || outputType == "printItem") {
+      }
+      else if (outputType == "removeItem" || outputType == "printItem") {
         BDA_REPOSITORY.itemTree.forEach(function(data, id) {
           var xmlDoc = jQuery.parseXML(data);
           var $itemXml = $(xmlDoc).find("add-item");
@@ -1388,8 +1416,19 @@
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
       }
+      else if(outputType == "Tree") {
+        //renderItemsAsTree();
+      }
 
       console.timeEnd("getItemTree");
+    },
+
+    renderItemsAsTree: function() {
+      /*
+      BDA_REPOSITORY.itemTree.forEach(function(data, id) {
+        BDA_REPOSITORY.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
+      });
+      */
     },
 
     createSpeedbar: function() {
