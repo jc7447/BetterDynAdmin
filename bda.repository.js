@@ -120,7 +120,7 @@
     },
 
 
-    CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*) cache-locality=(.*)/,
+    CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*)( cache-locality=(.*))?/,
 
     build: function() {
       console.time("bdaRepository");
@@ -303,7 +303,7 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
-	  BDA_REPOSITORY.setupEditableTable();
+      BDA_REPOSITORY.setupEditableTable();
       BDA_REPOSITORY.queryEditor = BDA_REPOSITORY.initCodeMirror(true);
 
 
@@ -412,20 +412,18 @@
       return editor;
     },
 
-    setupEditableTable: function()
-    {
+    setupEditableTable: function() {
       $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
-      var $target = $(item.target).parent();
-      $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
-      var $input = $($target.children()[0]);
-      $input.focus().blur(function(item) {
+        var $target = $(item.target).parent();
+        $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
+        var $input = $($target.children()[0]);
+        $input.focus().blur(function(item) {
           var $target = $(item.target);
           var $table = $target.parents(".dataTable");
           var descriptor = $table.attr("data-descriptor");
           var itemId = $target.parent().attr("data-item-id");
           var propertyName = $target.parent().attr("data-property");
-          if (propertyName == "id" || propertyName == "descriptor")
-          {
+          if (propertyName == "id" || propertyName == "descriptor") {
             $input.parent().html($input.val());
             $.notify(
               "You can't change value of id or descriptor this way.", {
@@ -433,19 +431,16 @@
                 className: "error"
               }
             );
-            return ;
+            return;
           }
           logTrace(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
-          var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n'
-                    + '  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]>'
-                    + '</set-property>\n</update-item>';
+          var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n' + '  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]>' + '</set-property>\n</update-item>';
           var initialValue = $input.attr("value");
           if (confirm('You are about to execute this query : \n' + query)) {
             jQuery.post(document.location.href, 'xmltext=' + query, function(res) {
               var $res = $(res);
               var errorsSelector1 = "Errors:";
-              if($res.text().indexOf(errorsSelector1) != -1)
-              {
+              if ($res.text().indexOf(errorsSelector1) != -1) {
                 var errorMsg = $res.find("code").text().trim();
                 $.notify(
                   "Error : " + errorMsg, {
@@ -456,9 +451,7 @@
                   }
                 );
                 $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + initialValue); // reset inital value
-              }
-              else
-              {
+              } else {
                 $.notify(
                   "Value succesfully changed", {
                     position: "top center",
@@ -466,10 +459,9 @@
                   }
                 );
               }
-              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' +  $input.val());
+              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
             });
-          }
-          else
+          } else
             $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + initialValue); // reset inital value
         });
       });
@@ -865,8 +857,7 @@
 
     renderProperty: function(curProp, propValue, itemId, isItemTree) {
       var html = "";
-      if (propValue !== null && propValue !== undefined)
-      {
+      if (propValue !== null && propValue !== undefined) {
         propValue = propValue.replace(/ /g, '●');
         // Remove "_"
         if (curProp.name == "descriptor")
@@ -878,16 +869,14 @@
         if (curProp.name == "id")
           html += "<td id='" + base_id + "'>" + propValue + "</td>";
         // Hide long value
-        else if (propValue.length > 25)
-        {
+        else if (propValue.length > 25) {
           var link_id = "link_" + base_id;
           var field_id = "text_" + base_id;
           propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >" + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "...</a>" + "</span><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
           html += td + propValue + "</td>";
         }
         // Make IDs clickable
-        else if (curProp.isId === true)
-        {
+        else if (curProp.isId === true) {
           propValue = BDA_REPOSITORY.parseRepositoryId(propValue);
           html += td;
           for (var b = 0; b != propValue.length; b++) {
@@ -905,23 +894,20 @@
         else if (curProp.name == "descriptor" || curProp.rdonly == "true" || curProp.derived == "true")
           html += "<td>" + propValue + "</td>";
         else
-            html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
-      }
-      else
+          html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
+      } else
         html += "<td>&nbsp;</td>";
 
       return html;
     },
 
-    renderTab: function(itemDesc, types, datas, tabId, isItemTree)
-    {
+    renderTab: function(itemDesc, types, datas, tabId, isItemTree) {
       var html = "";
       html += "<table class='dataTable' data-descriptor='" + itemDesc.substr(1) + "' ";
       if (isItemTree)
         html += "id='" + tabId + "'";
       html += ">";
-      for (var i = 0; i != types.length; i++)
-      {
+      for (var i = 0; i != types.length; i++) {
         var curProp = types[i];
         if (i % 2 === 0)
           html += "<tr class='even";
@@ -943,8 +929,7 @@
           html += "<div class='prop_attr prop_attr_blue'>E</div>";
         html += "</span></th>";
 
-        for (var a = 0; a < datas.length; a++)
-        {
+        for (var a = 0; a < datas.length; a++) {
           var propValue = datas[a][curProp.name];
           html += BDA_REPOSITORY.renderProperty(curProp, propValue, datas[a].id, isItemTree);
         }
@@ -1186,23 +1171,9 @@
       $("<div id='itemTree' />").insertAfter("#RQLEditor");
       var $itemTree = $("#itemTree");
       $itemTree.append("<h2>Get Item Tree</h2>");
-      $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output."
-      + "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order"
-      + "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
+      $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output." + "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order" + "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
 
-      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;"
-      + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>"
-      + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>"
-      + "output format :  <select id='itemTreeOutput'>"
-      + "<option value='HTMLtab'>HTML tab</option>"
-      + "<option value='addItem'>add-item XML</option>"
-      + "<option value='removeItem'>remove-item XML</option>"
-      + "<option value='printItem'>print-item XML</option>"
-      + "</select>&nbsp;"
-      + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>"
-      + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>"
-      + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>"
-      + "</div>");
+      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
       $itemTree.append("<div id='itemTreeInfo' />");
       $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
@@ -1359,10 +1330,9 @@
       //  If the max item is reached before recursion ended, we notify the user
       if (BDA_REPOSITORY.nbItemReceived >= maxItem) {
         $.notify(
-          "Item tree stopped because the maximum items limit was reached : " + maxItem + ".",
-          {
+          "Item tree stopped because the maximum items limit was reached : " + maxItem + ".", {
             className: "warn",
-            position:"top center"
+            position: "top center"
           }
         );
       }
@@ -1391,14 +1361,12 @@
         res = "<import-items>\n" + res + "\n</import-items>";
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
-      }
-      else if (outputType == "HTMLtab") {
+      } else if (outputType == "HTMLtab") {
         BDA_REPOSITORY.itemTree.forEach(function(data, id) {
           res += data;
         }, BDA_REPOSITORY.itemTree);
         BDA_REPOSITORY.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
-      }
-      else if (outputType == "removeItem" || outputType == "printItem") {
+      } else if (outputType == "removeItem" || outputType == "printItem") {
         BDA_REPOSITORY.itemTree.forEach(function(data, id) {
           var xmlDoc = jQuery.parseXML(data);
           var $itemXml = $(xmlDoc).find("add-item");
@@ -1415,8 +1383,7 @@
 
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
-      }
-      else if(outputType == "Tree") {
+      } else if (outputType == "Tree") {
         //renderItemsAsTree();
       }
 
@@ -1757,10 +1724,22 @@
         var text = $td.find('b:contains("item-descriptor")').first().text();
 
         var match = BDA_REPOSITORY.CACHE_STAT_TITLE_REGEXP.exec(text);
-        var itemDesc = match[1];
-        var cacheMode = match[2];
-        var cacheLocality = match[3];
-        var newText = '<span> item-descriptor=<b>{0}</b> cache-mode=<b>{1}</b> cache-locality=<b>{2}</b></span>'.format(itemDesc, cacheMode, cacheLocality);
+        var newText = '';
+        var itemDesc = '',
+          cacheMode = '',
+          cacheLocality = '';
+        if (!isNull(match[1])) {
+          itemDesc = match[1];
+          newText += '<span> item-descriptor=<b>{0}</b>'.format(itemDesc);
+        }
+        if (!isNull(match[2])) {
+          cacheMode = match[2];
+          newText += '<span> cache-mode=<b>{0}</b>'.format(cacheMode);
+        }
+        if (!isNull(match[3])) {
+          cacheLocality = match[3];
+          newText += '<span> cache-locality=<b>{0}</b>'.format(cacheLocality);
+        }
 
         //add as attr for easier handling
         $tr.attr('data-item-desc', itemDesc)
