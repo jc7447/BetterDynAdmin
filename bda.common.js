@@ -2,7 +2,7 @@
 
 try {
 
-  var isLoggingTrace = false;
+  var isLoggingTrace = true;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -206,9 +206,9 @@ try {
     return purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
   };
 
-  this.logTrace = function(msg) {
+  this.logTrace = function() {
     if (isLoggingTrace) {
-      console.log(msg);
+      console.log.apply(this, arguments);
     }
   };
 
@@ -224,26 +224,26 @@ try {
     return r;
   };
 
-  this.stringCompare =function(a, b) {
-      if (a !== null)
-        return a.localeCompare(b, 'en', {
-          caseFirst: 'upper'
-        });
-      else if (b !== null)
-        return -1;
-      else
-        return 0;
-    };
+  this.stringCompare = function(a, b) {
+    if (a !== null)
+      return a.localeCompare(b, 'en', {
+        caseFirst: 'upper'
+      });
+    else if (b !== null)
+      return -1;
+    else
+      return 0;
+  };
 
-  this.compareAttr = function(a,b,attr){
-    var aVal =  $(a).attr(attr);
-    var bVal =  $(b).attr(attr);
-    return stringCompare(aVal,bVal);
+  this.compareAttr = function(a, b, attr) {
+    var aVal = $(a).attr(attr);
+    var bVal = $(b).attr(attr);
+    return stringCompare(aVal, bVal);
   }
 
-  this.compareAttrFc = function(attr){
-    return function(a,b){
-      return compareAttr(a,b,attr);
+  this.compareAttrFc = function(attr) {
+    return function(a, b) {
+      return compareAttr(a, b, attr);
     }
   }
 
@@ -425,15 +425,15 @@ try {
     return csv;
   };
 
-  $.fn.sortContent = function(selector,sortFunction){
+  $.fn.sortContent = function(selector, sortFunction) {
     var $this = $(this);
     var $elems = $this.find(selector);
     console.log('selector ' + selector);
     console.log($elems.length);
-   $elems = $elems.sort(sortFunction);
+    $elems = $elems.sort(sortFunction);
     $elems.detach().appendTo($this);
     return this;
-  } 
+  }
 
   /*
 
@@ -486,6 +486,120 @@ Johann Burkard
         normalize();
       }
     }).end();
+  };
+
+
+  // CUSTOM ALERT with multiple options
+  const BDA_ALERT_CONFIG = {};
+  const bdaDefaults = {
+    msg: '',
+    options: []
+  };
+  const pluginName = "bdaAlert";
+
+  const templates = {
+    ALERT_MODAL_TEMPLATE: '<div  class="bda-alert-wrapper twbs">' +
+      '<div class="modal fade bda-modal" tabindex="-1" role="dialog">' +
+      '<div class="modal-dialog" role="document">' +
+      '<div class="modal-content ">' +
+      '<div class="modal-body bda-alert-body"></div>' +
+      '<div class="modal-footer bda-alert-footer"></div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>'
+  };
+
+  function BdaAlert(parent, options) {
+    console.log('BdaAlert');
+    console.log(parent)
+    this.$parent = $(parent);
+
+    this.options = $.extend({}, bdaDefaults, options);
+    this._defaults = bdaDefaults;
+    this._name = pluginName;
+
+    this._init();
+  }
+
+  BdaAlert.prototype = {
+    _init: function() {
+      logTrace('build bdaAlert');
+      logTrace(arguments)
+      logTrace(this.$parent.get());
+
+      this.$parent.append(templates.ALERT_MODAL_TEMPLATE);
+      this.modal = this.$parent.find('.modal');
+
+
+    },
+    _show: function() {
+      logTrace('bdaAlert show');
+      this.modal.modal('show');
+    },
+    _hide: function() {
+      logTrace('bdaAlert hide');
+      this.modal.modal('hide');
+    },
+    confirm: function(opts) {
+      var plugin = this;
+      logTrace('bdaAlert confirm');
+      logTrace(opts);
+      //set msg
+      plugin.modal.find('.bda-alert-body').html(opts.msg);
+      //clean
+      var $footer = plugin.modal.find('.bda-alert-footer').empty();
+
+      for (var i = 0; i < opts.options.length; i++) {
+        var opt = opts.options[i];
+        $('<input></input>', {
+            type: 'button',
+            value: opt.label,
+            class: 'btn btn-default'
+          })
+          .on('click', function() {
+            logTrace('bdaAlert click');
+            if (!isNull(opt.callback)) {
+              opt.callback($modal);
+            }
+            plugin._hide();
+          })
+          .appendTo($footer);
+      }
+      plugin._show();
+    }
+  }
+
+  $.fn[pluginName] = function(options) {
+    logTrace("call " + pluginName);
+    logTrace(options);
+    logTrace(arguments);
+    var args = arguments;
+
+    if (options === undefined || typeof options === 'object') {
+      return this.each(function() {
+
+        if (!$.data(this, 'plugin_' + pluginName)) {
+
+          $.data(this, 'plugin_' + pluginName, new BdaAlert(this, options));
+        }
+      });
+
+    } else if (typeof options === 'string' && options[0] !== '_' ) {
+
+      var returns;
+
+      this.each(function() {
+        var instance = $.data(this, 'plugin_' + "bdaAlert");
+
+        if (instance instanceof BdaAlert && typeof instance[options] === 'function') {
+          returns = instance[options].apply(instance, Array.prototype.slice.call(args, 1));
+        }
+
+      });
+
+      return returns !== undefined ? returns : this;
+    }
   };
 
 
