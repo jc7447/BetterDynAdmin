@@ -1474,12 +1474,15 @@ jQuery(document).ready(function() {
 
           $('.dash-autocomplete').textcomplete([{ // tech companies
             id: 'commands',
-            match: /^\b(\w{1,})$/, //1 letter or more
+            match: /\b(\w{1,})$/, //1 letter or more
             search: function(term, callback) {
+              console.log('search %s', term)
               BDA_DASH.suggestionEngine.search(term, callback, callback);
             },
             index: 1,
+            cache:true,
             replace: function(data) {
+              console.log('replace %s',data.value);
               return data.value + ' ';
             },
             template: function(data, term) {
@@ -1488,6 +1491,16 @@ jQuery(document).ready(function() {
                 pattern = '';
               }
               return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
+            },
+            context:function(text){
+              if(!isNull(text)){
+                var lines = text.split('\n');
+                if(lines.length > 0){
+                  var ret = lines[lines.length-1];
+                  return ret;
+                }
+              }
+              return "";
             }
           }, {
             id: 'comprefs',
