@@ -1707,17 +1707,24 @@
 
     setupCacheCollapse: function($header, $cacheTable) {
 
+      var fullColSize = 23;
+        if(BDA.isOldDynamo){
+          fullColSize=18;
+          
+        }
+
 
       $cacheTable.find('.cache-subheader').each(function() {
         var $tr = $(this);
 
         //expand the cell width
         var $td = $tr.find('td').first();
-        $td.attr('colspan', 23); //extend to full with
+      
+          $td.attr('colspan', fullColSize); //extend to full with
         //query cache line
         var $queryCols = $tr.next().next().children('td');
         if ($queryCols.length == 1) {
-          $queryCols.attr('colspan', 23);
+          $queryCols.attr('colspan', fullColSize);
         }
 
         //enhance the title line
