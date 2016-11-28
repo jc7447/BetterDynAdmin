@@ -151,6 +151,7 @@ jQuery(document).ready(function() {
 
         if (BDA.isOldDynamo)
         {
+          console.log('isOldDynamo')
           BDA.logoSelector = "";
           for (var i = 0; i != BDA.oldDynamoAltSelector.length; i++)
           {
@@ -169,7 +170,7 @@ jQuery(document).ready(function() {
         // Setup storage plugin
         $().bdaStorage();
         // Setup Repository plugin
-        $().bdaRepository();
+        $().bdaRepository(BDA);
         // Setup pipeline plugin
         $().bdaPipeline();
         // Setup XML definition plugin

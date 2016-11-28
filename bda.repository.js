@@ -1763,6 +1763,10 @@
 
       //make the header fixed with css
       $cacheTable.addClass('fixed_headers');
+      console.log('isOldDynamo ' + BDA.isOldDynamo)
+      if(BDA.isOldDynamo){
+        $cacheTable.addClass('oldDynamo');
+      }
 
       //clone the header
 
@@ -1912,12 +1916,13 @@
   };
 
   // Reference to BDA_STORAGE
-  var BDA_STORAGE;
+  var BDA_STORAGE,BDA;
 
   // Jquery plugin creation
-  $.fn.bdaRepository = function() {
+  $.fn.bdaRepository = function(theBDA) {
     console.log('Init plugin {0}'.format('bdaRepository'));
     //settings = $.extend({}, defaults, options);
+    BDA=theBDA;
     BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
     BDA_REPOSITORY.build();
     return this;

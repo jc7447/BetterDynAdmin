@@ -1013,6 +1013,11 @@ button.cache {
   width: 4%;
 }
 
+.fixed_headers.oldDynamo th,
+.fixed_headers.oldDynamo td {
+  width: 5.3%;
+}
+
 /*.fixed_headers .sticky-top thead {
   display: block;
 }
