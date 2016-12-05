@@ -192,14 +192,6 @@ jQuery(document).ready(function() {
 
         $().bdaScheduler();
 
-/*        $('<div id="bdaAlert"></div>').insertAfter(BDA.logoSelector).bdaAlert().bdaAlert('confirm',{
-          msg:'test msg',
-          options:[
-          {label:'toto'},
-          {label:'tata'},
-          ]
-        });*/
-
         var autocomplete = $.fn.bdaStorage.getBdaStorage().getConfigurationValue('search_autocomplete');
         autocomplete = (autocomplete == true) ? true : false;
         if (autocomplete) {

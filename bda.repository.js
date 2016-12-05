@@ -1046,14 +1046,32 @@
       }
 
       $(".loadable_property").click(function() {
+        console.log('click on loadable');
         var $elm = $(this);
         var id = $elm.attr("data-id");
         var itemDesc = $elm.attr("data-descriptor");
         var query = "<print-item id='" + id + "' item-descriptor='" + itemDesc + "' />\n";
-        if (confirm("You are about to add this query and reload the page : \n" + query)) {
-          BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
-          $("#RQLForm").submit();
-        }
+
+
+
+        $('body').bdaAlert({
+          msg: 'You are about to add this query and reload the page: \n' + query,
+          options: [{
+            label: 'Add & Reload',
+            _callback: function() {
+              BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
+              $("#RQLForm").submit();
+            }
+          }, {
+            label: 'Just Add',
+            _callback: function() {
+              BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
+            }
+          }, {
+            label: 'Cancel'
+          }]
+        });
+
       });
 
       if (isItemTree)

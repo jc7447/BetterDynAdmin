@@ -72,7 +72,7 @@ try {
         tag.name = tagName;
         tags[tagName] = tag;
       }
-      console.log('buildTagsFromArray ' + JSON.stringify(tags));
+      logTrace('buildTagsFromArray ' + JSON.stringify(tags));
       return tags;
     },
 
@@ -81,7 +81,7 @@ try {
         // First check cache value if any
         var rawXmlDef = getXmlDef(getCurrentComponentPath());
         if (rawXmlDef !== null) {
-          console.log("Getting XML def from cache");
+          logTrace("Getting XML def from cache");
           var xmlDoc = jQuery.parseXML(rawXmlDef);
           if (callback !== undefined)
             callback($(xmlDoc));
@@ -89,7 +89,7 @@ try {
         // If no cache entry, fetch the XML def in ajax
         else {
           var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
-          console.log(url);
+          logTrace(url);
           jQuery.ajax({
             url: url,
             success: function(result) {
@@ -103,14 +103,14 @@ try {
                   .replace("&nbsp;", "")
                   .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
                 try {
-                  console.log("XML def length : " + rawXmlDef.length);
+                  logTrace("XML def length : " + rawXmlDef.length);
                   var xmlDoc = jQuery.parseXML(rawXmlDef);
                   storeXmlDef(getCurrentComponentPath(), rawXmlDef);
                   callback($(xmlDoc));
                 } catch (err) {
-                  console.log("Unable to parse XML def file !");
+                  logTrace("Unable to parse XML def file !");
                   callback(null);
-                  console.log(err);
+                  logTrace(err);
                 }
               } else
                 callback(null);
@@ -121,20 +121,20 @@ try {
     };
 
   this.getXmlDef = function(componentPath) {
-    console.log("Getting XML def for : " + componentPath);
+    logTrace("Getting XML def for : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
     var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
     if (!xmlDefMetaData)
       return null;
     if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp) {
-      console.log("Xml def is outdated or from a different component");
+      logTrace("Xml def is outdated or from a different component");
       return null;
     }
     return localStorage.getItem("XMLDefData");
   };
 
   this.storeXmlDef = function(componentPath, rawXML) {
-    console.log("Storing XML def : " + componentPath);
+    logTrace("Storing XML def : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
 
     localStorage.setItem("XMLDefMetaData", JSON.stringify({
@@ -184,7 +184,7 @@ try {
       componentPath = componentPath.substr(0, componentPath.length - 1);
 
     var tab = componentPath.split("/");
-    //console.log("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
+    //logTrace("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
     return tab[tab.length - 1];
   };
 
@@ -208,7 +208,7 @@ try {
 
   this.logTrace = function() {
     if (isLoggingTrace) {
-      console.log.apply(this, arguments);
+      logTrace.apply(this, arguments);
     }
   };
 
@@ -433,8 +433,8 @@ try {
   $.fn.sortContent = function(selector, sortFunction) {
     var $this = $(this);
     var $elems = $this.find(selector);
-    console.log('selector ' + selector);
-    console.log($elems.length);
+    logTrace('selector ' + selector);
+    logTrace($elems.length);
     $elems = $elems.sort(sortFunction);
     $elems.detach().appendTo($this);
     return this;
@@ -513,121 +513,130 @@ Johann Burkard
   };
 
 
-  // CUSTOM ALERT with multiple options
-  const BDA_ALERT_CONFIG = {};
-  const bdaDefaults = {
-    msg: '',
-    options: []
-  };
-  const pluginName = "bdaAlert";
+  (function($) {
+    // CUSTOM ALERT with multiple options
+    const BDA_ALERT_CONFIG = {};
+    const bdaAlertDefaults = {
+      msg: '',
+      options: []
+    };
+    const pluginName = "bdaAlert";
 
-  const templates = {
-    ALERT_MODAL_TEMPLATE: '<div  class="bda-alert-wrapper twbs">' +
-      '<div class="modal fade bda-modal" tabindex="-1" role="dialog">' +
-      '<div class="modal-dialog" role="document">' +
-      '<div class="modal-content ">' +
-      '<div class="modal-body bda-alert-body"></div>' +
-      '<div class="modal-footer bda-alert-footer"></div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>'
-  };
+    const templates = {
+      ALERT_MODAL_TEMPLATE: '<div  class="bda-alert-wrapper twbs">' +
+        '<div class="modal fade bda-modal" tabindex="-1" role="dialog">' +
+        '<div class="modal-dialog" role="document">' +
+        '<div class="modal-content ">' +
+        '<div class="modal-body bda-alert-body"></div>' +
+        '<div class="modal-footer bda-alert-footer"></div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    };
 
-  function BdaAlert(parent, options) {
-    console.log('BdaAlert');
-    console.log(parent)
-    this.$parent = $(parent);
+    function BdaAlert(parent, inOptions) {
+     // logTrace('BdaAlert');
+      //logTrace(parent)
+      this.$parent = $(parent);
 
-    this.options = $.extend({}, bdaDefaults, options);
-    this._defaults = bdaDefaults;
-    this._name = pluginName;
+      logTrace('in options: %s', JSON.stringify(inOptions));
 
-    this._init();
-  }
+      this.options = inOptions //$.extend({}, bdaAlertDefaults, inOptions);
+      logTrace('options:');
+      logTrace( this.options);
+      this._defaults = bdaAlertDefaults;
+      this._name = pluginName;
 
-  BdaAlert.prototype = {
-    _init: function() {
-      logTrace('build bdaAlert');
-      logTrace(arguments)
-      logTrace(this.$parent.get());
+      this._init();
+    }
 
-      this.$parent.append(templates.ALERT_MODAL_TEMPLATE);
-      this.modal = this.$parent.find('.modal');
+    BdaAlert.prototype = {
+      _init: function() {
+        logTrace('build bdaAlert');
+        logTrace(arguments)
+        logTrace(this.$parent.get());
 
+        this.wrapper = $(templates.ALERT_MODAL_TEMPLATE);
+        this.$parent.append(this.wrapper );
+        this.modal = this.wrapper.find('.modal');
+      },
+      _show: function() {
+        logTrace('bdaAlert show');
+        this.modal.modal('show');
+      },
+      _hide: function() {
+        logTrace('bdaAlert hide');
+        this.modal.modal('hide');
+        this._destroy();
+      },
+      _destroy: function(){
+        logTrace('bdaAlert destroy');
+        this.wrapper.detach();
+      },
+      confirm: function() {
+        var plugin = this;
+        var opts = plugin.options;
+        logTrace('bdaAlert confirm');
+        logTrace(opts);
+        //set msg
+        plugin.modal.find('.bda-alert-body').html(opts.msg);
+        //clean
+        var $footer = plugin.modal.find('.bda-alert-footer').empty();
 
-    },
-    _show: function() {
-      logTrace('bdaAlert show');
-      this.modal.modal('show');
-    },
-    _hide: function() {
-      logTrace('bdaAlert hide');
-      this.modal.modal('hide');
-    },
-    confirm: function(opts) {
-      var plugin = this;
-      logTrace('bdaAlert confirm');
-      logTrace(opts);
-      //set msg
-      plugin.modal.find('.bda-alert-body').html(opts.msg);
-      //clean
-      var $footer = plugin.modal.find('.bda-alert-footer').empty();
-
-      for (var i = 0; i < opts.options.length; i++) {
-        var opt = opts.options[i];
-        $('<input></input>', {
-            type: 'button',
-            value: opt.label,
-            class: 'btn btn-default'
-          })
-          .on('click', function() {
-            logTrace('bdaAlert click');
-            if (!isNull(opt.callback)) {
-              opt.callback($modal);
+        var buildOuterCallback = function(callback){
+          return function(){
+           logTrace('bdaAlert click');
+           logTrace(callback);
+            if (!isNull(callback)) {
+              callback.apply(this.$modal);
             }
             plugin._hide();
-          })
-          .appendTo($footer);
+            
+          }
+        }
+
+        for (var i = 0; i < opts.options.length; i++) {
+          var opt = opts.options[i];
+          logTrace( opt);
+
+      
+
+          $('<input></input>', {
+              type: 'button',
+              value: opt.label,
+              class: 'btn btn-default',
+              data: opts.options[i]
+            })
+            .on('click', buildOuterCallback(opt._callback))
+            .appendTo($footer);
+        }
+        plugin._show();
       }
-      plugin._show();
     }
-  }
 
-  $.fn[pluginName] = function(options) {
-    logTrace("call " + pluginName);
-    logTrace(options);
-    logTrace(arguments);
-    var args = arguments;
+    $.fn[pluginName] = function(options) {
+      logTrace('in function bdaAlert');
+      try {
 
-    if (options === undefined || typeof options === 'object') {
-      return this.each(function() {
+        logTrace("call " + pluginName);
+        logTrace(options);
 
-        if (!$.data(this, 'plugin_' + pluginName)) {
+        return this.each(function() {
 
-          $.data(this, 'plugin_' + pluginName, new BdaAlert(this, options));
-        }
-      });
+          var data = new BdaAlert(this, options);
+          data.confirm();
 
-    } else if (typeof options === 'string' && options[0] !== '_' ) {
-
-      var returns;
-
-      this.each(function() {
-        var instance = $.data(this, 'plugin_' + "bdaAlert");
-
-        if (instance instanceof BdaAlert && typeof instance[options] === 'function') {
-          returns = instance[options].apply(instance, Array.prototype.slice.call(args, 1));
-        }
-
-      });
-
-      return returns !== undefined ? returns : this;
+        });
+      } catch (e) {
+        console.error(e);
+      }
+      return this;
     }
-  };
 
+  })(jQuery);
 
 
 } catch (e) {
-  console.log(e);
+  logTrace(e);
 }
