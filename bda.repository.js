@@ -1191,7 +1191,7 @@
       $itemTree.append("<h2>Get Item Tree</h2>");
       $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output." + "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order" + "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
 
-      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
+      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "<option value='tree'>Tree</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
       $itemTree.append("<div id='itemTreeInfo' />");
       $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
@@ -1401,19 +1401,64 @@
 
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
-      } else if (outputType == "Tree") {
-        //renderItemsAsTree();
+      }  else if (outputType == "tree") {
+        BDA_REPOSITORY.renderAsTree($xmlDef);
       }
 
       console.timeEnd("getItemTree");
     },
 
-    renderItemsAsTree: function() {
-      /*
+    renderAsTree: function($xmlDef) {
+       console.log("render as tree");
+       var nodes = [];
+       var edges = [];
+       var i = 0;
+//      $("#itemTreeResult").css("display", "none");
       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
-        BDA_REPOSITORY.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
-      });
-      */
+        console.log(data);
+        $(data).find("add-item").each(function(elm) {
+            var htmlTab = "<table>";
+            $(elm).find("set-property").each(function(index) {
+                $this = $(this);
+                htmlTab += "<tr>";
+                htmlTab += "<td>" + $this.attr("name") + "</td>";
+                htmlTab += "<td>" + $this.val() + "</td>";
+                htmltab += "</tr>";
+            });
+            htmlTab += "</table>";
+            var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="400">' +
+                '<rect x="0" y="0" width="100%" height="100%" fill="#7890A7" stroke-width="20" stroke="#ffffff" ></rect>' +
+                '<foreignObject x="15" y="10" width="100%" height="100%">' +
+                '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:10px">' +
+                htmlTab +
+                '</div>' +
+                '</foreignObject>' +
+                '</svg>';
+            console.log(url);
+            var url = "data:image/svg+xml;charset=utf-8,"+ encodeURIComponent(svg);
+
+          nodes.push({id: i, label: '', image: url, shape: 'image'});
+//          nodes.push({id: 2, label: 'Using SVG', image: url, shape: 'image'});
+//          edges.push({from: 1, to: 2, length: 300});
+          i++;
+        });
+        });
+ 
+        console.log(nodes);
+        // create a network
+        $("#itemTreeResult").empty();
+        var container = document.getElementById('itemTreeResult');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {
+            physics: {stabilization: false},
+            edges: {smooth: false}
+        };
+
+       var network = new vis.Network(container, data, options);
+      
     },
 
     createSpeedbar: function() {
