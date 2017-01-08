@@ -1228,3 +1228,31 @@ ol.itemDescAttributes {
 .notifyjs-bootstrap-base {
   font-size: 12px;
 }
+
+.legend {
+  display : inline-block;
+  color : black;
+  border-radius : 5px;
+  font-size : 11px;
+  padding : 3px;
+  margin : 5px;
+}
+
+#treePopup {
+  height: 90%;
+  width: 95%;
+}
+
+#treeContainer {
+  flex:1;
+}
+
+#treeInfo {
+  display:none;
+  float:left;
+}
+
+.flexContainer  {
+  display:flex;
+  height:100%;
+}

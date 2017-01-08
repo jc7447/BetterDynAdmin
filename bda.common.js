@@ -343,10 +343,6 @@ try {
     return xmlStr;
   };
 
-  $.fn.outerHTML = function(s) {
-    return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
-  };
-
   this.extendComponentPath = function(path) {
     var res = path;
     if (!path.startsWith('/dyn/admin/nucleus/')) {
@@ -362,12 +358,52 @@ try {
     if (isLoggingTrace) {
       console.time(name)
     }
-  }
+  };
+
   this.traceTimeEnd = function(name) {
     if (isLoggingTrace) {
       console.timeEnd(name)
     }
-  }
+  };
+
+  this.colorToCss = function (colors)
+  {
+    var cssVal =  "rgb(" ;
+    for (var i = 0; i < colors.length; i++)
+    {
+      if (i !== 0)
+        cssVal += ",";
+      cssVal += colors[i];
+    }
+    cssVal += ")";
+    return cssVal;
+  };
+
+  this.verifyColor = function (colors)
+  {
+    for (var i = 0; i < colors.length; i++)
+      if (colors[i] > 210)
+        colors[i] = 210;
+    return colors;
+  };
+
+  this.stringToColour = function (str)
+  {
+    var colors = [];
+    var hash = 0;
+    for (var i = 0; i < str.length; i++)
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    for (i = 0; i < 3; i++) {
+      var value = (hash >> (i * 8)) & 0xFF;
+      var hexVal = ('00' + value.toString(16)).substr(-2);
+      colors.push(parseInt(hexVal, 16));
+    }
+    return this.verifyColor(colors);
+  };
+
+  $.fn.outerHTML = function(s) {
+    return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
+  };
 
   $.fn.adjustToFit = function($parent, targetTotalSize, minSize) {
     var curSize = $parent.fullHeight();
@@ -458,6 +494,7 @@ function debounce(func, wait, immediate) {
     if (callNow) func.apply(context, args);
   };
 };
+
 
   /*
 
@@ -592,7 +629,7 @@ Johann Burkard
               callback.apply(this.$modal);
             }
             plugin._hide();
-            
+
           }
         }
 
@@ -600,7 +637,7 @@ Johann Burkard
           var opt = opts.options[i];
           logTrace( opt);
 
-      
+
 
           $('<input></input>', {
               type: 'button',

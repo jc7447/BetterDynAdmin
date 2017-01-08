@@ -803,7 +803,7 @@
         var $itemDesc = $xmlDef.find("item-descriptor[name='" + itemDesc + "']");
         // First check in current item desc
         isId = BDA_REPOSITORY.isPropertyId(propertyName, $itemDesc);
-        // In case we found the property but it's not an ID, we don't want to seach in super-type
+        // In case we found the property but it's not an ID, we don't want to search in super-type
         if (isId == "FOUND_NOT_ID")
           return null;
         // In case we found the property and it's an ID
@@ -1191,7 +1191,7 @@
       $itemTree.append("<h2>Get Item Tree</h2>");
       $itemTree.append("<p>This tool will recursively retrieve items and print the result with the chosen output." + "<br> For example, if you give an order ID in the form below, you will get all shipping groups, payment groups, commerceItems, priceInfo... of the given order" + "<br><b> Be careful when using this tool on a live instance ! Set a low max items value.</b></p>");
 
-      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
+      $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "<option value='tree'>Tree (experimental)</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
       $itemTree.append("<div id='itemTreeInfo' />");
       $itemTree.append("<div id='itemTreeResult' />");
       $("#itemTreeBtn").click(function() {
@@ -1358,7 +1358,7 @@
       $("#itemTreeInfo").empty();
       $("#itemTreeResult").empty();
       var res = "";
-      if (outputType !== "HTMLtab") {
+      if (outputType !== "HTMLtab" && outputType != "tree") {
         logTrace("Render copy button");
         $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
         $('#itemTreeCopyButton').click(function() {
@@ -1401,19 +1401,90 @@
 
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
-      } else if (outputType == "Tree") {
-        //renderItemsAsTree();
+      }  else if (outputType == "tree") {
+        BDA_REPOSITORY.renderAsTree($xmlDef);
       }
 
       console.timeEnd("getItemTree");
     },
 
-    renderItemsAsTree: function() {
-      /*
+    renderAsTree: function($xmlDef) {
+       console.log("render as tree");
+       var nodes = [];
+       var edges = [];
+       var legends = new Map();
+//      $("#itemTreeResult").css("display", "none");
       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
-        BDA_REPOSITORY.showXMLAsTab(res, $xmlDef, $("#itemTreeResult"), true);
+        //console.log("data : " + data);
+        var xmlDoc = $.parseXML("<xml>" + data + "</xml>");
+        var $xml = $(xmlDoc);
+        var $addItem = $xml.find("add-item").first();
+        var itemDesc = $addItem.attr("item-descriptor");
+        var itemId = $addItem.attr("id");
+
+        $xml.find("set-property").each(function(index) {
+            var $this = $(this);
+            var propertyName = $this.attr("name");
+            var propertyValue = $this.text();
+            if (propertyName != "order" && propertyName != "relationships" && propertyName != "orderRef") {
+              var isId = BDA_REPOSITORY.isTypeId(propertyName, itemDesc, $xmlDef)
+              if (isId != null && isId != "FOUND_NOT_ID") {
+                var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
+                for (var i = 0; i != idAsTab.length; i++) {
+                  edges.push({from: itemId, to:idAsTab[i], arrows:'to', title:propertyName});
+                }
+              }
+            }
+        });
+        var nodeColor = colorToCss(stringToColour(itemDesc));
+        nodes.push({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
+        legends.set(itemDesc, nodeColor);
       });
-      */
+
+      // Create popup
+      $("#itemTreeResult").empty()
+                          .append("<div class='popup_block' id='treePopup'>"
+                                + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times' /></a></div>"
+                                + "<div id='treeLegend'></div>"
+                                + "<div class='flexContainer'>"
+                                + "<div id='treeInfo'></div>"
+                                + "<div id='treeContainer'></div></div></div>");
+      $("#treePopup .close").click(function() {
+        $("#treePopup").fadeOut();
+      });
+
+      // Setup legend
+
+      legends.forEach(function(value, key) {
+        $("#treeLegend").append("<div class='legend' style='background-color:" + value + "'>" + key + "</div>");
+      });
+
+      console.log(nodes);
+      console.log(edges);
+
+      // Create the network
+      var data = {
+          nodes: nodes,
+          edges: edges
+      };
+
+      var options = {
+          physics: {stabilization: true},
+          edges: {smooth: true}
+      };
+
+     $("#treePopup").show();
+     var container = document.getElementById('treeContainer');
+     var network = new vis.Network(container, data, options);
+     network.on("click", function (params) {
+       params.event = "[original event]";
+       if (params.nodes && params.nodes.length == 1) {
+        //$("#treeContainer").css("width", "70%");
+        $("#treeInfo").empty();
+        BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(params.nodes[0]), null, $("#treeInfo"), false);
+        $("#treeInfo").show("slide", { direction: "right" });
+       }
+      });
     },
 
     createSpeedbar: function() {
@@ -1728,7 +1799,7 @@
       var fullColSize = 23;
         if(BDA.isOldDynamo){
           fullColSize=18;
-          
+
         }
 
 
@@ -1737,7 +1808,7 @@
 
         //expand the cell width
         var $td = $tr.find('td').first();
-      
+
           $td.attr('colspan', fullColSize); //extend to full with
         //query cache line
         var $queryCols = $tr.next().next().children('td');
