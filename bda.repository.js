@@ -1413,6 +1413,7 @@
        var nodes = [];
        var edges = [];
        var legends = new Map();
+       var descById = new Map();
 //      $("#itemTreeResult").css("display", "none");
       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
         //console.log("data : " + data);
@@ -1439,28 +1440,36 @@
         var nodeColor = colorToCss(stringToColour(itemDesc));
         nodes.push({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
         legends.set(itemDesc, nodeColor);
+        
+        if (descById.get(itemDesc)) {
+            descById.get(itemDesc).push(itemId);
+        } else {
+            descById.set(itemDesc, [itemId]);
+        }
       });
 
       // Create popup
       $("#itemTreeResult").empty()
                           .append("<div class='popup_block' id='treePopup'>"
-                                + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times' /></a></div>"
+                                + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></i></a></div>"
                                 + "<div id='treeLegend'></div>"
                                 + "<div class='flexContainer'>"
                                 + "<div id='treeInfo'></div>"
                                 + "<div id='treeContainer'></div></div></div>");
       $("#treePopup .close").click(function() {
-        $("#treePopup").fadeOut();
+        console.log("click on close");
+        $("#treePopup").fadeOut(200);
       });
 
       // Setup legend
 
       legends.forEach(function(value, key) {
-        $("#treeLegend").append("<div class='legend' style='background-color:" + value + "'>" + key + "</div>");
+        $("#treeLegend").append("<div class='legend' style='background-color:" + value + "' id='" + key + "'>" + key + "</div>");
       });
 
       console.log(nodes);
       console.log(edges);
+      console.log(descById);
 
       // Create the network
       var data = {
@@ -1470,7 +1479,8 @@
 
       var options = {
           physics: {stabilization: true},
-          edges: {smooth: true}
+          edges: {smooth: true},
+          nodes: {font: { color: "#FFFFFF"}}
       };
 
      $("#treePopup").show();
@@ -1479,12 +1489,23 @@
      network.on("click", function (params) {
        params.event = "[original event]";
        if (params.nodes && params.nodes.length == 1) {
-        //$("#treeContainer").css("width", "70%");
         $("#treeInfo").empty();
         BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(params.nodes[0]), null, $("#treeInfo"), false);
         $("#treeInfo").show("slide", { direction: "right" });
        }
       });
+
+      $(".legend").click(function() {
+        console.log("click on legend");
+        var id = $(this).attr('id');
+        console.log(id);
+        var ids = descById.get(id);
+        for (var i = 0; i != ids.length; i++) {
+            var connectedNodes = network.getConnectedNodes(ids[i]);
+            console.log(connectedNodes);
+        }
+      });
+
     },
 
     createSpeedbar: function() {
