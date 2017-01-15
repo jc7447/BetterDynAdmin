@@ -1410,11 +1410,11 @@
 
     renderAsTree: function($xmlDef) {
        console.log("render as tree");
-       var nodes = [];
-       var edges = [];
+      console.time('renderAsTree.setup')
+       var nodes = new vis.DataSet();
+       var edges = new vis.DataSet();
        var legends = new Map();
        var descById = new Map();
-//      $("#itemTreeResult").css("display", "none");
       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
         //console.log("data : " + data);
         var xmlDoc = $.parseXML("<xml>" + data + "</xml>");
@@ -1432,15 +1432,15 @@
               if (isId != null && isId != "FOUND_NOT_ID") {
                 var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
                 for (var i = 0; i != idAsTab.length; i++) {
-                  edges.push({from: itemId, to:idAsTab[i], arrows:'to', title:propertyName});
+                  edges.add({from: itemId, to:idAsTab[i], arrows:'to', title:propertyName});
                 }
               }
             }
         });
         var nodeColor = colorToCss(stringToColour(itemDesc));
-        nodes.push({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
+        nodes.add({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
         legends.set(itemDesc, nodeColor);
-        
+
         if (descById.get(itemDesc)) {
             descById.get(itemDesc).push(itemId);
         } else {
@@ -1458,19 +1458,19 @@
                                 + "<div id='treeContainer'></div></div></div>");
       $("#treePopup .close").click(function() {
         console.log("click on close");
-        $("#treePopup").fadeOut(200);
+        $("#treePopup").hide();
       });
 
       // Setup legend
-
       legends.forEach(function(value, key) {
         $("#treeLegend").append("<div class='legend' style='background-color:" + value + "' id='" + key + "'>" + key + "</div>");
       });
 
-      console.log(nodes);
-      console.log(edges);
-      console.log(descById);
-
+      logTrace(nodes);
+      logTrace(edges);
+      logTrace(descById);
+      console.timeEnd('renderAsTree.setup');
+      console.time('renderAsTree.render');
       // Create the network
       var data = {
           nodes: nodes,
@@ -1484,8 +1484,11 @@
       };
 
      $("#treePopup").show();
+
      var container = document.getElementById('treeContainer');
      var network = new vis.Network(container, data, options);
+     console.timeEnd('renderAsTree.render')
+
      network.on("click", function (params) {
        params.event = "[original event]";
        if (params.nodes && params.nodes.length == 1) {
@@ -1500,12 +1503,26 @@
         var id = $(this).attr('id');
         console.log(id);
         var ids = descById.get(id);
+
         for (var i = 0; i != ids.length; i++) {
-            var connectedNodes = network.getConnectedNodes(ids[i]);
-            console.log(connectedNodes);
+            //var connectedNodes = network.getConnectedNodes(ids[i]);
+            console.log(ids[i]);
+            console.log(nodes);
+            nodes.update([{id: ids[i], hidden: true}]);
+            BDA_REPOSITORY.findParentNodes(ids[i], edges);
         }
       });
 
+    },
+
+    findParentNodes: function(nodeId, edges) {
+      console.log("findParentNodes");
+      var nodes = [];
+      edges.forEach(function(elm) {
+        console.log(this);
+        console.log(elm);
+      });
+      return nodes;
     },
 
     createSpeedbar: function() {
@@ -2022,7 +2039,7 @@
 
       var linesText = [];
       for (var i = 0; i < data.length; i++) {
-        linesText.push(data[i].join(';'));
+        linesText.push(data[i].join(';'))
       }
 
       var csv = linesText.join('\n');
