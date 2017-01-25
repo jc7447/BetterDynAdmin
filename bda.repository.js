@@ -1503,26 +1503,61 @@
         var id = $(this).attr('id');
         console.log(id);
         var ids = descById.get(id);
-
+        var nodesAndEdgesToHide = {};
         for (var i = 0; i != ids.length; i++) {
-            //var connectedNodes = network.getConnectedNodes(ids[i]);
-            console.log(ids[i]);
-            console.log(nodes);
-            nodes.update([{id: ids[i], hidden: true}]);
-            BDA_REPOSITORY.findParentNodes(ids[i], edges);
+            nodesAndEdgesToHide = BDA_REPOSITORY.findNodesAndEdgesToHide(ids[i], network, edges, nodes);
+
+            // Foreach nodesAndEdgesToHide.nodes
+            for (var a = 0; a != nodesAndEdgesToHide.nodes.length; a++) {
+                nodes.update([{id: nodesAndEdgesToHide.nodes[a], hidden: true}]);
+            }
+            // Foreach nodesAndEdgesToHide.edges
+            for (var a = 0; a != nodesAndEdgesToHide.edges.length; a++) {
+                edges.update([{id: nodesAndEdgesToHide.edges[a], hidden: true}]);
+            }
         }
       });
-
     },
 
-    findParentNodes: function(nodeId, edges) {
-      console.log("findParentNodes");
-      var nodes = [];
-      edges.forEach(function(elm) {
-        console.log(this);
-        console.log(elm);
-      });
-      return nodes;
+    findNodesAndEdgesToHide: function(id, network, edges, nodes) {
+        console.log("findNodesAndEdgesToHide for ID : " + id);
+        var nodesAndEdgesToHide = {};
+        nodesAndEdgesToHide.nodes = BDA_REPOSITORY.findOrphanSon(id, network, edges, nodes, [id]);
+        nodesAndEdgesToHide.edges = [];
+        for (var i = 0; i != nodesAndEdgesToHide.nodes.length; i++) {
+            nodesAndEdgesToHide.edges = nodesAndEdgesToHide.edges.concat(network.getConnectedEdges(nodesAndEdgesToHide.nodes[i]));
+        }
+        console.log("nodesAndEdgesToHide.nodes : ");
+        console.log(nodesAndEdgesToHide.nodes);
+        console.log("nodesAndEdgesToHide.edges : ");
+        console.log(nodesAndEdgesToHide.edges);
+        return nodesAndEdgesToHide;
+    },
+
+    findOrphanSon: function(id, network, edges, nodes, orphanSons) {
+        console.log("About to find orphan for node : " + id);
+        edges.forEach(function(elm) {
+            //console.log(elm);
+            if (elm.from == id) {
+                var isOrphan = true;
+                var connectedEdges = network.getConnectedEdges(elm.to);
+                
+                for (var i = 0; i != connectedEdges.length; i++) {
+                    var edge = edges.get(connectedEdges[i]);
+                    console.log("connectedEdge - from : " + edge.to + " - " + edge.from);
+                    if (edge.to == elm.to && edge.from != id) {
+                        isOrphan = false;
+                        break;
+                    }
+                }
+                if (isOrphan && orphanSons.indexOf(elm.to) === -1) {
+                    console.log(elm.to + " is a new orphan son of node : " + id);
+                    orphanSons.push(elm.to);
+                    BDA_REPOSITORY.findOrphanSon(elm.to, network, edges, nodes, orphanSons);
+                }
+            }
+        });
+        return orphanSons;
     },
 
     createSpeedbar: function() {
