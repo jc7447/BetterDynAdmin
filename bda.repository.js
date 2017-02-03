@@ -857,14 +857,15 @@
 
     renderProperty: function(curProp, propValue, itemId, isItemTree) {
       var html = "";
-      if (propValue !== null && propValue !== undefined) {
+      var td = "<td data-property='" + curProp.name + "' data-item-id='" + itemId + "'>";
+      if (propValue !== null && propValue !== undefined)
+      {
         propValue = propValue.replace(/ /g, '●');
         // Remove "_"
         if (curProp.name == "descriptor")
           propValue = propValue.substr(1);
         // propertyName_id
         var base_id = curProp.name + "_" + itemId;
-        var td = "<td data-property='" + curProp.name + "' data-item-id='" + itemId + "'>";
 
         if (curProp.name == "id")
           html += "<td id='" + base_id + "'>" + propValue + "</td>";
@@ -896,7 +897,7 @@
         else
           html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
       } else
-        html += "<td>&nbsp;</td>";
+        html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i></td>';
 
       return html;
     },
