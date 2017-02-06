@@ -970,6 +970,8 @@
         .end()
         .text()
         .trim();
+	    
+	debugger;
 
       $addItems.each(function() {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
