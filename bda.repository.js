@@ -993,6 +993,7 @@
 		}
 	}
 
+	    console.dir($addItems);
       $addItems.each(function() {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
         if (!types[curItemDesc])
