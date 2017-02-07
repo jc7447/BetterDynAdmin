@@ -978,8 +978,10 @@
 		var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
 		console.dir(defaultItemProperties);
 		
-		console.log("name : " + defaultItemProperty.getAttribute("name"));
-		console.log("default : " + defaultItemProperty.getAttribute("default"));
+		for (var i = 0; i < defaultItemProperties.length; i++) {
+			console.log("name : " + defaultItemProperties[i].getAttribute("name"));
+			console.log("default : " + defaultItemProperties[i].getAttribute("default"));
+		}
 	}
 
       $addItems.each(function() {
