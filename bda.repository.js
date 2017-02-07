@@ -977,7 +977,7 @@
 		console.dir(itemDescriptor);
 		var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
 		console.dir(defaultItemProperties);
-		for each (defaultItemProperty in defaultItemProperties){
+		for each (var defaultItemProperty in defaultItemProperties){
 			console.log("name : " + defaultItemProperty.getAttribute("name"));
 			console.log("default : " + defaultItemProperty.getAttribute("default"));
 		}
