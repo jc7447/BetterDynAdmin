@@ -987,6 +987,7 @@
 					var exists = $(properties[j]).find("[name=" + defaultItemPropertyName + "]").length;
 					if(exists == 0){
 						properties[j].innerHTML += '<set-property name="' + defaultItemPropertyName + '"><!--[CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]--></set-property>';
+						console.dir(properties[j]);
 					}
 				}
 		}
