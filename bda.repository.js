@@ -975,11 +975,11 @@
 	if($addItems.length > 0){
 		var itemDescriptor = $addItems[0].getAttribute("item-descriptor");
 		console.dir(itemDescriptor);
-		/*var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
+		var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
 		console.dir(defaultItemProperties);
 		
 		console.log("name : " + defaultItemProperty.getAttribute("name"));
-		console.log("default : " + defaultItemProperty.getAttribute("default"));*/
+		console.log("default : " + defaultItemProperty.getAttribute("default"));
 	}
 
       $addItems.each(function() {
