@@ -973,7 +973,7 @@
 	    
 	debugger;
 	if($addItems.length > 0){
-		var itemDescriptor = $($addItems[0]).find("item-descriptor");
+		var itemDescriptor = $addItems[0].getAttribute("item-descriptor");
 		console.dir(itemDescriptor);
 		/*var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
 		console.dir(defaultItemProperties);
