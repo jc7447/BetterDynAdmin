@@ -988,7 +988,7 @@
 					if(exists == 0){
 						properties[j].innerHTML += '<set-property name="' + defaultItemPropertyName + '"><!--[CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]--></set-property>';
 					}
-				});
+				}
 		}
 	}
 
