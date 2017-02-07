@@ -865,6 +865,7 @@
 
     renderProperty: function(curProp, propValue, itemId, isItemTree) {
       var html = "";
+      var td = "<td data-property='" + curProp.name + "' data-item-id='" + itemId + "'>";
       if (propValue !== null && propValue !== undefined)
       {
         propValue = propValue.replace(/ /g, '●');
@@ -873,7 +874,6 @@
           propValue = propValue.substr(1);
         // propertyName_id
         var base_id = curProp.name + "_" + itemId;
-        var td = "<td data-property='" + curProp.name + "' data-item-id='" + itemId + "'>";
 
         if (curProp.name == "id")
           html += "<td id='" + base_id + "'>" + propValue + "</td>";
@@ -908,7 +908,7 @@
             html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
       }
       else
-        html += "<td>&nbsp;</td>";
+        html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i></td>';
 
       return html;
     },
@@ -970,7 +970,30 @@
         .end()
         .text()
         .trim();
+	    
+	debugger;
+	if(!isItemTree && $addItems.length > 0){
+		var itemDescriptor = $addItems[0].getAttribute("item-descriptor");
+		console.dir(itemDescriptor);
+		var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
+		console.dir(defaultItemProperties);
+		
+		for (var i = 0; i < defaultItemProperties.length; i++) {
+				var defaultItemPropertyName = defaultItemProperties[i].getAttribute("name");
+				console.log("name : " + defaultItemProperties[i].getAttribute("name"));
+				console.log("default : " + defaultItemProperties[i].getAttribute("default"));
+				var properties = $addItems.find("set-property");
+				for (var j = 0; j < properties.length; j++) {
+					var exists = $(properties[j]).find("[name=" + defaultItemPropertyName + "]").length;
+					if(exists == 0){
+						properties[j].outerHTML += '<set-property name="' + defaultItemPropertyName + '"><![CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]></set-property>';
+						console.dir(properties[j]);
+					}
+				}
+		}
+	}
 
+	    console.dir($addItems);
       $addItems.each(function() {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
         if (!types[curItemDesc])
