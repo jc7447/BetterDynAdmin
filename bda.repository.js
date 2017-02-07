@@ -957,6 +957,34 @@
         .end()
         .text()
         .trim();
+            
+      var descriptorAndDefaultValues = {};
+      for (var i = 0; i < $addItems.length; i++) {
+            var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
+            if(descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false){
+                  descriptorAndDefaultValues[itemDescriptor] = {};
+                  var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
+                  var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
+                  if(itemDefinition !== undefined && itemDefinition.length > 0){
+                        var superType = itemDefinition[0].getAttribute("super-type");
+                        console.log("supertype is : " + superType);
+                        defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
+                        console.dir(defaultProperties);
+                  }      
+                  for (var defaultPropertiesIndex = 0; defaultPropertiesIndex < defaultProperties.length; defaultPropertiesIndex++) {
+                        var defaultProperty = defaultProperties[defaultPropertiesIndex];
+                        var defaultPropertyName = defaultProperty.getAttribute("name");
+                        var defaultPropertyValue = defaultProperty.getAttribute("default");
+                        descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] = defaultPropertyValue;
+                  }
+            }
+            for (var defaultPropertyName in descriptorAndDefaultValues[itemDescriptor]) {
+                  var exists = $($addItems[i]).find("[name=" + defaultPropertyName + "]").length;
+                  if(exists == 0){
+                        $addItems[i].innerHTML += '<set-property name="' + defaultPropertyName + '"><![CDATA[' + descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] + ']]></set-property>';
+                  }
+            }
+      }
 
       $addItems.each(function() {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
