@@ -982,10 +982,11 @@
 				var defaultItemPropertyName = defaultItemProperties[i].getAttribute("name");
 				console.log("name : " + defaultItemProperties[i].getAttribute("name"));
 				console.log("default : " + defaultItemProperties[i].getAttribute("default"));
-				$addItems.find("set-property").each(function(){
-					var exists = $(this).find("[name=" + defaultItemPropertyName + "]").length;
+				var properties = $addItems.find("set-property");
+				for (var j = 0; j < properties.length; j++) {
+					var exists = $(properties[j]).find("[name=" + defaultItemPropertyName + "]").length;
 					if(exists == 0){
-						this.innerHTML += '<set-property name="' + defaultItemPropertyName + '"><!--[CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]--></set-property>';
+						properties[j].innerHTML += '<set-property name="' + defaultItemPropertyName + '"><!--[CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]--></set-property>';
 					}
 				});
 		}
