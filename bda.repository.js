@@ -986,7 +986,7 @@
 				for (var j = 0; j < properties.length; j++) {
 					var exists = $(properties[j]).find("[name=" + defaultItemPropertyName + "]").length;
 					if(exists == 0){
-						properties[j].outerHTML += '<set-property name="' + defaultItemPropertyName + '"><!--[CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]--></set-property>';
+						properties[j].outerHTML += '<set-property name="' + defaultItemPropertyName + '"><![CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]></set-property>';
 						console.dir(properties[j]);
 					}
 				}
