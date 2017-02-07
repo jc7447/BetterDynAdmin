@@ -972,6 +972,16 @@
         .trim();
 	    
 	debugger;
+	if($addItems.length > 0){
+		var itemDescriptor = $($addItems[0]).find("item-descriptor");
+		console.dir(itemDescriptor);
+		var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
+		console.dir(defaultItemProperties);
+		for each (defaultItemProperty in defaultItemProperties){
+			console.log("name : " + defaultItemProperty.getAttribute("name"));
+			console.log("default : " + defaultItemProperty.getAttribute("default"));
+		}
+	}
 
       $addItems.each(function() {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
