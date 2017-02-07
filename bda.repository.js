@@ -972,15 +972,22 @@
         .trim();
 	    
 	debugger;
-	if($addItems.length > 0){
+	if(!isItemTree && $addItems.length > 0){
 		var itemDescriptor = $addItems[0].getAttribute("item-descriptor");
 		console.dir(itemDescriptor);
 		var defaultItemProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
 		console.dir(defaultItemProperties);
 		
 		for (var i = 0; i < defaultItemProperties.length; i++) {
-			console.log("name : " + defaultItemProperties[i].getAttribute("name"));
-			console.log("default : " + defaultItemProperties[i].getAttribute("default"));
+				var defaultItemPropertyName = defaultItemProperties[i].getAttribute("name");
+				console.log("name : " + defaultItemProperties[i].getAttribute("name"));
+				console.log("default : " + defaultItemProperties[i].getAttribute("default"));
+				$addItems.find("set-property").each(function(){
+					var exists = $(this).find("[name=" + defaultItemPropertyName + "]").length;
+					if(exists == 0){
+						this.innerHTML += '<set-property name="' + defaultItemPropertyName + '"><!--[CDATA[' + defaultItemProperties[i].getAttribute("default") + ']]--></set-property>';
+					}
+				});
 		}
 	}
 
