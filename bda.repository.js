@@ -118,9 +118,8 @@
         }
       },
     },
-
-
     CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*)( cache-locality=(.*))?/,
+    edgesToIgnore : ["order","relationships","orderRef"],
 
     build: function() {
       console.time("bdaRepository");
@@ -873,7 +872,9 @@
         else if (propValue.length > 25) {
           var link_id = "link_" + base_id;
           var field_id = "text_" + base_id;
-          propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >" + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "...</a>" + "</span><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
+          propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >"
+          + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "..."
+          + "</span></a><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
           html += td + propValue + "</td>";
         }
         // Make IDs clickable
@@ -1031,7 +1032,9 @@
         }
       }
       $outputDiv.append(html);
-      $outputDiv.prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
+      $outputDiv.prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only "
+      + "<div class='prop_attr prop_attr_green'>D</div> : derived "
+      + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
 
       if ($(".copyField").length > 0) {
         // reuse $outputDiv in case we have several results set on the page (RQL query + get item tool)
@@ -1325,6 +1328,7 @@
       }
 
       console.time("getItemTree");
+      console.time("retrieveItem");
       // Get XML definition of the repository
       $("#itemTreeInfo").html("<p>Getting XML definition of this repository...</p>");
       var $xmlDef = processRepositoryXmlDef("definitionFiles", function($xmlDef) {
@@ -1344,6 +1348,7 @@
     },
 
     renderItemTreeTab: function(outputType, printRepoAttr, $xmlDef, maxItem) {
+      console.timeEnd("retrieveItem");
       console.log("Render item tree tab : " + outputType);
 
       //  If the max item is reached before recursion ended, we notify the user
@@ -1428,7 +1433,7 @@
             var $this = $(this);
             var propertyName = $this.attr("name");
             var propertyValue = $this.text();
-            if (propertyName != "order" && propertyName != "relationships" && propertyName != "orderRef") {
+            if (BDA_REPOSITORY.edgesToIgnore.indexOf(propertyName) === -1) {
               var isId = BDA_REPOSITORY.isTypeId(propertyName, itemDesc, $xmlDef)
               if (isId != null && isId != "FOUND_NOT_ID") {
                 var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
@@ -1467,9 +1472,10 @@
         $("#treeLegend").append("<div class='legend' style='background-color:" + value + "' id='" + key + "'>" + key + "</div>");
       });
 
-      logTrace(nodes);
-      logTrace(edges);
-      logTrace(descById);
+      console.log("Number for nodes : " + nodes.length);
+      console.log("Number for edges : " + edges.length);
+      //logTrace(descById);
+       $("#treePopup").show();
       console.timeEnd('renderAsTree.setup');
       console.time('renderAsTree.render');
       // Create the network
@@ -1479,12 +1485,10 @@
       };
 
       var options = {
-          physics: {stabilization: true},
+          physics: {stabilization: false},
           edges: {smooth: true},
           nodes: {font: { color: "#FFFFFF"}}
       };
-
-     $("#treePopup").show();
 
      var container = document.getElementById('treeContainer');
      var network = new vis.Network(container, data, options);
@@ -1495,11 +1499,13 @@
        if (params.nodes && params.nodes.length == 1) {
         $("#treeInfo").empty();
         BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(params.nodes[0]), null, $("#treeInfo"), false);
-        $("#treeInfo").show("slide", { direction: "right" });
+        $("#treeInfo").fadeIn(400);
        }
       });
 
       $(".legend").click(function() {
+        // This feature is disabled for now.
+        return ;
         console.log("click on legend");
         var id = $(this).attr('id');
         console.log(id);
@@ -1542,7 +1548,7 @@
             if (elm.from == id) {
                 var isOrphan = true;
                 var connectedEdges = network.getConnectedEdges(elm.to);
-                
+
                 for (var i = 0; i != connectedEdges.length; i++) {
                     var edge = edges.get(connectedEdges[i]);
                     console.log("connectedEdge - from : " + edge.to + " - " + edge.from);
