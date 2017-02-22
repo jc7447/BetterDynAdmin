@@ -1416,19 +1416,19 @@
 
     renderAsTree: function($xmlDef) {
        console.log("render as tree");
-      console.time('renderAsTree.setup')
+       console.time('renderAsTree.setup');
        var nodes = new vis.DataSet();
        var edges = new vis.DataSet();
        var legends = new Map();
        var descById = new Map();
-      BDA_REPOSITORY.itemTree.forEach(function(data, id) {
+       var i = 0;
+       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
         //console.log("data : " + data);
         var xmlDoc = $.parseXML("<xml>" + data + "</xml>");
         var $xml = $(xmlDoc);
         var $addItem = $xml.find("add-item").first();
         var itemDesc = $addItem.attr("item-descriptor");
         var itemId = $addItem.attr("id");
-
         $xml.find("set-property").each(function(index) {
             var $this = $(this);
             var propertyName = $this.attr("name");
@@ -1438,20 +1438,24 @@
               if (isId != null && isId != "FOUND_NOT_ID") {
                 var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
                 for (var i = 0; i != idAsTab.length; i++) {
-                  edges.add({from: itemId, to:idAsTab[i], arrows:'to', title:propertyName});
+                    if (idAsTab[i] != "," && idAsTab[i] != "=") {
+                      edges.add({from: itemId, to:idAsTab[i], arrows:'to', title:propertyName});
+                    }
                 }
               }
             }
         });
+        i++;
+
         var nodeColor = colorToCss(stringToColour(itemDesc));
-        nodes.add({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
+        if (nodes.length <= 20)
+          nodes.add({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
         legends.set(itemDesc, nodeColor);
 
-        if (descById.get(itemDesc)) {
+        if (descById.get(itemDesc))
             descById.get(itemDesc).push(itemId);
-        } else {
+        else
             descById.set(itemDesc, [itemId]);
-        }
       });
 
       // Create popup
@@ -1474,10 +1478,13 @@
 
       console.log("Number for nodes : " + nodes.length);
       console.log("Number for edges : " + edges.length);
+      console.log(nodes);
+      console.log(edges);
       //logTrace(descById);
        $("#treePopup").show();
       console.timeEnd('renderAsTree.setup');
       console.time('renderAsTree.render');
+
       // Create the network
       var data = {
           nodes: nodes,
@@ -1486,12 +1493,33 @@
 
       var options = {
           physics: {stabilization: false},
+          //layout : {improvedLayout : true},
           edges: {smooth: true},
           nodes: {font: { color: "#FFFFFF"}}
       };
 
      var container = document.getElementById('treeContainer');
      var network = new vis.Network(container, data, options);
+
+
+/*
+    // randomly create some nodes and edges
+    var data = BDA_REPOSITORY.getScaleFreeNetwork(80);
+
+    console.log(data);
+    console.log("Number for nodes : " + data.nodes.length);
+    console.log("Number for edges : " + data.edges.length);
+    // create a network
+    var container = document.getElementById('treeContainer');
+
+    var options = {
+      physics: {
+        stabilization: false
+      },
+        edges: {smooth: true}
+    };
+    network = new vis.Network(container, data, options);
+*/
      console.timeEnd('renderAsTree.render')
 
      network.on("click", function (params) {
@@ -1525,6 +1553,71 @@
         }
       });
     },
+
+
+    getScaleFreeNetwork : function (nodeCount) {
+      var nodes = [];
+      var edges = [];
+      var connectionCount = [];
+
+      // randomly create some nodes and edges
+      for (var i = 0; i < nodeCount; i++) {
+        nodes.push({
+          id: i,
+          label: String(i)
+        });
+
+        connectionCount[i] = 0;
+
+        // create edges in a scale-free-network way
+        if (i == 1) {
+          var from = i;
+          var to = 0;
+          edges.push({
+            from: from,
+            to: to
+          });
+          connectionCount[from]++;
+          connectionCount[to]++;
+        }
+        else if (i > 1) {
+          var conn = edges.length * 2;
+          var rand = Math.floor(Math.random() * conn);
+          var cum = 0;
+          var j = 0;
+          while (j < connectionCount.length && cum < rand) {
+            cum += connectionCount[j];
+            j++;
+          }
+
+
+          var from = i;
+          var to = j;
+          edges.push({
+            from: from,
+            to: to
+          });
+          if (i % 2 == 0) {
+            edges.push({
+              from: to,
+              to: from
+            });
+          }
+          connectionCount[from]++;
+          connectionCount[to]++;
+        }
+      }
+
+      edges.push({from: "70", to: "4"});
+      edges.push({from: "12", to: "51"});
+      edges.push({from: "26", to: "25"});
+      edges.push({from: "16", to: "68"});
+      edges.push({from: "70", to: "54"});
+      edges.push({from: "4", to: "57"});
+
+      return {nodes:nodes, edges:edges};
+    },
+
 
     findNodesAndEdgesToHide: function(id, network, edges, nodes) {
         console.log("findNodesAndEdgesToHide for ID : " + id);
