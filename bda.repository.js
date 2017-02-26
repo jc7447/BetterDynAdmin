@@ -1449,43 +1449,65 @@
        var edges = new vis.DataSet();
        var legends = new Map();
        var descById = new Map();
+       var itemIdToVisId = new Map();
        var i = 0;
        BDA_REPOSITORY.itemTree.forEach(function(data, id) {
-        //console.log("data : " + data);
+        itemIdToVisId.set(id, i);
+        i++;
+       });
+       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
+
         var xmlDoc = $.parseXML("<xml>" + data + "</xml>");
         var $xml = $(xmlDoc);
         var $addItem = $xml.find("add-item").first();
         var itemDesc = $addItem.attr("item-descriptor");
         var itemId = $addItem.attr("id");
-        $xml.find("set-property").each(function(index) {
+
+        console.time('renderAsTree.properties');
+        i = 0;
+        $addItem.children().each(function(index) {
+//            if(index > 0)
+//                console.timeEnd("renderAsTree.loop");
             var $this = $(this);
             var propertyName = $this.attr("name");
+//            console.time('renderAsTree.property' + propertyName);
             var propertyValue = $this.text();
             if (BDA_REPOSITORY.edgesToIgnore.indexOf(propertyName) === -1) {
+//              console.time('renderAsTree.isID' + propertyName);
               var isId = BDA_REPOSITORY.isTypeId(propertyName, itemDesc, $xmlDef)
+//              console.timeEnd('renderAsTree.isID' + propertyName);
               if (isId != null && isId != "FOUND_NOT_ID") {
+//              console.time('renderAsTree.parseRepositoryId' + propertyName);
                 var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
+//                console.timeEnd('renderAsTree.parseRepositoryId' + propertyName);
+//                console.time('renderAsTree.fillEdges' + propertyName);
                 for (var i = 0; i != idAsTab.length; i++) {
                     if (idAsTab[i] != "," && idAsTab[i] != "=") {
-                      edges.add({from: itemId, to:idAsTab[i], arrows:'to', title:propertyName});
+                      edges.add({from: itemIdToVisId.get(itemId), to:itemIdToVisId.get(idAsTab[i]), arrows:'to', title:propertyName});
                     }
                 }
+//                console.timeEnd('renderAsTree.fillEdges' + propertyName);
               }
             }
+//            console.timeEnd('renderAsTree.property' + propertyName);
+            i++;
+//           console.time("renderAsTree.loop");
         });
-        i++;
+//        console.timeEnd("renderAsTree.loop");
+        console.timeEnd('renderAsTree.properties');
 
         var nodeColor = colorToCss(stringToColour(itemDesc));
-        if (nodes.length <= 20)
-          nodes.add({id: itemId, label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
+        nodes.add({id: itemIdToVisId.get(itemId), label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
         legends.set(itemDesc, nodeColor);
 
         if (descById.get(itemDesc))
             descById.get(itemDesc).push(itemId);
         else
             descById.set(itemDesc, [itemId]);
-      });
 
+      });
+      console.timeEnd('renderAsTree.setup');
+      console.time('renderAsTree.setupUI');
       // Create popup
       $("#itemTreeResult").empty()
                           .append("<div class='popup_block' id='treePopup'>"
@@ -1510,7 +1532,7 @@
       console.log(edges);
       //logTrace(descById);
        $("#treePopup").show();
-      console.timeEnd('renderAsTree.setup');
+      console.timeEnd('renderAsTree.setupUI');
       console.time('renderAsTree.render');
 
       // Create the network
@@ -1554,7 +1576,7 @@
        params.event = "[original event]";
        if (params.nodes && params.nodes.length == 1) {
         $("#treeInfo").empty();
-        BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(params.nodes[0]), null, $("#treeInfo"), false);
+        BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(itemIdToVisId.get(params.nodes[0])), null, $("#treeInfo"), false);
         $("#treeInfo").fadeIn(400);
        }
       });
