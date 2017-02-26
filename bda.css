@@ -1241,10 +1241,12 @@ ol.itemDescAttributes {
 #treePopup {
   height: 90%;
   width: 95%;
+  overflow: hidden;
 }
 
-#treeContainer {
-  flex:1;
+.flexContainer {
+  display:flex;
+  height: 100%;
 }
 
 #treeInfo {
@@ -1252,7 +1254,7 @@ ol.itemDescAttributes {
   float:left;
 }
 
-.flexContainer  {
-  display:flex;
-  height:100%;
+#treeContainer  {
+  height: 100%;
+  flex : 1;
 }

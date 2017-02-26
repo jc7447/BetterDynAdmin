@@ -957,34 +957,35 @@
         .end()
         .text()
         .trim();
-            
+
       var descriptorAndDefaultValues = {};
-      for (var i = 0; i < $addItems.length; i++) {
-            var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
-            if(descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false){
-                  descriptorAndDefaultValues[itemDescriptor] = {};
-                  var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
-                  var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
-                  if(itemDefinition !== undefined && itemDefinition.length > 0){
-                        var superType = itemDefinition[0].getAttribute("super-type");
-                        console.log("supertype is : " + superType);
-                        defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
-                        console.dir(defaultProperties);
-                  }      
-                  for (var defaultPropertiesIndex = 0; defaultPropertiesIndex < defaultProperties.length; defaultPropertiesIndex++) {
-                        var defaultProperty = defaultProperties[defaultPropertiesIndex];
-                        var defaultPropertyName = defaultProperty.getAttribute("name");
-                        var defaultPropertyValue = defaultProperty.getAttribute("default");
-                        descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] = defaultPropertyValue;
-                  }
+      if ($xmlDef != null) {
+        for (var i = 0; i < $addItems.length; i++) {
+          var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
+          if(descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false){
+            descriptorAndDefaultValues[itemDescriptor] = {};
+            var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
+            var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
+            if(itemDefinition !== undefined && itemDefinition.length > 0){
+              var superType = itemDefinition[0].getAttribute("super-type");
+              defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
             }
-            for (var defaultPropertyName in descriptorAndDefaultValues[itemDescriptor]) {
-                  var exists = $($addItems[i]).find("[name=" + defaultPropertyName + "]").length;
-                  if(exists == 0){
-                        $addItems[i].innerHTML += '<set-property name="' + defaultPropertyName + '"><![CDATA[' + descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] + ']]></set-property>';
-                  }
+            for (var defaultPropertiesIndex = 0; defaultPropertiesIndex < defaultProperties.length; defaultPropertiesIndex++) {
+              var defaultProperty = defaultProperties[defaultPropertiesIndex];
+              var defaultPropertyName = defaultProperty.getAttribute("name");
+              var defaultPropertyValue = defaultProperty.getAttribute("default");
+              descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] = defaultPropertyValue;
             }
+          }
+          for (var defaultPropertyName in descriptorAndDefaultValues[itemDescriptor]) {
+            var exists = $($addItems[i]).find("[name=" + defaultPropertyName + "]").length;
+            if(exists == 0){
+              $addItems[i].innerHTML += '<set-property name="' + defaultPropertyName + '"><![CDATA[' + descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] + ']]></set-property>';
+            }
+          }
+        }
       }
+
 
       $addItems.each(function() {
         var curItemDesc = "_" + $(this).attr("item-descriptor");
@@ -1449,65 +1450,47 @@
        var edges = new vis.DataSet();
        var legends = new Map();
        var descById = new Map();
-       var itemIdToVisId = new Map();
+       var itemIdToVisId = {};
        var i = 0;
        BDA_REPOSITORY.itemTree.forEach(function(data, id) {
-        itemIdToVisId.set(id, i);
+        itemIdToVisId[id] = i;
         i++;
        });
-       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
 
+       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
         var xmlDoc = $.parseXML("<xml>" + data + "</xml>");
         var $xml = $(xmlDoc);
         var $addItem = $xml.find("add-item").first();
         var itemDesc = $addItem.attr("item-descriptor");
         var itemId = $addItem.attr("id");
 
-        console.time('renderAsTree.properties');
-        i = 0;
         $addItem.children().each(function(index) {
-//            if(index > 0)
-//                console.timeEnd("renderAsTree.loop");
             var $this = $(this);
             var propertyName = $this.attr("name");
-//            console.time('renderAsTree.property' + propertyName);
             var propertyValue = $this.text();
             if (BDA_REPOSITORY.edgesToIgnore.indexOf(propertyName) === -1) {
-//              console.time('renderAsTree.isID' + propertyName);
               var isId = BDA_REPOSITORY.isTypeId(propertyName, itemDesc, $xmlDef)
-//              console.timeEnd('renderAsTree.isID' + propertyName);
               if (isId != null && isId != "FOUND_NOT_ID") {
-//              console.time('renderAsTree.parseRepositoryId' + propertyName);
                 var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
-//                console.timeEnd('renderAsTree.parseRepositoryId' + propertyName);
-//                console.time('renderAsTree.fillEdges' + propertyName);
                 for (var i = 0; i != idAsTab.length; i++) {
                     if (idAsTab[i] != "," && idAsTab[i] != "=") {
-                      edges.add({from: itemIdToVisId.get(itemId), to:itemIdToVisId.get(idAsTab[i]), arrows:'to', title:propertyName});
+                      edges.add({from: itemIdToVisId[itemId], to:itemIdToVisId[idAsTab[i]], arrows:'to', title:propertyName});
                     }
                 }
-//                console.timeEnd('renderAsTree.fillEdges' + propertyName);
               }
             }
-//            console.timeEnd('renderAsTree.property' + propertyName);
-            i++;
-//           console.time("renderAsTree.loop");
         });
-//        console.timeEnd("renderAsTree.loop");
-        console.timeEnd('renderAsTree.properties');
 
         var nodeColor = colorToCss(stringToColour(itemDesc));
-        nodes.add({id: itemIdToVisId.get(itemId), label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
+        nodes.add({id: itemIdToVisId[itemId], label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
         legends.set(itemDesc, nodeColor);
 
         if (descById.get(itemDesc))
             descById.get(itemDesc).push(itemId);
         else
             descById.set(itemDesc, [itemId]);
-
       });
       console.timeEnd('renderAsTree.setup');
-      console.time('renderAsTree.setupUI');
       // Create popup
       $("#itemTreeResult").empty()
                           .append("<div class='popup_block' id='treePopup'>"
@@ -1515,7 +1498,9 @@
                                 + "<div id='treeLegend'></div>"
                                 + "<div class='flexContainer'>"
                                 + "<div id='treeInfo'></div>"
-                                + "<div id='treeContainer'></div></div></div>");
+                                + "<div id='treeContainer'></div>"
+                                + "</div>"
+                                + "</div>");
       $("#treePopup .close").click(function() {
         console.log("click on close");
         $("#treePopup").hide();
@@ -1528,11 +1513,8 @@
 
       console.log("Number for nodes : " + nodes.length);
       console.log("Number for edges : " + edges.length);
-      console.log(nodes);
-      console.log(edges);
-      //logTrace(descById);
-       $("#treePopup").show();
-      console.timeEnd('renderAsTree.setupUI');
+
+      $("#treePopup").show();
       console.time('renderAsTree.render');
 
       // Create the network
@@ -1543,41 +1525,33 @@
 
       var options = {
           physics: {stabilization: false},
-          //layout : {improvedLayout : true},
           edges: {smooth: true},
           nodes: {font: { color: "#FFFFFF"}}
       };
 
      var container = document.getElementById('treeContainer');
      var network = new vis.Network(container, data, options);
-
-
-/*
-    // randomly create some nodes and edges
-    var data = BDA_REPOSITORY.getScaleFreeNetwork(80);
-
-    console.log(data);
-    console.log("Number for nodes : " + data.nodes.length);
-    console.log("Number for edges : " + data.edges.length);
-    // create a network
-    var container = document.getElementById('treeContainer');
-
-    var options = {
-      physics: {
-        stabilization: false
-      },
-        edges: {smooth: true}
-    };
-    network = new vis.Network(container, data, options);
-*/
      console.timeEnd('renderAsTree.render')
 
      network.on("click", function (params) {
        params.event = "[original event]";
        if (params.nodes && params.nodes.length == 1) {
         $("#treeInfo").empty();
-        BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(itemIdToVisId.get(params.nodes[0])), null, $("#treeInfo"), false);
-        $("#treeInfo").fadeIn(400);
+        var visId = params.nodes[0];
+        var itemId = null;
+        console.log("Click on " + visId);
+        // Find itemId from visID
+        for (var id in itemIdToVisId) {
+          if (visId === itemIdToVisId[id]) {
+            itemId = id;
+            break;
+          }
+        }
+        console.log("itemId : " + itemId);
+        console.log(BDA_REPOSITORY.itemTree.get(itemId));
+        BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(itemId), null, $("#treeInfo"), false);
+        console.log( $("#treeInfo").html());
+        $("#treeInfo").show();
        }
       });
 
@@ -1603,71 +1577,6 @@
         }
       });
     },
-
-
-    getScaleFreeNetwork : function (nodeCount) {
-      var nodes = [];
-      var edges = [];
-      var connectionCount = [];
-
-      // randomly create some nodes and edges
-      for (var i = 0; i < nodeCount; i++) {
-        nodes.push({
-          id: i,
-          label: String(i)
-        });
-
-        connectionCount[i] = 0;
-
-        // create edges in a scale-free-network way
-        if (i == 1) {
-          var from = i;
-          var to = 0;
-          edges.push({
-            from: from,
-            to: to
-          });
-          connectionCount[from]++;
-          connectionCount[to]++;
-        }
-        else if (i > 1) {
-          var conn = edges.length * 2;
-          var rand = Math.floor(Math.random() * conn);
-          var cum = 0;
-          var j = 0;
-          while (j < connectionCount.length && cum < rand) {
-            cum += connectionCount[j];
-            j++;
-          }
-
-
-          var from = i;
-          var to = j;
-          edges.push({
-            from: from,
-            to: to
-          });
-          if (i % 2 == 0) {
-            edges.push({
-              from: to,
-              to: from
-            });
-          }
-          connectionCount[from]++;
-          connectionCount[to]++;
-        }
-      }
-
-      edges.push({from: "70", to: "4"});
-      edges.push({from: "12", to: "51"});
-      edges.push({from: "26", to: "25"});
-      edges.push({from: "16", to: "68"});
-      edges.push({from: "70", to: "54"});
-      edges.push({from: "4", to: "57"});
-
-      return {nodes:nodes, edges:edges};
-    },
-
 
     findNodesAndEdgesToHide: function(id, network, edges, nodes) {
         console.log("findNodesAndEdgesToHide for ID : " + id);
