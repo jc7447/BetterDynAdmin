@@ -27,12 +27,12 @@ Change logs
 
 ### 2.1 - 26/02/17
 
-* [#46](../../issues/46)[Repository] New option to render items as tree
-* [#84](../../issues/84)[Repository] Result tables show default repository values (thanks to @onewingedfallen59)
-* [#106](../../issues/106)[Repository] Option to not reload immediately when loading a sub-item (thanks to @troussej)
-* [#104](../../issues/104)[Repository] Auto-complete GSA tags in the query editor (thanks to @troussej)
-* [#103](../../issues/103)[Dash] Auto-complete GSA tags (thanks to @troussej)
-* [#103](../../issues/103)[Dash] Auto-save editor state (thanks to @troussej)
+* [#46](../../issues/46) [Repository] New option to render items as tree
+* [#84](../../issues/84) [Repository] Result tables show default repository values (thanks to @onewingedfallen59)
+* [#106](../../issues/106) [Repository] Option to not reload immediately when loading a sub-item (thanks to @troussej)
+* [#104](../../issues/104) [Repository] Auto-complete GSA tags in the query editor (thanks to @troussej)
+* [#103](../../issues/103) [Dash] Auto-complete GSA tags (thanks to @troussej)
+* [#103](../../issues/103) [Dash] Auto-save editor state (thanks to @troussej)
 
 ### 2.0 - 18/09/16
 
