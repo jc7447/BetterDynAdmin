@@ -108,7 +108,7 @@
       var compObj = {};
       compObj.componentPath = component;
       compObj.componentName = getComponentNameFromPath(component);
-      compObj.colors = BDA_TOOLBAR.stringToColour(compObj.componentName);
+      compObj.colors = stringToColour(compObj.componentName);
       var storedComp = BDA_STORAGE.getStoredComponents();
       if (storedComp.length > 0)
         compObj.id = storedComp[storedComp.length - 1].id + 1;
@@ -135,42 +135,7 @@
           colorValue = 0;
         borderColor.push(colorValue);
       }
-      return BDA_TOOLBAR.colorToCss(borderColor);
-    },
-
-    colorToCss : function (colors)
-    {
-      var cssVal =  "rgb(" ;
-      for (var i = 0; i < colors.length; i++)
-      {
-        if (i !== 0)
-          cssVal += ",";
-        cssVal += colors[i];
-      }
-      cssVal += ")";
-      return cssVal;
-    },
-
-    verifyColor : function (colors)
-    {
-      for (var i = 0; i < colors.length; i++)
-        if (colors[i] > 210)
-          colors[i] = 210;
-      return colors;
-    },
-
-    stringToColour : function (str)
-    {
-      var colors = [];
-      var hash = 0;
-      for (var i = 0; i < str.length; i++)
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      for (i = 0; i < 3; i++) {
-        var value = (hash >> (i * 8)) & 0xFF;
-        var hexVal = ('00' + value.toString(16)).substr(-2);
-        colors.push(parseInt(hexVal, 16));
-      }
-      return BDA_TOOLBAR.verifyColor(colors);
+      return colorToCss(borderColor);
     },
 
     showMoreInfos : function (component)
@@ -274,7 +239,7 @@
         //check filters
         if(show)
         {
-          var colors = BDA_TOOLBAR.stringToColour(fav.componentName);
+          var colors = stringToColour(fav.componentName);
           var shortName = getComponentShortName(fav.componentName);
           var callableHTML = "<div class='favMethods'>";
           if(fav.methods !== undefined)
@@ -301,7 +266,7 @@
           }
 
           $("<div class='toolbar-elem fav'></div>")
-          .css("background-color", BDA_TOOLBAR.colorToCss(colors))
+          .css("background-color", colorToCss(colors))
           .css("border", "1px solid " + BDA_TOOLBAR.getBorderColor(colors))
           .html("<div class='favLink'>"
               + "<a href='" + fav.componentPath + "' title='" + fav.componentName + "' >"
@@ -525,7 +490,7 @@
       for (var i = 0; i < sortedTags.length; i++) {
         tagName = sortedTags[i];
         var tag = tags[tagName];
-        var tagColor = BDA_TOOLBAR.stringToColour(tagName);
+        var tagColor = stringToColour(tagName);
 
         $('<label >#' + tagName + '</label>')
         .attr('for','favFilter_'+tagName)
@@ -550,7 +515,7 @@
          })
          .appendTo(
            $('<li class="bda-button tag-filter" ></li>')
-           .css("background-color", BDA_TOOLBAR.colorToCss(tagColor))
+           .css("background-color", colorToCss(tagColor))
            .css("border", "1px solid " + BDA_TOOLBAR.getBorderColor(tagColor))
            .appendTo($list)
          )

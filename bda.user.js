@@ -18,8 +18,8 @@
 // @grant GM_deleteValue
 //
 // ------ write version on bdaCSS TOO ! ------
-// @version 2.0.4
-// @resource bdaCSS bda.css?version=2.0.4
+// @version 2.1
+// @resource bdaCSS bda.css?version=2.1
 
 // @require https://code.jquery.com/jquery-3.0.0.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.21.5/js/jquery.tablesorter.min.js
@@ -151,6 +151,7 @@ jQuery(document).ready(function() {
 
         if (BDA.isOldDynamo)
         {
+          console.log('isOldDynamo')
           BDA.logoSelector = "";
           for (var i = 0; i != BDA.oldDynamoAltSelector.length; i++)
           {
@@ -169,7 +170,7 @@ jQuery(document).ready(function() {
         // Setup storage plugin
         $().bdaStorage();
         // Setup Repository plugin
-        $().bdaRepository();
+        $().bdaRepository(BDA);
         // Setup pipeline plugin
         $().bdaPipeline();
         // Setup XML definition plugin

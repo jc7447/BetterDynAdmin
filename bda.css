@@ -1013,6 +1013,11 @@ button.cache {
   width: 4%;
 }
 
+.fixed_headers.oldDynamo th,
+.fixed_headers.oldDynamo td {
+  width: 5.3%;
+}
+
 /*.fixed_headers .sticky-top thead {
   display: block;
 }
@@ -1222,4 +1227,34 @@ ol.itemDescAttributes {
 }
 .notifyjs-bootstrap-base {
   font-size: 12px;
+}
+
+.legend {
+  display : inline-block;
+  color : white;
+  border-radius : 5px;
+  font-size : 11px;
+  padding : 3px;
+  margin : 5px;
+}
+
+#treePopup {
+  height: 90%;
+  width: 95%;
+  overflow: hidden;
+}
+
+.flexContainer {
+  display:flex;
+  height: 100%;
+}
+
+#treeInfo {
+  display:none;
+  float:left;
+}
+
+#treeContainer  {
+  height: 100%;
+  flex : 1;
 }

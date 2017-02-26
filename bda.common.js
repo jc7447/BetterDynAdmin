@@ -72,7 +72,7 @@ try {
         tag.name = tagName;
         tags[tagName] = tag;
       }
-      console.log('buildTagsFromArray ' + JSON.stringify(tags));
+      logTrace('buildTagsFromArray ' + JSON.stringify(tags));
       return tags;
     },
 
@@ -81,7 +81,7 @@ try {
         // First check cache value if any
         var rawXmlDef = getXmlDef(getCurrentComponentPath());
         if (rawXmlDef !== null) {
-          console.log("Getting XML def from cache");
+          logTrace("Getting XML def from cache");
           var xmlDoc = jQuery.parseXML(rawXmlDef);
           if (callback !== undefined)
             callback($(xmlDoc));
@@ -89,7 +89,7 @@ try {
         // If no cache entry, fetch the XML def in ajax
         else {
           var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
-          console.log(url);
+          logTrace(url);
           jQuery.ajax({
             url: url,
             success: function(result) {
@@ -103,14 +103,14 @@ try {
                   .replace("&nbsp;", "")
                   .replace("<!DOCTYPE gsa-template SYSTEM \"dynamosystemresource:/atg/dtds/gsa/gsa_1.0.dtd\">", "");
                 try {
-                  console.log("XML def length : " + rawXmlDef.length);
+                  logTrace("XML def length : " + rawXmlDef.length);
                   var xmlDoc = jQuery.parseXML(rawXmlDef);
                   storeXmlDef(getCurrentComponentPath(), rawXmlDef);
                   callback($(xmlDoc));
                 } catch (err) {
-                  console.log("Unable to parse XML def file !");
+                  logTrace("Unable to parse XML def file !");
                   callback(null);
-                  console.log(err);
+                  logTrace(err);
                 }
               } else
                 callback(null);
@@ -121,20 +121,20 @@ try {
     };
 
   this.getXmlDef = function(componentPath) {
-    console.log("Getting XML def for : " + componentPath);
+    logTrace("Getting XML def for : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
     var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
     if (!xmlDefMetaData)
       return null;
     if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp) {
-      console.log("Xml def is outdated or from a different component");
+      logTrace("Xml def is outdated or from a different component");
       return null;
     }
     return localStorage.getItem("XMLDefData");
   };
 
   this.storeXmlDef = function(componentPath, rawXML) {
-    console.log("Storing XML def : " + componentPath);
+    logTrace("Storing XML def : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
 
     localStorage.setItem("XMLDefMetaData", JSON.stringify({
@@ -184,7 +184,7 @@ try {
       componentPath = componentPath.substr(0, componentPath.length - 1);
 
     var tab = componentPath.split("/");
-    //console.log("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
+    //logTrace("For component :" + componentPath + ", name is : " + (tab[tab.length - 1]));
     return tab[tab.length - 1];
   };
 
@@ -206,9 +206,9 @@ try {
     return purgeSlashes(document.location.pathname.replace("/dyn/admin/nucleus", ""));
   };
 
-  this.logTrace = function(msg) {
+  this.logTrace = function() {
     if (isLoggingTrace) {
-      console.log(msg);
+      logTrace.apply(this, arguments);
     }
   };
 
@@ -224,26 +224,26 @@ try {
     return r;
   };
 
-  this.stringCompare =function(a, b) {
-      if (a !== null)
-        return a.localeCompare(b, 'en', {
-          caseFirst: 'upper'
-        });
-      else if (b !== null)
-        return -1;
-      else
-        return 0;
-    };
+  this.stringCompare = function(a, b) {
+    if (a !== null)
+      return a.localeCompare(b, 'en', {
+        caseFirst: 'upper'
+      });
+    else if (b !== null)
+      return -1;
+    else
+      return 0;
+  };
 
-  this.compareAttr = function(a,b,attr){
-    var aVal =  $(a).attr(attr);
-    var bVal =  $(b).attr(attr);
-    return stringCompare(aVal,bVal);
+  this.compareAttr = function(a, b, attr) {
+    var aVal = $(a).attr(attr);
+    var bVal = $(b).attr(attr);
+    return stringCompare(aVal, bVal);
   }
 
-  this.compareAttrFc = function(attr){
-    return function(a,b){
-      return compareAttr(a,b,attr);
+  this.compareAttrFc = function(attr) {
+    return function(a, b) {
+      return compareAttr(a, b, attr);
     }
   }
 
@@ -343,10 +343,6 @@ try {
     return xmlStr;
   };
 
-  $.fn.outerHTML = function(s) {
-    return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
-  };
-
   this.extendComponentPath = function(path) {
     var res = path;
     if (!path.startsWith('/dyn/admin/nucleus/')) {
@@ -362,12 +358,52 @@ try {
     if (isLoggingTrace) {
       console.time(name)
     }
-  }
+  };
+
   this.traceTimeEnd = function(name) {
     if (isLoggingTrace) {
       console.timeEnd(name)
     }
-  }
+  };
+
+  this.colorToCss = function (colors)
+  {
+    var cssVal =  "rgb(" ;
+    for (var i = 0; i < colors.length; i++)
+    {
+      if (i !== 0)
+        cssVal += ",";
+      cssVal += colors[i];
+    }
+    cssVal += ")";
+    return cssVal;
+  };
+
+  this.verifyColor = function (colors)
+  {
+    for (var i = 0; i < colors.length; i++)
+      if (colors[i] > 210)
+        colors[i] = 210;
+    return colors;
+  };
+
+  this.stringToColour = function (str)
+  {
+    var colors = [];
+    var hash = 0;
+    for (var i = 0; i < str.length; i++)
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    for (i = 0; i < 3; i++) {
+      var value = (hash >> (i * 8)) & 0xFF;
+      var hexVal = ('00' + value.toString(16)).substr(-2);
+      colors.push(parseInt(hexVal, 16));
+    }
+    return this.verifyColor(colors);
+  };
+
+  $.fn.outerHTML = function(s) {
+    return (s) ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
+  };
 
   $.fn.adjustToFit = function($parent, targetTotalSize, minSize) {
     var curSize = $parent.fullHeight();
@@ -430,15 +466,35 @@ try {
     return csv;
   };
 
-  $.fn.sortContent = function(selector,sortFunction){
+  $.fn.sortContent = function(selector, sortFunction) {
     var $this = $(this);
     var $elems = $this.find(selector);
-    console.log('selector ' + selector);
-    console.log($elems.length);
-   $elems = $elems.sort(sortFunction);
+    logTrace('selector ' + selector);
+    logTrace($elems.length);
+    $elems = $elems.sort(sortFunction);
     $elems.detach().appendTo($this);
     return this;
   }
+
+  // Returns a function, that, as long as it continues to be invoked, will not
+// be triggered. The function will be called after it stops being called for
+// N milliseconds. If `immediate` is passed, trigger the function on the
+// leading edge, instead of the trailing.
+function debounce(func, wait, immediate) {
+  var timeout;
+  return function() {
+    var context = this, args = arguments;
+    var later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    var callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+};
+
 
   /*
 
@@ -494,7 +550,130 @@ Johann Burkard
   };
 
 
+  (function($) {
+    // CUSTOM ALERT with multiple options
+    const BDA_ALERT_CONFIG = {};
+    const bdaAlertDefaults = {
+      msg: '',
+      options: []
+    };
+    const pluginName = "bdaAlert";
+
+    const templates = {
+      ALERT_MODAL_TEMPLATE: '<div  class="bda-alert-wrapper twbs">' +
+        '<div class="modal fade bda-modal" tabindex="-1" role="dialog">' +
+        '<div class="modal-dialog" role="document">' +
+        '<div class="modal-content ">' +
+        '<div class="modal-body bda-alert-body"></div>' +
+        '<div class="modal-footer bda-alert-footer"></div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    };
+
+    function BdaAlert(parent, inOptions) {
+     // logTrace('BdaAlert');
+      //logTrace(parent)
+      this.$parent = $(parent);
+
+      logTrace('in options: %s', JSON.stringify(inOptions));
+
+      this.options = inOptions //$.extend({}, bdaAlertDefaults, inOptions);
+      logTrace('options:');
+      logTrace( this.options);
+      this._defaults = bdaAlertDefaults;
+      this._name = pluginName;
+
+      this._init();
+    }
+
+    BdaAlert.prototype = {
+      _init: function() {
+        logTrace('build bdaAlert');
+        logTrace(arguments)
+        logTrace(this.$parent.get());
+
+        this.wrapper = $(templates.ALERT_MODAL_TEMPLATE);
+        this.$parent.append(this.wrapper );
+        this.modal = this.wrapper.find('.modal');
+      },
+      _show: function() {
+        logTrace('bdaAlert show');
+        this.modal.modal('show');
+      },
+      _hide: function() {
+        logTrace('bdaAlert hide');
+        this.modal.modal('hide');
+        this._destroy();
+      },
+      _destroy: function(){
+        logTrace('bdaAlert destroy');
+        this.wrapper.detach();
+      },
+      confirm: function() {
+        var plugin = this;
+        var opts = plugin.options;
+        logTrace('bdaAlert confirm');
+        logTrace(opts);
+        //set msg
+        plugin.modal.find('.bda-alert-body').html(opts.msg);
+        //clean
+        var $footer = plugin.modal.find('.bda-alert-footer').empty();
+
+        var buildOuterCallback = function(callback){
+          return function(){
+           logTrace('bdaAlert click');
+           logTrace(callback);
+            if (!isNull(callback)) {
+              callback.apply(this.$modal);
+            }
+            plugin._hide();
+
+          }
+        }
+
+        for (var i = 0; i < opts.options.length; i++) {
+          var opt = opts.options[i];
+          logTrace( opt);
+
+
+
+          $('<input></input>', {
+              type: 'button',
+              value: opt.label,
+              class: 'btn btn-default',
+              data: opts.options[i]
+            })
+            .on('click', buildOuterCallback(opt._callback))
+            .appendTo($footer);
+        }
+        plugin._show();
+      }
+    }
+
+    $.fn[pluginName] = function(options) {
+      logTrace('in function bdaAlert');
+      try {
+
+        logTrace("call " + pluginName);
+        logTrace(options);
+
+        return this.each(function() {
+
+          var data = new BdaAlert(this, options);
+          data.confirm();
+
+        });
+      } catch (e) {
+        console.error(e);
+      }
+      return this;
+    }
+
+  })(jQuery);
+
 
 } catch (e) {
-  console.log(e);
+  logTrace(e);
 }

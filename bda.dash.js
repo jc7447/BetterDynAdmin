@@ -559,8 +559,8 @@ jQuery(document).ready(function() {
             }
 
             if (params.queryParams != null) {
-              console.log('params.queryParams:');
-              console.log(params.queryParams);
+              logTrace('params.queryParams:');
+              logTrace(params.queryParams);
               xmlText = BDA_DASH.formatRql(xmlText, params.queryParams);
               //expand the params
             }
@@ -756,7 +756,7 @@ jQuery(document).ready(function() {
                 var $values = $('<dl></dl>');
                 for (var i = 0; i < returnValue.length; i++) {
                   var q = returnValue[i];
-                  console.log(q.query);
+                  logTrace(q.query);
                   $values.append($('<dt>{0}</dt>'.format(q.name + " : ")));
                   $values.append($('<dd></dd>')).append($('<pre></pre>').text(q.query));
                 }
@@ -1320,7 +1320,7 @@ jQuery(document).ready(function() {
       },
 
       initEditor: function() {
-        console.log('initEditor');
+        logTrace('initEditor');
 
         BDA_DASH.$editor = $('#dashEditor');
 
@@ -1351,6 +1351,13 @@ jQuery(document).ready(function() {
            BDA_DASH.loadScript(name);
          });*/
 
+         var autosaveFc = debounce(function(){
+          logTrace('save current text')
+          var inputText  = BDA_DASH.$editor.val();
+          BDA_STORAGE.storeConfiguration('dashCurrentText', inputText);
+        },
+        300);
+
         BDA_DASH.$editor.keydown(function(e) {
           if (e.which == 13 && e.altKey && !e.shiftKey && !e.ctrlKey) {
             e.preventDefault();
@@ -1370,9 +1377,8 @@ jQuery(document).ready(function() {
             BDA_DASH.handleInput(inputText);
             return false;
           }
-
           //ctrl+C
-          if (e.which == 67 && !e.altKey && !e.shiftKey && e.ctrlKey) {
+          else if (e.which == 67 && !e.altKey && !e.shiftKey && e.ctrlKey) {
             var input = BDA_DASH.$editor[0];
             var selected = false;
             if (typeof input.selectionStart == "number") {
@@ -1387,17 +1393,36 @@ jQuery(document).ready(function() {
             }
           }
           //ctrl+K or ctrl+L
-          if ((e.which == 75 || e.which == 76) && !e.altKey && !e.shiftKey && e.ctrlKey) {
+          else if ((e.which == 75 || e.which == 76) && !e.altKey && !e.shiftKey && e.ctrlKey) {
             e.preventDefault();
             BDA_DASH.$screen.find('.alert').alert('close');
             return false;
+          }else{
+            autosaveFc();
           }
         });
+
+
+        BDA_DASH.$editor.on('change',function(){
+          autosaveFc();
+        })
 
         $('#dashRunEditor').on('click', function() {
           var input = BDA_DASH.$editor.val();
           BDA_DASH.handleInput(input);
         });
+
+        var prevtext = BDA_STORAGE.getConfigurationValue('dashCurrentText');
+        if(!isNull(prevtext)){
+          BDA_DASH.$editor.val(prevtext);
+
+           var el =  BDA_DASH.$editor.get(0);
+           var elemLen = el.value.length;
+           el.selectionStart = elemLen;
+           el.selectionEnd = elemLen;
+           el.focus();
+        }
+
 
       },
 
@@ -1474,12 +1499,15 @@ jQuery(document).ready(function() {
 
           $('.dash-autocomplete').textcomplete([{ // tech companies
             id: 'commands',
-            match: /^\b(\w{1,})$/, //1 letter or more
+            match: /\b(\w{1,})$/, //1 letter or more
             search: function(term, callback) {
+              logTrace('search %s', term)
               BDA_DASH.suggestionEngine.search(term, callback, callback);
             },
             index: 1,
+            cache:true,
             replace: function(data) {
+              logTrace('replace %s',data.value);
               return data.value + ' ';
             },
             template: function(data, term) {
@@ -1488,12 +1516,22 @@ jQuery(document).ready(function() {
                 pattern = '';
               }
               return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
+            },
+            context:function(text){
+              if(!isNull(text)){
+                var lines = text.split('\n');
+                if(lines.length > 0){
+                  var ret = lines[lines.length-1];
+                  return ret;
+                }
+              }
+              return "";
             }
           }, {
             id: 'comprefs',
             match: /@(t|th|thi|this|([A-Z][A-Z0-9#]*))?$/, //@ and 0 letter or more or 'this'
             search: function(term, callback) {
-              console.log(term);
+              logTrace(term);
               if (isNull(term)) {
                 //show all
                 callback(BDA_DASH.FLAT_COMP_REFS)
@@ -1838,7 +1876,7 @@ jQuery(document).ready(function() {
           offset--;
         }
         var idx = BDA_DASH.HIST.length - offset;
-        console.log('idx =' + idx);
+        logTrace('idx =' + idx);
         if (idx >= 0 && idx < BDA_DASH.HIST.length) {
           var val = BDA_DASH.HIST[idx];
           BDA_DASH.$input.val(val);
@@ -1907,8 +1945,8 @@ jQuery(document).ready(function() {
       },
 
       getVarValue: function(param) {
-        console.log("getVarValue");
-        console.log(param);
+        logTrace("getVarValue");
+        logTrace(param);
         var val = BDA_DASH.VARS[param.name];
         if (val == undefined || val == null) {
           val = "";
