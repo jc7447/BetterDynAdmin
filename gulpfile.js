@@ -6,7 +6,7 @@ env({
     file: '.env'
   });
 
-let source = ['*.js','*.css','parser/**','lib/**']; 
+let source = ['*.js','*.css','parser/**','lib/**','html/**']; 
 let destination =   './dest';
 
 console.log('dest %s, env js',destination, process.env.destination);
