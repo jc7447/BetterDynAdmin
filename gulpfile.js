@@ -9,7 +9,7 @@ env({
 let source = ['*.js','*.css','parser/**','lib/**']; 
 let destination =   './dest';
 
-console.log('dest %s',destination);
+console.log('dest %s, env js',destination, process.env.destination);
 
 gulp.task('watch', function() {  
 
