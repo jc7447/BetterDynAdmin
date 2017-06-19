@@ -1,0 +1,29 @@
+{
+  "name": "better-dyn-admin",
+  "version": "1.0.0",
+  "description": "Better Dynamo Administration",
+  "main": "none.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jc7447/BetterDynAdmin.git"
+  },
+  "keywords": [
+    "atg",
+    "dynadmin",
+    "oracle"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jc7447/BetterDynAdmin/issues"
+  },
+  "homepage": "https://github.com/jc7447/BetterDynAdmin#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-env": "^0.4.0",
+    "gulp-watch": "^4.3.11"
+  }
+}
