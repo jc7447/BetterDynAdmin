@@ -8,7 +8,7 @@ jQuery(document).ready(function() {
     var BDA_DASH = {
 
       devMode: false,
-      version: 0.7,
+      version: 0.8,
 
       settings: {
         domain: "",
@@ -218,22 +218,21 @@ jQuery(document).ready(function() {
 
       },
       repoXmlSource: [{
-          value: 'add-item',
-          pattern: ['<add-item item-descriptor="','" id="">\n\n</add-item>']
-        },{
-          value: 'print-item',
-          pattern: ['<print-item item-descriptor="','" id=""/>\n']
-        },{
-          value: 'query-items',
-           pattern: ['<query-items item-descriptor="','" >\n\n</query-items>']
-        },{
-         value: 'remove-item',
-          pattern: ['<remove-item item-descriptor="','" id=""/>\n']
-        },{
-          value:'set-property',
-          pattern: ['<set-property name="','"/> </set-property>']
-        }
-      ],
+        value: 'add-item',
+        pattern: ['<add-item item-descriptor="', '" id="">\n\n</add-item>']
+      }, {
+        value: 'print-item',
+        pattern: ['<print-item item-descriptor="', '" id=""/>\n']
+      }, {
+        value: 'query-items',
+        pattern: ['<query-items item-descriptor="', '" >\n\n</query-items>']
+      }, {
+        value: 'remove-item',
+        pattern: ['<remove-item item-descriptor="', '" id=""/>\n']
+      }, {
+        value: 'set-property',
+        pattern: ['<set-property name="', '"/> </set-property>']
+      }],
       progress: {
         total: 0,
         current: 0
@@ -250,19 +249,19 @@ jQuery(document).ready(function() {
       //shell fonctions
       FCT: {
 
-        wait:{
-           commandPattern: 'time',
+        wait: {
+          commandPattern: 'time',
           help: 'Wait for X ms',
           paramDef: [{
             name: "time",
             type: "value"
           }],
-         
+
           main: function(params, callback, errCallback) {
             var time = parseInt(params.time)
-            setTimeout(function(){
+            setTimeout(function() {
               callback(time);
-            },time);
+            }, time);
 
           },
           responseToString: function(params, returnValue) {
@@ -868,6 +867,7 @@ jQuery(document).ready(function() {
           main: function(params, callback, errCallback) {
             //BDA_DASH.$screen.find('.alert').each(function(){$(this).alert('close')});
             BDA_DASH.$screen.find('.alert').alert('close');
+            BDA_DASH.saveScreenState();
             BDA_DASH.updateProgress();
             BDA_DASH.handleNextStackElem();
           }
@@ -1063,6 +1063,7 @@ jQuery(document).ready(function() {
 
         $('#dashClearScreen').on('click', function() {
           BDA_DASH.$screen.find('.alert').alert('close');
+          BDA_DASH.saveScreenState();
         });
 
         $('#dashFullScreen').on('click', function() {
@@ -1151,7 +1152,8 @@ jQuery(document).ready(function() {
           }
         });
 
-        BDA_DASH.handleInput('help -k'); //skip history..
+        // BDA_DASH.handleInput('help -k'); //skip history
+        BDA_DASH.restoreScreenState();
         console.timeEnd("dashBuild");
       },
 
@@ -1351,12 +1353,12 @@ jQuery(document).ready(function() {
            BDA_DASH.loadScript(name);
          });*/
 
-         var autosaveFc = debounce(function(){
-          logTrace('save current text')
-          var inputText  = BDA_DASH.$editor.val();
-          BDA_STORAGE.storeConfiguration('dashCurrentText', inputText);
-        },
-        300);
+        var autosaveFc = debounce(function() {
+            logTrace('save current text')
+            var inputText = BDA_DASH.$editor.val();
+            BDA_STORAGE.storeConfiguration('dashCurrentText', inputText);
+          },
+          300);
 
         BDA_DASH.$editor.keydown(function(e) {
           if (e.which == 13 && e.altKey && !e.shiftKey && !e.ctrlKey) {
@@ -1397,13 +1399,13 @@ jQuery(document).ready(function() {
             e.preventDefault();
             BDA_DASH.$screen.find('.alert').alert('close');
             return false;
-          }else{
+          } else {
             autosaveFc();
           }
         });
 
 
-        BDA_DASH.$editor.on('change',function(){
+        BDA_DASH.$editor.on('change', function() {
           autosaveFc();
         })
 
@@ -1413,14 +1415,14 @@ jQuery(document).ready(function() {
         });
 
         var prevtext = BDA_STORAGE.getConfigurationValue('dashCurrentText');
-        if(!isNull(prevtext)){
+        if (!isNull(prevtext)) {
           BDA_DASH.$editor.val(prevtext);
 
-           var el =  BDA_DASH.$editor.get(0);
-           var elemLen = el.value.length;
-           el.selectionStart = elemLen;
-           el.selectionEnd = elemLen;
-           el.focus();
+          var el = BDA_DASH.$editor.get(0);
+          var elemLen = el.value.length;
+          el.selectionStart = elemLen;
+          el.selectionEnd = elemLen;
+          el.focus();
         }
 
 
@@ -1505,9 +1507,9 @@ jQuery(document).ready(function() {
               BDA_DASH.suggestionEngine.search(term, callback, callback);
             },
             index: 1,
-            cache:true,
+            cache: true,
             replace: function(data) {
-              logTrace('replace %s',data.value);
+              logTrace('replace %s', data.value);
               return data.value + ' ';
             },
             template: function(data, term) {
@@ -1517,11 +1519,11 @@ jQuery(document).ready(function() {
               }
               return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
             },
-            context:function(text){
-              if(!isNull(text)){
+            context: function(text) {
+              if (!isNull(text)) {
                 var lines = text.split('\n');
-                if(lines.length > 0){
-                  var ret = lines[lines.length-1];
+                if (lines.length > 0) {
+                  var ret = lines[lines.length - 1];
                   return ret;
                 }
               }
@@ -1566,7 +1568,7 @@ jQuery(document).ready(function() {
           }, {
             id: 'xml',
             match: /<(\w*)$/,
-            index:1,
+            index: 1,
             search: function(term, callback) {
               if (isNull(term)) {
                 callback(BDA_DASH.repoXmlSource)
@@ -1778,12 +1780,22 @@ jQuery(document).ready(function() {
         var $entry = $(BDA_DASH.templates.screenLine.format(textResult, msgClass, logMsg));
         $entry.find('.cmd').text(cmd);
         $entry.attr('data-command', cmd);
+
         $entry.appendTo(BDA_DASH.$screen);
+        BDA_DASH.bindSaveScreenOnDismiss($entry);
+        BDA_DASH.saveScreenState();
 
         BDA_DASH.$screen.scrollTop(BDA_DASH.$screen[0].scrollHeight);
         BDA_DASH.updateProgress();
         BDA_DASH.handleNextStackElem();
         return $entry;
+      },
+
+      bindSaveScreenOnDismiss: function($entry) {
+        $entry.on('closed.bs.alert', function() {
+          console.log('on alert close');
+          BDA_DASH.saveScreenState();
+        });
       },
 
       saveOutput: function(result, outputDef) {
@@ -2280,6 +2292,19 @@ jQuery(document).ready(function() {
         $bar.text('{0}/{1}'.format(BDA_DASH.progress.current, BDA_DASH.progress.total));
         //move to bottom
         var $progress = $bar.parent().detach().appendTo(BDA_DASH.$screen);
+      },
+
+      saveScreenState: function() {
+        console.log('saveScreenState')
+        BDA_STORAGE.storeConfiguration('dashScreen', BDA_DASH.$screen.html());
+      },
+
+      restoreScreenState: function() {
+        let screen = BDA_STORAGE.getConfigurationValue('dashScreen');
+        BDA_DASH.$screen.html(screen);
+        BDA_DASH.$screen.find('.alert').each(function() {
+          BDA_DASH.bindSaveScreenOnDismiss($(this));
+        })
       },
 
       log: function(msg, level) {
