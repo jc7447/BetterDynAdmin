@@ -19,7 +19,7 @@
         + '</div>' //
         + '{4}' //
         + '<div class="favDelete" id="delete{1}"><i class="fa fa-trash-o"></i> Delete</div>' //
-        + '{4}' //
+        + '<div class="favEdit" data-component="{1}""><i class="fa fa-pencil"></i> Edit</div>' //
         + '<div class="fav-tags">{5}</div>' //
         + '</div>'
 

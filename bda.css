@@ -584,7 +584,7 @@ a {
   text-align: left;
 }
 
-.favDelete {
+.favDelete, .favEdit{
   cursor: pointer;
 }
 
