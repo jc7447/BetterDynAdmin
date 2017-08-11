@@ -237,6 +237,14 @@
       BDA_TOOLBAR.$POPUP = $(BDA_TOOLBAR.templates.POPUP);
       BDA_TOOLBAR.$POPUP.insertAfter(BDA.logoSelector);
 
+      // now always bind close/submit because the popup might be used to edit
+      $('.close').click(function() {
+        console.log('close')
+        $('.popup_block').fadeOut();
+      });
+
+      $('#submitComponent').click(() => BDA_TOOLBAR.submitComponent());
+
       BDA_TOOLBAR.addExistingTagsToToolbarPopup();
 
       var favs = BDA_STORAGE.getStoredComponents();
@@ -347,13 +355,6 @@
           logTrace('adding fav button');
           $("<div class='toolbar-elem newFav'><a href='javascript:void(0)' id='addComponent' title='Add component to toolbar'>+</a></div>")
             .appendTo("#toolbar");
-
-          $('.close').click(function() {
-            $('.popup_block').fadeOut();
-          });
-
-          $('#submitComponent').click(() => BDA_TOOLBAR.submitComponent(componentPath));
-
           $(".newFav").click(BDA_TOOLBAR.initFavPopup.bind(this));
         }
       }
