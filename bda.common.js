@@ -366,11 +366,9 @@ try {
     }
   };
 
-  this.colorToCss = function (colors)
-  {
-    var cssVal =  "rgb(" ;
-    for (var i = 0; i < colors.length; i++)
-    {
+  this.colorToCss = function(colors) {
+    var cssVal = "rgb(";
+    for (var i = 0; i < colors.length; i++) {
       if (i !== 0)
         cssVal += ",";
       cssVal += colors[i];
@@ -379,16 +377,14 @@ try {
     return cssVal;
   };
 
-  this.verifyColor = function (colors)
-  {
+  this.verifyColor = function(colors) {
     for (var i = 0; i < colors.length; i++)
       if (colors[i] > 210)
         colors[i] = 210;
     return colors;
   };
 
-  this.stringToColour = function (str)
-  {
+  this.stringToColour = function(str) {
     var colors = [];
     var hash = 0;
     for (var i = 0; i < str.length; i++)
@@ -477,23 +473,24 @@ try {
   }
 
   // Returns a function, that, as long as it continues to be invoked, will not
-// be triggered. The function will be called after it stops being called for
-// N milliseconds. If `immediate` is passed, trigger the function on the
-// leading edge, instead of the trailing.
-function debounce(func, wait, immediate) {
-  var timeout;
-  return function() {
-    var context = this, args = arguments;
-    var later = function() {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this,
+        args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
     };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
   };
-};
 
 
   /*
@@ -573,7 +570,7 @@ Johann Burkard
     };
 
     function BdaAlert(parent, inOptions) {
-     // logTrace('BdaAlert');
+      // logTrace('BdaAlert');
       //logTrace(parent)
       this.$parent = $(parent);
 
@@ -581,7 +578,7 @@ Johann Burkard
 
       this.options = inOptions //$.extend({}, bdaAlertDefaults, inOptions);
       logTrace('options:');
-      logTrace( this.options);
+      logTrace(this.options);
       this._defaults = bdaAlertDefaults;
       this._name = pluginName;
 
@@ -595,7 +592,7 @@ Johann Burkard
         logTrace(this.$parent.get());
 
         this.wrapper = $(templates.ALERT_MODAL_TEMPLATE);
-        this.$parent.append(this.wrapper );
+        this.$parent.append(this.wrapper);
         this.modal = this.wrapper.find('.modal');
       },
       _show: function() {
@@ -607,7 +604,7 @@ Johann Burkard
         this.modal.modal('hide');
         this._destroy();
       },
-      _destroy: function(){
+      _destroy: function() {
         logTrace('bdaAlert destroy');
         this.wrapper.detach();
       },
@@ -621,10 +618,10 @@ Johann Burkard
         //clean
         var $footer = plugin.modal.find('.bda-alert-footer').empty();
 
-        var buildOuterCallback = function(callback){
-          return function(){
-           logTrace('bdaAlert click');
-           logTrace(callback);
+        var buildOuterCallback = function(callback) {
+          return function() {
+            logTrace('bdaAlert click');
+            logTrace(callback);
             if (!isNull(callback)) {
               callback.apply(this.$modal);
             }
@@ -635,7 +632,7 @@ Johann Burkard
 
         for (var i = 0; i < opts.options.length; i++) {
           var opt = opts.options[i];
-          logTrace( opt);
+          logTrace(opt);
 
 
 
