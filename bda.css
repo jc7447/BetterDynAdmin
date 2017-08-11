@@ -586,6 +586,11 @@ a {
 
 .favDelete, .favEdit{
   cursor: pointer;
+  display: inline-block;
+}
+
+.favEdit{
+  margin-left: 5px;
 }
 
 .fav-button {
@@ -692,8 +697,17 @@ table.tablesorter tr.alt-row:hover td {
   font-size: 14px;
 }
 
-.popup_title {
+.popup_title, .popup_title_update{
   margin-top: 0;
+  display: none;
+}
+
+#addComponentToolbarPopup[data-mode='add'] .popup_title {
+  display: block;
+}
+
+#addComponentToolbarPopup[data-mode='update'] .popup_title_update {
+  display: block;
 }
 
 #addComponentToolbarPopupContent {

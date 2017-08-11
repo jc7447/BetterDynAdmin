@@ -26,6 +26,7 @@
         + ' <div class="addFavOptions">' //
         + ' <a href="#" class="close"><i class="fa fa-times"></i></a>' //
         + ' <h3 class="popup_title">Add new component</h3>' //
+        + ' <h3 class="popup_title_update"></h3>' //
         + ' <p>Choose methods and/or properties to shortcut : </p>' //
         + ' <div id="addComponentToolbarPopupContent">' //
         + ' <div id="methods"><ul></ul></div>' //
@@ -423,6 +424,7 @@
         success: function(result, status, jqXHR) {
           let page = $('<div></div>').html(result);
           BDA_TOOLBAR.initFavPopupContent(page, 'update', component);
+          BDA_TOOLBAR.$POPUP.find('.popup_title_update').html(component.componentName);
           BDA_TOOLBAR.showPopup('update', componentPath);
         },
         error: function(jqXHR, textStatus, errorThrown) {
