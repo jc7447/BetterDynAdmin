@@ -34,6 +34,9 @@ try {
               $panel.slideToggle();
               rotateArrow($thisParent.find(".menuArrow i"));
             });
+
+            BDA_MENU.checkVersion();
+
             console.timeEnd("bdaMenu");
           },
 
@@ -48,16 +51,15 @@ try {
               .html("<p>I want to use the same BDA data on every domains : <input type='checkbox' id='" + BDA_STORAGE.GMValue_MonoInstance + "'>");
 
 
-            BDA_MENU.createCheckBoxConfig($bdaConfigPanel,{
-              name:'search_autocomplete',
+            BDA_MENU.createCheckBoxConfig($bdaConfigPanel, {
+              name: 'search_autocomplete',
               description: 'Search AutoComplete',
               message: '<p>Be aware of perfs impacts. Reload dyn/admin to take into account</p>'
             });
 
-            BDA_MENU.createCheckBoxConfig($bdaConfigPanel,
-              {
-                description:'Display xmlDef as table by default',
-                name:'defaultOpenXmlDefAsTable'
+            BDA_MENU.createCheckBoxConfig($bdaConfigPanel, {
+              description: 'Display xmlDef as table by default',
+              name: 'defaultOpenXmlDefAsTable'
             });
 
             BDA_MENU.createDefaultMethodsConfig($bdaConfigPanel);
@@ -161,25 +163,24 @@ try {
           // advanced config
 
 
-          createCheckBoxConfig: function(parentPanel,inOptions) {
+          createCheckBoxConfig: function(parentPanel, inOptions) {
 
-            var options = $.extend(
-              {
-                name:null,
-                description:null,
-                message:''
+            var options = $.extend({
+                name: null,
+                description: null,
+                message: ''
               },
               inOptions);
 
             var value = BDA_STORAGE.getConfigurationValue(options.name);
             value = (value == true) ? true : false;
-            logTrace('value of {0} = {1}',name  ,value);
+            logTrace('value of {0} = {1}', name, value);
             var checked = value ? 'checked="true"' : '';
 
-            parentPanel.append('<p class="config">{0} : <input type="checkbox" id="{1}_config" {2}/></p>{3}'.format(options.description,options.name,checked,options.message));
+            parentPanel.append('<p class="config">{0} : <input type="checkbox" id="{1}_config" {2}/></p>{3}'.format(options.description, options.name, checked, options.message));
             $('#{0}_config'.format(options.name)).on('change', function() {
               var val = $(this).is(':checked');
-              logTrace('save {0} {1} '.format( options.name, val));
+              logTrace('save {0} {1} '.format(options.name, val));
               BDA_STORAGE.storeConfiguration(options.name, val);
             });
           },
@@ -282,6 +283,18 @@ try {
             logTrace($element);
             $element.addClass('menu').appendTo(BDA_MENU.$menuBar);
           },
+
+          checkVersion: function() {
+            let storedVersion = BDA_STORAGE.getConfigurationValue('bda_version');
+            let currentVersion = GM_info.script.version;
+            console.log('checkVersion %s %s', storedVersion, currentVersion)
+            if (_.isNil(storedVersion) || !versionUpToDate(storedVersion, currentVersion)) {
+
+              BDA_STORAGE.storeConfiguration('bda_version', currentVersion);
+              $('#whatsnew').click();
+            }
+
+          }
         };
 
         var defaults = {};

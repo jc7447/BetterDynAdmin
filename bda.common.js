@@ -493,6 +493,37 @@ try {
   };
 
 
+  // compare two versions, return true if local is up to date, false otherwise
+  // if both versions are in the form of major[.minor][.patch] then the comparison parses and compares as such
+  // otherwise the versions are treated as strings and normal string compare is done
+  var VPAT = /^\d+(\.\d+){0,2}$/;
+
+  function versionUpToDate(local, remote) {
+    if (!local || !remote || local.length === 0 || remote.length === 0)
+      return false;
+    if (local == remote)
+      return true;
+    if (VPAT.test(local) && VPAT.test(remote)) {
+      var lparts = local.split('.');
+      while (lparts.length < 3)
+        lparts.push("0");
+      var rparts = remote.split('.');
+      while (rparts.length < 3)
+        rparts.push("0");
+      for (var i = 0; i < 3; i++) {
+        var l = parseInt(lparts[i], 10);
+        var r = parseInt(rparts[i], 10);
+        if (l === r)
+          continue;
+        return l > r;
+      }
+      return true;
+    } else {
+      return local >= remote;
+    }
+  }
+
+
   /*
 
 highlight v4
