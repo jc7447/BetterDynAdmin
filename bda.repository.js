@@ -119,7 +119,7 @@
       },
     },
     CACHE_STAT_TITLE_REGEXP: /item-descriptor=(.*) cache-mode=(.*)( cache-locality=(.*))?/,
-    edgesToIgnore : ["order","relationships","orderRef"],
+    edgesToIgnore: ["order", "relationships", "orderRef"],
 
     build: function() {
       console.time("bdaRepository");
@@ -155,7 +155,7 @@
       $("#RQLForm").empty().append($children);
       $("textarea[name=xmltext]").attr("id", "xmltext");
 
-      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>" + " <optgroup label='Empty queries'>" + "<option value='print-item'>print-item</option>" + "<option value='query-items'>query-items</option>" + "<option value='remove-item'>remove-item</option>" + "<option value='add-item'>add-item</option>" + "<option value='update-item'>update-item</option>" + "</optgroup>" + " <optgroup label='Predefined queries'>" + "<option value='all'>query-items ALL</option>" + "<option value='last_10'>query-items last 10</option>" + "</optgroup>" + "</select>";
+      var actionSelect = "<select id='RQLAction' class='js-example-basic-single' style='width:170px'>" + " <optgroup label='Empty queries'>" + "<option value='print-item'>print-item</option>" + "<option value='query-items'>query-items</option>" + "<option value='remove-item'>remove-item</option>" + "<option value='add-item'>add-item</option>" + "<option value='update-item'>update-item</option>" + "</optgroup>" + " <optgroup label='Predefined queries'>" + "<option value='all'>query-items ALL</option>" + "<option value='last_10_ordered'>query-items last 10 order by id</option>" + "<option value='last_10'>query-items last 10</option>" + "</optgroup>" + "</select>";
 
       $("<div id='RQLToolbar'></div>").append("<div> Action : " + actionSelect + " <span id='editor'>" + "<span id='itemIdField' >ids : <input type='text' id='itemId' placeholder='Id1,Id2,Id3' /></span>" + "<span id='itemDescriptorField' > descriptor :  <select id='itemDescriptor' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "<span id='idOnlyField' style='display: none;'><label for='idOnly'>&nbsp;id only : </label><input type='checkbox' id='idOnly'></input></span>" + "</span>" + BDA_REPOSITORY.getsubmitButton() + "</div>")
         .insertBefore("#RQLEditor textarea")
@@ -696,11 +696,21 @@
       return query;
     },
 
-    getLast10ItemQuery: function() {
+    getLast10ItemQueryOrdered: function() {
       var descriptor = $("#itemDescriptor").val();
       var idOnly = $("#idOnly").prop('checked');
       var query = "<query-items item-descriptor=\"" + descriptor + "\" id-only=\"" + idOnly + "\">\n";
       query += "ALL ORDER BY ID DESC RANGE 0+10\n";
+      query += "</query-items>\n";
+      return query;
+    },
+
+
+    getLast10ItemQuery: function() {
+      var descriptor = $("#itemDescriptor").val();
+      var idOnly = $("#idOnly").prop('checked');
+      var query = "<query-items item-descriptor=\"" + descriptor + "\" id-only=\"" + idOnly + "\">\n";
+      query += "ALL RANGE 0+10\n";
       query += "</query-items>\n";
       return query;
     },
@@ -721,6 +731,8 @@
         query = BDA_REPOSITORY.getUpdateItemQuery();
       else if (action == "all")
         query = BDA_REPOSITORY.getAllItemQuery();
+      else if (action == "last_10_ordered")
+        query = BDA_REPOSITORY.getLast10ItemQueryOrdered();
       else if (action == "last_10")
         query = BDA_REPOSITORY.getLast10ItemQuery();
       return query;
@@ -857,8 +869,7 @@
     renderProperty: function(curProp, propValue, itemId, isItemTree) {
       var html = "";
       var td = "<td data-property='" + curProp.name + "' data-item-id='" + itemId + "'>";
-      if (propValue !== null && propValue !== undefined)
-      {
+      if (propValue !== null && propValue !== undefined) {
         propValue = propValue.replace(/ /g, '●');
         // Remove "_"
         if (curProp.name == "descriptor")
@@ -872,9 +883,7 @@
         else if (propValue.length > 25) {
           var link_id = "link_" + base_id;
           var field_id = "text_" + base_id;
-          propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >"
-          + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "..."
-          + "</span></a><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
+          propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >" + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "..." + "</span></a><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
           html += td + propValue + "</td>";
         }
         // Make IDs clickable
@@ -962,11 +971,11 @@
       if ($xmlDef != null) {
         for (var i = 0; i < $addItems.length; i++) {
           var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
-          if(descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false){
+          if (descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false) {
             descriptorAndDefaultValues[itemDescriptor] = {};
             var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
             var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
-            if(itemDefinition !== undefined && itemDefinition.length > 0){
+            if (itemDefinition !== undefined && itemDefinition.length > 0) {
               var superType = itemDefinition[0].getAttribute("super-type");
               defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
             }
@@ -979,7 +988,7 @@
           }
           for (var defaultPropertyName in descriptorAndDefaultValues[itemDescriptor]) {
             var exists = $($addItems[i]).find("[name=" + defaultPropertyName + "]").length;
-            if(exists == 0){
+            if (exists == 0) {
               $addItems[i].innerHTML += '<set-property name="' + defaultPropertyName + '"><![CDATA[' + descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] + ']]></set-property>';
             }
           }
@@ -1061,9 +1070,7 @@
         }
       }
       $outputDiv.append(html);
-      $outputDiv.prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only "
-      + "<div class='prop_attr prop_attr_green'>D</div> : derived "
-      + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
+      $outputDiv.prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
 
       if ($(".copyField").length > 0) {
         // reuse $outputDiv in case we have several results set on the page (RQL query + get item tool)
@@ -1436,7 +1443,7 @@
 
         $("#itemTreeResult").append("<pre />");
         $("#itemTreeResult pre").text(res);
-      }  else if (outputType == "tree") {
+      } else if (outputType == "tree") {
         BDA_REPOSITORY.renderAsTree($xmlDef);
       }
 
@@ -1444,20 +1451,20 @@
     },
 
     renderAsTree: function($xmlDef) {
-       console.log("render as tree");
-       console.time('renderAsTree.setup');
-       var nodes = new vis.DataSet();
-       var edges = new vis.DataSet();
-       var legends = new Map();
-       var descById = new Map();
-       var itemIdToVisId = {};
-       var i = 0;
-       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
+      console.log("render as tree");
+      console.time('renderAsTree.setup');
+      var nodes = new vis.DataSet();
+      var edges = new vis.DataSet();
+      var legends = new Map();
+      var descById = new Map();
+      var itemIdToVisId = {};
+      var i = 0;
+      BDA_REPOSITORY.itemTree.forEach(function(data, id) {
         itemIdToVisId[id] = i;
         i++;
-       });
+      });
 
-       BDA_REPOSITORY.itemTree.forEach(function(data, id) {
+      BDA_REPOSITORY.itemTree.forEach(function(data, id) {
         var xmlDoc = $.parseXML("<xml>" + data + "</xml>");
         var $xml = $(xmlDoc);
         var $addItem = $xml.find("add-item").first();
@@ -1465,42 +1472,45 @@
         var itemId = $addItem.attr("id");
 
         $addItem.children().each(function(index) {
-            var $this = $(this);
-            var propertyName = $this.attr("name");
-            var propertyValue = $this.text();
-            if (BDA_REPOSITORY.edgesToIgnore.indexOf(propertyName) === -1) {
-              var isId = BDA_REPOSITORY.isTypeId(propertyName, itemDesc, $xmlDef)
-              if (isId != null && isId != "FOUND_NOT_ID") {
-                var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
-                for (var i = 0; i != idAsTab.length; i++) {
-                    if (idAsTab[i] != "," && idAsTab[i] != "=") {
-                      edges.add({from: itemIdToVisId[itemId], to:itemIdToVisId[idAsTab[i]], arrows:'to', title:propertyName});
-                    }
+          var $this = $(this);
+          var propertyName = $this.attr("name");
+          var propertyValue = $this.text();
+          if (BDA_REPOSITORY.edgesToIgnore.indexOf(propertyName) === -1) {
+            var isId = BDA_REPOSITORY.isTypeId(propertyName, itemDesc, $xmlDef)
+            if (isId != null && isId != "FOUND_NOT_ID") {
+              var idAsTab = BDA_REPOSITORY.parseRepositoryId(propertyValue);
+              for (var i = 0; i != idAsTab.length; i++) {
+                if (idAsTab[i] != "," && idAsTab[i] != "=") {
+                  edges.add({
+                    from: itemIdToVisId[itemId],
+                    to: itemIdToVisId[idAsTab[i]],
+                    arrows: 'to',
+                    title: propertyName
+                  });
                 }
               }
             }
+          }
         });
 
         var nodeColor = colorToCss(stringToColour(itemDesc));
-        nodes.add({id: itemIdToVisId[itemId], label: itemDesc + "\n" + itemId, color: nodeColor, shape: 'box'});
+        nodes.add({
+          id: itemIdToVisId[itemId],
+          label: itemDesc + "\n" + itemId,
+          color: nodeColor,
+          shape: 'box'
+        });
         legends.set(itemDesc, nodeColor);
 
         if (descById.get(itemDesc))
-            descById.get(itemDesc).push(itemId);
+          descById.get(itemDesc).push(itemId);
         else
-            descById.set(itemDesc, [itemId]);
+          descById.set(itemDesc, [itemId]);
       });
       console.timeEnd('renderAsTree.setup');
       // Create popup
       $("#itemTreeResult").empty()
-                          .append("<div class='popup_block' id='treePopup'>"
-                                + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></i></a></div>"
-                                + "<div id='treeLegend'></div>"
-                                + "<div class='flexContainer'>"
-                                + "<div id='treeInfo'></div>"
-                                + "<div id='treeContainer'></div>"
-                                + "</div>"
-                                + "</div>");
+        .append("<div class='popup_block' id='treePopup'>" + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></i></a></div>" + "<div id='treeLegend'></div>" + "<div class='flexContainer'>" + "<div id='treeInfo'></div>" + "<div id='treeContainer'></div>" + "</div>" + "</div>");
       $("#treePopup .close").click(function() {
         console.log("click on close");
         $("#treePopup").hide();
@@ -1519,104 +1529,118 @@
 
       // Create the network
       var data = {
-          nodes: nodes,
-          edges: edges
+        nodes: nodes,
+        edges: edges
       };
 
       var options = {
-          physics: {stabilization: false},
-          edges: {smooth: true},
-          nodes: {font: { color: "#FFFFFF"}}
-      };
-
-     var container = document.getElementById('treeContainer');
-     var network = new vis.Network(container, data, options);
-     console.timeEnd('renderAsTree.render')
-
-     network.on("click", function (params) {
-       params.event = "[original event]";
-       if (params.nodes && params.nodes.length == 1) {
-        $("#treeInfo").empty();
-        var visId = params.nodes[0];
-        var itemId = null;
-        console.log("Click on " + visId);
-        // Find itemId from visID
-        for (var id in itemIdToVisId) {
-          if (visId === itemIdToVisId[id]) {
-            itemId = id;
-            break;
+        physics: {
+          stabilization: false
+        },
+        edges: {
+          smooth: true
+        },
+        nodes: {
+          font: {
+            color: "#FFFFFF"
           }
         }
-        console.log("itemId : " + itemId);
-        console.log(BDA_REPOSITORY.itemTree.get(itemId));
-        BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(itemId), null, $("#treeInfo"), false);
-        console.log( $("#treeInfo").html());
-        $("#treeInfo").show();
-       }
+      };
+
+      var container = document.getElementById('treeContainer');
+      var network = new vis.Network(container, data, options);
+      console.timeEnd('renderAsTree.render')
+
+      network.on("click", function(params) {
+        params.event = "[original event]";
+        if (params.nodes && params.nodes.length == 1) {
+          $("#treeInfo").empty();
+          var visId = params.nodes[0];
+          var itemId = null;
+          console.log("Click on " + visId);
+          // Find itemId from visID
+          for (var id in itemIdToVisId) {
+            if (visId === itemIdToVisId[id]) {
+              itemId = id;
+              break;
+            }
+          }
+          console.log("itemId : " + itemId);
+          console.log(BDA_REPOSITORY.itemTree.get(itemId));
+          BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(itemId), null, $("#treeInfo"), false);
+          console.log($("#treeInfo").html());
+          $("#treeInfo").show();
+        }
       });
 
       $(".legend").click(function() {
         // This feature is disabled for now.
-        return ;
+        return;
         console.log("click on legend");
         var id = $(this).attr('id');
         console.log(id);
         var ids = descById.get(id);
         var nodesAndEdgesToHide = {};
         for (var i = 0; i != ids.length; i++) {
-            nodesAndEdgesToHide = BDA_REPOSITORY.findNodesAndEdgesToHide(ids[i], network, edges, nodes);
+          nodesAndEdgesToHide = BDA_REPOSITORY.findNodesAndEdgesToHide(ids[i], network, edges, nodes);
 
-            // Foreach nodesAndEdgesToHide.nodes
-            for (var a = 0; a != nodesAndEdgesToHide.nodes.length; a++) {
-                nodes.update([{id: nodesAndEdgesToHide.nodes[a], hidden: true}]);
-            }
-            // Foreach nodesAndEdgesToHide.edges
-            for (var a = 0; a != nodesAndEdgesToHide.edges.length; a++) {
-                edges.update([{id: nodesAndEdgesToHide.edges[a], hidden: true}]);
-            }
+          // Foreach nodesAndEdgesToHide.nodes
+          for (var a = 0; a != nodesAndEdgesToHide.nodes.length; a++) {
+            nodes.update([{
+              id: nodesAndEdgesToHide.nodes[a],
+              hidden: true
+            }]);
+          }
+          // Foreach nodesAndEdgesToHide.edges
+          for (var a = 0; a != nodesAndEdgesToHide.edges.length; a++) {
+            edges.update([{
+              id: nodesAndEdgesToHide.edges[a],
+              hidden: true
+            }]);
+          }
         }
       });
     },
 
     findNodesAndEdgesToHide: function(id, network, edges, nodes) {
-        console.log("findNodesAndEdgesToHide for ID : " + id);
-        var nodesAndEdgesToHide = {};
-        nodesAndEdgesToHide.nodes = BDA_REPOSITORY.findOrphanSon(id, network, edges, nodes, [id]);
-        nodesAndEdgesToHide.edges = [];
-        for (var i = 0; i != nodesAndEdgesToHide.nodes.length; i++) {
-            nodesAndEdgesToHide.edges = nodesAndEdgesToHide.edges.concat(network.getConnectedEdges(nodesAndEdgesToHide.nodes[i]));
-        }
-        console.log("nodesAndEdgesToHide.nodes : ");
-        console.log(nodesAndEdgesToHide.nodes);
-        console.log("nodesAndEdgesToHide.edges : ");
-        console.log(nodesAndEdgesToHide.edges);
-        return nodesAndEdgesToHide;
+      console.log("findNodesAndEdgesToHide for ID : " + id);
+      var nodesAndEdgesToHide = {};
+      nodesAndEdgesToHide.nodes = BDA_REPOSITORY.findOrphanSon(id, network, edges, nodes, [id]);
+      nodesAndEdgesToHide.edges = [];
+      for (var i = 0; i != nodesAndEdgesToHide.nodes.length; i++) {
+        nodesAndEdgesToHide.edges = nodesAndEdgesToHide.edges.concat(network.getConnectedEdges(nodesAndEdgesToHide.nodes[i]));
+      }
+      console.log("nodesAndEdgesToHide.nodes : ");
+      console.log(nodesAndEdgesToHide.nodes);
+      console.log("nodesAndEdgesToHide.edges : ");
+      console.log(nodesAndEdgesToHide.edges);
+      return nodesAndEdgesToHide;
     },
 
     findOrphanSon: function(id, network, edges, nodes, orphanSons) {
-        console.log("About to find orphan for node : " + id);
-        edges.forEach(function(elm) {
-            //console.log(elm);
-            if (elm.from == id) {
-                var isOrphan = true;
-                var connectedEdges = network.getConnectedEdges(elm.to);
+      console.log("About to find orphan for node : " + id);
+      edges.forEach(function(elm) {
+        //console.log(elm);
+        if (elm.from == id) {
+          var isOrphan = true;
+          var connectedEdges = network.getConnectedEdges(elm.to);
 
-                for (var i = 0; i != connectedEdges.length; i++) {
-                    var edge = edges.get(connectedEdges[i]);
-                    console.log("connectedEdge - from : " + edge.to + " - " + edge.from);
-                    if (edge.to == elm.to && edge.from != id) {
-                        isOrphan = false;
-                        break;
-                    }
-                }
-                if (isOrphan && orphanSons.indexOf(elm.to) === -1) {
-                    console.log(elm.to + " is a new orphan son of node : " + id);
-                    orphanSons.push(elm.to);
-                    BDA_REPOSITORY.findOrphanSon(elm.to, network, edges, nodes, orphanSons);
-                }
+          for (var i = 0; i != connectedEdges.length; i++) {
+            var edge = edges.get(connectedEdges[i]);
+            console.log("connectedEdge - from : " + edge.to + " - " + edge.from);
+            if (edge.to == elm.to && edge.from != id) {
+              isOrphan = false;
+              break;
             }
-        });
-        return orphanSons;
+          }
+          if (isOrphan && orphanSons.indexOf(elm.to) === -1) {
+            console.log(elm.to + " is a new orphan son of node : " + id);
+            orphanSons.push(elm.to);
+            BDA_REPOSITORY.findOrphanSon(elm.to, network, edges, nodes, orphanSons);
+          }
+        }
+      });
+      return orphanSons;
     },
 
     createSpeedbar: function() {
@@ -1929,10 +1953,10 @@
     setupCacheCollapse: function($header, $cacheTable) {
 
       var fullColSize = 23;
-        if(BDA.isOldDynamo){
-          fullColSize=18;
+      if (BDA.isOldDynamo) {
+        fullColSize = 18;
 
-        }
+      }
 
 
       $cacheTable.find('.cache-subheader').each(function() {
@@ -1941,7 +1965,7 @@
         //expand the cell width
         var $td = $tr.find('td').first();
 
-          $td.attr('colspan', fullColSize); //extend to full with
+        $td.attr('colspan', fullColSize); //extend to full with
         //query cache line
         var $queryCols = $tr.next().next().children('td');
         if ($queryCols.length == 1) {
@@ -1992,7 +2016,7 @@
       //make the header fixed with css
       $cacheTable.addClass('fixed_headers');
       console.log('isOldDynamo ' + BDA.isOldDynamo)
-      if(BDA.isOldDynamo){
+      if (BDA.isOldDynamo) {
         $cacheTable.addClass('oldDynamo');
       }
 
@@ -2144,13 +2168,13 @@
   };
 
   // Reference to BDA_STORAGE
-  var BDA_STORAGE,BDA;
+  var BDA_STORAGE, BDA;
 
   // Jquery plugin creation
   $.fn.bdaRepository = function(theBDA) {
     console.log('Init plugin {0}'.format('bdaRepository'));
     //settings = $.extend({}, defaults, options);
-    BDA=theBDA;
+    BDA = theBDA;
     BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
     BDA_REPOSITORY.build();
     return this;
