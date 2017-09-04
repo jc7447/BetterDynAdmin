@@ -81,26 +81,9 @@
           $('<button class="showActorXml"><i class="fa fa-code link"></i></button>')
             .on('click', (event) => {
               codeBlock.toggleClass('hidden');
-              // console.log('click', codeBlock.attr());
             })
             .appendTo($elem);
-          // $elem.attr("id", chainName);
-          // $elem.find("td:eq(7)").click(function() {
-          //   var $td = $(this);
-          //   if ($td.hasClass("open")) {
-          //     $td.removeClass("open");
-          //     BDA_PIPELINE.hidePipelineXml(chainName);
-          //   } else {
-          //     $td.addClass("open");
-          //     BDA_PIPELINE.showPipelineXml(chainName, $elem.hasClass("odd"));
-          //   }
-          // });
 
-          // $elem.find("td:eq(8)").click(function() {
-          //   // Redset direction
-          //   BDA_PIPELINE.options.layout.hierarchical.direction = "LR";
-          //   BDA_PIPELINE.showPipelineGraph(chainName);
-          // });
         });
       })
     },
@@ -113,8 +96,6 @@
       var $codeBlock = wrapper.insertAfter($elem)
         .find("pre")
         .text(xml);
-      // if (isOdd)
-      //   $("#" + trId).addClass("odd");
       highlightAndIndentXml($codeBlock);
       return wrapper;
     },
