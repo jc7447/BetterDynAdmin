@@ -1,3 +1,7 @@
+.hidden{
+  display: none;
+}
+
 tr.even td {
   background-color: #FFF;
 }
@@ -1271,4 +1275,8 @@ ol.itemDescAttributes {
 #treeContainer  {
   height: 100%;
   flex : 1;
+}
+
+.showActorXml{
+  margin-left: 10px;
 }
