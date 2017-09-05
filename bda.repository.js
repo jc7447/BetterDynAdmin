@@ -950,7 +950,7 @@
       return html;
     },
 
-    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree) {
+    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb) {
       console.time("renderTab");
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
       var $xml = $(xmlDoc);
@@ -1085,40 +1085,46 @@
         });
       }
 
-      $(".loadable_property").click(function() {
-        console.log('click on loadable');
-        var $elm = $(this);
-        var id = $elm.attr("data-id");
-        var itemDesc = $elm.attr("data-descriptor");
-        var query = "<print-item id='" + id + "' item-descriptor='" + itemDesc + "' />\n";
+      if (_.isNil(loadSubItemCb)) {
+        $outputDiv.find(".loadable_property").click(BDA_REPOSITORY.showLoadSubItemAlert);
 
-
-
-        $('body').bdaAlert({
-          msg: 'You are about to add this query and reload the page: \n' + query,
-          options: [{
-            label: 'Add & Reload',
-            _callback: function() {
-              BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
-              $("#RQLForm").submit();
-            }
-          }, {
-            label: 'Just Add',
-            _callback: function() {
-              BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
-            }
-          }, {
-            label: 'Cancel'
-          }]
-        });
-
-      });
+      } else {
+        $outputDiv.find(".loadable_property").click(loadSubItemCb);
+      }
 
       if (isItemTree)
         BDA_REPOSITORY.createSpeedbar();
 
       console.timeEnd("renderTab");
       return log;
+    },
+
+    showLoadSubItemAlert: function() {
+      console.log('click on loadable');
+      var $elm = $(this);
+      var id = $elm.attr("data-id");
+      var itemDesc = $elm.attr("data-descriptor");
+      var query = "<print-item id='" + id + "' item-descriptor='" + itemDesc + "' />\n";
+
+
+
+      $('body').bdaAlert({
+        msg: 'You are about to add this query and reload the page: \n' + query,
+        options: [{
+          label: 'Add & Reload',
+          _callback: function() {
+            BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
+            $("#RQLForm").submit();
+          }
+        }, {
+          label: 'Just Add',
+          _callback: function() {
+            BDA_REPOSITORY.setQueryEditorValue(BDA_REPOSITORY.getQueryEditorValue() + query);
+          }
+        }, {
+          label: 'Cancel'
+        }]
+      });
     },
 
     showRQLLog: function(log, error) {

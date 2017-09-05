@@ -142,6 +142,7 @@ jQuery(document).ready(function() {
           '<p class="dash_feeback_line">$&gt;&nbsp;<span class="cmd"></span></p>' +
           '<p class="dash_log_line">{2}</p>' +
           '<p class="dash_return_line">{0}</p>' +
+          '<div class="dash_return_line objectResult"></div>' +
           '</div>',
         systemResponse: '<div class="dash_screen_sys_res alert alert-{1} alert-dismissible" role="alert" >' +
           '<div class="btn-group" role="group">' +
@@ -442,9 +443,18 @@ jQuery(document).ready(function() {
                 console.log('xmlDef: ', $xmlDef);
                 var $res = $('<div></div>');
 
-                BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false);
+                BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false,
+                  function() {
+                    var $elm = $(this);
+                    console.log('click on loadable', $elm);
+                    var id = $elm.attr("data-id");
+                    var itemDesc = $elm.attr("data-descriptor");
+                    var query = "print {0} {1} {2}".format(params.repo, itemDesc, id);
+                    console.log('query %s', query);
+                    BDA_DASH.handleInput(query);
+                  });
                 // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-                cb($res.html());
+                cb('', $res);
               },
               params.repo
             );
@@ -486,7 +496,7 @@ jQuery(document).ready(function() {
                     var $itemXml;
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
-                      items.push(convertAddItemToPlainObject($itemXml));
+                      items.push($itemXml.outerHTML());
                     })
                     callback(items);
                   } else {
@@ -507,13 +517,28 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: function(params, retval) {
-            var res = "";
-            for (var i = 0; i < retval.length; i++) {
-              var item = retval[i];
-              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-            }
-            return res;
+          responseToString: function(params, retval, cb) {
+            processRepositoryXmlDef(
+              "definitionFiles",
+              ($xmlDef) => {
+                console.log('xmlDef: ', $xmlDef);
+                var $res = $('<div></div>');
+
+                BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false,
+                  function() {
+                    var $elm = $(this);
+                    console.log('click on loadable', $elm);
+                    var id = $elm.attr("data-id");
+                    var itemDesc = $elm.attr("data-descriptor");
+                    var query = "print {0} {1} {2}".format(params.repo, itemDesc, id);
+                    console.log('query %s', query);
+                    BDA_DASH.handleInput(query);
+                  });
+                // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+                cb('', $res);
+              },
+              params.repo
+            );
           }
         },
 
@@ -1732,8 +1757,8 @@ jQuery(document).ready(function() {
                 if (isNull(fct.responseToString)) {
                   textResult = JSON.stringify(result);
                 } else {
-                  textResult = fct.responseToString(parsedParams, result, (asyncRes) => {
-                    BDA_DASH.handleOutput(stringCmd, parsedParams, result, asyncRes, "success");
+                  textResult = fct.responseToString(parsedParams, result, (asyncTextRes, asyncJqueryRes) => {
+                    BDA_DASH.handleOutput(stringCmd, parsedParams, result, asyncTextRes, "success", asyncJqueryRes);
                   });
                 }
               }
@@ -1773,7 +1798,7 @@ jQuery(document).ready(function() {
       },
 
       //end method, should be always called at the end of a shell function
-      handleOutput: function(cmd, params, result, textResult, level) {
+      handleOutput: function(cmd, params, result, textResult, level, jqueryResult) {
 
         //save the result
         logTrace('handleOutput ' + textResult);
@@ -1797,6 +1822,7 @@ jQuery(document).ready(function() {
 
         var msgClass = BDA_DASH.styles[level];
         var $entry = $(BDA_DASH.templates.screenLine.format(textResult, msgClass, logMsg));
+        $entry.find('.objectResult').append(jqueryResult);
         $entry.find('.cmd').text(cmd);
         $entry.attr('data-command', cmd);
 
