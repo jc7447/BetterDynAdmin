@@ -5,6 +5,7 @@ jQuery(document).ready(function() {
 
     var BDA;
     var BDA_STORAGE;
+    var BDA_REPOSITORY;
     var BDA_DASH = {
 
       devMode: false,
@@ -432,13 +433,25 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: function(params, retval) {
-            var res = "";
-            for (var i = 0; i < retval.length; i++) {
-              var item = retval[i];
-              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-            }
-            return res;
+          responseToString: function(params, retval, cb) {
+
+            processRepositoryXmlDef(
+              "definitionFiles",
+              ($xmlDef) => {
+
+                var $res = $('<div></div>');
+                for (var i = 0; i < retval.length; i++) {
+                  var item = retval[i];
+                  BDA_REPOSITORY.showXMLAsTab(item, $xmlDef, $res, false);
+                  // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+                }
+                cb($res.html());
+              },
+              params.repo
+            );
+
+
+            // return res;
           }
         },
 
@@ -610,6 +623,9 @@ jQuery(document).ready(function() {
             for (var i = 0; i < retval.length; i++) {
               var item = retval[i];
               res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+
+
+              //                res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
             }
             return res;
           }
@@ -1717,10 +1733,14 @@ jQuery(document).ready(function() {
                 if (isNull(fct.responseToString)) {
                   textResult = JSON.stringify(result);
                 } else {
-                  textResult = fct.responseToString(parsedParams, result);
+                  textResult = fct.responseToString(parsedParams, result, (asyncRes) => {
+                    BDA_DASH.handleOutput(stringCmd, parsedParams, result, asyncRes, "success");
+                  });
                 }
               }
-              BDA_DASH.handleOutput(stringCmd, parsedParams, result, textResult, "success");
+              if (!_.isNil(textResult)) {
+                BDA_DASH.handleOutput(stringCmd, parsedParams, result, textResult, "success");
+              }
             },
             function(err) {
               BDA_DASH.handleError(stringCmd, err);
@@ -2333,6 +2353,7 @@ jQuery(document).ready(function() {
       logTrace('Init plugin {0}'.format('DASH'));
       BDA = pBDA;
       BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
+      BDA_REPOSITORY = $.fn.getBdaRepository();
 
 
       if ($().bdaAddMenuElem) {
