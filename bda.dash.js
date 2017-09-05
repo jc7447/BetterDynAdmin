@@ -412,7 +412,8 @@ jQuery(document).ready(function() {
                     var $itemXml;
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
-                      items.push(convertAddItemToPlainObject($itemXml));
+                      // items.push(convertAddItemToPlainObject($itemXml));
+                      items.push($itemXml.outerHTML());
                     })
                     callback(items);
                   } else {
@@ -438,13 +439,11 @@ jQuery(document).ready(function() {
             processRepositoryXmlDef(
               "definitionFiles",
               ($xmlDef) => {
-
+                console.log('xmlDef: ', $xmlDef);
                 var $res = $('<div></div>');
-                for (var i = 0; i < retval.length; i++) {
-                  var item = retval[i];
-                  BDA_REPOSITORY.showXMLAsTab(item, $xmlDef, $res, false);
-                  // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-                }
+
+                BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false);
+                // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
                 cb($res.html());
               },
               params.repo
