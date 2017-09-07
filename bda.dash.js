@@ -435,33 +435,7 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: function(params, retval, cb) {
-
-            processRepositoryXmlDef(
-              "definitionFiles",
-              ($xmlDef) => {
-                console.log('xmlDef: ', $xmlDef);
-                var $res = $('<div></div>');
-
-                BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false,
-                  function() {
-                    var $elm = $(this);
-                    console.log('click on loadable', $elm);
-                    var id = $elm.attr("data-id");
-                    var itemDesc = $elm.attr("data-descriptor");
-                    var query = "print {0} {1} {2}".format(params.repo, itemDesc, id);
-                    console.log('query %s', query);
-                    BDA_DASH.handleInput(query);
-                  });
-                // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-                cb('', $res);
-              },
-              params.repo
-            );
-
-
-            // return res;
-          }
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(params.repo, retval, cb)
         },
 
         //print @OR order p92133231
@@ -517,29 +491,7 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: function(params, retval, cb) {
-            processRepositoryXmlDef(
-              "definitionFiles",
-              ($xmlDef) => {
-                console.log('xmlDef: ', $xmlDef);
-                var $res = $('<div></div>');
-
-                BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false,
-                  function() {
-                    var $elm = $(this);
-                    console.log('click on loadable', $elm);
-                    var id = $elm.attr("data-id");
-                    var itemDesc = $elm.attr("data-descriptor");
-                    var query = "print {0} {1} {2}".format(params.repo, itemDesc, id);
-                    console.log('query %s', query);
-                    BDA_DASH.handleInput(query);
-                  });
-                // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-                cb('', $res);
-              },
-              params.repo
-            );
-          }
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(params.repo, retval, cb)
         },
 
 
@@ -620,7 +572,7 @@ jQuery(document).ready(function() {
                     var items = [];
                     $xmlDoc.find('add-item').each(function() {
                       $itemXml = $(this);
-                      items.push(convertAddItemToPlainObject($itemXml));
+                      items.push($itemXml.outerHTML());
                     })
                     callback(items);
                   } else {
@@ -642,16 +594,14 @@ jQuery(document).ready(function() {
             );
 
           },
-          responseToString: function(params, retval) {
-            var res = "";
-            for (var i = 0; i < retval.length; i++) {
-              var item = retval[i];
-              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-
-
-              //                res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+          responseToString: (params, retval, cb) => {
+            let repo;
+            if (_.isNil(params.componentProperty)) {
+              repo = params.repo
+            } else {
+              repo = params.componentProperty.path;
             }
-            return res;
+            BDA_DASH.displayRqlResult(repo, retval, cb);
           }
 
         },
@@ -2324,6 +2274,30 @@ jQuery(document).ready(function() {
         if (BDA_DASH.progress.total > 1) {
           $bar.parent().fadeIn();
         }
+      },
+
+      displayRqlResult: function(repo, retval, cb) {
+        processRepositoryXmlDef(
+          "definitionFiles",
+          ($xmlDef) => {
+            console.log('xmlDef: ', $xmlDef);
+            var $res = $('<div></div>');
+
+            BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false,
+              function() {
+                var $elm = $(this);
+                console.log('click on loadable', $elm);
+                var id = $elm.attr("data-id");
+                var itemDesc = $elm.attr("data-descriptor");
+                var query = "print {0} {1} {2}".format(repo, itemDesc, id);
+                console.log('query %s', query);
+                BDA_DASH.handleInput(query);
+              });
+            // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
+            cb('', $res);
+          },
+          repo
+        );
       },
 
       updateProgress: function() {

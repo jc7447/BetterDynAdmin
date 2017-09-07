@@ -76,10 +76,13 @@ try {
       return tags;
     },
 
-    this.processRepositoryXmlDef = function(property, callback) {
+    this.processRepositoryXmlDef = function(property, callback, componentPath) {
       if (callback !== undefined) {
         // First check cache value if any
-        var rawXmlDef = getXmlDef(getCurrentComponentPath());
+        if (_.isNil(componentPath)) {
+          componentPath = getCurrentComponentPath();
+        }
+        var rawXmlDef = getXmlDef(componentPath);
         if (rawXmlDef !== null) {
           logTrace("Getting XML def from cache");
           var xmlDoc = jQuery.parseXML(rawXmlDef);
@@ -88,7 +91,7 @@ try {
         }
         // If no cache entry, fetch the XML def in ajax
         else {
-          var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
+          var url = location.protocol + '//' + location.host + '/dyn/admin/nucleus' + componentPath + "?propertyName=" + property;
           logTrace(url);
           jQuery.ajax({
             url: url,
@@ -105,7 +108,7 @@ try {
                 try {
                   logTrace("XML def length : " + rawXmlDef.length);
                   var xmlDoc = jQuery.parseXML(rawXmlDef);
-                  storeXmlDef(getCurrentComponentPath(), rawXmlDef);
+                  storeXmlDef(componentPath, rawXmlDef);
                   callback($(xmlDoc));
                 } catch (err) {
                   logTrace("Unable to parse XML def file !");
