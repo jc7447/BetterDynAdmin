@@ -9,7 +9,7 @@ jQuery(document).ready(function() {
     var BDA_DASH = {
 
       devMode: false,
-      version: 0.8,
+      version: 0.9,
 
       settings: {
         domain: "",
@@ -79,10 +79,6 @@ jQuery(document).ready(function() {
           '</div>' +
           '<div class="col-sm-5">' +
           '<div class="btn-group" role="group" >' +
-          /*'<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">' +
-          '<i class="fa fa-folder-open" />&nbsp;' +
-          '</i>' +
-          '</button>' +*/
           '<button type="button" id="dashDeleteScript" class="btn btn-primary" title="delete">' +
           '<i class="fa fa-trash-o" />&nbsp;' +
           '</i>' +
@@ -118,10 +114,11 @@ jQuery(document).ready(function() {
           '</div>' +
           '</div>' +
           '<div id="dashFooter" class="modal-footer">' +
-          '<ul class="nav nav-pills">' +
+          '<ul id="dashNav" class="nav nav-pills">' +
           '<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab" data-fs-mode="false">Console</a></li>' +
           '<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab"  data-fs-mode="true">Editor</a></li>' +
           '<li role="presentation" class="pull-right footer-right" ><a id="dashClearScreen" class="btn-default"   role="tab" aria-controls="clearScreen" >Clear Screen <i class="fa fa-ban" ></i></a></li>' +
+
           '</ul>' +
           '<div id="dashTips" class="text-muted"></div>' +
           '</div>' +
@@ -1023,20 +1020,8 @@ jQuery(document).ready(function() {
         //change the screen size to keep the modal same size
         logTrace('bind tab change events');
         //init size
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        BDA_DASH.bindTabChangeResize($('a[data-toggle="tab"]'));
 
-          var $target = $(e.target);
-          var fsMode = $target.attr('data-fs-mode') == "true";
-
-          BDA_DASH.toggleFullScreen(fsMode);
-
-          // BDA_DASH.updateScreenHeight(); //done bt toggleFS
-          //save latest tab
-          var tId = $target.attr('id');
-          BDA_STORAGE.storeConfiguration('dashDefaultTab', tId);
-
-          $('.tab-pane.active .main-input').focus();
-        });
         //resize dash on window resize
         $(window).resize(function() {
           if (BDA_DASH.$modalContent.is(":visible")) {
@@ -1056,18 +1041,6 @@ jQuery(document).ready(function() {
           BDA_DASH.saveScreenState();
         });
 
-        $('#dashFullScreen').on('click', function() {
-          BDA_DASH.toggleFullScreen();
-        });
-
-        /*     BDA_DASH.$input.keydown(function(e) {
-               if (e.which == 38 && e.shiftKey) {
-                 BDA_DASH.moveInHistory(true);
-               }
-               if (e.which == 40 && e.shiftKey) {
-                 BDA_DASH.moveInHistory(false);
-               }
-             });*/
         logTrace('bind clear');
         $('#dashCleanInput').on('click', function(e) {
           e.preventDefault();
@@ -1144,7 +1117,27 @@ jQuery(document).ready(function() {
 
         // BDA_DASH.handleInput('help -k'); //skip history
         BDA_DASH.restoreScreenState();
+
+        console.log('trigger dash build done')
+        $('body').trigger('bda.dash.build.done');
+
         console.timeEnd("dashBuild");
+      },
+
+      bindTabChangeResize: function($elem) {
+        $elem.on('shown.bs.tab', function(e) {
+          var $target = $(e.target);
+          var fsMode = $target.attr('data-fs-mode') == "true";
+          var cols = $target.attr('data-cols');
+
+          BDA_DASH.toggleFullScreen(fsMode, cols);
+
+          //save latest tab
+          var tId = $target.attr('id');
+          BDA_STORAGE.storeConfiguration('dashDefaultTab', tId);
+
+          $('.tab-pane.active .main-input').focus();
+        });
       },
 
       submitSaveScriptForm: function() {
@@ -2238,17 +2231,28 @@ jQuery(document).ready(function() {
 
       },
 
-      toggleFullScreen: function(on) {
+      toggleFullScreen: function(on, cols) {
         if (isNull(on)) {
           var fs = BDA_DASH.$modal.attr('data-fullscreen');
           on = (fs == "true");
         }
+        if (_.isNil(cols)) {
+          cols = on ? '2' : '1';
+        }
         if (on) {
           BDA_DASH.$modal.attr('data-fullscreen', true).addClass('fullscreen');
-          $('.dashcol').removeClass('col-lg-12').addClass('col-lg-6');
         } else {
           BDA_DASH.$modal.attr('data-fullscreen', false).removeClass('fullscreen');
-          $('.dashcol').removeClass('col-lg-6').addClass('col-lg-12');
+        }
+
+        switch (cols) {
+          case '2':
+            $('.dashcol').removeClass('col-lg-12').addClass('col-lg-6');
+            break;
+          case '1':
+          default:
+            $('.dashcol').removeClass('col-lg-6').addClass('col-lg-12');
+
         }
         //update modal size
         BDA_DASH.updateScreenHeight();
@@ -2365,6 +2369,9 @@ jQuery(document).ready(function() {
 
     $.fn.openDash = function() {
       BDA_DASH.openDash();
+    }
+    $.fn.getDash = function() {
+      return BDA_DASH;
     }
 
     logTrace('bda.dash.js end');

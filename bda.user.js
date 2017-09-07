@@ -70,6 +70,7 @@
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
 // @require bda.scheduler.js
+// @require bda.repo-explorer.js
 
 // @updateUrl http://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -192,6 +193,8 @@ jQuery(document).ready(function() {
         $().initDASH(BDA);
 
         $().bdaScheduler();
+
+        $().initRepositoryExplorer(BDA);
 
         var autocomplete = $.fn.bdaStorage.getBdaStorage().getConfigurationValue('search_autocomplete');
         autocomplete = (autocomplete == true) ? true : false;
