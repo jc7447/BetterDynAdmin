@@ -849,7 +849,6 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 .fullscreen #dashScreen {
-  margin-bottom: 0;
   height: 100%;
   max-height: 100%;
 }
@@ -1293,6 +1292,9 @@ ol.itemDescAttributes {
 
 .show-xml-close {
   display: none;
+  }
+.bottom-panel{
+  margin-top: 10px;
 }
 .open .show-xml-close {
   display: block;
