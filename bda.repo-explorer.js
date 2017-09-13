@@ -10,7 +10,8 @@ try {
             queries: {
               print: {
                 writable: false,
-                requireId: true
+                requireId: true,
+                template: 'print {0} {1} {2}'
               },
               query: {
                 writable: true,
@@ -92,15 +93,56 @@ try {
               BDA_DASH.$control.append(BDA_REEX.$panel);
               BDA_REEX.$querySelect = BDA_REEX.$panel.find('#reexQueryType');
               BDA_REEX.$editor = BDA_REEX.$panel.find('#reexEditor');
+              BDA_REEX.$idInput = BDA_REEX.$panel.find('#reexId');
+              BDA_REEX.$itemDescInput = BDA_REEX.$panel.find('#reexItemDesc');
+              BDA_REEX.$repoInput = BDA_REEX.$panel.find('#reexRepo');
               BDA_DASH.bindTabChangeResize(navPill.find('a[data-toggle="tab"]'));
               BDA_REEX.initQueryTypeSelect();
+
               var defaultTab = BDA_STORAGE.getConfigurationValue('dashDefaultTab');
               if (!isNull(defaultTab)) {
                 $('#' + defaultTab).tab('show');
               }
 
-              BDA_REEX.$submit = BDA_REEX.$panel.find('')
+              BDA_REEX.$submit = BDA_REEX.$panel.find('#reexRun');
+              BDA_REEX.$submit.on('click', BDA_REEX.submit)
+
             })
+          },
+
+          submit: function() {
+
+            try {
+
+              console.log('submit')
+              let queryType = BDA_REEX.$querySelect.val();
+              console.log(queryType);
+              switch (queryType) {
+                case 'print':
+                  BDA_REEX.submitPrint();
+                  break;
+                default:
+
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          },
+
+          submitPrint: function() {
+            let dashQuery = BDA_REEX.config.queries.print.template.format(BDA_REEX.getRepoInput(), BDA_REEX.getItemDescInput(), BDA_REEX.getIdInput());
+            BDA_DASH.handleInput(dashQuery);
+          },
+
+          getIdInput: function() {
+            return BDA_REEX.$idInput.val();
+          },
+
+          getItemDescInput: function() {
+            return BDA_REEX.$itemDescInput.val();
+          },
+          getRepoInput: function() {
+            return BDA_REEX.$repoInput.val();
           },
 
           initQueryTypeSelect: function() {
