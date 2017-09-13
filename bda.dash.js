@@ -1115,7 +1115,6 @@ jQuery(document).ready(function() {
           }
         });
 
-        // BDA_DASH.handleInput('help -k'); //skip history
         BDA_DASH.restoreScreenState();
 
         console.log('trigger dash build done')

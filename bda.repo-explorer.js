@@ -6,13 +6,38 @@ try {
 
         var BDA_REEX = {
 
+          config: {
+            queries: {
+              print: {
+                writable: false,
+                requireId: true
+              },
+              query: {
+                writable: true,
+                requireId: false
+              },
+              add: {
+                writable: true,
+                requireId: true
+              },
+              remove: {
+                writable: false,
+                requireId: true
+              },
+              custom: {
+                writable: true,
+                requireId: false
+              }
+            }
+          },
+
           templates: {
 
             menuPill: '<li role="presentation"><a id="repoExplorerButton"  href="#repo-explorer-tab" aria-controls="editor" role="tab" data-toggle="tab" data-cols="1" data-fs-mode="true">Repo Explorer</a></li>',
             panel: '<div role="tabpanel" class="tab-pane fade bottom-panel" id="repo-explorer-tab">' +
               '<form id="dashEditorForm" class="form-horizontal">' +
               '<div class="form-group top-row">' +
-              '<div class="col-sm-1">' +
+              '<div class="col-sm-2">' +
               '<select id="reexQueryType" class="form-control">' +
               '<option data-queryable="false">print</option>' +
               '<option data-queryable="true">query</option>' +
@@ -21,19 +46,19 @@ try {
               '<option data-queryable="true">custom</option>' +
               '</select>' +
               '</div>' +
-              '<div class="col-sm-3">' +
-              '<input type="text" id="reexRepo" class="form-control">' +
-              '</input>' +
-              '</div>' +
-              '<div class="col-sm-2">' +
-              '<input type="text" id="reexItemDesc" class="form-control">' +
-              '</input>' +
-              '</div>' +
-              '<div class="col-sm-2">' +
-              '<input type="text" id="reexId" class="form-control">' +
-              '</input>' +
-              '</div>' +
               '<div class="col-sm-4">' +
+              '<input type="text" id="reexRepo" class="form-control" placeholder="repository">' +
+              '</input>' +
+              '</div>' +
+              '<div class="col-sm-2">' +
+              '<input type="text" id="reexItemDesc" class="form-control" placeholder="item descriptor">' +
+              '</input>' +
+              '</div>' +
+              '<div class="col-sm-2">' +
+              '<input type="text" id="reexId" class="form-control" placeholder="id">' +
+              '</input>' +
+              '</div>' +
+              '<div class="col-sm-2">' +
               '<div class="btn-group" role="group" >' +
               '<button type="button" id="reexClear" class="btn btn-primary" title="clear">' +
               '<i class="fa fa-eraser" />&nbsp;' +
@@ -69,22 +94,30 @@ try {
               BDA_REEX.$editor = BDA_REEX.$panel.find('#reexEditor');
               BDA_DASH.bindTabChangeResize(navPill.find('a[data-toggle="tab"]'));
               BDA_REEX.initQueryTypeSelect();
+              var defaultTab = BDA_STORAGE.getConfigurationValue('dashDefaultTab');
+              if (!isNull(defaultTab)) {
+                $('#' + defaultTab).tab('show');
+              }
+
+              BDA_REEX.$submit = BDA_REEX.$panel.find('')
             })
           },
 
           initQueryTypeSelect: function() {
             BDA_REEX.$querySelect.on('change', BDA_REEX.updateEditorState);
-            BDA_REEX.updateEditorState(BDA_REEX.$querySelect); //init
+            BDA_REEX.updateEditorState(); //init
           },
           updateEditorState: function() {
-            let $option = $(this).find(':selected');
-            let writable = $option.attr('data-queryable');
-            console.log('writable %s', writable);
-            if (writable === 'true') {
-              BDA_REEX.$editor.attr('disabled', false);
-            } else {
-              BDA_REEX.$editor.attr('disabled', true);
+            let $option = BDA_REEX.$querySelect.find(':selected');
+            let opt = $option.val();
+            let writable = true;
+            try {
+              writable = BDA_REEX.config.queries[opt].writable;
+            } catch (e) {
+
             }
+            console.log('writable %s', writable);
+            BDA_REEX.$editor.attr('disabled', !writable);
           }
         }
 
