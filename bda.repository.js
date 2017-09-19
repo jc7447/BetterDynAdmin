@@ -73,7 +73,7 @@
     hasResults: false,
     templates: {
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
-      queryItems: '<query-items item-descriptor="{0}">{1}</query-items>'
+      queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>'
     },
     cmAutocomplete: {
       tags: {
@@ -1884,6 +1884,22 @@
       BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
     },
 
+    previewRql: function(queryType, values) {
+      let xmlText;
+      switch (queryType) {
+        case 'print':
+          xmlText = BDA_REPOSITORY.templates.printItem.format(values.itemDescriptor, values.id);
+          break;
+        case 'query':
+          xmlText = BDA_REPOSITORY.templates.queryItems.format(values.itemDescriptor, values.text);
+          break;
+        default:
+          xmlText = values.text
+
+      }
+      return xmlText;
+    },
+
     setupRepositoryCacheSection: function() {
 
       try {
@@ -2219,6 +2235,10 @@
   $.fn.executeRql = function(domain, xmlText, repository, callback, errCallback) {
     BDA_REPOSITORY.executeQuery(domain, xmlText, repository, callback, errCallback);
   };
+
+  $.fn.previewRql = function(queryType, values) {
+    return BDA_REPOSITORY.previewRql(queryType, values);
+  }
 
   $.fn.getBdaRepository = function() {
     return BDA_REPOSITORY;

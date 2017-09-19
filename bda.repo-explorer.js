@@ -10,24 +10,53 @@ try {
             queries: {
               print: {
                 writable: false,
-                requireId: true,
-                template: 'print {0} {1} {2}'
+                template: 'print {repository} {itemDescriptor} {id}',
+                fields: {
+                  id: true,
+                  repository: true,
+                  itemDescriptor: true,
+                  text: false
+                }
               },
               query: {
                 writable: true,
-                requireId: false
+                template: 'query {repository} {itemDescriptor} {{text}}',
+                fields: {
+                  id: false,
+                  repository: true,
+                  itemDescriptor: true,
+                  text: true
+                }
               },
               add: {
                 writable: true,
-                requireId: true
+                fields: {
+                  id: true,
+                  repository: true,
+                  itemDescriptor: true,
+                  text: false
+                }
               },
               remove: {
                 writable: false,
-                requireId: true
+                template: 'rql {repository} {<remove-item item-descriptor="{itemDescriptor}" id="{id}"/>}',
+                fields: {
+                  id: true,
+                  repository: true,
+                  itemDescriptor: true,
+                  text: false
+                }
               },
-              custom: {
+              freeRql: {
                 writable: true,
-                requireId: false
+
+                template: 'rql {repository} {{text}}',
+                fields: {
+                  id: false,
+                  repository: true,
+                  itemDescriptor: true,
+                  text: false
+                }
               }
             }
           },
@@ -39,24 +68,24 @@ try {
               '<form id="dashEditorForm" class="form-horizontal">' +
               '<div class="form-group top-row">' +
               '<div class="col-sm-2">' +
-              '<select id="reexQueryType" class="form-control">' +
+              '<select id="reexQueryType" class="form-control reex-input">' +
               '<option data-queryable="false">print</option>' +
               '<option data-queryable="true">query</option>' +
-              '<option data-queryable="true">add</option>' +
+              //  '<option data-queryable="true">add</option>' +
               '<option data-queryable="false">remove</option>' +
-              '<option data-queryable="true">custom</option>' +
+              '<option data-queryable="true">freeRql</option>' +
               '</select>' +
               '</div>' +
               '<div class="col-sm-4">' +
-              '<input type="text" id="reexRepo" class="form-control" placeholder="repository">' +
+              '<input type="text" id="reexRepo" class="form-control reex-input" placeholder="repository">' +
               '</input>' +
               '</div>' +
               '<div class="col-sm-2">' +
-              '<input type="text" id="reexItemDesc" class="form-control" placeholder="item descriptor">' +
+              '<input type="text" id="reexItemDesc" class="form-control reex-input" placeholder="item descriptor">' +
               '</input>' +
               '</div>' +
               '<div class="col-sm-2">' +
-              '<input type="text" id="reexId" class="form-control" placeholder="id">' +
+              '<input type="text" id="reexId" class="form-control reex-input" placeholder="id">' +
               '</input>' +
               '</div>' +
               '<div class="col-sm-2">' +
@@ -65,7 +94,7 @@ try {
               '<i class="fa fa-eraser" />&nbsp;' +
               '</i>' +
               '</button>' +
-              '<button type="button" id="reexRun" class="btn btn-primary" title="run">' +
+              '<button type="button" id="reexRun" class="btn btn-primary " title="run">' +
               '<i class="fa fa-play" />&nbsp;' +
               '</i>' +
               '</button>' +
@@ -74,10 +103,11 @@ try {
               '</div>' +
               '<div class="form-group middle-row">' +
               '<div class="col-sm-6">' +
-              '<textarea id="reexEditor" class="form-control dash-input main-input reex-autocomplete" rows="4" placeholder=""></textarea>' +
+              '<textarea id="reexEditor" class="form-control dash-input main-input reex-input reex-autocomplete" rows="4" placeholder=""></textarea>' +
               '</div>' +
               '<div class="col-sm-6">' +
-              '<div>preview</div>' +
+              '<div id="reexPreview">preview</div><br/>' +
+              '<div id="reexPreviewRql" class="xml"><pre><code></code></pre></div>' +
               '</div>' +
               '</div>' +
               '</form>' +
@@ -91,11 +121,17 @@ try {
               BDA_DASH.$footer.find('#dashNav').append(navPill);
               BDA_REEX.$panel = $(BDA_REEX.templates.panel);
               BDA_DASH.$control.append(BDA_REEX.$panel);
-              BDA_REEX.$querySelect = BDA_REEX.$panel.find('#reexQueryType');
-              BDA_REEX.$editor = BDA_REEX.$panel.find('#reexEditor');
-              BDA_REEX.$idInput = BDA_REEX.$panel.find('#reexId');
-              BDA_REEX.$itemDescInput = BDA_REEX.$panel.find('#reexItemDesc');
-              BDA_REEX.$repoInput = BDA_REEX.$panel.find('#reexRepo');
+              BDA_REEX.$preview = BDA_REEX.$panel.find('#reexPreview');
+              BDA_REEX.$previewRql = BDA_REEX.$panel.find('#reexPreviewRql');
+
+              BDA_REEX.fields = {
+                id: BDA_REEX.$panel.find('#reexId'),
+                itemDescriptor: BDA_REEX.$panel.find('#reexItemDesc'),
+                repository: BDA_REEX.$panel.find('#reexRepo'),
+                text: BDA_REEX.$panel.find('#reexEditor'),
+                type: BDA_REEX.$panel.find('#reexQueryType')
+              }
+
               BDA_DASH.bindTabChangeResize(navPill.find('a[data-toggle="tab"]'));
               BDA_REEX.initQueryTypeSelect();
 
@@ -107,6 +143,53 @@ try {
               BDA_REEX.$submit = BDA_REEX.$panel.find('#reexRun');
               BDA_REEX.$submit.on('click', BDA_REEX.submit)
 
+              //restore inputs
+              let inputAsString = BDA_STORAGE.getConfigurationValue('reexCurrentInputs');
+              if (!_.isNil(inputAsString)) {
+                let inputs = JSON.parse(inputAsString);
+                BDA_REEX.fields.id.val(inputs.id);
+                BDA_REEX.fields.itemDescriptor.val(inputs.itemDescriptor);
+                BDA_REEX.fields.text.val(inputs.text);
+                BDA_REEX.fields.type.val(inputs.queryType);
+                BDA_REEX.fields.repository.val(inputs.repository);
+              }
+
+              var autosaveFc = debounce(function() {
+                  try {
+
+                    var inputs = BDA_REEX.getInputs()
+                    let inputAsString = JSON.stringify(inputs);
+                    BDA_STORAGE.storeConfiguration('reexCurrentInputs', inputAsString);
+                  } catch (e) {
+                    console.error(e);
+                  }
+                },
+                300);
+
+              // bind preview
+              BDA_REEX.$panel.find('.reex-input')
+
+              .on('keyup', BDA_REEX.updatePreview)
+                .on('change', BDA_REEX.updatePreview)
+                .on('keyup', autosaveFc)
+                .on('change', autosaveFc)
+              BDA_REEX.updatePreview(); // init on build
+
+
+
+            })
+          },
+
+
+
+          updatePreview: function() {
+            let queryType = BDA_REEX.fields.type.val();
+            let dashQuery = BDA_REEX.formatQuery(BDA_REEX.config.queries[queryType].template, BDA_REEX.getInputs());
+            let rql = BDA_REPOSITORY.previewRql(queryType, BDA_REEX.getInputs());
+            BDA_REEX.$preview.html('> ' + dashQuery);
+            BDA_REEX.$previewRql.find('code').text(rql);
+            BDA_REEX.$previewRql.each(function(i, block) {
+              hljs.highlightBlock(block);
             })
           },
 
@@ -114,52 +197,48 @@ try {
 
             try {
 
-              console.log('submit')
-              let queryType = BDA_REEX.$querySelect.val();
-              console.log(queryType);
-              switch (queryType) {
-                case 'print':
-                  BDA_REEX.submitPrint();
-                  break;
-                default:
+              let queryType = BDA_REEX.fields.type.val();
+              let dashQuery = BDA_REEX.formatQuery(BDA_REEX.config.queries[queryType].template, BDA_REEX.getInputs());
+              BDA_DASH.handleInput(dashQuery);
 
-              }
             } catch (e) {
               console.error(e);
             }
           },
 
-          submitPrint: function() {
-            let dashQuery = BDA_REEX.config.queries.print.template.format(BDA_REEX.getRepoInput(), BDA_REEX.getItemDescInput(), BDA_REEX.getIdInput());
-            BDA_DASH.handleInput(dashQuery);
+          getInputs() {
+            return {
+              id: BDA_REEX.fields.id.val(),
+              text: BDA_REEX.fields.text.val(),
+              repository: BDA_REEX.fields.repository.val(),
+              itemDescriptor: BDA_REEX.fields.itemDescriptor.val(),
+              queryType: BDA_REEX.fields.type.val()
+            }
           },
 
-          getIdInput: function() {
-            return BDA_REEX.$idInput.val();
+          formatQuery: function(query, params) {
+            let result = query;
+            _.forEach(params, (value, key) => {
+              result = result.replace('{' + key + '}', value);
+            })
+            return result;
           },
 
-          getItemDescInput: function() {
-            return BDA_REEX.$itemDescInput.val();
-          },
-          getRepoInput: function() {
-            return BDA_REEX.$repoInput.val();
-          },
 
           initQueryTypeSelect: function() {
-            BDA_REEX.$querySelect.on('change', BDA_REEX.updateEditorState);
+            BDA_REEX.fields.type.on('change', BDA_REEX.updateEditorState);
             BDA_REEX.updateEditorState(); //init
           },
           updateEditorState: function() {
-            let $option = BDA_REEX.$querySelect.find(':selected');
+            let $option = BDA_REEX.fields.type.find(':selected');
             let opt = $option.val();
-            let writable = true;
-            try {
-              writable = BDA_REEX.config.queries[opt].writable;
-            } catch (e) {
 
-            }
-            console.log('writable %s', writable);
-            BDA_REEX.$editor.attr('disabled', !writable);
+
+            let inputConfig = BDA_REEX.config.queries[opt].fields;
+            _.forEach(inputConfig, (value, key) => {
+              BDA_REEX.fields[key].attr('disabled', !value);
+            })
+
           }
         }
 
