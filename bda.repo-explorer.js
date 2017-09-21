@@ -9,7 +9,6 @@ try {
           config: {
             queries: {
               print: {
-                writable: false,
                 template: 'print {repository} {itemDescriptor} {id}',
                 fields: {
                   id: true,
@@ -19,7 +18,6 @@ try {
                 }
               },
               query: {
-                writable: true,
                 template: 'query {repository} {itemDescriptor} {{text}}',
                 fields: {
                   id: false,
@@ -29,7 +27,6 @@ try {
                 }
               },
               add: {
-                writable: true,
                 fields: {
                   id: true,
                   repository: true,
@@ -38,7 +35,6 @@ try {
                 }
               },
               remove: {
-                writable: false,
                 template: 'rql {repository} {<remove-item item-descriptor="{itemDescriptor}" id="{id}"/>}',
                 fields: {
                   id: true,
@@ -48,14 +44,12 @@ try {
                 }
               },
               freeRql: {
-                writable: true,
-
                 template: 'rql {repository} {{text}}',
                 fields: {
                   id: false,
                   repository: true,
                   itemDescriptor: true,
-                  text: false
+                  text: true
                 }
               }
             }
@@ -81,8 +75,8 @@ try {
               '</input>' +
               '</div>' +
               '<div class="col-sm-2">' +
-              '<input type="text" id="reexItemDesc" class="form-control reex-input" placeholder="item descriptor">' +
-              '</input>' +
+              '<select  id="reexItemDesc" class="reex-input" placeholder="item descriptor">' +
+              '</select>' +
               '</div>' +
               '<div class="col-sm-2">' +
               '<input type="text" id="reexId" class="form-control reex-input" placeholder="id">' +
@@ -173,31 +167,47 @@ try {
                 .on('keyup', autosaveFc)
                 .on('change', autosaveFc)
 
-              BDA_REEX.fields.repository.on('change', BDA_REEX.reloadRepositoryDefinition)
 
               BDA_REEX.updatePreview(); // init on build
 
 
 
               BDA_REEX.reloadRepositoryDefinition();
-              BDA_REEX.initFieldsAutocomplete();
+              BDA_REEX.initFields();
             })
           },
 
-          initFieldsAutocomplete: function() {
-            BDA_REEX.initRepositoryAutocomplete()
+          initFields: function() {
+            BDA_REEX.initItemDescriptorField();
+            BDA_REEX.initRepositoryField()
           },
 
-          initRepositoryAutocomplete: function() {
+          initItemDescriptorField: function() {
+            BDA_REEX.fields.itemDescriptor.select2({
+              placeholder: "Select a descriptor",
+              allowClear: true,
+              width: "100%",
+              matcher: function(params, data) {
+                // If there are no search terms, return all of the data
+                if ($.trim(params) === '') {
+                  return data;
+                }
+                data = data.toUpperCase();
+                params = params.toUpperCase();
+                // `params.term` should be the term that is used for searching
+                // `data.text` is the text that is displayed for the data object
+                if (data.indexOf(params) != -1)
+                  return true;
+                return false;
+              }
+            });
+          },
+
+          initRepositoryField: function() {
+
+            //autocomplete
             let settings = $().getBdaSearchSuggestionEngineOptions();
-            var comps = BDA_STORAGE.getStoredComponents();
-            // settings.local = _.map(comps, (fav) => {
-            //   return {
-            //     path: fav.componentPath.replace(/\/dyn\/admin\/nucleus/g, '').replace(/\/$/g, ''),
-            //     value: fav.componentName
-            //   }
-            // });
-            //  settings.remote = null;
+
             console.log(settings.local)
 
             let completionEngine = new Bloodhound(settings);
@@ -213,6 +223,11 @@ try {
               limit: 5,
             });
 
+
+            BDA_REEX.fields.repository
+              .on('typeahead:select', BDA_REEX.reloadRepositoryDefinition)
+              .on('change', BDA_REEX.reloadRepositoryDefinition)
+
           },
 
 
@@ -222,13 +237,25 @@ try {
 
                 if (!_.isNil($xmlDef) && $xmlDef.length > 0) {
 
-                  //BDA_REEX.fields.descriptors.
                   let itemDescriptors = [];
                   var $descriptors = $xmlDef.find("item-descriptor");
                   $descriptors.each((index, desc) => {
                     itemDescriptors.push(desc.getAttribute('name'));
                   })
                   itemDescriptors = sort(itemDescriptors);
+                  // update select box
+                  BDA_REEX.fields.itemDescriptor
+                    .find('option')
+                    .remove();
+
+                  _.forEach(itemDescriptors, (desc) => {
+                      BDA_REEX.fields.itemDescriptor.append($('<option>{0}</option>'.format(desc)));
+                    })
+                    //set default value
+
+                  var defaultDesc = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath('/dyn/admin/nucleus' + BDA_REEX.fields.repository.val())];
+                  BDA_REEX.fields.itemDescriptor.val(defaultDesc);
+                  BDA_REEX.fields.itemDescriptor.trigger('change');
                 }
 
               } catch (e) {
