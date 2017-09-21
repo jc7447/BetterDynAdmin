@@ -168,18 +168,75 @@ try {
 
               // bind preview
               BDA_REEX.$panel.find('.reex-input')
-
-              .on('keyup', BDA_REEX.updatePreview)
+                .on('keyup', BDA_REEX.updatePreview)
                 .on('change', BDA_REEX.updatePreview)
                 .on('keyup', autosaveFc)
                 .on('change', autosaveFc)
+
+              BDA_REEX.fields.repository.on('change', BDA_REEX.reloadRepositoryDefinition)
+
               BDA_REEX.updatePreview(); // init on build
 
 
 
+              BDA_REEX.reloadRepositoryDefinition();
+              BDA_REEX.initFieldsAutocomplete();
             })
           },
 
+          initFieldsAutocomplete: function() {
+            BDA_REEX.initRepositoryAutocomplete()
+          },
+
+          initRepositoryAutocomplete: function() {
+            let settings = $().getBdaSearchSuggestionEngineOptions();
+            var comps = BDA_STORAGE.getStoredComponents();
+            // settings.local = _.map(comps, (fav) => {
+            //   return {
+            //     path: fav.componentPath.replace(/\/dyn\/admin\/nucleus/g, '').replace(/\/$/g, ''),
+            //     value: fav.componentName
+            //   }
+            // });
+            //  settings.remote = null;
+            console.log(settings.local)
+
+            let completionEngine = new Bloodhound(settings);
+            //init typeahead
+            BDA_REEX.fields.repository.typeahead({
+              highlight: true,
+              hint: false,
+              minLength: 3,
+            }, {
+              name: 'reexRepository',
+              source: completionEngine,
+              displayKey: 'value',
+              limit: 5,
+            });
+
+          },
+
+
+          reloadRepositoryDefinition: function() {
+            processRepositoryXmlDef('definitionFiles', ($xmlDef) => {
+              try {
+
+                if (!_.isNil($xmlDef) && $xmlDef.length > 0) {
+
+                  //BDA_REEX.fields.descriptors.
+                  let itemDescriptors = [];
+                  var $descriptors = $xmlDef.find("item-descriptor");
+                  $descriptors.each((index, desc) => {
+                    itemDescriptors.push(desc.getAttribute('name'));
+                  })
+                  itemDescriptors = sort(itemDescriptors);
+                }
+
+              } catch (e) {
+                console.error(e);
+              }
+            }, BDA_REEX.fields.repository.val())
+
+          },
 
 
           updatePreview: function() {

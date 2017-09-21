@@ -7,18 +7,25 @@
     templates: {},
 
     defaultOptions: {
-      align: 'left'
+      align: 'left',
+      limit: 15,
+      //must do a callback here since at init, BDA_search is not defined yet
+      onEnter: (ev, suggestion) => BDA_SEARCH.onEnter(ev, suggestion)
+    },
+
+    onEnter: function(ev, suggestion) {
+      window.location = '/dyn/admin/nucleus' + suggestion.value;
     },
 
     build: function($searchField, options) {
-      console.time("bdaSearch");
       try {
         BDA_SEARCH.$searchField = $searchField;
         //wrap the field in twbs class for the bootstrap css to work
         var $wrapper = BDA_SEARCH.$searchField.wrap('<span class="twbs searchWrapper" ></span>').parent();
 
         //init bloodhound
-        BDA_SEARCH.suggestionEngine = new Bloodhound({
+
+        BDA_SEARCH.suggestionEngineOptions = {
           initialize: true,
           queryTokenizer: Bloodhound.tokenizers.whitespace,
           datumTokenizer: function(datum) {
@@ -30,14 +37,14 @@
           remote: {
             url: BDA_SEARCH.searchUrl,
             wildcard: '%QUERY',
-            prepare :function(query,settings){
-              console.log('prepare')
-              return {url:settings.url.replace('%QUERY',query),type:'POST'};
+            prepare: function(query, settings) {
+              return {
+                url: settings.url.replace('%QUERY', query),
+                type: 'POST'
+              };
             },
             //transform the returned html to extract the search results:
             transform: function(response) {
-              console.log('transform')
-              console.log(response);
               var searchResultsTable = $('<div></div>').html(response).find('th:contains("Search Results:")').closest('table');
               var res = searchResultsTable
                 .find('td > a')
@@ -50,7 +57,8 @@
             }
           }
 
-        });
+        };
+        BDA_SEARCH.suggestionEngine = new Bloodhound(BDA_SEARCH.suggestionEngineOptions);
 
 
         //init typeahead
@@ -62,13 +70,11 @@
           name: 'bdaSearch',
           source: BDA_SEARCH.suggestionEngine,
           displayKey: 'value',
-          limit: 15,
+          limit: options.limit,
         });
 
         //go to page on select
-        BDA_SEARCH.$searchField.bind('typeahead:select', function(ev, suggestion) {
-          window.location = '/dyn/admin/nucleus' + suggestion.value;
-        });
+        BDA_SEARCH.$searchField.bind('typeahead:select', options.onEnter);
         logTrace(JSON.stringify(options));
         if (options.align == 'right') {
           logTrace('setup right alignment');
@@ -78,7 +84,7 @@
             logTrace('open');
             var $field = $(this);
             //reset
-            $menu.css('left','0');
+            $menu.css('left', '0');
             //adjust to flush right
             var menuWidth = $menu.width();
             var inputWidth = $field.width();
@@ -106,5 +112,7 @@
     BDA_SEARCH.build($(this), $.extend({}, BDA_SEARCH.defaultOptions, options));
     return this;
   };
+
+  $.fn.getBdaSearchSuggestionEngineOptions = () => BDA_SEARCH.suggestionEngineOptions;
 
 })(jQuery);
