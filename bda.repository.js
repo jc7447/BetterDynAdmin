@@ -309,6 +309,8 @@
       // Init select2 plugin
       $("#RQLAction").select2({
         width: "style",
+        containerCssClass: 'bda-repository',
+        dropdownCssClass: 'bda-repository',
         minimumResultsForSearch: -1
       });
 
@@ -316,6 +318,8 @@
         placeholder: "Select a descriptor",
         allowClear: false,
         width: "element",
+        containerCssClass: 'bda-repository',
+        dropdownCssClass: 'bda-repository',
         matcher: function(params, data) {
           // If there are no search terms, return all of the data
           if ($.trim(params) === '') {

@@ -210,8 +210,8 @@ try {
   };
 
   this.logTrace = function() {
-    if (isLoggingTrace) {
-      logTrace.apply(this, arguments);
+    if (isLoggingTrace && window.console != undefined) {
+      console.log.apply(this, arguments);
     }
   };
 

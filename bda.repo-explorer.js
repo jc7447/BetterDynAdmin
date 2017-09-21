@@ -71,16 +71,20 @@ try {
               '</select>' +
               '</div>' +
               '<div class="col-sm-4">' +
-              '<input type="text" id="reexRepo" class="form-control reex-input" placeholder="repository">' +
-              '</input>' +
+              '<div class="input-group">' +
+              '<input type="text" id="reexRepo" class="form-control reex-input" placeholder="repository"/>' +
+              '<span class="input-group-btn"><button type="button"  class="btn btn-default clear-button" data-target="repository">×</button></span>' +
+              '</div>' +
               '</div>' +
               '<div class="col-sm-2">' +
-              '<select  id="reexItemDesc" class="reex-input" placeholder="item descriptor">' +
+              '<select  id="reexItemDesc" class=" reex-input" placeholder="item descriptor">' +
               '</select>' +
               '</div>' +
               '<div class="col-sm-2">' +
-              '<input type="text" id="reexId" class="form-control reex-input" placeholder="id">' +
-              '</input>' +
+              '<div class="input-group">' +
+              '<input type="text" id="reexId" class="form-control reex-input" placeholder="id"/>' +
+              '<span class="input-group-btn"><button type="button"  class="btn btn-default clear-button" data-target="id">×</button></span>' +
+              '</div>' +
               '</div>' +
               '<div class="col-sm-2">' +
               '<div class="btn-group" role="group" >' +
@@ -148,16 +152,7 @@ try {
                 BDA_REEX.fields.repository.val(inputs.repository);
               }
 
-              var autosaveFc = debounce(function() {
-                  try {
-
-                    var inputs = BDA_REEX.getInputs()
-                    let inputAsString = JSON.stringify(inputs);
-                    BDA_STORAGE.storeConfiguration('reexCurrentInputs', inputAsString);
-                  } catch (e) {
-                    console.error(e);
-                  }
-                },
+              var autosaveFc = debounce(BDA_REEX.savePanelStatus,
                 300);
 
               // bind preview
@@ -179,7 +174,14 @@ try {
 
           initFields: function() {
             BDA_REEX.initItemDescriptorField();
-            BDA_REEX.initRepositoryField()
+            BDA_REEX.initRepositoryField();
+
+            $('.clear-button').on('click', function(event) {
+              let target = $(this).attr('data-target');
+              BDA_REEX.fields[target].val('');
+              BDA_REEX.savePanelStatus();
+            });
+
           },
 
           initItemDescriptorField: function() {
@@ -226,10 +228,20 @@ try {
 
             BDA_REEX.fields.repository
               .on('typeahead:select', BDA_REEX.reloadRepositoryDefinition)
-              .on('change', BDA_REEX.reloadRepositoryDefinition)
+              .on('change', BDA_REEX.reloadRepositoryDefinition);
+
 
           },
+          savePanelStatus: function() {
+            try {
 
+              var inputs = BDA_REEX.getInputs()
+              let inputAsString = JSON.stringify(inputs);
+              BDA_STORAGE.storeConfiguration('reexCurrentInputs', inputAsString);
+            } catch (e) {
+              console.error(e);
+            }
+          },
 
           reloadRepositoryDefinition: function() {
             processRepositoryXmlDef('definitionFiles', ($xmlDef) => {
