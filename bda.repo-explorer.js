@@ -185,16 +185,13 @@ try {
 
             $('.clear-button').on('click', function(event) {
               let target = $(this).attr('data-target');
-              BDA_REEX.fields[target].val('');
-              BDA_REEX.savePanelStatus();
+              BDA_REEX.fields[target].val('').change();
             });
 
             $('.current-component-button').on('click', function() {
               console.log('current-component-button')
               let target = $(this).attr('data-target');
-              BDA_REEX.fields[target].val(getCurrentComponentPath());
-              BDA_REEX.reloadRepositoryDefinition();
-              BDA_REEX.savePanelStatus();
+              BDA_REEX.fields[target].val(getCurrentComponentPath()).change();
             })
 
           },
