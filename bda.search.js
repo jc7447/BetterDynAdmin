@@ -25,12 +25,19 @@
 
         //init bloodhound
 
+        let favs = [];
+        var comps = BDA_STORAGE.getStoredComponents();
+        _.forEach(comps, (fav) => {
+          favs.push({
+            value: fav.componentPath.replace(/\/dyn\/admin\/nucleus/g, '').replace(/\/$/g, '')
+          });
+        })
+
         BDA_SEARCH.suggestionEngineOptions = {
           initialize: true,
-          queryTokenizer: Bloodhound.tokenizers.whitespace,
-          datumTokenizer: function(datum) {
-            return Bloodhound.tokenizers.whitespace(datum.value);
-          },
+          local: favs,
+          queryTokenizer: (query) => query.split('/'),
+          datumTokenizer: (datum) => datum.value.split('/'),
           identify: function(obj) {
             return obj.value;
           },
@@ -105,10 +112,14 @@
       }
     },
   };
+
+  var BDA_STORAGE;
   // Reference to BDA
   // Jquery plugin creation
+
   $.fn.bdaSearch = function(options) {
     console.log('Init plugin {0}'.format('bdaSearch'));
+    BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
     BDA_SEARCH.build($(this), $.extend({}, BDA_SEARCH.defaultOptions, options));
     return this;
   };

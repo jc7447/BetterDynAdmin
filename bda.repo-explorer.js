@@ -221,21 +221,26 @@ try {
 
             //autocomplete
             let settings = $().getBdaSearchSuggestionEngineOptions();
+            let dynamoSearch = new Bloodhound(settings);
 
-            console.log(settings.local)
 
-            let completionEngine = new Bloodhound(settings);
+
             //init typeahead
             BDA_REEX.fields.repository.typeahead({
               highlight: true,
               hint: false,
               minLength: 3,
-            }, {
-              name: 'reexRepository',
-              source: completionEngine,
+            }, [{
+              name: 'reexRepositorySearch',
+              source: dynamoSearch,
               displayKey: 'value',
               limit: 5,
-            });
+              // }, {
+              //   name: 'favs',
+              //   source: favSearchEngine,
+              //   //   displayKey: 'path',
+              //   limit: 5
+            }]);
 
 
             BDA_REEX.fields.repository
