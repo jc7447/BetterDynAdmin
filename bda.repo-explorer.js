@@ -73,7 +73,12 @@ try {
               '<div class="col-sm-4">' +
               '<div class="input-group">' +
               '<input type="text" id="reexRepo" class="form-control reex-input" placeholder="repository"/>' +
-              '<span class="input-group-btn"><button type="button"  class="btn btn-default clear-button" data-target="repository">×</button></span>' +
+              '<div class="input-group-btn">' +
+              '<button type="button"  class="btn btn-default current-component-button" data-target="repository">' +
+              '<i class="fa fa-location-arrow" ></i>&nbsp;' +
+              '</button>' +
+              '<button type="button"  class="btn btn-default clear-button" data-target="repository">×</button>' +
+              '</div>' +
               '</div>' +
               '</div>' +
               '<div class="col-sm-2">' +
@@ -83,7 +88,9 @@ try {
               '<div class="col-sm-2">' +
               '<div class="input-group">' +
               '<input type="text" id="reexId" class="form-control reex-input" placeholder="id"/>' +
-              '<span class="input-group-btn"><button type="button"  class="btn btn-default clear-button" data-target="id">×</button></span>' +
+              '<div class="input-group-btn">' +
+              '<button type="button"  class="btn btn-default clear-button" data-target="id">×</button>' +
+              '</div>' +
               '</div>' +
               '</div>' +
               '<div class="col-sm-2">' +
@@ -181,6 +188,14 @@ try {
               BDA_REEX.fields[target].val('');
               BDA_REEX.savePanelStatus();
             });
+
+            $('.current-component-button').on('click', function() {
+              console.log('current-component-button')
+              let target = $(this).attr('data-target');
+              BDA_REEX.fields[target].val(getCurrentComponentPath());
+              BDA_REEX.reloadRepositoryDefinition();
+              BDA_REEX.savePanelStatus();
+            })
 
           },
 
