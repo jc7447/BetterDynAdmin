@@ -95,7 +95,7 @@ try {
               '</div>' +
               '<div class="col-sm-2">' +
               '<div class="btn-group" role="group" >' +
-              '<button type="button" id="reexClear" class="btn btn-primary" title="clear">' +
+              '<button type="button" id="reexClear" class="btn btn-primary clear-all" title="clear">' +
               '<i class="fa fa-eraser" />&nbsp;' +
               '</i>' +
               '</button>' +
@@ -108,7 +108,7 @@ try {
               '</div>' +
               '<div class="form-group middle-row">' +
               '<div class="col-sm-6">' +
-              '<textarea id="reexEditor" class="form-control dash-input main-input reex-input reex-autocomplete" rows="4" placeholder=""></textarea>' +
+              '<textarea id="reexEditor" class="form-control dash-input main-input reex-input reex-autocomplete" rows="5" placeholder=""></textarea>' +
               '</div>' +
               '<div class="col-sm-6">' +
               '<div id="reexPreview">preview</div><br/>' +
@@ -187,6 +187,12 @@ try {
               let target = $(this).attr('data-target');
               BDA_REEX.fields[target].val('').change();
             });
+
+            $('.clear-all').on('click', () => {
+              _.forEach(BDA_REEX.fields, (f) => {
+                f.val('').change();
+              })
+            })
 
             $('.current-component-button').on('click', function() {
               console.log('current-component-button')
