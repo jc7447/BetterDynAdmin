@@ -23,7 +23,7 @@ jQuery(document).ready(function() {
       $footer: null,
 
       modalHeight: 200,
-      modalHeightRatio: 0.9,
+      modalHeightRatio: 0.93,
       //
       initialized: false,
 
@@ -120,7 +120,7 @@ jQuery(document).ready(function() {
           '<li role="presentation" class="pull-right footer-right" ><a id="dashClearScreen" class="btn-default"   role="tab" aria-controls="clearScreen" >Clear Screen <i class="fa fa-ban" ></i></a></li>' +
 
           '</ul>' +
-          '<div id="dashTips" class="text-muted"></div>' +
+          '<div id="dashTips" class="tips text-muted"></div>' +
           '</div>' +
           '</div>' +
           '</div>' +

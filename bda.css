@@ -911,6 +911,12 @@ table.table {
   opacity: 1;
 }
 
+
+
+#dashModal  {
+  font-size: 0.9em;
+}
+
 .printItem {
   margin-top: 15px;
 }
@@ -985,6 +991,7 @@ kbd {
 #dashTips {
   margin-top: 10px;
   margin-bottom: 5px;
+  font-size: 0.7em;
 }
 
 .footer-right {
