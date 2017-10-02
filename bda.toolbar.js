@@ -278,8 +278,9 @@
             }
           }
 
-        } else
+        } else {
           show = true;
+        }
 
         //check filters
         if (show) {
@@ -489,6 +490,18 @@
           console.log('setting default properties: ' + name);
           $('#var_' + name).attr('checked', true);
         });
+      }
+
+      try {
+
+        if (mode === 'update' && !_.isNil(componentObj)) {
+          $('input.tag').prop('checked', false); //clear all
+          _.forEach(componentObj.tags, tag => {
+            $('input.tag[name="{0}"]'.format(tag)).prop('checked', true);
+          })
+        }
+      } catch (e) {
+        console.error(e);
       }
 
     },
