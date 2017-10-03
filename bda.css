@@ -505,6 +505,10 @@ a {
   cursor: pointer;
 }
 
+.tag-clear {
+  background-color: #bababa;
+}
+
 .favline {
   margin-bottom: 5px;
   display: block;

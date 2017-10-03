@@ -562,12 +562,9 @@
 
       //if at least one filter
       if (tags !== null && Object.keys(tags).length > 0) {
-        $('<button id="clear-filters" class="bda-button bda-button-icon" title="Clear"><i class="fa fa-times" aria-hidden="true"></i></button>')
+        $('<li class="bda-button tag-filter tag-clear" ><input type="checkbox"/>#ALL</li>')
           .on('click', BDA_TOOLBAR.clearTags)
-          .appendTo(
-            $('<li class="tag-filter" ></li>')
-            .appendTo($list)
-          );
+          .appendTo($list)
       }
 
       var sortedTags = [];
@@ -576,10 +573,13 @@
       }
       sortedTags = sort(sortedTags);
 
+      let clearButtonChecked = true;
+
       for (var i = 0; i < sortedTags.length; i++) {
         tagName = sortedTags[i];
         var tag = tags[tagName];
         var tagColor = stringToColour(tagName);
+        clearButtonChecked = !tag.selected;
 
         $('<label >#' + tagName + '</label>')
           .attr('for', 'favFilter_' + tagName)
@@ -611,6 +611,8 @@
 
       }
       $list.appendTo($favline);
+
+      $('.tag-clear input').prop('checked', clearButtonChecked);
     },
   };
   // Reference to BDA
