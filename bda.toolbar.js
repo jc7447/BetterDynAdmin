@@ -576,13 +576,13 @@
       }
       sortedTags = sort(sortedTags);
 
-      let clearButtonChecked = true;
+      let oneFavChecked = false;
 
       for (var i = 0; i < sortedTags.length; i++) {
         tagName = sortedTags[i];
         var tag = tags[tagName];
         var tagColor = stringToColour(tagName);
-        clearButtonChecked = !tag.selected;
+        oneFavChecked = oneFavChecked || tag.selected;
 
         $('<label >#' + tagName + '</label>')
           .attr('for', 'favFilter_' + tagName)
@@ -615,7 +615,7 @@
       }
       $list.appendTo($favline);
 
-      $('.tag-clear input').prop('checked', clearButtonChecked);
+      $('.tag-clear input').prop('checked', !oneFavChecked);
     },
   };
   // Reference to BDA
