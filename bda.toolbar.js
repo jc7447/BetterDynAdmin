@@ -261,6 +261,8 @@
         }
       }
 
+      favs = _.sortBy(favs, fav => getComponentShortName(fav.componentName));
+
       for (var i = 0; i != favs.length; i++) {
         var fav = favs[i];
         var show = false;
@@ -559,6 +561,7 @@
       var $favline = $('<div id="favTagList" class="favline">').appendTo('#toolbar');
 
       var $list = $('<ul></ul>');
+
 
       //if at least one filter
       if (tags !== null && Object.keys(tags).length > 0) {
