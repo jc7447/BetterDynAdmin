@@ -139,6 +139,7 @@ jQuery(document).ready(function() {
           '<p class="dash_feeback_line">$&gt;&nbsp;<span class="cmd"></span></p>' +
           '<p class="dash_log_line">{2}</p>' +
           '<p class="dash_return_line">{0}</p>' +
+          '<p class="dash_help_line"><br/> Type <em>help</em> for more information.</p>' +
           '<div class="dash_return_line objectResult"></div>' +
           '</div>',
         systemResponse: '<div class="dash_screen_sys_res alert alert-{1} alert-dismissible" role="alert" >' +
@@ -173,7 +174,7 @@ jQuery(document).ready(function() {
           'All your base are belong to us.'
         ],
         menuElem: '<div id="bdaDashMenuElem" class="menu" title="ctrl+alt+T"><p>Dash</p><div class="menuArrow"><i class="fa fa-terminal" /></div></div>',
-        errMsg: '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.',
+        errMsg: '<strong>{0}</strong> : {1}',
         tableTemplate: '<table class="table"><tr><th>{0}</th><th>{1}</th></tr>{2}</table>',
         rowTemplate: '<tr><td>{0}</td><td>{1}</td></tr>',
         printItemTemplate: '<div class="panel panel-default printItem"><div class="panel-heading">Printing item with id: {0}</div>{1}</div>',

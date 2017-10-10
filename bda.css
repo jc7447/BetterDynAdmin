@@ -937,6 +937,18 @@ table.table {
   padding-top: 2px;
 }
 
+.dash_screen_line{
+  font-size: 14px;
+}
+
+.dash_help_line {
+  display: none;
+}
+
+.alert-danger .dash_help_line{
+  display: block;
+}
+
 kbd {
   padding: 2px 4px;
   font-size: 90%;
