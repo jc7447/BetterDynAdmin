@@ -1490,37 +1490,7 @@ jQuery(document).ready(function() {
           });
 
 
-          $('.dash-autocomplete').textcomplete([{ // tech companies
-            id: 'commands',
-            match: /\b(\w{1,})$/, //1 letter or more
-            search: function(term, callback) {
-              logTrace('search %s', term)
-              BDA_DASH.suggestionEngine.search(term, callback, callback);
-            },
-            index: 1,
-            cache: true,
-            replace: function(data) {
-              logTrace('replace %s', data.value);
-              return data.value + ' ';
-            },
-            template: function(data, term) {
-              var pattern = data.pattern;
-              if (isNull(pattern)) {
-                pattern = '';
-              }
-              return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
-            },
-            context: function(text) {
-              if (!isNull(text)) {
-                var lines = text.split('\n');
-                if (lines.length > 0) {
-                  var ret = lines[lines.length - 1];
-                  return ret;
-                }
-              }
-              return "";
-            }
-          }, {
+          $('.dash-autocomplete').textcomplete([{
             id: 'comprefs',
             match: /@(t|th|thi|this|([A-Z][A-Z0-9#]*))?$/, //@ and 0 letter or more or 'this'
             search: function(term, callback) {
@@ -1555,6 +1525,36 @@ jQuery(document).ready(function() {
             },
             template: function(data, term) {
               return '<strong>${0}&nbsp</strong>:&nbsp{1}'.format(data.value, data.preview);
+            }
+          }, {
+            id: 'commands',
+            match: /\b([^@]{1,})$/, //1 letter or more
+            search: function(term, callback) {
+              logTrace('search %s', term)
+              BDA_DASH.suggestionEngine.search(term, callback, callback);
+            },
+            index: 1,
+            cache: true,
+            replace: function(data) {
+              logTrace('replace %s', data.value);
+              return data.value + ' ';
+            },
+            template: function(data, term) {
+              var pattern = data.pattern;
+              if (isNull(pattern)) {
+                pattern = '';
+              }
+              return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
+            },
+            context: function(text) {
+              if (!isNull(text)) {
+                var lines = text.split('\n');
+                if (lines.length > 0) {
+                  var ret = lines[lines.length - 1];
+                  return ret;
+                }
+              }
+              return "";
             }
           }, {
             id: 'xml',
