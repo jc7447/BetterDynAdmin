@@ -138,7 +138,7 @@ try {
               }
 
               BDA_DASH.bindTabChangeResize(navPill.find('a[data-toggle="tab"]'));
-              BDA_REEX.initQueryTypeSelect();
+
 
               var defaultTab = BDA_STORAGE.getConfigurationValue('dashDefaultTab');
               if (!isNull(defaultTab)) {
@@ -159,6 +159,7 @@ try {
                 BDA_REEX.fields.repository.val(inputs.repository);
               }
 
+
               var autosaveFc = debounce(BDA_REEX.savePanelStatus,
                 300);
 
@@ -169,10 +170,8 @@ try {
                 .on('keyup', autosaveFc)
                 .on('change', autosaveFc)
 
-
+              BDA_REEX.initQueryTypeSelect();
               BDA_REEX.updatePreview(); // init on build
-
-
 
               BDA_REEX.reloadRepositoryDefinition();
               BDA_REEX.initFields();
