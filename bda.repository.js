@@ -1865,8 +1865,17 @@
 
             let errors = BDA_REPOSITORY.getErrors(result);
 
+            var rawItemsXml;
+
             if (_.isEmpty(errors)) {
-              var rawItemsXml = $(result).find("code").html();
+              rawItemsXml = $(result).find("code").html();
+              if (_.isEmpty(rawItemsXml)) {
+                errors = "Null response";
+              }
+            }
+
+            if (_.isEmpty(errors)) {
+
 
               // remove first 2 lines
               var tab = rawItemsXml.split("\n");

@@ -200,6 +200,19 @@ try {
               BDA_REEX.fields[target].val(getCurrentComponentPath()).change();
             })
 
+            //bind enter on text & id inputs
+            _.forEach([BDA_REEX.fields.id, BDA_REEX.fields.text], (field) => {
+              field.on('keydown', (e) => {
+
+
+                if (e.which == 13 && !e.altKey && !e.shiftKey) {
+                  e.preventDefault();
+                  BDA_REEX.submit();
+                  return false;
+                }
+              })
+            })
+
           },
 
           initItemDescriptorField: function() {
