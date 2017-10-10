@@ -402,7 +402,7 @@ jQuery(document).ready(function() {
               params.itemDesc,
               params.id,
               params.repo,
-              function($xmlDoc) {
+              function($xmlDoc, head) {
                 try {
                   var res = "";
                   var items = []
@@ -413,7 +413,10 @@ jQuery(document).ready(function() {
                       // items.push(convertAddItemToPlainObject($itemXml));
                       items.push($itemXml.outerHTML());
                     })
-                    callback(items);
+                    callback({
+                      items: items,
+                      head: head
+                    });
                   } else {
                     throw {
                       name: "Not Found",
@@ -459,7 +462,7 @@ jQuery(document).ready(function() {
               params.itemDesc,
               params.query,
               params.repo,
-              function($xmlDoc) {
+              function($xmlDoc, head) {
                 try {
                   var res = "";
                   var items = []
@@ -469,7 +472,10 @@ jQuery(document).ready(function() {
                       $itemXml = $(this);
                       items.push($itemXml.outerHTML());
                     })
-                    callback(items);
+                    callback({
+                      items: items,
+                      head: head
+                    });
                   } else {
                     throw {
                       name: "Not Found",
@@ -563,7 +569,6 @@ jQuery(document).ready(function() {
               repo,
               function($xmlDoc, head) {
                 try {
-                  var res = head.join('') + "\n";
                   if (!isNull($xmlDoc)) {
                     var $itemXml;
                     var items = [];
@@ -571,7 +576,10 @@ jQuery(document).ready(function() {
                       $itemXml = $(this);
                       items.push($itemXml.outerHTML());
                     })
-                    callback(items);
+                    callback({
+                      items: items,
+                      head: head
+                    });
                   } else {
                     throw {
                       name: "Not Found",
@@ -2286,7 +2294,8 @@ jQuery(document).ready(function() {
             console.log('xmlDef: ', $xmlDef);
             var $res = $('<div></div>');
 
-            BDA_REPOSITORY.showXMLAsTab(retval.join(''), $xmlDef, $res, false,
+
+            BDA_REPOSITORY.showXMLAsTab(retval.items.join(''), $xmlDef, $res, false,
               function() {
                 var $elm = $(this);
                 console.log('click on loadable', $elm);
@@ -2296,6 +2305,7 @@ jQuery(document).ready(function() {
                 console.log('query %s', query);
                 BDA_DASH.handleInput(query);
               });
+            //  $res.prepend($('<div></div>').text(retval.head));
             // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
             cb('', $res);
           },

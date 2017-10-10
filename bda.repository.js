@@ -1844,7 +1844,7 @@
     // simply handles an ajax call to a repository and parse the result
     // xmltext : full xml text
     // repository : only the strict nucleus path
-    // callback : take 1 param : array of add-items
+    // callback : take 1 param :  object {item: array of add-items, head}
     executeQuery: function(domain, xmltext, repository, callback, errCallback) {
 
       if (isNull(domain)) {
@@ -1859,16 +1859,33 @@
           xmltext: xmltext
         },
         success: function(result, status, jqXHR) {
-          var rawItemsXml = $(result).find("code").html();
-          // remove first 2 lines
-          var tab = rawItemsXml.split("\n");
-          var head = tab.splice(0, 2);
-          rawItemsXml = tab.join("\n").trim();
-          // unescape HTML
-          rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
-          rawItemsXml = sanitizeXml(rawItemsXml);
-          var xmlDoc = jQuery.parseXML(rawItemsXml);
-          callback($(xmlDoc), head);
+
+          //check for errors
+          try {
+
+            let errors = BDA_REPOSITORY.getErrors(result);
+
+            if (_.isEmpty(errors)) {
+              var rawItemsXml = $(result).find("code").html();
+
+              // remove first 2 lines
+              var tab = rawItemsXml.split("\n");
+              var head = tab.splice(0, 2);
+              rawItemsXml = tab.join("\n").trim();
+              // unescape HTML
+              rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
+              rawItemsXml = sanitizeXml(rawItemsXml);
+              var xmlDoc = jQuery.parseXML(rawItemsXml);
+              callback($(xmlDoc), head);
+            } else {
+              errCallback(null, 'Execution Error', errors);
+            }
+
+          } catch (e) {
+            console.error(e);
+          }
+
+
         },
         error: function(jqXHR, textStatus, errorThrown) {
           if (!isNull(errCallback)) {
@@ -1876,6 +1893,18 @@
           }
         }
       });
+    },
+
+    getErrors: function(res) {
+
+      var $res = $(res);
+      var errorsSelector1 = "Errors:";
+      let errorMsg = null;
+      if ($res.text().indexOf(errorsSelector1) != -1) {
+        errorMsg = $res.find("code").text().trim();
+      }
+
+      return errorMsg;
     },
 
     executePrintItem: function(domain, itemDescriptor, id, repository, callback, errCallback) {
