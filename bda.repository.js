@@ -41,8 +41,67 @@
       children: []
     }
   };
+
+  var Repository = function(data) {
+    this.path;
+    this.xmlDefinition;
+    this.descriptors = {}
+    _.merge(this, data);
+  }
+  Repository.prototype.getItemDescriptor = function(itemDescriptorName) {
+    let desc = this.descriptors[itemDescriptorName]
+    if (_.isNil(desc) && !_.isNil(this.xmlDefinition)) {
+      desc = BDA_REPOSITORY.buildItemDescriptor(itemDescriptorName, this.xmlDefinition, this);
+      this.descriptors[itemDescriptorName] = desc;
+    }
+    return desc;
+  }
+
+  var ItemDescriptor = function(data) {
+    this.properties = {}; //PropertyDescriptor
+    this.name;
+    this.xmlDefinition;
+    _.merge(this, data);
+
+  }
+  var PropertyDescriptor = function(data) {
+    this.name;
+    this.type;
+    this.multi;
+    this.subType;
+    this.superType;
+    this.defaultValue;
+    _.merge(this, data);
+  }
+
+  var RepositoryItem = function(data) {
+    this.itemDescriptor;
+    _.merge(this, data);
+
+  }
+  var PropertyValue = function(data, descriptor) {
+    this.descriptor = descriptor;
+    this.xmlValue;
+    this.value;
+    if (_.isNil(this.descriptor) && !_.isNil(this.descriptor.defaultValue)) {
+      this.value = this.descriptor.defaultValue;
+    }
+    // then override with value from xml
+    _.merge(this, data);
+    // get attribues from the xml result, not the descriptor
+    if (!_.isNil(this.xmlValue)) {
+      this.rdonly = this.xmlValue.attr('rdonly');
+      this.derived = this.xmlValue.attr('derived');
+      this.exportable = this.xmlValue.attr('exportable');
+    }
+  }
+
+
   "use strict";
   var BDA_REPOSITORY = {
+
+    repositories: {},
+
     MAP_SEPARATOR: "=",
     LIST_SEPARATOR: ",",
     descriptorTableSelector: "table:eq(0)",
@@ -954,7 +1013,86 @@
       return html;
     },
 
-    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb) {
+    getDescriptorAndDefaultValues: function(itemDescriptor, $xmlDef, descriptorAndDefaultValues) {
+      descriptorAndDefaultValues[itemDescriptor] = {};
+      var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
+      var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
+      if (itemDefinition !== undefined && itemDefinition.length > 0) {
+        var superType = itemDefinition[0].getAttribute("super-type");
+        defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
+      }
+      for (var defaultPropertiesIndex = 0; defaultPropertiesIndex < defaultProperties.length; defaultPropertiesIndex++) {
+        var defaultProperty = defaultProperties[defaultPropertiesIndex];
+        var defaultPropertyName = defaultProperty.getAttribute("name");
+        var defaultPropertyValue = defaultProperty.getAttribute("default");
+        descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] = defaultPropertyValue;
+      }
+    },
+
+    //same as getDescriptorAndDefaultValues but using Objects
+    buildItemDescriptor: function(itemDescriptorName, $xmlDef, repository) {
+      console.log('buildItemDescriptor %s', itemDescriptorName);
+      console.time(itemDescriptorName);
+      var $itemDefinition = $xmlDef.find('item-descriptor[name={0}]'.format(itemDescriptorName));
+
+      // first get properties from the parent, if it exists
+      var superType = $itemDefinition.attr("super-type");
+      let parent = null;
+      if (!_.isNil(superType)) {
+        parent = repository.getItemDescriptor(superType); //this will build parents by recursion if necessary
+      }
+      let propertyDescriptors = {};
+      if (!_.isNil(parent)) {
+        propertyDescriptors = parent.properties;
+      }
+
+
+      // then add current properties
+      var $properties = $itemDefinition.find('property');
+
+      var selfPropertyDescriptors = {};
+      $properties.each(function() {
+        let $prop = $(this);
+        let name = $prop.attr('name');
+        let propDesc = new PropertyDescriptor({
+          name: name,
+          xmlDefinition: $prop
+        });
+        let defaultValue = $prop.attr('default');
+        if (!_.isNil(defaultValue)) {
+          propDesc.defaultValue = defaultValue;
+        }
+        selfPropertyDescriptors[name] = propDesc;
+      });
+
+      console.log('selfPropertyDescriptors', selfPropertyDescriptors);
+      propertyDescriptors = _.merge(propertyDescriptors, selfPropertyDescriptors);
+
+      let desc = new ItemDescriptor({
+        name: itemDescriptorName,
+        xmlDefinition: $itemDefinition,
+        properties: propertyDescriptors
+      });
+      console.timeEnd(itemDescriptorName);
+      return desc;
+    },
+
+
+
+    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
+
+      if (_.isEmpty(repositoryPath)) {
+        repositoryPath = getCurrentComponentPath();
+      }
+      let repository = BDA_REPOSITORY.repositories[repositoryPath];
+      if (_.isNil(repository)) {
+        repository = new Repository({
+          path: repositoryPath,
+          xmlDefinition: $xmlDef
+        })
+        BDA_REPOSITORY.repositories[repositoryPath] = repository;
+      }
+
       console.time("renderTab");
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
       var $xml = $(xmlDoc);
@@ -975,20 +1113,12 @@
       if ($xmlDef != null) {
         for (var i = 0; i < $addItems.length; i++) {
           var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
+
+          let desc = repository.getItemDescriptor(itemDescriptor);
+          console.log("item descriptor : ", desc);
+
           if (descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false) {
-            descriptorAndDefaultValues[itemDescriptor] = {};
-            var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
-            var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
-            if (itemDefinition !== undefined && itemDefinition.length > 0) {
-              var superType = itemDefinition[0].getAttribute("super-type");
-              defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
-            }
-            for (var defaultPropertiesIndex = 0; defaultPropertiesIndex < defaultProperties.length; defaultPropertiesIndex++) {
-              var defaultProperty = defaultProperties[defaultPropertiesIndex];
-              var defaultPropertyName = defaultProperty.getAttribute("name");
-              var defaultPropertyValue = defaultProperty.getAttribute("default");
-              descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] = defaultPropertyValue;
-            }
+            BDA_REPOSITORY.getDescriptorAndDefaultValues(itemDescriptor, $xmlDef, descriptorAndDefaultValues);
           }
           for (var defaultPropertyName in descriptorAndDefaultValues[itemDescriptor]) {
             var exists = $($addItems[i]).find("[name=" + defaultPropertyName + "]").length;
@@ -1109,8 +1239,6 @@
       var id = $elm.attr("data-id");
       var itemDesc = $elm.attr("data-descriptor");
       var query = "<print-item id='" + id + "' item-descriptor='" + itemDesc + "' />\n";
-
-
 
       $('body').bdaAlert({
         msg: 'You are about to add this query and reload the page: \n' + query,
