@@ -76,18 +76,19 @@
 
   var RepositoryItem = function(data) {
     this.itemDescriptor;
+    this.id;
+    this.repository;
+    this.values = {};
     _.merge(this, data);
 
   }
-  var PropertyValue = function(data, descriptor) {
+  var PropertyValue = function(xmlValue, descriptor) {
     this.descriptor = descriptor;
-    this.xmlValue;
-    this.value;
-    if (_.isNil(this.descriptor) && !_.isNil(this.descriptor.defaultValue)) {
-      this.value = this.descriptor.defaultValue;
-    }
-    // then override with value from xml
-    _.merge(this, data);
+    this.xmlValue = xmlValue;
+    this.value = xmlValue.text();
+    // if (_.isNil(this.value) && !_.isNil(this.descriptor) && !_.isNil(this.descriptor.defaultValue)) {
+    //   this.value = this.descriptor.defaultValue;
+    // }
     // get attribues from the xml result, not the descriptor
     if (!_.isNil(this.xmlValue)) {
       this.rdonly = this.xmlValue.attr('rdonly');
@@ -1031,7 +1032,6 @@
 
     //same as getDescriptorAndDefaultValues but using Objects
     buildItemDescriptor: function(itemDescriptorName, $xmlDef, repository) {
-      console.log('buildItemDescriptor %s', itemDescriptorName);
       console.time(itemDescriptorName);
       var $itemDefinition = $xmlDef.find('item-descriptor[name={0}]'.format(itemDescriptorName));
 
@@ -1065,7 +1065,6 @@
         selfPropertyDescriptors[name] = propDesc;
       });
 
-      console.log('selfPropertyDescriptors', selfPropertyDescriptors);
       propertyDescriptors = _.merge(propertyDescriptors, selfPropertyDescriptors);
 
       let desc = new ItemDescriptor({
@@ -1078,9 +1077,8 @@
     },
 
 
-
     showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
-
+      console.time('renderTab_new');
       if (_.isEmpty(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
@@ -1092,6 +1090,47 @@
         })
         BDA_REPOSITORY.repositories[repositoryPath] = repository;
       }
+      var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
+      var $xml = $(xmlDoc);
+      var $addItems = $xml.find("add-item");
+
+      $addItems.each(function() {
+        var currentItem = $(this);
+        var descriptorName = currentItem.attr("item-descriptor");
+        var id = currentItem.attr("id");
+        let itemDescriptor = repository.getItemDescriptor(descriptorName);
+        let repositoryItem = new RepositoryItem({
+          itemDescriptor: itemDescriptor,
+          id: id
+        })
+
+        currentItem.find('set-property').each(function() {
+          let currentProperty = $(this);
+          let propertyName = currentProperty.attr('name');
+          let propertyDescriptor;
+          if (!_.isNil(itemDescriptor)) {
+            propertyDescriptor = itemDescriptor.properties[propertyName];
+          }
+          let val = new PropertyValue(currentProperty, propertyDescriptor);
+          repositoryItem.values[propertyName] = val;
+        })
+        console.log('repoItem', repositoryItem);
+      });
+
+
+      //do it at the end
+      let log = $xml.children()
+        .remove()
+        .end()
+        .text()
+        .trim();
+      console.timeEnd('renderTab_new');
+    },
+
+
+
+    oldShowXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
+
 
       console.time("renderTab");
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
@@ -1113,9 +1152,6 @@
       if ($xmlDef != null) {
         for (var i = 0; i < $addItems.length; i++) {
           var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
-
-          let desc = repository.getItemDescriptor(itemDescriptor);
-          console.log("item descriptor : ", desc);
 
           if (descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false) {
             BDA_REPOSITORY.getDescriptorAndDefaultValues(itemDescriptor, $xmlDef, descriptorAndDefaultValues);
