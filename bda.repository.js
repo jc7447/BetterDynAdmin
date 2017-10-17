@@ -133,7 +133,8 @@
     hasResults: false,
     templates: {
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
-      queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>'
+      queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
+      resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>'
     },
     cmAutocomplete: {
       tags: {
@@ -1076,12 +1077,7 @@
       return desc;
     },
 
-
-    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
-      console.time('renderTab_new');
-      if (_.isEmpty(repositoryPath)) {
-        repositoryPath = getCurrentComponentPath();
-      }
+    getRepository: function(repositoryPath) {
       let repository = BDA_REPOSITORY.repositories[repositoryPath];
       if (_.isNil(repository)) {
         repository = new Repository({
@@ -1090,6 +1086,16 @@
         })
         BDA_REPOSITORY.repositories[repositoryPath] = repository;
       }
+      retun repository;
+    },
+
+
+    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
+      console.time('renderTab_new');
+      if (_.isEmpty(repositoryPath)) {
+        repositoryPath = getCurrentComponentPath();
+      }
+      let repository = BDA_REPOSITORY.getRepository(repositoryPath);
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
@@ -1114,7 +1120,7 @@
           let val = new PropertyValue(currentProperty, propertyDescriptor);
           repositoryItem.values[propertyName] = val;
         })
-        console.log('repoItem', repositoryItem);
+        logTrace('repoItem', repositoryItem);
       });
 
 
@@ -1125,6 +1131,17 @@
         .text()
         .trim();
       console.timeEnd('renderTab_new');
+    },
+
+    formatTabResult: function(repository, repositoryItems) {
+      let nbItemDescriptors = _(repositoryItems)
+        .groupBy((repoItem) => repoItem.itemDescriptor ? repoItem.itemDescriptor.name : null)
+        .map((items, name) => ({
+          name,
+          count: items.length
+        }))
+        .value();
+      let res = $(BDA_REPOSITORY.templates.resultHeader.format(repositoryItems.length, nbItemDescriptors))
     },
 
 
