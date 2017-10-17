@@ -82,6 +82,10 @@
     _.merge(this, data);
 
   }
+  RepositoryItem.prototype.hasValueFor = function(propertyName) {
+    return !_.isNil(this.values[propertyName]) && !_.isEmpty(this.values[propertyName].value)
+  }
+
   var PropertyValue = function(xmlValue, descriptor) {
     this.descriptor = descriptor;
     this.xmlValue = xmlValue;
@@ -96,6 +100,7 @@
       this.exportable = this.xmlValue.attr('exportable');
     }
   }
+
 
 
   "use strict";
@@ -134,7 +139,12 @@
     templates: {
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
-      resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>'
+      resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
+      resultTable: '<table class="dataTable" data-descriptor="{0}"><tbody></tbody></table>',
+      idCell: '<td id="id_{0}">{0}</td>',
+      descriptorCell: '<td>{0}</td>',
+      propertyCell: '<td data-property="{1}" data-item-id="{2}">{0}</td>'
+
     },
     cmAutocomplete: {
       tags: {
@@ -201,6 +211,8 @@
     setupRepositoryPage: function() {
       // Move RQL editor to the top of the page
 
+      console.time('preparePage');
+
       $(BDA_REPOSITORY.descriptorTableSelector).attr("id", "descriptorTable");
 
       $("<div id='RQLEditor'></div>").insertBefore("h2:first");
@@ -240,12 +252,23 @@
       checkboxSplit += "/> don't split.";
 
       $("#tabs").after("<div id='RQLSave'>" + "<div style='display:inline-block;width:200px'><button id='clearQuery' type='button'>Clear <i class='fa fa-ban fa-x'></i></button></div>" + "<div style='display:inline-block;width:530px'>Split tab every :  <input type='text' value='" + itemByTab + "' id='splitValue'> items. " + checkboxSplit + "</div>" + "<button type='submit' id='RQLSubmit'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>" + "<div><input placeholder='Name this query' type='text' id='queryLabel'>&nbsp;<button type='button' id='saveQuery'>Save <i class='fa fa-save fa-x'></i></button></div>");
+      console.timeEnd('preparePage');
 
-
+      console.time('showQueryList');
       BDA_REPOSITORY.showQueryList();
+      console.timeEnd('showQueryList');
+
+      console.time('setupItemTreeForm');
       BDA_REPOSITORY.setupItemTreeForm();
+      console.timeEnd('setupItemTreeForm');
+
+      console.time('setupItemDescriptorTable');
       BDA_REPOSITORY.setupItemDescriptorTable();
+      console.timeEnd('setupItemDescriptorTable');
+
+      console.time('setupPropertiesTables');
       BDA_REPOSITORY.setupPropertiesTables();
+      console.timeEnd('setupPropertiesTables');
 
       var defaultDescriptor = BDA_REPOSITORY.defaultDescriptor[getComponentNameFromPath(getCurrentComponentPath())];
       if (defaultDescriptor !== undefined)
@@ -363,9 +386,14 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
+      console.time('setupEditableTable');
       BDA_REPOSITORY.setupEditableTable();
+      console.timeEnd('setupEditableTable');
+      console.time('initCodeMirror');
       BDA_REPOSITORY.queryEditor = BDA_REPOSITORY.initCodeMirror(true);
+      console.timeEnd('initCodeMirror');
 
+      console.time('initSelect2');
 
       // Init select2 plugin
       $("#RQLAction").select2({
@@ -399,10 +427,13 @@
       $("#itemDescriptor").on("select2-selecting", function(e) {
         BDA_REPOSITORY.showItemPropertyList(e.val);
       });
+      console.timeEnd('initSelect2');
+
 
     },
 
     initCodeMirror: function(autocomplete) {
+
       var editor;
       if (autocomplete) {
 
@@ -1077,7 +1108,7 @@
       return desc;
     },
 
-    getRepository: function(repositoryPath) {
+    getRepository: function($xmlDef, repositoryPath) {
       let repository = BDA_REPOSITORY.repositories[repositoryPath];
       if (_.isNil(repository)) {
         repository = new Repository({
@@ -1086,7 +1117,7 @@
         })
         BDA_REPOSITORY.repositories[repositoryPath] = repository;
       }
-      retun repository;
+      return repository;
     },
 
 
@@ -1095,12 +1126,86 @@
       if (_.isEmpty(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
-      let repository = BDA_REPOSITORY.getRepository(repositoryPath);
+      let repository = BDA_REPOSITORY.getRepository($xmlDef, repositoryPath);
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
 
-      $addItems.each(function() {
+      let items = BDA_REPOSITORY.parseXmlAsObjects($addItems, repository);
+      console.log('items', items);
+
+      BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
+
+      //do it at the end
+      let log = $xml.children()
+        .remove()
+        .end()
+        .text()
+        .trim();
+      console.timeEnd('renderTab_new');
+    },
+
+    formatTabResult: function(repository, repositoryItems, result) {
+      try {
+        let itemsByType = _.groupBy(repositoryItems, repoItem => !_.isNil(repoItem.itemDescriptor) ? repoItem.itemDescriptor.name : null);
+        console.log('itemsByType', itemsByType);
+        let nbItemDescriptors = _.keys(itemsByType).length;
+        let res = $(BDA_REPOSITORY.templates.resultHeader.format(repositoryItems.length, nbItemDescriptors))
+        console.log('res', res.text());
+
+        var chunkSize;
+        var splitObj = BDA_STORAGE.getStoredSplitObj();
+        // activeSplit = don't split - don't ask me why this name...
+        if (_.isNil(splitObj) || !!splitObj.activeSplit) {
+          chunkSize = Number.MAX_SAFE_INTEGER;
+        } else {
+          chunkSize = parseInt(splitObj.splitValue);
+        }
+        if (chunkSize < 1) {
+          chunkSize = 1; // safety
+        }
+
+        // for each property, only display it if it is not empty in one result
+        let renderContext = {}
+        _(itemsByType)
+          .each((items, itemDescName) => {
+            let desc = repository.getItemDescriptor(itemDescName);
+            renderContext[itemDescName] = {};
+            _.each(desc.properties, property => {
+              try {
+                renderContext[itemDescName][property.name] = _.some(items, item => item.hasValueFor(property.name));
+
+              } catch (e) {
+                console.err('error finding render context for: itemDescName,items, property', itemDescName, items, property);
+              }
+            })
+          });
+
+
+        // for each group of item by descriptor, split in chunks of same descriptor and max size 'chunkSize'
+        let chunks = _(itemsByType)
+          .map(group => _.chunk(group, chunkSize)) //split each group
+          .flatMap() //flatten the array of arrays
+          .value();
+
+        //now render each tab
+        _(chunks)
+          .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext))
+          .each(table => {
+            if (!_.isNil(table)) {
+              table.appendTo(result)
+            }
+          });
+
+        console.log('chunks', chunks);
+      } catch (e) {
+        console.error(e);
+      }
+
+    },
+
+    parseXmlAsObjects: function($addItems, repository) {
+      return $addItems.map(function() {
         var currentItem = $(this);
         var descriptorName = currentItem.attr("item-descriptor");
         var id = currentItem.attr("id");
@@ -1121,30 +1226,60 @@
           repositoryItem.values[propertyName] = val;
         })
         logTrace('repoItem', repositoryItem);
+        return repositoryItem;
       });
-
-
-      //do it at the end
-      let log = $xml.children()
-        .remove()
-        .end()
-        .text()
-        .trim();
-      console.timeEnd('renderTab_new');
     },
 
-    formatTabResult: function(repository, repositoryItems) {
-      let nbItemDescriptors = _(repositoryItems)
-        .groupBy((repoItem) => repoItem.itemDescriptor ? repoItem.itemDescriptor.name : null)
-        .map((items, name) => ({
-          name,
-          count: items.length
-        }))
-        .value();
-      let res = $(BDA_REPOSITORY.templates.resultHeader.format(repositoryItems.length, nbItemDescriptors))
+    buildResultTable: function(items, renderContext) {
+      let res;
+      if (!_.isNil(items) && items.length > 0) {
+        let itemDescriptor = items[0].itemDescriptor;
+        let itemDescriptorName = itemDescriptor ? itemDescriptor.name : '';
+        let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
+
+        let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id)).join('');
+        let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(table);
+
+        let descLineElems = _(items).map(() => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName)).join('');
+        let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(table);
+
+        //for each property, get 
+        let index = 0;
+        _.each(itemDescriptor.properties, (property, key) => {
+          let doDisplay;
+          try {
+            doDisplay = !!renderContext[itemDescriptor.name][property.name];
+          } catch (e) {
+            doDisplay = false;
+          }
+          if (doDisplay) {
+            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property));
+            let line = $('<tr class="{0}"></tr>'.format(getEvenOddClass(index)));
+            $('<th>{0}</th>'.format(property.name)).appendTo(line);
+            _.each(cells, cell => cell.appendTo(line));
+            line.appendTo(table);
+            index++;
+          }
+        })
+
+        res = table;
+      }
+      return res;
     },
 
+    buildPropertyValueCell: function(item, property) {
+      let val;
+      try {
 
+        val = item.values[property.name].value;
+      } catch (e) {
+        val = '';
+      }
+
+      let res = BDA_REPOSITORY.templates.propertyCell.format(val, item.id, property.name);
+
+      return $(res);
+    },
 
     oldShowXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
 
