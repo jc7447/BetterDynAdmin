@@ -1277,9 +1277,32 @@
             doDisplay = false;
           }
           if (doDisplay) {
-            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property));
             let line = $('<tr class="{0}"></tr>'.format(getEvenOddClass(index)));
-            $('<th>{0}</th>'.format(property.name)).appendTo(line);
+
+
+
+            //build property name cell
+            // the following flags have been set on the repoItem level :
+
+            let propertyNameCell = $('<th>{0}<span class="prop_name"></span></th>'.format(property.name)).appendTo(line);
+
+            let sampleItem = _.find(items, item => !_.isNil(item.values[property.name]));
+
+            if (!_.isNil(sampleItem)) {
+              let sampleProperty = sampleItem.values[property.name];
+              if (!!sampleProperty.derived) {
+                propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
+              }
+              if (!!sampleProperty.rdonly) {
+                propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
+              }
+              if (!!sampleProperty.exportable) {
+                propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
+              }
+            }
+
+            // add all cells
+            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property));
             _.each(cells, cell => cell.appendTo(line));
             line.appendTo(table);
             index++;
@@ -1294,7 +1317,6 @@
     buildPropertyValueCell: function(item, property) {
       let val;
       try {
-
         val = item.values[property.name].value;
       } catch (e) {
         val = '';
@@ -1308,7 +1330,7 @@
     oldShowXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
 
 
-      console.time("renderTab");
+      console.time("oldShowXMLAsTab");
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
       var $xml = $(xmlDoc);
       var $addItems = $xml.find("add-item");
@@ -1441,7 +1463,7 @@
       if (isItemTree)
         BDA_REPOSITORY.createSpeedbar();
 
-      console.timeEnd("renderTab");
+      console.timeEnd("oldShowXMLAsTab");
       return log;
     },
 
