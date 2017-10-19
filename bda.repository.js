@@ -81,15 +81,30 @@
     this.values = {};
     _.merge(this, data);
 
+    // init default values
+    if (!_.isNil(this.itemDescriptor)) {
+      _(this.itemDescriptor.properties)
+        .filter(propDesc => !_.isEmpty(propDesc.defaultValue))
+        .each(propDesc => {
+          this.values[propDesc.name] = new PropertyValue(propDesc);
+        });
+    }
+
   }
   RepositoryItem.prototype.hasValueFor = function(propertyName) {
     return !_.isNil(this.values[propertyName]) && !_.isEmpty(this.values[propertyName].value)
   }
 
-  var PropertyValue = function(xmlValue, descriptor) {
+  var PropertyValue = function(descriptor, xmlValue) {
     this.descriptor = descriptor;
     this.xmlValue = xmlValue;
-    this.value = xmlValue.text();
+    if (!_.isNil(xmlValue)) {
+      this.setValueFromXml(xmlValue)
+    } else if (!_.isNil(descriptor)) {
+      this.value = descriptor.defaultValue;
+      this.isDefault = true;
+    }
+    this.isDefault;
     // if (_.isNil(this.value) && !_.isNil(this.descriptor) && !_.isNil(this.descriptor.defaultValue)) {
     //   this.value = this.descriptor.defaultValue;
     // }
@@ -99,6 +114,10 @@
       this.derived = this.xmlValue.attr('derived');
       this.exportable = this.xmlValue.attr('exportable');
     }
+  }
+  PropertyValue.prototype.setValueFromXml = function(xmlValue) {
+    this.value = xmlValue.text();
+    this.isDefault = false;
   }
 
 
@@ -1222,8 +1241,13 @@
           if (!_.isNil(itemDescriptor)) {
             propertyDescriptor = itemDescriptor.properties[propertyName];
           }
-          let val = new PropertyValue(currentProperty, propertyDescriptor);
-          repositoryItem.values[propertyName] = val;
+          let val = repositoryItem.values[propertyName];
+          if (_.isNil(val)) {
+            val = new PropertyValue(propertyDescriptor, currentProperty);
+            repositoryItem.values[propertyName] = val;
+          } else {
+            val.setValueFromXml(currentProperty);
+          }
         })
         logTrace('repoItem', repositoryItem);
         return repositoryItem;
