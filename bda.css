@@ -800,6 +800,14 @@ table.tablesorter tr.alt-row:hover td {
   cursor: pointer;
 }
 
+.show-short .long {
+    display: none;
+}
+
+
+.show-long .short {
+    display: none;
+}
 /* DASH */
 .modal-dialog.modal-lg {
   width: 60%;

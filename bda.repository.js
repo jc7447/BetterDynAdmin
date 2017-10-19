@@ -162,7 +162,8 @@
       resultTable: '<table class="dataTable" data-descriptor="{0}"><tbody></tbody></table>',
       idCell: '<td id="id_{0}">{0}</td>',
       descriptorCell: '<td>{0}</td>',
-      propertyCell: '<td data-property="{1}" data-item-id="{2}">{0}</td>'
+      propertyCell: '<td data-property="{1}" data-item-id="{2}">{0}</td>',
+      longPropertyCell: '<td class="property show-short" data-property="{2}" data-item-id="{3}"><span class="long">{0}</span><span class="short">{1}</span></td>',
 
     },
     cmAutocomplete: {
@@ -1321,8 +1322,14 @@
       } catch (e) {
         val = '';
       }
+      let res;
+      if (val.length <= 20) {
+        res = BDA_REPOSITORY.templates.propertyCell.format(val, item.id, property.name);
+      } else {
+        let short = val.substr(0, 20) + '...';
+        res = BDA_REPOSITORY.templates.longPropertyCell.format(val, short, item.id, property.name);
+      }
 
-      let res = BDA_REPOSITORY.templates.propertyCell.format(val, item.id, property.name);
 
       return $(res);
     },
