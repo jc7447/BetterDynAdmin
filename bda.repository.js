@@ -119,10 +119,7 @@
     this.value = xmlValue.text();
     this.isDefault = false;
   }
-
-
-
-  "use strict";
+  "use scrict";
   var BDA_REPOSITORY = {
 
     repositories: {},
@@ -853,7 +850,6 @@
         query = BDA_REPOSITORY.getLast10ItemQuery();
       return query;
     },
-
     submitRQLQuery: function(addText) {
       if (addText) {
         var query = BDA_REPOSITORY.getRQLQuery();
@@ -1128,7 +1124,24 @@
       return desc;
     },
 
+    getRepositoryAsync: function(path, callback) {
+      console.log('getRepositoryAsync', path);
+      let repository = BDA_REPOSITORY.repositories[path];
+      if (_.isNil(repository)) {
+        processRepositoryXmlDef("definitionFiles",
+          ($xmlDef) => {
+
+            repository = BDA_REPOSITORY.getRepository($xmlDef, path);
+            callback(repository);
+          }, path)
+
+      } else {
+        callback(repository)
+      }
+    },
+
     getRepository: function($xmlDef, repositoryPath) {
+      console.log('getRepository', repositoryPath);
       let repository = BDA_REPOSITORY.repositories[repositoryPath];
       if (_.isNil(repository)) {
         repository = new Repository({
@@ -1147,22 +1160,78 @@
         repositoryPath = getCurrentComponentPath();
       }
       let repository = BDA_REPOSITORY.getRepository($xmlDef, repositoryPath);
-      var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
-      var $xml = $(xmlDoc);
-      var $addItems = $xml.find("add-item");
+      let parsedResult = BDA_REPOSITORY.parseXmlResult(xmlContent, repository);
 
-      let items = BDA_REPOSITORY.parseXmlAsObjects($addItems, repository);
+      let items = parsedResult.items;
+      let logs = parsedResult.logs;
       console.log('items', items);
+
+      BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv);
+
+      console.log('logs', logs);
+      console.timeEnd('renderTab_new');
+      return logs;
+    },
+
+    renderResultSection: function(items, repository, $outputDiv) {
+      // now render the result section
+      $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
+      // show all button
+
+      let showAllButton = $('<button>Show all</button>').on('click', function() {
+        $('.property')
+          .toggleClass('show-short')
+          .toggleClass('show-long');
+      })
+      $outputDiv.append($('<p></p>').append(showAllButton));
 
       BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
 
-      //do it at the end
-      let log = $xml.children()
+    },
+
+    parseXhrResult: function(xhrResult, repositoryPath, callback) {
+
+      BDA_REPOSITORY.getRepositoryAsync(repositoryPath, (repository) => {
+        try {
+
+          console.log('parseXhrResult', repositoryPath, xhrResult);
+          var xmlContent = $('<div>' + xhrResult + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
+          xmlContent = sanitizeXml(xmlContent);
+          let result = BDA_REPOSITORY.parseXmlResult(xmlContent, repository);
+          result.repository = repository;
+          console.log('parseXhrResult result:', result);
+          callback(result);
+        } catch (e) {
+          console.error(e);
+        }
+      })
+
+    },
+
+    parseXmlResult: function(xmlContent, repository) {
+      try {
+
+        var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
+        var $xml = $(xmlDoc);
+        var $addItems = $xml.find("add-item");
+        let items = BDA_REPOSITORY.parseXmlAsObjects($addItems, repository);
+        let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
+        return {
+          items: items,
+          logs: logs
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    getExecutionLogs: function(xmlContent) {
+      var log = $("<xml>" + xmlContent + "</xml>")
+        .children()
         .remove()
         .end()
         .text()
         .trim();
-      console.timeEnd('renderTab_new');
+      return log;
     },
 
     formatTabResult: function(repository, repositoryItems, result) {
@@ -1208,6 +1277,7 @@
           .flatMap() //flatten the array of arrays
           .value();
 
+
         //now render each tab
         _(chunks)
           .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext))
@@ -1217,7 +1287,6 @@
             }
           });
 
-        console.log('chunks', chunks);
       } catch (e) {
         console.error(e);
       }
@@ -1279,8 +1348,6 @@
           }
           if (doDisplay) {
             let line = $('<tr class="{0}"></tr>'.format(getEvenOddClass(index)));
-
-
 
             //build property name cell
             // the following flags have been set on the repoItem level :
@@ -2244,17 +2311,7 @@
             }
 
             if (_.isEmpty(errors)) {
-
-
-              // remove first 2 lines
-              var tab = rawItemsXml.split("\n");
-              var head = tab.splice(0, 2);
-              rawItemsXml = tab.join("\n").trim();
-              // unescape HTML
-              rawItemsXml = "<xml>" + rawItemsXml.replace(/&lt;/g, "<").replace(/&gt;/g, ">") + "</xml>";
-              rawItemsXml = sanitizeXml(rawItemsXml);
-              var xmlDoc = jQuery.parseXML(rawItemsXml);
-              callback($(xmlDoc), head);
+              callback(result);
             } else {
               errCallback(null, 'Execution Error', errors);
             }

@@ -1022,6 +1022,10 @@ kbd {
   border: 1px solid transparent;
 }
 
+.dash_return_line{
+  margin-top: 0.5em;
+}
+
 /** CACHE STATS **/
 table.cache {
   border-spacing: 0;

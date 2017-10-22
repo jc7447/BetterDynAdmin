@@ -403,30 +403,8 @@ jQuery(document).ready(function() {
               params.itemDesc,
               params.id,
               params.repo,
-              function($xmlDoc, head) {
-                try {
-                  var res = "";
-                  var items = []
-                  if (!isNull($xmlDoc)) {
-                    var $itemXml;
-                    $xmlDoc.find('add-item').each(function() {
-                      $itemXml = $(this);
-                      // items.push(convertAddItemToPlainObject($itemXml));
-                      items.push($itemXml.outerHTML());
-                    })
-                    callback({
-                      items: items,
-                      head: head
-                    });
-                  } else {
-                    throw {
-                      name: "Not Found",
-                      message: "No value"
-                    }
-                  }
-                } catch (e) {
-                  errCallback(e);
-                }
+              function(result) {
+                $().getBdaRepository().parseXhrResult(result, params.repo, callback);
               },
               function(jqXHR, textStatus, errorThrown) {
                 errCallback({
@@ -436,7 +414,7 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(params.repo, retval, cb)
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(retval, cb)
         },
 
         //print @OR order p92133231
@@ -463,29 +441,8 @@ jQuery(document).ready(function() {
               params.itemDesc,
               params.query,
               params.repo,
-              function($xmlDoc, head) {
-                try {
-                  var res = "";
-                  var items = []
-                  if (!isNull($xmlDoc)) {
-                    var $itemXml;
-                    $xmlDoc.find('add-item').each(function() {
-                      $itemXml = $(this);
-                      items.push($itemXml.outerHTML());
-                    })
-                    callback({
-                      items: items,
-                      head: head
-                    });
-                  } else {
-                    throw {
-                      name: "Not Found",
-                      message: "No value"
-                    }
-                  }
-                } catch (e) {
-                  errCallback(e);
-                }
+              function(result) {
+                $().getBdaRepository().parseXhrResult(result, params.repo, callback);
               },
               function(jqXHR, textStatus, errorThrown) {
                 errCallback({
@@ -495,7 +452,7 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(params.repo, retval, cb)
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(retval, cb)
         },
 
 
@@ -568,28 +525,8 @@ jQuery(document).ready(function() {
               BDA_DASH.settings.domain,
               xmlText,
               repo,
-              function($xmlDoc, head) {
-                try {
-                  if (!isNull($xmlDoc)) {
-                    var $itemXml;
-                    var items = [];
-                    $xmlDoc.find('add-item').each(function() {
-                      $itemXml = $(this);
-                      items.push($itemXml.outerHTML());
-                    })
-                    callback({
-                      items: items,
-                      head: head
-                    });
-                  } else {
-                    throw {
-                      name: "Not Found",
-                      message: "No value"
-                    }
-                  }
-                } catch (e) {
-                  errCallback(e);
-                }
+              function(result) {
+                $().getBdaRepository().parseXhrResult(result, params.repo, callback);
               },
               function(jqXHR, textStatus, errorThrown) {
                 errCallback({
@@ -600,15 +537,8 @@ jQuery(document).ready(function() {
             );
 
           },
-          responseToString: (params, retval, cb) => {
-            let repo;
-            if (_.isNil(params.componentProperty)) {
-              repo = params.repo
-            } else {
-              repo = params.componentProperty.path;
-            }
-            BDA_DASH.displayRqlResult(repo, retval, cb);
-          }
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(retval, cb)
+
 
         },
 
@@ -1752,7 +1682,7 @@ jQuery(document).ready(function() {
       handleOutput: function(cmd, params, result, textResult, level, jqueryResult) {
 
         //save the result
-        logTrace('handleOutput ' + textResult);
+        logTrace('handleOutput ' + textResult, jqueryResult);
         logTrace(params);
         if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
           BDA_DASH.saveOutput(result, params.output);
@@ -2288,30 +2218,11 @@ jQuery(document).ready(function() {
         }
       },
 
-      displayRqlResult: function(repo, retval, cb) {
-        processRepositoryXmlDef(
-          "definitionFiles",
-          ($xmlDef) => {
-            console.log('xmlDef: ', $xmlDef);
-            var $res = $('<div></div>');
 
-
-            BDA_REPOSITORY.showXMLAsTab(retval.items.join(''), $xmlDef, $res, false,
-              function() {
-                var $elm = $(this);
-                console.log('click on loadable', $elm);
-                var id = $elm.attr("data-id");
-                var itemDesc = $elm.attr("data-descriptor");
-                var query = "print {0} {1} {2}".format(repo, itemDesc, id);
-                console.log('query %s', query);
-                BDA_DASH.handleInput(query);
-              });
-            //  $res.prepend($('<div></div>').text(retval.head));
-            // res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-            cb('', $res);
-          },
-          repo
-        );
+      displayRqlResult: function(result, cb) {
+        var $res = $('<div></div>');
+        $().getBdaRepository().renderResultSection(result.items, result.repository, $res);
+        cb(result.logs, $res);
       },
 
       updateProgress: function() {
