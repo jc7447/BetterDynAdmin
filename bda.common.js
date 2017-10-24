@@ -436,6 +436,11 @@ try {
     this.css('height', value + 'px');
     return this;
   };
+  $.fn.scrollTo = function() {
+    $('html, body').animate({
+      scrollTop: $(this).offset().top
+    }, 300);
+  }
 
   $.fn.toCSV = function() {
     var data = [];

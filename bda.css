@@ -808,6 +808,12 @@ table.tablesorter tr.alt-row:hover td {
 .show-long .short {
     display: none;
 }
+
+td.property .actions{
+  float:right;
+  margin-left: 5px;
+}
+
 /* DASH */
 .modal-dialog.modal-lg {
   width: 60%;

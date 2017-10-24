@@ -64,21 +64,31 @@
     _.merge(this, data);
 
   }
-  var PropertyDescriptor = function(data) {
-    this.name;
-    this.type;
-    this.multi;
-    this.subType;
-    this.superType;
-    this.defaultValue;
-    _.merge(this, data);
+  var PropertyDescriptor = function($xmlDefinition) {
+    this.xmlDefinition = $xmlDefinition;
+    if (this.xmlDefinition) {
+      this.name = this.xmlDefinition.attr('name');
+      this.type = this.xmlDefinition.attr('type');
+      this.itemType = this.xmlDefinition.attr('item-type');
+      this.otherRepositoryPath = this.xmlDefinition.attr('repository');
+      this.componentItemType = this.xmlDefinition.attr('component-item-type');
+
+      if (!!this.itemType || !!this.componentItemType) {
+        this.isItem = true;
+        this.isItemOfSameRepository = _.isNil(this.otherRepositoryPath);
+        this.isMulti = !!this.componentItemType;
+        if (!!this.componentItemType) {
+          this.itemType = this.componentItemType; //simplify by using one property
+        }
+      }
+    }
   }
 
   var RepositoryItem = function(data) {
     this.itemDescriptor;
     this.id;
     this.repository;
-    this.values = {};
+    this.values = {}; // PropertyValue
     _.merge(this, data);
 
     // init default values
@@ -159,8 +169,11 @@
       resultTable: '<table class="dataTable" data-descriptor="{0}"><tbody></tbody></table>',
       idCell: '<td id="id_{0}">{0}</td>',
       descriptorCell: '<td>{0}</td>',
-      propertyCell: '<td data-property="{1}" data-item-id="{2}">{0}</td>',
-      longPropertyCell: '<td class="property show-short" data-property="{2}" data-item-id="{3}"><span class="long">{0}</span><span class="short">{1}</span></td>',
+      propertyCell: '<td data-property="{1}" data-item-id="{2}"><div class="propertyValue">{0}</div></td>',
+      longPropertyCell: '<td class="property show-short" data-property="{2}" data-item-id="{3}">' +
+        '<span class="long propertyValue">{0}</span><span class="short">{1}</span>' +
+        '<span class="actions"><i class="fa fa-compress collapse long" aria-hidden="true"></i><i class="fa fa-expand expand short" aria-hidden="true"></i></span>' +
+        '</td>',
 
     },
     cmAutocomplete: {
@@ -1094,7 +1107,6 @@
         propertyDescriptors = parent.properties;
       }
 
-
       // then add current properties
       var $properties = $itemDefinition.find('property');
 
@@ -1102,10 +1114,7 @@
       $properties.each(function() {
         let $prop = $(this);
         let name = $prop.attr('name');
-        let propDesc = new PropertyDescriptor({
-          name: name,
-          xmlDefinition: $prop
-        });
+        let propDesc = new PropertyDescriptor($prop);
         let defaultValue = $prop.attr('default');
         if (!_.isNil(defaultValue)) {
           propDesc.defaultValue = defaultValue;
@@ -1176,14 +1185,29 @@
     renderResultSection: function(items, repository, $outputDiv) {
       // now render the result section
       $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
-      // show all button
 
-      let showAllButton = $('<button>Show all</button>').on('click', function() {
+      // show all button
+      let showAll = $('<button>Show All <i class="fa fa-expand" aria-hidden="true"></i></button>');
+      let hideAll = $('<button>Collapse All <i class="fa fa-compress" aria-hidden="true"></i></button>');
+
+      showAll.on('click', function() {
         $('.property')
-          .toggleClass('show-short')
-          .toggleClass('show-long');
+          .removeClass('show-short')
+          .addClass('show-long');
+        $(this).hide();
+        hideAll.show();
       })
-      $outputDiv.append($('<p></p>').append(showAllButton));
+
+      hideAll.on('click', function() {
+        $('.property')
+          .addClass('show-short')
+          .removeClass('show-long');
+        $(this).hide();
+        showAll.show();
+      }).hide();
+
+
+      $outputDiv.append($('<p></p>').append(showAll).append(hideAll));
 
       BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
 
@@ -1244,7 +1268,7 @@
 
         var chunkSize;
         var splitObj = BDA_STORAGE.getStoredSplitObj();
-        // activeSplit = don't split - don't ask me why this name...
+        // activeSplit == don't split - don't ask me why this name...
         if (_.isNil(splitObj) || !!splitObj.activeSplit) {
           chunkSize = Number.MAX_SAFE_INTEGER;
         } else {
@@ -1254,7 +1278,7 @@
           chunkSize = 1; // safety
         }
 
-        // for each property, only display it if it is not empty in one result
+        // for each property, only display it if it'si not empty in one result
         let renderContext = {}
         _(itemsByType)
           .each((items, itemDescName) => {
@@ -1279,13 +1303,16 @@
 
 
         //now render each tab
-        _(chunks)
+        let firstResult = _(chunks)
           .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext))
-          .each(table => {
-            if (!_.isNil(table)) {
-              table.appendTo(result)
-            }
-          });
+          .filter(table => !_.isNil(table))
+          .map(table => {
+            table.appendTo(result)
+            return table;
+          })
+          .head().value();
+
+        return firstResult;
 
       } catch (e) {
         console.error(e);
@@ -1389,16 +1416,75 @@
       } catch (e) {
         val = '';
       }
+
       let res;
       if (val.length <= 20) {
-        res = BDA_REPOSITORY.templates.propertyCell.format(val, item.id, property.name);
+        res = $(BDA_REPOSITORY.templates.propertyCell.format('', item.id, property.name));
       } else {
-        let short = val.substr(0, 20) + '...';
-        res = BDA_REPOSITORY.templates.longPropertyCell.format(val, short, item.id, property.name);
+        let short = val.substr(0, 20) + ' ...';
+        res = $(BDA_REPOSITORY.templates.longPropertyCell.format('', short, item.id, property.name));
+
+      }
+
+      //enable local collapse/expand
+      res.find('.actions')
+        .on('click', '.collapse', function() {
+          $(this).parent().parent().addClass('show-short').removeClass('show-long');
+        })
+        .on('click', '.expand', function() {
+          $(this).parent().parent().removeClass('show-short').addClass('show-long');
+        })
+
+      let longCell = res.find('.propertyValue');
+      if (property.isItem && property.isItemOfSameRepository) {
+        let ids = val.split(',');
+        _(ids)
+          .map(_.trim)
+          .map(id => {
+            return $('<span class="clickable_property loadable_property">{0}</span>'.format(id)).on('click', function() {
+              BDA_REPOSITORY.loadSubItem(id, property.itemType);
+            })
+          })
+          .each((elem, idx) => {
+            longCell.append(elem)
+            if (idx < ids.length - 1) {
+              longCell.append(', ');
+            }
+          });
+      } else {
+        longCell.append(val);
+      }
+      return res;
+    },
+
+    // load sub item with an ajax call
+    loadSubItem: function(id, itemDescriptorName, repositoryPath) {
+      if (_.isNil(repositoryPath)) {
+        repositoryPath = getCurrentComponentPath();
       }
 
 
-      return $(res);
+      // : function(domain, itemDescriptor, id, repository, callback, errCallback) {
+      BDA_REPOSITORY.executePrintItem('', itemDescriptorName, id, repositoryPath,
+        function(result) {
+          BDA_REPOSITORY.parseXhrResult(result, repositoryPath, (parsed) => {
+            let $outputDiv = $('#RQLResults');
+            let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, $outputDiv);
+            console.log('top', top);
+            if (top) {
+              top.scrollTo();
+            }
+          });
+        },
+        function(jqXHR, textStatus, errorThrown) {
+          $.notify(
+            "Error during call: " + errorThrown + ".", {
+              className: "warn",
+              position: "top center"
+            }
+          );
+        }
+      )
     },
 
     oldShowXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
