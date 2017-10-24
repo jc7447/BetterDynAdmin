@@ -171,11 +171,17 @@
       resultTable: '<table class="dataTable" data-descriptor="{0}"><tbody></tbody></table>',
       idCell: '<td id="id_{0}">{0}</td>',
       descriptorCell: '<td>{0}</td>',
-      propertyCell: '<td data-property="{1}" data-item-id="{2}"><div class="propertyValue">{0}</div></td>',
-      longPropertyCell: '<td class="property show-short" data-property="{2}" data-item-id="{3}">' +
-        '<span class="long propertyValue">{0}</span><span class="short">{1}</span>' +
-        '<span class="actions"><i class="fa fa-compress collapse long" aria-hidden="true"></i><i class="fa fa-expand expand short" aria-hidden="true"></i></span>' +
+      propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short">' +
+        '{0}' +
+        '<span class="actions">' +
+        '<i class="fa fa-compress collapse" aria-hidden="true"></i>' +
+        '<i class="fa fa-expand expand" aria-hidden="true"></i>' +
+        '<i class="fa fa-spinner fa-spin passive-loading-icon" aria-hidden="true"></i>' +
+        '</span>' +
         '</td>',
+      shortPropertyCell: '<div class="propertyValue"></div>',
+      longPropertyCell: '<span class="long propertyValue"></span><span class="short">{0}</span>',
+
 
     },
     cmAutocomplete: {
@@ -1422,13 +1428,19 @@
         val = '';
       }
 
-      let res;
+      let innerVal;
+      let long = false;
       if (val.length <= BDA_REPOSITORY.CELL_MAX_LENGTH) {
-        res = $(BDA_REPOSITORY.templates.propertyCell.format('', item.id, property.name));
+        innerVal = BDA_REPOSITORY.templates.shortPropertyCell;
       } else {
+        long = true;
         let short = val.substr(0, BDA_REPOSITORY.CELL_MAX_LENGTH) + ' ...';
-        res = $(BDA_REPOSITORY.templates.longPropertyCell.format('', short, item.id, property.name));
+        innerVal = BDA_REPOSITORY.templates.longPropertyCell.format(short);
+      }
 
+      res = $(BDA_REPOSITORY.templates.propertyCell.format(innerVal, item.id, property.name));
+      if (long) {
+        res.addClass('toggable');
       }
 
       //enable local collapse/expand
@@ -1470,7 +1482,12 @@
         _(ids)
           .map(elem => {
             let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
-              BDA_REPOSITORY.loadSubItem(elem.id, property.itemType);
+              let $property = $(this).parent().parent();
+              $property.addClass('loading');
+              let endLoadingFc = () => {
+                $property.removeClass('loading');
+              };
+              BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, null, endLoadingFc, endLoadingFc);
             });
             return {
               key: elem.key,
@@ -1494,7 +1511,8 @@
     },
 
     // load sub item with an ajax call
-    loadSubItem: function(id, itemDescriptorName, repositoryPath) {
+    loadSubItem: function(id, itemDescriptorName, repositoryPath, cb, cbErr) {
+      console.log('loadSubItem', id, itemDescriptor, repositoryPath)
       if (_.isNil(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
@@ -1510,15 +1528,21 @@
             if (top) {
               top.scrollTo();
             }
+            if (cb) {
+              cb();
+            }
           });
         },
         function(jqXHR, textStatus, errorThrown) {
           $.notify(
             "Error during call: " + errorThrown + ".", {
-              className: "warn",
+              className: "error",
               position: "top center"
             }
           );
+          if (cbErr) {
+            cbErr();
+          }
         }
       )
     },

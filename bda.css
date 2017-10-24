@@ -804,14 +804,37 @@ table.tablesorter tr.alt-row:hover td {
     display: none;
 }
 
-
 .show-long .short {
     display: none;
 }
 
+.expand, .collapse{
+  display: none;
+}
+
+.toggable.show-short .expand {
+    display: block;
+}
+
+.toggable.show-long .collapse {
+    display: block;
+}
+
 td.property .actions{
   float:right;
-  margin-left: 5px;
+  margin-left: 3px;
+}
+
+.actions i{
+  float:right;
+  margin-left: 2px;
+}
+
+td.property .actions .passive-loading-icon{
+  display: none;
+}
+td.property.loading .actions .passive-loading-icon{
+  display: block;
 }
 
 /* DASH */
