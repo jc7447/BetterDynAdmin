@@ -134,6 +134,8 @@
 
     repositories: {},
 
+    CELL_MAX_LENGTH: 23,
+
     MAP_SEPARATOR: "=",
     LIST_SEPARATOR: ",",
     descriptorTableSelector: "table:eq(0)",
@@ -1123,6 +1125,7 @@
       });
 
       propertyDescriptors = _.merge(propertyDescriptors, selfPropertyDescriptors);
+      propertyDescriptors = _.sortKeysBy(propertyDescriptors);
 
       let desc = new ItemDescriptor({
         name: itemDescriptorName,
@@ -1303,7 +1306,7 @@
 
 
         //now render each tab
-        let firstResult = _(chunks)
+        let firstResult = _.chain(chunks)
           .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext))
           .filter(table => !_.isNil(table))
           .map(table => {
@@ -1366,14 +1369,16 @@
 
         //for each property, get 
         let index = 0;
-        _.each(itemDescriptor.properties, (property, key) => {
-          let doDisplay;
-          try {
-            doDisplay = !!renderContext[itemDescriptor.name][property.name];
-          } catch (e) {
-            doDisplay = false;
-          }
-          if (doDisplay) {
+        _(itemDescriptor.properties)
+          .filter((property, key) => {
+            try {
+              return !!renderContext[itemDescriptor.name][property.name];
+            } catch (e) {
+              return false;
+            }
+          })
+          .each((property) => {
+
             let line = $('<tr class="{0}"></tr>'.format(getEvenOddClass(index)));
 
             //build property name cell
@@ -1401,8 +1406,8 @@
             _.each(cells, cell => cell.appendTo(line));
             line.appendTo(table);
             index++;
-          }
-        })
+
+          });
 
         res = table;
       }
@@ -1418,10 +1423,10 @@
       }
 
       let res;
-      if (val.length <= 20) {
+      if (val.length <= BDA_REPOSITORY.CELL_MAX_LENGTH) {
         res = $(BDA_REPOSITORY.templates.propertyCell.format('', item.id, property.name));
       } else {
-        let short = val.substr(0, 20) + ' ...';
+        let short = val.substr(0, BDA_REPOSITORY.CELL_MAX_LENGTH) + ' ...';
         res = $(BDA_REPOSITORY.templates.longPropertyCell.format('', short, item.id, property.name));
 
       }
@@ -1435,20 +1440,51 @@
           $(this).parent().parent().removeClass('show-short').addClass('show-long');
         })
 
+      // for id of other items, load sub item on click
       let longCell = res.find('.propertyValue');
+      //for now handle only same repo
       if (property.isItem && property.isItemOfSameRepository) {
-        let ids = val.split(',');
+
+        // handle map types
+        let ids = _(val)
+          .split(',')
+          .map(sPair => _.split(sPair, '='))
+          .map(pairArray => {
+            if (pairArray.length >= 2) {
+              return {
+                id: pairArray[1].trim(),
+                key: pairArray[0].trim()
+              }
+            } else if (pairArray.length == 1) {
+              return {
+                id: pairArray[0].trim()
+              }
+            } else {
+              return null;
+            }
+
+          })
+          .filter(elem => !_.isNil(elem))
+          .value();
+
         _(ids)
-          .map(_.trim)
-          .map(id => {
-            return $('<span class="clickable_property loadable_property">{0}</span>'.format(id)).on('click', function() {
-              BDA_REPOSITORY.loadSubItem(id, property.itemType);
-            })
+          .map(elem => {
+            let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
+              BDA_REPOSITORY.loadSubItem(elem.id, property.itemType);
+            });
+            return {
+              key: elem.key,
+              cell: cell
+            }
+
           })
           .each((elem, idx) => {
-            longCell.append(elem)
+            if (!_.isNil(elem.key)) {
+              longCell.append('{0} = '.format(elem.key));
+            }
+            longCell.append(elem.cell)
             if (idx < ids.length - 1) {
-              longCell.append(', ');
+              longCell.append(' , ');
             }
           });
       } else {

@@ -712,6 +712,21 @@ Johann Burkard
       return this;
     }
 
+
+
+    _.mixin({
+      'sortKeysBy': function(object, comparator) {
+
+        const keys = Object.keys(object)
+        const sortedKeys = _.sortBy(keys, comparator)
+
+        return _.fromPairs(
+          _.map(sortedKeys, key => [key, object[key]])
+        )
+
+      }
+    });
+
   })(jQuery);
 
 
