@@ -2222,7 +2222,7 @@ jQuery(document).ready(function() {
       displayRqlResult: function(result, cb) {
         var $res = $('<div></div>');
         $().getBdaRepository().renderResultSection(result.items, result.repository, $res);
-        cb(result.logs, $res);
+        cb('<pre>{0}</pre>'.format(result.logs), $res);
       },
 
       updateProgress: function() {

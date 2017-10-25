@@ -169,7 +169,7 @@
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
       resultTable: '<table class="dataTable" data-descriptor="{0}"><tbody></tbody></table>',
-      idCell: '<td id="id_{0}">{0}</td>',
+      idCell: '<td data-identifier="id_{0}_{1}">{0}</td>',
       descriptorCell: '<td>{0}</td>',
       propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short">' +
         '{0}' +
@@ -424,9 +424,9 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
-      console.time('setupEditableTable');
-      BDA_REPOSITORY.setupEditableTable();
-      console.timeEnd('setupEditableTable');
+      // console.time('setupEditableTable');
+      // BDA_REPOSITORY.setupEditableTable();
+      // console.timeEnd('setupEditableTable');
       console.time('initCodeMirror');
       BDA_REPOSITORY.queryEditor = BDA_REPOSITORY.initCodeMirror(true);
       console.timeEnd('initCodeMirror');
@@ -1367,7 +1367,7 @@
         let itemDescriptorName = itemDescriptor ? itemDescriptor.name : '';
         let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
 
-        let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id)).join('');
+        let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id, itemDescriptorName)).join('');
         let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(table);
 
         let descLineElems = _(items).map(() => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName)).join('');
@@ -1456,7 +1456,7 @@
       let longCell = res.find('.propertyValue');
       //for now handle only same repo
       if (property.isItem && property.isItemOfSameRepository) {
-
+        let outputDiv = $('#RQLResults');
         // handle map types
         let ids = _(val)
           .split(',')
@@ -1482,12 +1482,23 @@
         _(ids)
           .map(elem => {
             let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
-              let $property = $(this).parent().parent();
-              $property.addClass('loading');
-              let endLoadingFc = () => {
-                $property.removeClass('loading');
-              };
-              BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, null, endLoadingFc, endLoadingFc);
+              try {
+                //find the item if same id
+                let resultTable = $(this).closest('.rqlResultContainer').find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
+                // if the result already exists, just scroll to it
+                if (resultTable.length > 0) {
+                  resultTable.scrollTo();
+                } else {
+                  let $property = $(this).parent().parent();
+                  $property.addClass('loading');
+                  let endLoadingFc = () => {
+                    $property.removeClass('loading');
+                  };
+                  BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, getCurrentComponentPath(), outputDiv, null, null, endLoadingFc);
+                }
+              } catch (e) {
+                console.error(e)
+              }
             });
             return {
               key: elem.key,
@@ -1511,25 +1522,27 @@
     },
 
     // load sub item with an ajax call
-    loadSubItem: function(id, itemDescriptorName, repositoryPath, cb, cbErr) {
+    loadSubItem: function(id, itemDescriptorName, repositoryPath, $outputDiv, cbSuccess, cbErr, cbEnd) {
       console.log('loadSubItem', id, itemDescriptor, repositoryPath)
       if (_.isNil(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
 
-
       // : function(domain, itemDescriptor, id, repository, callback, errCallback) {
       BDA_REPOSITORY.executePrintItem('', itemDescriptorName, id, repositoryPath,
         function(result) {
           BDA_REPOSITORY.parseXhrResult(result, repositoryPath, (parsed) => {
-            let $outputDiv = $('#RQLResults');
+
             let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, $outputDiv);
             console.log('top', top);
             if (top) {
               top.scrollTo();
             }
-            if (cb) {
-              cb();
+            if (cbSuccess) {
+              cbSuccess();
+            }
+            if (cbEnd) {
+              cbEnd();
             }
           });
         },
@@ -1542,6 +1555,9 @@
           );
           if (cbErr) {
             cbErr();
+          }
+          if (cbEnd) {
+            cbEnd();
           }
         }
       )
@@ -1729,7 +1745,7 @@
       // Add 'show raw xml' link
       var html = "<p>" + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>" + "</p>\n";
       html += "<p id='rawXml'></p>";
-      $("#RQLResults").append(html);
+      $("#RQLResults").addClass('rqlResultContainer').append(html);
 
       var xmlContent = $(BDA_REPOSITORY.resultsSelector).next().text().trim();
       xmlContent = sanitizeXml(xmlContent);
