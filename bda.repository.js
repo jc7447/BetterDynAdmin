@@ -1173,7 +1173,7 @@
 
 
     showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
-      console.time('renderTab_new');
+      console.time('showXMLAsTab_new');
       if (_.isEmpty(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
@@ -1182,12 +1182,14 @@
 
       let items = parsedResult.items;
       let logs = parsedResult.logs;
-      console.log('items', items);
 
       BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv);
 
-      console.log('logs', logs);
-      console.timeEnd('renderTab_new');
+      if (isItemTree) {
+        BDA_REPOSITORY.createSpeedbar_new();
+      }
+
+      console.timeEnd('showXMLAsTab_new');
       return logs;
     },
 
@@ -1456,7 +1458,6 @@
       let longCell = res.find('.propertyValue');
       //for now handle only same repo
       if (property.isItem && property.isItemOfSameRepository) {
-        let outputDiv = $('#RQLResults');
         // handle map types
         let ids = _(val)
           .split(',')
@@ -1484,12 +1485,15 @@
             let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
               try {
                 //find the item if same id
-                let resultTable = $(this).closest('.rqlResultContainer').find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
+                let $this = $(this);
+                // load the result in the parent section (repo/itemtree/dashscreen)
+                let outputDiv = $this.closest('.rqlResultContainer');
+                let resultTable = outputDiv.find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
                 // if the result already exists, just scroll to it
                 if (resultTable.length > 0) {
                   resultTable.scrollTo();
                 } else {
-                  let $property = $(this).parent().parent();
+                  let $property = $this.parent().parent();
                   $property.addClass('loading');
                   let endLoadingFc = () => {
                     $property.removeClass('loading');
@@ -1841,7 +1845,7 @@
 
       $itemTree.append("<div id='itemTreeForm'>" + "id : <input type='text' id='itemTreeId' /> &nbsp;" + "descriptor :  <span id='itemTreeDescriptorField' ><select id='itemTreeDesc' class='itemDescriptor' >" + BDA_REPOSITORY.getDescriptorOptions() + "</select></span>" + "max items : <input type='text' id='itemTreeMax' value='50' /> &nbsp;<br><br>" + "output format :  <select id='itemTreeOutput'>" + "<option value='HTMLtab'>HTML tab</option>" + "<option value='addItem'>add-item XML</option>" + "<option value='removeItem'>remove-item XML</option>" + "<option value='printItem'>print-item XML</option>" + "<option value='tree'>Tree (experimental)</option>" + "</select>&nbsp;" + "<input type='checkbox' id='printRepositoryAttr' /><label for='printRepositoryAttr'>Print attribute : </label>" + "<pre style='margin:0; display:inline;'>repository='" + getCurrentComponentPath() + "'</pre> <br><br>" + "<button id='itemTreeBtn'>Enter <i class='fa fa-play fa-x'></i></button>" + "</div>");
       $itemTree.append("<div id='itemTreeInfo' />");
-      $itemTree.append("<div id='itemTreeResult' />");
+      $itemTree.append("<div id='itemTreeResult' class='rqlResultContainer' />");
       $("#itemTreeBtn").click(function() {
         var descriptor = $("#itemTreeDesc").val();
         var id = $("#itemTreeId").val().trim();
@@ -2249,6 +2253,46 @@
         }
       });
       return orphanSons;
+    },
+
+    createSpeedbar_new: function() {
+      console.log('createSpeedbar_new')
+      try {
+
+        let speedbar = $('<div id="speedbar"><div id="widget"><a class="close" href="javascript:void(0)"><i class="fa fa-times"></i></a><p>Quick links :</p><ul></ul></div></div>');
+        speedbar.find('.close').on('click', () => {
+          speedbar.fadeOut(200);
+        })
+
+
+
+        let list = speedbar.find('ul');
+        $("#itemTreeResult .dataTable").each(function(index) {
+          var $tab = $(this);
+          var id = $tab.attr("id");
+          var descriptor = $tab.attr('data-descriptor');
+
+          var nbItem = $tab.find("td").length / $tab.find("tr").length;
+          let elem = $("<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<span class='clickable_property'>" + descriptor + " (" + nbItem + ")</span></li>");
+          elem.on('click', () => $tab.scrollTo);
+          list.append(elem);
+        });
+        speedbar.appendTo('#itemTreeInfo');
+
+        let widget = speedbar.find('#widget');
+        let initialTop = widget.offset().top;
+        $(window).scroll(function() { // scroll event
+          var windowTop = $(window).scrollTop();
+          if (initialTop < windowTop)
+            widget.addClass('sticky-top-100');
+          else {
+            widget.removeClass('sticky-top-100');
+          }
+        });
+      } catch (e) {
+        console.error(e);
+      }
+
     },
 
     createSpeedbar: function() {

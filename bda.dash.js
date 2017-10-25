@@ -2220,7 +2220,7 @@ jQuery(document).ready(function() {
 
 
       displayRqlResult: function(result, cb) {
-        var $res = $('<div></div>');
+        var $res = $('<div class="rqlResultContainer"></div>');
         $().getBdaRepository().renderResultSection(result.items, result.repository, $res);
         cb('<pre>{0}</pre>'.format(result.logs), $res);
       },
