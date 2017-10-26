@@ -115,6 +115,10 @@ a {
   background-color: green;
 }
 
+.item-line.rdonly td{
+  color: #888;
+}
+
 .copyLink {
   text-decoration: none;
   color: #00214a;

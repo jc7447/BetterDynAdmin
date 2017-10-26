@@ -168,7 +168,7 @@
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
-      resultTable: '<table class="dataTable" data-descriptor="{0}"><tbody></tbody></table>',
+      resultTable: '<table class="dataTable" data-descriptor="{0}"></table>',
       idCell: '<td data-identifier="id_{0}_{1}">{0}</td>',
       descriptorCell: '<td>{0}</td>',
       propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short">' +
@@ -1183,7 +1183,7 @@
       let items = parsedResult.items;
       let logs = parsedResult.logs;
 
-      BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv);
+      BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv, isItemTree);
 
       if (isItemTree) {
         BDA_REPOSITORY.createSpeedbar_new();
@@ -1193,7 +1193,7 @@
       return logs;
     },
 
-    renderResultSection: function(items, repository, $outputDiv) {
+    renderResultSection: function(items, repository, $outputDiv, isItemTree) {
       // now render the result section
       $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
 
@@ -1219,6 +1219,13 @@
 
 
       $outputDiv.append($('<p></p>').append(showAll).append(hideAll));
+
+      if (isItemTree) {
+        $('<button>Show speedbar</button></p>')
+          .on('click', () => $('#speedbar').fadeIn(200))
+          .appendTo($outputDiv);
+      }
+
 
       BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
 
@@ -1368,13 +1375,15 @@
         let itemDescriptor = items[0].itemDescriptor;
         let itemDescriptorName = itemDescriptor ? itemDescriptor.name : '';
         let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
+        let tableHead = $('<thead></thead>').appendTo(table);
 
         let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id, itemDescriptorName)).join('');
-        let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(table);
+        let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(tableHead);
 
         let descLineElems = _(items).map(() => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName)).join('');
-        let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(table);
+        let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
 
+        let tbody = $('<tbody></tbody>').appendTo(table);
         //for each property, get 
         let index = 0;
         _(itemDescriptor.properties)
@@ -1387,7 +1396,7 @@
           })
           .each((property) => {
 
-            let line = $('<tr class="{0}"></tr>'.format(getEvenOddClass(index)));
+            let line = $('<tr class="item-line {0}"></tr>'.format(getEvenOddClass(index)));
 
             //build property name cell
             // the following flags have been set on the repoItem level :
@@ -1400,19 +1409,22 @@
               let sampleProperty = sampleItem.values[property.name];
               if (!!sampleProperty.derived) {
                 propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
+                line.addClass('derived');
               }
               if (!!sampleProperty.rdonly) {
                 propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
+                line.addClass('rdonly');
               }
               if (!!sampleProperty.exportable) {
                 propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
+                line.addClass('exportable');
               }
             }
 
             // add all cells
             let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property));
             _.each(cells, cell => cell.appendTo(line));
-            line.appendTo(table);
+            line.appendTo(tbody);
             index++;
 
           });
@@ -1458,71 +1470,75 @@
       let longCell = res.find('.propertyValue');
       //for now handle only same repo
       if (property.isItem && property.isItemOfSameRepository) {
-        // handle map types
-        let ids = _(val)
-          .split(',')
-          .map(sPair => _.split(sPair, '='))
-          .map(pairArray => {
-            if (pairArray.length >= 2) {
-              return {
-                id: pairArray[1].trim(),
-                key: pairArray[0].trim()
-              }
-            } else if (pairArray.length == 1) {
-              return {
-                id: pairArray[0].trim()
-              }
-            } else {
-              return null;
-            }
-
-          })
-          .filter(elem => !_.isNil(elem))
-          .value();
-
-        _(ids)
-          .map(elem => {
-            let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
-              try {
-                //find the item if same id
-                let $this = $(this);
-                // load the result in the parent section (repo/itemtree/dashscreen)
-                let outputDiv = $this.closest('.rqlResultContainer');
-                let resultTable = outputDiv.find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
-                // if the result already exists, just scroll to it
-                if (resultTable.length > 0) {
-                  resultTable.scrollTo();
-                } else {
-                  let $property = $this.parent().parent();
-                  $property.addClass('loading');
-                  let endLoadingFc = () => {
-                    $property.removeClass('loading');
-                  };
-                  BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, getCurrentComponentPath(), outputDiv, null, null, endLoadingFc);
-                }
-              } catch (e) {
-                console.error(e)
-              }
-            });
-            return {
-              key: elem.key,
-              cell: cell
-            }
-
-          })
-          .each((elem, idx) => {
-            if (!_.isNil(elem.key)) {
-              longCell.append('{0} = '.format(elem.key));
-            }
-            longCell.append(elem.cell)
-            if (idx < ids.length - 1) {
-              longCell.append(' , ');
-            }
-          });
+        BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
       } else {
         longCell.append(val);
       }
       return res;
+    },
+
+    buildLinkToOtherItem: function(longCell, val, property) {
+      // handle map types
+      let ids = _(val)
+        .split(',')
+        .map(sPair => _.split(sPair, '='))
+        .map(pairArray => {
+          if (pairArray.length >= 2) {
+            return {
+              id: pairArray[1].trim(),
+              key: pairArray[0].trim()
+            }
+          } else if (pairArray.length == 1) {
+            return {
+              id: pairArray[0].trim()
+            }
+          } else {
+            return null;
+          }
+
+        })
+        .filter(elem => !_.isNil(elem))
+        .value();
+
+      _(ids)
+        .map(elem => {
+          let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
+            try {
+              //find the item if same id
+              let $this = $(this);
+              // load the result in the parent section (repo/itemtree/dashscreen)
+              let outputDiv = $this.closest('.rqlResultContainer');
+              let resultTable = outputDiv.find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
+              // if the result already exists, just scroll to it
+              if (resultTable.length > 0) {
+                resultTable.scrollTo();
+              } else {
+                let $property = $this.parent().parent();
+                $property.addClass('loading');
+                let endLoadingFc = () => {
+                  $property.removeClass('loading');
+                };
+                BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, getCurrentComponentPath(), outputDiv, null, null, endLoadingFc);
+              }
+            } catch (e) {
+              console.error(e)
+            }
+          });
+          return {
+            key: elem.key,
+            cell: cell
+          }
+
+        })
+        .each((elem, idx) => {
+          if (!_.isNil(elem.key)) {
+            longCell.append('{0} = '.format(elem.key));
+          }
+          longCell.append(elem.cell)
+          if (idx < ids.length - 1) {
+            longCell.append(' , ');
+          }
+        });
     },
 
     // load sub item with an ajax call
@@ -2264,8 +2280,6 @@
           speedbar.fadeOut(200);
         })
 
-
-
         let list = speedbar.find('ul');
         $("#itemTreeResult .dataTable").each(function(index) {
           var $tab = $(this);
@@ -2273,22 +2287,26 @@
           var descriptor = $tab.attr('data-descriptor');
 
           var nbItem = $tab.find("td").length / $tab.find("tr").length;
-          let elem = $("<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<span class='clickable_property'>" + descriptor + " (" + nbItem + ")</span></li>");
-          elem.on('click', () => $tab.scrollTo);
+          let elem = $("<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<span class='clickable_property'>" + descriptor + "</span> (" + nbItem + ")</li>");
+          elem.on('click', () => $tab.scrollTo());
           list.append(elem);
         });
         speedbar.appendTo('#itemTreeInfo');
 
+        let container = $('#itemTreeResult');
+
         let widget = speedbar.find('#widget');
-        let initialTop = widget.offset().top;
-        $(window).scroll(function() { // scroll event
+        let initialTop = container.offset().top;
+        var initialBot = initialTop + container.height();
+        $(window).scroll(function() {
           var windowTop = $(window).scrollTop();
-          if (initialTop < windowTop)
+          if (initialTop < windowTop && initialBot > windowTop) {
             widget.addClass('sticky-top-100');
-          else {
+          } else {
             widget.removeClass('sticky-top-100');
           }
         });
+
       } catch (e) {
         console.error(e);
       }
