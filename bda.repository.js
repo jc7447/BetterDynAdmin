@@ -174,13 +174,15 @@
       propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short">' +
         '{0}' +
         '<span class="actions">' +
-        '<i class="fa fa-compress collapse" aria-hidden="true"></i>' +
-        '<i class="fa fa-expand expand" aria-hidden="true"></i>' +
+        '<i class="fa fa-compress action collapse" aria-hidden="true"></i>' +
+        '<i class="fa fa-expand action expand" aria-hidden="true"></i>' +
         '<i class="fa fa-spinner fa-spin passive-loading-icon" aria-hidden="true"></i>' +
+        '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
         '</span>' +
         '</td>',
-      shortPropertyCell: '<div class="propertyValue"></div>',
-      longPropertyCell: '<span class="long propertyValue"></span><span class="short">{0}</span>',
+      shortPropertyCell: '<div class="value-elem propertyValue"></div>',
+      longPropertyCell: '<span class="value-elem long propertyValue"></span><span class="value-elem short">{0}</span>',
+      editProperty: '<update-item item-descriptor="{0}" id="{1}">\n\t<set-property name="{2}">\n\t<![CDATA[{3}]]>\n\t</set-property>\n</update-item>'
 
 
     },
@@ -1408,11 +1410,11 @@
             if (!_.isNil(sampleItem)) {
               let sampleProperty = sampleItem.values[property.name];
               if (!!sampleProperty.derived) {
-                propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
+                propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
                 line.addClass('derived');
               }
               if (!!sampleProperty.rdonly) {
-                propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
+                propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
                 line.addClass('rdonly');
               }
               if (!!sampleProperty.exportable) {
@@ -1435,9 +1437,10 @@
     },
 
     buildPropertyValueCell: function(item, property) {
+      let propertyValue = item.values[property.name];
       let val;
       try {
-        val = item.values[property.name].value;
+        val = propertyValue.value;
       } catch (e) {
         val = '';
       }
@@ -1465,6 +1468,10 @@
         .on('click', '.expand', function() {
           $(this).parent().parent().removeClass('show-short').addClass('show-long');
         })
+        .on('click', '.start-edit', function() {
+          $(this).parent().parent().addClass('show-edit').find('input').focus();
+
+        })
 
       // for id of other items, load sub item on click
       let longCell = res.find('.propertyValue');
@@ -1474,6 +1481,11 @@
       } else {
         longCell.append(val);
       }
+
+      if (!propertyValue.rdonly && !propertyValue.derived) {
+        BDA_REPOSITORY.addInlineEditForm(res, val, property, item);
+      }
+
       return res;
     },
 
@@ -1539,6 +1551,73 @@
             longCell.append(' , ');
           }
         });
+    },
+
+    addInlineEditForm: function(output, val, property, item) {
+      try {
+
+        let form = $('<form class="edit"><input type="text"></input></form>');
+        let input = form.find('input').val(val);
+        input.on('blur', function() {
+
+          try {
+            let newVal = input.val();
+            if (newVal === val) {
+              input.closest('.property').removeClass('show-edit');
+              return; // exit if no change
+            }
+            var xmlText = BDA_REPOSITORY.templates.editProperty.format(item.itemDescriptor.name, item.id, property.name, newVal);
+            let highlighted = $('<div class="xml"><pre><code></code></pre></div>');
+            highlighted.find('code').text(xmlText);
+            highlighted.each(function(i, block) {
+              hljs.highlightBlock(block);
+            })
+
+            $('body').bdaAlert({
+              msg: 'You are about to execute this query : \n {0}'.format(highlighted.html()),
+              options: [{
+                label: 'Confirm',
+                _callback: function() {
+                  BDA_REPOSITORY.executeQuery('', xmlText, getCurrentComponentPath(),
+                    (result) => {
+                      var xmlContent = $('<div>' + result + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
+                      let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
+
+                      $.notify(
+                        $("<div>Success: \n<pre>{0}</pre></div>".format(logs)), {
+                          className: "success",
+                          position: "top center",
+                          autoHideDelay: 5000
+
+                        }
+                      );
+                    },
+                    (jqXHR, textStatus, errorThrown) => {
+                      $.notify(
+                        "Error during call: {0}.".format(errorThrown), {
+                          className: "error",
+                          position: "top center",
+                          autoHide: false
+                        }
+                      );
+                    });
+                }
+              }, {
+                label: 'Cancel'
+              }]
+            });
+          } catch (e) {
+            console.error(e);
+          }
+
+        })
+
+        output.append(form);
+      } catch (e) {
+        console.error(e);
+      }
+
+
     },
 
     // load sub item with an ajax call

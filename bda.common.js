@@ -438,7 +438,7 @@ try {
   };
   $.fn.scrollTo = function() {
     $('html, body').animate({
-      scrollTop: $(this).position().top
+      scrollTop: $(this).offset().top
     }, 300);
   }
 
