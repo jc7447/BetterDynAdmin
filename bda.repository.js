@@ -169,9 +169,16 @@
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
       resultTable: '<table class="dataTable" data-descriptor="{0}"></table>',
-      idCell: '<td data-identifier="id_{0}_{1}">{0}</td>',
+      idCell: '<td class="property" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}">' +
+        '<div class="flex-wrapper">' +
+        '<div class="value-elem">{0}</div>' +
+        '<span class="actions">' +
+        '<i class="fa fa-refresh action reload-item" aria-hidden="true"></i>' +
+        '</div>' +
+        '</span>' +
+        '</td>',
       descriptorCell: '<td>{0}</td>',
-      propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short"><div class="flex-wrapper">' +
+      propertyCell: '<td data-property="{2}" data-item-id="{1}" class="property show-short"><div class="flex-wrapper">' +
         '{0}' +
         '<span class="actions">' +
         '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
@@ -1381,6 +1388,25 @@
 
         let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id, itemDescriptorName)).join('');
         let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(tableHead);
+        idLine.find('.reload-item').on('click', function() {
+          let $this = $(this);
+          let property = $this.closest('.property');
+          let id = property.attr('data-id');
+          let item = property.attr('data-item');
+          let parentTab = $this.closest('.dataTable');
+          $this.addClass('fa-spin');
+          BDA_REPOSITORY.reloadTab(id, item, getCurrentComponentPath(), parentTab, () => {
+            $this.removeClass('fa-spin');
+            $.notify(
+              $("<div>Success: Reloaded {0} {1}</div>".format(item, id)), {
+                className: "success",
+                position: "top center",
+                autoHideDelay: 3000
+              }
+            );
+
+          });
+        });
 
         let descLineElems = _(items).map(() => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName)).join('');
         let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
@@ -1611,13 +1637,53 @@
           }
 
         })
-
         output.append(form);
       } catch (e) {
         console.error(e);
       }
 
 
+    },
+
+    reloadTab: function(id, itemDescriptorName, repositoryPath, parentTab, cb) {
+      if (_.isNil(repositoryPath)) {
+        repositoryPath = getCurrentComponentPath();
+      }
+      BDA_REPOSITORY.executePrintItem('', itemDescriptorName, id, repositoryPath,
+        function(result) {
+          BDA_REPOSITORY.parseXhrResult(result, repositoryPath, (parsed) => {
+
+            try {
+
+              let tempResult = $('<div></div>');
+              BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, tempResult);
+              let propertySelector = '.property[data-item-id="{0}"]'.format(id);
+              tempResult.find(propertySelector).each(function() {
+                let $this = $(this);
+                let propertyName = $this.attr('data-property');
+                parentTab.find(propertySelector + '[data-property="{0}"]'.format(propertyName)).replaceWith(this);
+
+
+              })
+              if (cb) {
+                cb();
+              }
+            } catch (e) {
+              console.error(e);
+            }
+
+          })
+        },
+
+        function(jqXHR, textStatus, errorThrown) {
+          $.notify(
+            "Error during call: " + errorThrown + ".", {
+              className: "error",
+              position: "top center"
+            }
+          );
+
+        })
     },
 
     // load sub item with an ajax call
