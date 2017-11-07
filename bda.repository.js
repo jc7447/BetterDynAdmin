@@ -1424,7 +1424,7 @@
             }
 
             // add all cells
-            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property));
+            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem));
             _.each(cells, cell => cell.appendTo(line));
             line.appendTo(tbody);
             index++;
@@ -1436,7 +1436,7 @@
       return res;
     },
 
-    buildPropertyValueCell: function(item, property) {
+    buildPropertyValueCell: function(item, property, referencePropertyValue) {
       let propertyValue = item.values[property.name];
       let val;
       try {
@@ -1482,7 +1482,7 @@
         longCell.append(val);
       }
 
-      if (!_.isNil(propertyValue) && !propertyValue.rdonly && !propertyValue.derived) {
+      if (!_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
         BDA_REPOSITORY.addInlineEditForm(res, val, property, item);
       }
 
