@@ -171,15 +171,15 @@
       resultTable: '<table class="dataTable" data-descriptor="{0}"></table>',
       idCell: '<td data-identifier="id_{0}_{1}">{0}</td>',
       descriptorCell: '<td>{0}</td>',
-      propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short">' +
+      propertyCell: '<td data-property="{1}" data-item-id="{2}" class="property show-short"><div class="flex-wrapper">' +
         '{0}' +
         '<span class="actions">' +
+        '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
         '<i class="fa fa-compress action collapse" aria-hidden="true"></i>' +
         '<i class="fa fa-expand action expand" aria-hidden="true"></i>' +
         '<i class="fa fa-spinner fa-spin passive-loading-icon" aria-hidden="true"></i>' +
-        '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
         '</span>' +
-        '</td>',
+        '</div></td>',
       shortPropertyCell: '<div class="value-elem propertyValue"></div>',
       longPropertyCell: '<span class="value-elem long propertyValue"></span><span class="value-elem short">{0}</span>',
       editProperty: '<update-item item-descriptor="{0}" id="{1}">\n\t<set-property name="{2}">\n\t<![CDATA[{3}]]>\n\t</set-property>\n</update-item>'
@@ -1463,13 +1463,13 @@
       //enable local collapse/expand
       res.find('.actions')
         .on('click', '.collapse', function() {
-          $(this).parent().parent().addClass('show-short').removeClass('show-long');
+          $(this).closest('.property').addClass('show-short').removeClass('show-long');
         })
         .on('click', '.expand', function() {
-          $(this).parent().parent().removeClass('show-short').addClass('show-long');
+          $(this).closest('.property').removeClass('show-short').addClass('show-long');
         })
         .on('click', '.start-edit', function() {
-          $(this).parent().parent().addClass('show-edit').find('input').focus();
+          $(this).closest('.property').addClass('show-edit').find('input').focus();
 
         })
 
@@ -1482,7 +1482,7 @@
         longCell.append(val);
       }
 
-      if (!propertyValue.rdonly && !propertyValue.derived) {
+      if (!_.isNil(propertyValue) && !propertyValue.rdonly && !propertyValue.derived) {
         BDA_REPOSITORY.addInlineEditForm(res, val, property, item);
       }
 
