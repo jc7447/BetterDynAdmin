@@ -1461,7 +1461,7 @@
             }
 
             // add all cells
-            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem));
+            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo));
             _.each(cells, cell => cell.appendTo(line));
             line.appendTo(tbody);
             index++;
@@ -1473,7 +1473,7 @@
       return res;
     },
 
-    buildPropertyValueCell: function(item, property, referencePropertyValue) {
+    buildPropertyValueCell: function(item, property, referencePropertyValue, repository) {
       let propertyValue = item.values[property.name];
       let val;
       try {
@@ -1520,7 +1520,7 @@
       }
 
       if (!_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-        BDA_REPOSITORY.addInlineEditForm(res, val, property, item);
+        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
       }
 
       return res;
@@ -1590,7 +1590,7 @@
         });
     },
 
-    addInlineEditForm: function(output, val, property, item) {
+    addInlineEditForm: function(output, val, property, item, repository) {
       try {
 
         let form = $('<form class="edit"><input type="text"></input></form>');
@@ -1616,14 +1616,14 @@
               options: [{
                 label: 'Confirm',
                 _callback: function() {
-                  BDA_REPOSITORY.executeQuery('', xmlText, getCurrentComponentPath(),
+                  BDA_REPOSITORY.executeQuery('', xmlText, repository.path,
                     (result) => {
                       try {
                         var xmlContent = $('<div>' + result + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
                         let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
 
                         let parentTab = input.closest('.dataTable');
-                        BDA_REPOSITORY.reloadTab(item.id, item.itemDescriptor.name, getCurrentComponentPath(), parentTab, () => {
+                        BDA_REPOSITORY.reloadTab(item.id, item.itemDescriptor.name, repository.path, parentTab, () => {
 
                           $.notify(
                             "Success: \n{0}".format(logs), {
