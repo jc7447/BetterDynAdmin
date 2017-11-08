@@ -1611,17 +1611,22 @@
                 _callback: function() {
                   BDA_REPOSITORY.executeQuery('', xmlText, getCurrentComponentPath(),
                     (result) => {
-                      var xmlContent = $('<div>' + result + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
-                      let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
+                      try {
+                        var xmlContent = $('<div>' + result + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
+                        let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
+                        $.notify(
+                          "Success: \n{0}".format(logs), {
+                            className: "success",
+                            position: "top center",
+                            autoHideDelay: 5000
 
-                      $.notify(
-                        $("<div>Success: \n<pre>{0}</pre></div>".format(logs)), {
-                          className: "success",
-                          position: "top center",
-                          autoHideDelay: 5000
+                          }
+                        );
 
-                        }
-                      );
+                      } catch (e) {
+                        console.error(e);
+                      }
+
                     },
                     (jqXHR, textStatus, errorThrown) => {
                       $.notify(
