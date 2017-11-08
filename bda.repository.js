@@ -263,6 +263,9 @@
 
       $(BDA_REPOSITORY.descriptorTableSelector).attr("id", "descriptorTable");
 
+      //save the native form in variable before adding more forms with the showRQLResults methods (inline forms)
+      BDA_REPOSITORY.initialForm = $("form:eq(1)");
+
       $("<div id='RQLEditor'></div>").insertBefore("h2:first");
       $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
       if (BDA_REPOSITORY.hasErrors)
@@ -270,8 +273,9 @@
       if (BDA_REPOSITORY.hasResults && !BDA_REPOSITORY.hasErrors)
         BDA_REPOSITORY.showRQLResults();
 
-      $("form:eq(1)").appendTo("#RQLEditor");
-      $("form:eq(1)").attr("id", "RQLForm");
+      BDA_REPOSITORY.initialForm
+        .appendTo("#RQLEditor")
+        .attr("id", "RQLForm");
       var $children = $("#RQLForm").children();
       $("#RQLForm").empty().append($children);
       $("textarea[name=xmltext]").attr("id", "xmltext");
