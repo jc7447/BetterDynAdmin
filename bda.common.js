@@ -437,9 +437,11 @@ try {
     return this;
   };
   $.fn.scrollTo = function() {
-    $('html, body').animate({
-      scrollTop: $(this).offset().top
-    }, 300);
+
+    $(this).get()[0].scrollIntoView({
+      behavior: "smooth"
+    });
+
   }
 
   $.fn.toCSV = function() {

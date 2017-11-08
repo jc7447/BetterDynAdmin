@@ -64,7 +64,7 @@
     _.merge(this, data);
 
   }
-  var PropertyDescriptor = function($xmlDefinition) {
+  var PropertyDescriptor = function($xmlDefinition, repository) {
     this.xmlDefinition = $xmlDefinition;
     if (this.xmlDefinition) {
       this.name = this.xmlDefinition.attr('name');
@@ -76,6 +76,11 @@
       if (!!this.itemType || !!this.componentItemType) {
         this.isItem = true;
         this.isItemOfSameRepository = _.isNil(this.otherRepositoryPath);
+        if (this.isItemOfSameRepository) {
+          this.itemRepository = repository.path;
+        } else {
+          this.itemRepository = this.otherRepositoryPath;
+        }
         this.isMulti = !!this.componentItemType;
         if (!!this.componentItemType) {
           this.itemType = this.componentItemType; //simplify by using one property
@@ -169,7 +174,7 @@
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
       resultTable: '<table class="dataTable" data-descriptor="{0}"></table>',
-      idCell: '<td class="property" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}">' +
+      idCell: '<td class="property" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}" data-repository="{2}">' +
         '<div class="flex-wrapper">' +
         '<div class="value-elem">{0}</div>' +
         '<span class="actions">' +
@@ -1136,7 +1141,7 @@
       $properties.each(function() {
         let $prop = $(this);
         let name = $prop.attr('name');
-        let propDesc = new PropertyDescriptor($prop);
+        let propDesc = new PropertyDescriptor($prop, repository);
         let defaultValue = $prop.attr('default');
         if (!_.isNil(defaultValue)) {
           propDesc.defaultValue = defaultValue;
@@ -1336,7 +1341,7 @@
 
         //now render each tab
         let firstResult = _.chain(chunks)
-          .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext))
+          .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext, repository))
           .filter(table => !_.isNil(table))
           .map(table => {
             table.appendTo(result)
@@ -1383,7 +1388,7 @@
       });
     },
 
-    buildResultTable: function(items, renderContext) {
+    buildResultTable: function(items, renderContext, repo) {
       let res;
       if (!_.isNil(items) && items.length > 0) {
         let itemDescriptor = items[0].itemDescriptor;
@@ -1391,16 +1396,17 @@
         let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
         let tableHead = $('<thead></thead>').appendTo(table);
 
-        let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id, itemDescriptorName)).join('');
+        let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id, itemDescriptorName, repo.path)).join('');
         let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(tableHead);
         idLine.find('.reload-item').on('click', function() {
           let $this = $(this);
           let property = $this.closest('.property');
           let id = property.attr('data-id');
           let item = property.attr('data-item');
+          let repoPath = property.attr('data-repository');
           let parentTab = $this.closest('.dataTable');
           $this.addClass('fa-spin');
-          BDA_REPOSITORY.reloadTab(id, item, getCurrentComponentPath(), parentTab, () => {
+          BDA_REPOSITORY.reloadTab(id, item, repoPath, parentTab, () => {
             $this.removeClass('fa-spin');
             $.notify(
               "Success: Reloaded {0} {1}".format(item, id), {
@@ -1561,7 +1567,7 @@
                 let endLoadingFc = () => {
                   $property.removeClass('loading');
                 };
-                BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, getCurrentComponentPath(), outputDiv, null, null, endLoadingFc);
+                BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, property.itemRepository, outputDiv, null, null, endLoadingFc);
               }
             } catch (e) {
               console.error(e)
@@ -1705,7 +1711,6 @@
 
     // load sub item with an ajax call
     loadSubItem: function(id, itemDescriptorName, repositoryPath, $outputDiv, cbSuccess, cbErr, cbEnd) {
-      console.log('loadSubItem', id, itemDescriptor, repositoryPath)
       if (_.isNil(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
