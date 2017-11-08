@@ -176,6 +176,7 @@
         '<i class="fa fa-refresh action reload-item" aria-hidden="true"></i>' +
         '</div>' +
         '</span>' +
+        '</div>' +
         '</td>',
       descriptorCell: '<td>{0}</td>',
       propertyCell: '<td data-property="{2}" data-item-id="{1}" class="property show-short"><div class="flex-wrapper">' +
@@ -1398,7 +1399,7 @@
           BDA_REPOSITORY.reloadTab(id, item, getCurrentComponentPath(), parentTab, () => {
             $this.removeClass('fa-spin');
             $.notify(
-              $("<div>Success: Reloaded {0} {1}</div>".format(item, id)), {
+              "Success: Reloaded {0} {1}".format(item, id), {
                 className: "success",
                 position: "top center",
                 autoHideDelay: 3000
