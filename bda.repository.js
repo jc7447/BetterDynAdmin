@@ -190,7 +190,7 @@
         '</div></td>',
       shortPropertyCell: '<div class="value-elem propertyValue"></div>',
       longPropertyCell: '<span class="value-elem long propertyValue"></span><span class="value-elem short">{0}</span>',
-      editProperty: '<update-item item-descriptor="{0}" id="{1}">\n\t<set-property name="{2}">\n\t<![CDATA[{3}]]>\n\t</set-property>\n</update-item>'
+      editProperty: '<update-item item-descriptor="{0}" id="{1}">\n    <set-property name="{2}"><![CDATA[{3}]]></set-property>\n</update-item>'
 
 
     },
@@ -1592,6 +1592,7 @@
         input.on('blur', function() {
 
           try {
+
             let newVal = input.val();
             if (newVal === val) {
               input.closest('.property').removeClass('show-edit');
@@ -1614,14 +1615,20 @@
                       try {
                         var xmlContent = $('<div>' + result + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
                         let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
-                        $.notify(
-                          "Success: \n{0}".format(logs), {
-                            className: "success",
-                            position: "top center",
-                            autoHideDelay: 5000
 
-                          }
-                        );
+                        let parentTab = input.closest('.dataTable');
+                        BDA_REPOSITORY.reloadTab(item.id, item.itemDescriptor.name, getCurrentComponentPath(), parentTab, () => {
+
+                          $.notify(
+                            "Success: \n{0}".format(logs), {
+                              className: "success",
+                              position: "top center",
+                              autoHideDelay: 5000
+
+                            }
+                          );
+
+                        });
 
                       } catch (e) {
                         console.error(e);
