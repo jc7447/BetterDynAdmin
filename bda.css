@@ -882,10 +882,13 @@ td.property.loading .actions .passive-loading-icon {
 /* DASH */
 .modal-dialog.modal-lg {
   width: 60%;
+  padding-top:10px;
 }
 
 .fullscreen .modal-dialog.modal-lg {
-  width: 95%;
+  width: 100%;
+  padding:10 ;
+
 }
 
 #dashModal .modal-content {

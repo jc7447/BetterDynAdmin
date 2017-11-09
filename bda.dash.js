@@ -23,7 +23,7 @@ jQuery(document).ready(function() {
       $footer: null,
 
       modalHeight: 200,
-      modalHeightRatio: 0.93,
+      modalHeightRatio: 0.98,
       //
       initialized: false,
 
