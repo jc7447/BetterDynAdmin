@@ -179,13 +179,14 @@
         '<div class="value-elem">{0}</div>' +
         '<span class="actions">' +
         '<i class="fa fa-refresh action reload-item" aria-hidden="true"></i>' +
-        '<i class="fa fa-code action copy-xml" aria-hidden="true"><div class="xmltext hidden">{3}</div></i>' +
+        '<i class="fa fa-code action copy-xml" aria-hidden="true"></i>' +
+        '<i class="fa fa-close action close-elem" aria-hidden="true"></i>' +
         '</div>' +
         '</span>' +
         '</div>' +
         '</td>',
-      descriptorCell: '<td>{0}</td>',
-      propertyCell: '<td data-property="{2}" data-item-id="{1}" class="property show-short"><div class="flex-wrapper">' +
+      descriptorCell: '<td data-id="{1}">{0}</td>',
+      propertyCell: '<td data-property="{2}" data-id="{1}" class="property show-short"><div class="flex-wrapper">' +
         '{0}' +
         '<span class="actions">' +
         '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
@@ -574,7 +575,7 @@
           var $target = $(item.target);
           var $table = $target.parents(".dataTable");
           var descriptor = $table.attr("data-descriptor");
-          var itemId = $target.parent().attr("data-item-id");
+          var itemId = $target.parent().attr("data-id");
           var propertyName = $target.parent().attr("data-property");
           if (propertyName == "id" || propertyName == "descriptor") {
             $input.parent().html($input.val());
@@ -1021,7 +1022,7 @@
 
     renderProperty: function(curProp, propValue, itemId, isItemTree) {
       var html = "";
-      var td = "<td data-property='" + curProp.name + "' data-item-id='" + itemId + "'>";
+      var td = "<td data-property='" + curProp.name + "' data-id='" + itemId + "'>";
       if (propValue !== null && propValue !== undefined) {
         propValue = propValue.replace(/ /g, '●');
         // Remove "_"
@@ -1256,7 +1257,6 @@
 
       BDA_REPOSITORY.getRepositoryAsync(repositoryPath, (repository) => {
         try {
-
           console.log('parseXhrResult', repositoryPath, xhrResult);
           var rawXml = $('<div>' + xhrResult + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
           let xmlContent = sanitizeXml(rawXml);
@@ -1434,8 +1434,12 @@
         idLine.find('.copy-xml').on('click', function() {
           copyToClipboard($(this).closest('.property').data('repositoryItem').rawXml);
         })
+        idLine.find('.close-elem').on('click', function() {
+          console.log('close-elem', $(this));
+          BDA_REPOSITORY.closeTab($(this).closest('.property'));
+        })
 
-        let descLineElems = _(items).map(() => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName)).join('');
+        let descLineElems = _(items).map((item) => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName, item.id)).join('');
         let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
 
         let tbody = $('<tbody></tbody>').appendTo(table);
@@ -1683,7 +1687,21 @@
 
 
     },
+    closeTab: function(idCell) {
+      try {
+        console.log('closetab', idCell);
+        let tab = idCell.closest('.dataTable');
+        tab.find('[data-id="{0}"]'.format(idCell.attr('data-id'))).remove();
+        //if last item remove tab
+        let tabSize = tab.find('.idCell').length;
+        if (tabSize == 0) {
+          tab.remove();
+        }
+      } catch (e) {
+        console.error(e);
+      }
 
+    },
     reloadTab: function(id, itemDescriptorName, repositoryPath, parentTab, cb) {
       if (_.isNil(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
@@ -1697,7 +1715,7 @@
               let tempResult = $('<div></div>');
               BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, tempResult);
 
-              let propertySelector = '.property[data-item-id="{0}"]'.format(id);
+              let propertySelector = '.property[data-id="{0}"]'.format(id);
               tempResult.find(propertySelector).each(function() {
                 let $this = $(this);
                 let propertyName = $this.attr('data-property');
