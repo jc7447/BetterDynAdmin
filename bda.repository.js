@@ -174,11 +174,12 @@
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
       resultTable: '<table class="dataTable" data-descriptor="{0}"></table>',
-      idCell: '<td class="property" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}" data-repository="{2}">' +
+      idCell: '<td class="property idCell" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}" data-repository="{2}" >' +
         '<div class="flex-wrapper">' +
         '<div class="value-elem">{0}</div>' +
         '<span class="actions">' +
         '<i class="fa fa-refresh action reload-item" aria-hidden="true"></i>' +
+        '<i class="fa fa-code action copy-xml" aria-hidden="true"><div class="xmltext hidden">{3}</div></i>' +
         '</div>' +
         '</span>' +
         '</div>' +
@@ -1191,13 +1192,14 @@
     },
 
 
-    showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
+    showXMLAsTab: function(rawXml, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
+      let xmlContent = sanitizeXml(rawXml);
       console.time('showXMLAsTab_new');
       if (_.isEmpty(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
       }
       let repository = BDA_REPOSITORY.getRepository($xmlDef, repositoryPath);
-      let parsedResult = BDA_REPOSITORY.parseXmlResult(xmlContent, repository);
+      let parsedResult = BDA_REPOSITORY.parseXmlResult(xmlContent, repository, rawXml);
 
       let items = parsedResult.items;
       let logs = parsedResult.logs;
@@ -1256,9 +1258,9 @@
         try {
 
           console.log('parseXhrResult', repositoryPath, xhrResult);
-          var xmlContent = $('<div>' + xhrResult + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
-          xmlContent = sanitizeXml(xmlContent);
-          let result = BDA_REPOSITORY.parseXmlResult(xmlContent, repository);
+          var rawXml = $('<div>' + xhrResult + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
+          let xmlContent = sanitizeXml(rawXml);
+          let result = BDA_REPOSITORY.parseXmlResult(xmlContent, repository, rawXml);
           result.repository = repository;
           console.log('parseXhrResult result:', result);
           callback(result);
@@ -1269,13 +1271,14 @@
 
     },
 
-    parseXmlResult: function(xmlContent, repository) {
+    parseXmlResult: function(xmlContent, repository, rawXml) {
       try {
 
         var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
         var $xml = $(xmlDoc);
+        var rawXmlDoc = $($.parseXML("<xml>" + rawXml + "</xml>"));
         var $addItems = $xml.find("add-item");
-        let items = BDA_REPOSITORY.parseXmlAsObjects($addItems, repository);
+        let items = BDA_REPOSITORY.parseXmlAsObjects($addItems, repository, rawXmlDoc);
         let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
         return {
           items: items,
@@ -1357,15 +1360,21 @@
 
     },
 
-    parseXmlAsObjects: function($addItems, repository) {
+    parseXmlAsObjects: function($addItems, repository, rawXmlDoc) {
       return $addItems.map(function() {
         var currentItem = $(this);
         var descriptorName = currentItem.attr("item-descriptor");
         var id = currentItem.attr("id");
         let itemDescriptor = repository.getItemDescriptor(descriptorName);
+        let rawXml;
+        if (!_.isNil(rawXmlDoc)) {
+          rawXml = rawXmlDoc.find('add-item[item-descriptor="{0}"][id="{1}"]'.format(descriptorName, id));
+        }
         let repositoryItem = new RepositoryItem({
           itemDescriptor: itemDescriptor,
-          id: id
+          id: id,
+          xmlDefinition: currentItem,
+          rawXml: rawXml.outerHTML()
         })
 
         currentItem.find('set-property').each(function() {
@@ -1396,8 +1405,12 @@
         let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
         let tableHead = $('<thead></thead>').appendTo(table);
 
-        let idLineElems = _(items).map(item => item.id).map(id => BDA_REPOSITORY.templates.idCell.format(id, itemDescriptorName, repo.path)).join('');
-        let idLine = $('<tr class="id even"><th>id</th>{0}</tr>'.format(idLineElems)).appendTo(tableHead);
+        let idLine = $('<tr class="id even"><th>id</th></tr>').appendTo(tableHead);
+        _(items)
+          .map(item => $(BDA_REPOSITORY.templates.idCell.format(item.id, itemDescriptorName, repo.path)).data('repositoryItem', item))
+          .each((elem) => {
+            elem.appendTo(idLine)
+          });
         idLine.find('.reload-item').on('click', function() {
           let $this = $(this);
           let property = $this.closest('.property');
@@ -1418,6 +1431,9 @@
 
           });
         });
+        idLine.find('.copy-xml').on('click', function() {
+          copyToClipboard($(this).closest('.property').data('repositoryItem').rawXml);
+        })
 
         let descLineElems = _(items).map(() => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName)).join('');
         let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
@@ -1680,14 +1696,18 @@
 
               let tempResult = $('<div></div>');
               BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, tempResult);
+
               let propertySelector = '.property[data-item-id="{0}"]'.format(id);
               tempResult.find(propertySelector).each(function() {
                 let $this = $(this);
                 let propertyName = $this.attr('data-property');
                 parentTab.find(propertySelector + '[data-property="{0}"]'.format(propertyName)).replaceWith(this);
-
-
               })
+
+              //  update the data
+              let idSelector = '.idCell[data-identifier="id_{0}_{1}"]'.format(id, itemDescriptorName);
+              parentTab.find(idSelector).replaceWith(tempResult.find(idSelector));
+
               if (cb) {
                 cb();
               }
@@ -1935,7 +1955,7 @@
       $("#RQLResults").addClass('rqlResultContainer').append(html);
 
       var xmlContent = $(BDA_REPOSITORY.resultsSelector).next().text().trim();
-      xmlContent = sanitizeXml(xmlContent);
+      // xmlContent = sanitizeXml(xmlContent); //sanitize later
 
       processRepositoryXmlDef("definitionFiles", function($xmlDef) {
         var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, $("#RQLResults"), false);
