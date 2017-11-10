@@ -1613,8 +1613,8 @@
     addInlineEditForm: function(output, val, property, item, repository) {
       try {
 
-        let form = $('<form class="edit"><input type="text"></input></form>');
-        let input = form.find('input').val(val);
+        let form = $('<form class="edit"><textarea class="inline-input"></input></form>');
+        let input = form.find('.inline-input').val(val);
         input.on('blur', function() {
 
           try {
