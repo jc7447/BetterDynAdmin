@@ -724,6 +724,7 @@ table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td 
 .close, #submitComponent {
   float: right;
   color: black;
+  cursor: pointer;
 }
 
 .fav-submit-button {
@@ -743,14 +744,14 @@ table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td 
   text-overflow: ellipsis;
 }
 
-#speedbar {
+.speedbar {
   float: right;
   width: 210px;
   margin-right: 100px;
   margin-top: 100px;
 }
 
-#speedbar #widget {
+.speedbar .widget {
   width: 240px;
   border: 1px solid #999;
   font-size: 13px;
@@ -759,22 +760,22 @@ table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td 
   background-color: white;
 }
 
-#widget i {
+.widget i {
   font-size: 11px;
 }
 
-#widget ul {
+.widget ul {
   list-style-type: none;
   padding-inline-start: 0px;
   margin-block-end: 0;
   margin-block-start: 0;
 }
 
-#widget p {
+.widget p {
   margin-top: 0;
 }
 
-#widget li {
+.widget li {
   margin-top: 5px;
 }
 

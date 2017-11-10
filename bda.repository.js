@@ -1207,9 +1207,9 @@
 
       BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv, isItemTree);
 
-      if (isItemTree) {
-        BDA_REPOSITORY.createSpeedbar_new();
-      }
+      //  if (isItemTree) {
+      BDA_REPOSITORY.createSpeedbar_new($outputDiv);
+      //}
 
       console.timeEnd('showXMLAsTab_new');
       return logs;
@@ -1758,8 +1758,9 @@
         function(result) {
           BDA_REPOSITORY.parseXhrResult(result, repositoryPath, (parsed) => {
 
+
             let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, $outputDiv);
-            console.log('top', top);
+            BDA_REPOSITORY.reloadSpeedBar($outputDiv);
             if (top) {
               top.scrollTo();
             }
@@ -2476,17 +2477,18 @@
       return orphanSons;
     },
 
-    createSpeedbar_new: function() {
+
+    createSpeedbar_new: function(resultElem) {
       console.log('createSpeedbar_new')
       try {
 
-        let speedbar = $('<div id="speedbar"><div id="widget"><a class="close" href="javascript:void(0)"><i class="fa fa-times"></i></a><p>Quick links :</p><ul></ul></div></div>');
+        let speedbar = $('<div class="speedbar"><div class="widget"><i class="fa fa-times close"></i><p>Quick links :</p><ul></ul></div></div>');
         speedbar.find('.close').on('click', () => {
           speedbar.fadeOut(200);
         })
 
         let list = speedbar.find('ul');
-        $("#itemTreeResult .dataTable").each(function(index) {
+        resultElem.find(".dataTable").each(function(index) {
           var $tab = $(this);
           var id = $tab.attr("id");
           var descriptor = $tab.attr('data-descriptor');
@@ -2496,11 +2498,11 @@
           elem.on('click', () => $tab.scrollTo());
           list.append(elem);
         });
-        speedbar.appendTo('#itemTreeInfo');
+        speedbar.prependTo(resultElem);
 
-        let container = $('#itemTreeResult');
+        let container = $(resultElem);
 
-        let widget = speedbar.find('#widget');
+        let widget = speedbar.find('.widget');
         let initialTop = container.offset().top;
         var initialBot = initialTop + container.height();
         $(window).scroll(function() {
@@ -2516,6 +2518,11 @@
         console.error(e);
       }
 
+    },
+
+    reloadSpeedBar: function(resultElem) {
+      resultElem.find('.speedbar').remove();
+      BDA_REPOSITORY.createSpeedbar_new(resultElem);
     },
 
     createSpeedbar: function() {
