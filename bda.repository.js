@@ -1526,7 +1526,7 @@
           $(this).closest('.property').removeClass('show-short').addClass('show-long');
         })
         .on('click', '.start-edit', function() {
-          $(this).closest('.property').addClass('show-edit').find('input').focus();
+          $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
 
         })
 
@@ -1613,7 +1613,7 @@
     addInlineEditForm: function(output, val, property, item, repository) {
       try {
 
-        let form = $('<form class="edit"><textarea class="inline-input"></input></form>');
+        let form = $('<form class="edit"><textarea class="inline-input" rows="1"></input></form>');
         let input = form.find('.inline-input').val(val);
         input.on('blur', function() {
 
