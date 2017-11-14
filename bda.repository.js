@@ -1720,13 +1720,15 @@
 
 
     },
-    closeTab: function(idCell) {
+    closeTab: function(idCell, container) {
       try {
         console.log('closetab', idCell);
         let tab = idCell.closest('.dataTable');
         tab.find('[data-id="{0}"]'.format(idCell.attr('data-id'))).remove();
         //if last item remove tab
         let tabSize = tab.find('.idCell').length;
+        let container = tab.closest('.rqlResultContainer');
+        BDA_REPOSITORY.reloadSpeedBar(container);
         if (tabSize == 0) {
           tab.remove();
         }
