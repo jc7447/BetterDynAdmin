@@ -1217,7 +1217,10 @@
 
     renderResultSection: function(items, repository, $outputDiv, isItemTree) {
       // now render the result section
-      $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
+      $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " +
+        "<div class='prop_attr prop_attr_green'>D</div> : derived " +
+        "<div class='prop_attr prop_attr_blue'>E</div> : export is false," +
+        '&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i> : Link to other Repository');
 
       // show all button
       let showAll = $('<button>Show All <i class="fa fa-expand" aria-hidden="true"></i></button>');
@@ -1465,18 +1468,22 @@
             let sampleItem = _.find(items, item => !_.isNil(item.values[property.name]));
 
             if (!_.isNil(sampleItem)) {
-              let sampleProperty = sampleItem.values[property.name];
-              if (!!sampleProperty.derived) {
+              let sampleValue = sampleItem.values[property.name];
+              if (!!sampleValue.derived) {
                 propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
                 line.addClass('derived');
               }
-              if (!!sampleProperty.rdonly) {
+              if (!!sampleValue.rdonly) {
                 propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
                 line.addClass('rdonly');
               }
-              if (!!sampleProperty.exportable) {
+              if (!!sampleValue.exportable) {
                 propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
                 line.addClass('exportable');
+              }
+              if (property.isItem && !property.isItemOfSameRepository) {
+                propertyNameCell.append('&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i>');
+                line.addClass('other-repository');
               }
             }
 
@@ -1532,9 +1539,11 @@
 
       // for id of other items, load sub item on click
       let longCell = res.find('.propertyValue');
-      //for now handle only same repo
-      if (property.isItem && property.isItemOfSameRepository) {
+
+      if (property.isItem) {
+
         BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
+
       } else {
         longCell.append(val);
       }
@@ -1571,26 +1580,47 @@
 
       _(ids)
         .map(elem => {
-          let cell = $('<span class="clickable_property loadable_property">{0}</span>'.format(elem.id)).on('click', function() {
-            try {
-              //find the item if same id
+          let cell = $('<span class="clickable_property loadable_property {1}">{0}</span>'.format(elem.id, property.isItemOfSameRepository ? '' : 'newpage')).on('click', function() {
+
+            if (property.isItemOfSameRepository) {
               let $this = $(this);
-              // load the result in the parent section (repo/itemtree/dashscreen)
-              let outputDiv = $this.closest('.rqlResultContainer');
-              let resultTable = outputDiv.find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
-              // if the result already exists, just scroll to it
-              if (resultTable.length > 0) {
-                resultTable.scrollTo();
-              } else {
-                let $property = $this.parent().parent();
-                $property.addClass('loading');
-                let endLoadingFc = () => {
-                  $property.removeClass('loading');
-                };
-                BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, property.itemRepository, outputDiv, null, null, endLoadingFc);
+              try {
+                //find the item if same id
+                // load the result in the parent section (repo/itemtree/dashscreen)
+                let outputDiv = $this.closest('.rqlResultContainer');
+                let resultTable = outputDiv.find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
+                // if the result already exists, just scroll to it
+                if (resultTable.length > 0) {
+                  resultTable.scrollTo();
+                } else {
+                  let $property = $this.parent().parent();
+                  $property.addClass('loading');
+                  let endLoadingFc = () => {
+                    $property.removeClass('loading');
+                  };
+                  BDA_REPOSITORY.loadSubItem(elem.id, property.itemType, property.itemRepository, outputDiv, null, null, endLoadingFc);
+                }
+              } catch (e) {
+                console.error(e)
               }
-            } catch (e) {
-              console.error(e)
+
+            } else {
+              //create a form that will post to a new tab
+              try {
+
+                var xmlText = BDA_REPOSITORY.templates.printItem.format(property.itemType, elem.id);
+                let form = $('<form  action="/dyn/admin/nucleus{0}/" method="POST" target="_blank"><textarea name="xmltext" ></textarea><input value="Enter" type="submit"></form>'.format(property.itemRepository));
+                form
+                  .appendTo('body')
+                  .find('textarea')
+                  .val(xmlText)
+                  .end()
+                  .submit()
+                  .remove();
+
+              } catch (e) {
+                console.error(e);
+              }
             }
           });
           return {

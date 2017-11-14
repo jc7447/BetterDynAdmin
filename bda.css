@@ -796,6 +796,10 @@ table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td 
   cursor: pointer;
 }
 
+.newpage{
+  font-style: italic;
+}
+
 .show-edit .start-edit, .derived .start-edit, .rdonly .start-edit {
   display: none;
 }
