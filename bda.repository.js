@@ -1301,25 +1301,28 @@
       return log;
     },
 
+    getChunkSize: function() {
+      let chunkSize = 1;
+      var splitObj = BDA_STORAGE.getStoredSplitObj();
+      // activeSplit == don't split - don't ask me why this name...
+      if (_.isNil(splitObj) || !!splitObj.activeSplit) {
+        chunkSize = Number.MAX_SAFE_INTEGER;
+      } else {
+        chunkSize = parseInt(splitObj.splitValue);
+      }
+      if (chunkSize < 1) {
+        chunkSize = 1; // safety
+      }
+      return chunkSize;
+    },
+
     formatTabResult: function(repository, repositoryItems, result) {
       try {
         let itemsByType = _.groupBy(repositoryItems, repoItem => !_.isNil(repoItem.itemDescriptor) ? repoItem.itemDescriptor.name : null);
-        console.log('itemsByType', itemsByType);
         let nbItemDescriptors = _.keys(itemsByType).length;
         let res = $(BDA_REPOSITORY.templates.resultHeader.format(repositoryItems.length, nbItemDescriptors))
-        console.log('res', res.text());
 
-        var chunkSize;
-        var splitObj = BDA_STORAGE.getStoredSplitObj();
-        // activeSplit == don't split - don't ask me why this name...
-        if (_.isNil(splitObj) || !!splitObj.activeSplit) {
-          chunkSize = Number.MAX_SAFE_INTEGER;
-        } else {
-          chunkSize = parseInt(splitObj.splitValue);
-        }
-        if (chunkSize < 1) {
-          chunkSize = 1; // safety
-        }
+        var chunkSize = BDA_REPOSITORY.getChunkSize();
 
         // for each property, only display it if it'si not empty in one result
         let renderContext = {}
@@ -1408,7 +1411,7 @@
         let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
         let tableHead = $('<thead></thead>').appendTo(table);
 
-        let idLine = $('<tr class="id even"><th>id</th></tr>').appendTo(tableHead);
+        let idLine = $('<tr class="id even"><th>{0}</th></tr>'.format(itemDescriptorName)).appendTo(tableHead);
         _(items)
           .map(item => $(BDA_REPOSITORY.templates.idCell.format(item.id, itemDescriptorName, repo.path)).data('repositoryItem', item))
           .each((elem) => {
@@ -1442,8 +1445,8 @@
           BDA_REPOSITORY.closeTab($(this).closest('.property'));
         })
 
-        let descLineElems = _(items).map((item) => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName, item.id)).join('');
-        let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
+        // let descLineElems = _(items).map((item) => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName, item.id)).join('');
+        // let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
 
         let tbody = $('<tbody></tbody>').appendTo(table);
         //for each property, get 
@@ -1458,7 +1461,7 @@
           })
           .each((property) => {
 
-            let line = $('<tr class="item-line {0}"></tr>'.format(getEvenOddClass(index)));
+            let line = $('<tr class="item-line {0}" data-property="{1}"></tr>'.format(getEvenOddClass(index), property.name));
 
             //build property name cell
             // the following flags have been set on the repoItem level :
@@ -1732,6 +1735,38 @@
       }
 
     },
+
+    findTabToAppendTo: function(itemDescriptorName, outputDiv) {
+      let dataTables = outputDiv.find('.dataTable[data-descriptor="{0}"]'.format(itemDescriptorName));
+      var max = BDA_REPOSITORY.getChunkSize();
+      let res;
+      console.log('dataTables', dataTables);
+      dataTables.each(function(idx, table) {
+        let $table = $(table);
+        console.log('table', $table);
+        if ($table.find('.idCell').length < max) {
+          res = $table;
+        }
+      })
+      return res;
+    },
+
+    appendToDataTable: function(id, itemDescriptorName, repositoryPath, dataTable, tempResult, cb) {
+      let propertySelector = '.property[data-id="{0}"]'.format(id);
+      tempResult.find(propertySelector).each(function() {
+        let $this = $(this);
+        let propertyName = $this.attr('data-property');
+        dataTable.find('.item-line[data-property="{0}"]'.format(propertyName)).append($this);
+      })
+
+      //  update the data
+      let idSelector = '.idCell[data-identifier="id_{0}_{1}"]'.format(id, itemDescriptorName);
+      dataTable.find('tr.id').append(tempResult.find(idSelector));
+      if (cb) {
+        cb();
+      }
+    },
+
     reloadTab: function(id, itemDescriptorName, repositoryPath, parentTab, cb) {
       if (_.isNil(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
@@ -1788,8 +1823,17 @@
         function(result) {
           BDA_REPOSITORY.parseXhrResult(result, repositoryPath, (parsed) => {
 
+            let temp = $('<div></div>');
 
-            let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, $outputDiv);
+            let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, temp);
+            let targetTab = BDA_REPOSITORY.findTabToAppendTo(itemDescriptorName, $outputDiv);
+            if (_.isNil(targetTab) || targetTab.length === 0) {
+              temp.children().appendTo($outputDiv);
+            } else {
+              BDA_REPOSITORY.appendToDataTable(id, itemDescriptorName, repositoryPath, targetTab, temp);
+              top = targetTab;
+            }
+
             BDA_REPOSITORY.reloadSpeedBar($outputDiv);
             if (top) {
               top.scrollTo();
