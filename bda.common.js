@@ -646,6 +646,9 @@ Johann Burkard
         logTrace(opts);
         //set msg
         plugin.modal.find('.bda-alert-body').html(opts.msg);
+        if (!_.isNil(opts.width)) {
+          plugin.modal.find('.modal-dialog').width(opts.width);
+        }
         //clean
         var $footer = plugin.modal.find('.bda-alert-footer').empty();
 
@@ -664,8 +667,6 @@ Johann Burkard
         for (var i = 0; i < opts.options.length; i++) {
           var opt = opts.options[i];
           logTrace(opt);
-
-
 
           $('<input></input>', {
               type: 'button',

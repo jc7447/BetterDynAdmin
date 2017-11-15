@@ -1708,19 +1708,36 @@
           $("#storedQueries").html(html);
       }
 
-      $('#storedQueries .queryView').each(function(i, block) {
-        hljs.highlightBlock(block);
-      });
+      // $('#storedQueries .queryView').each(function(i, block) {
+      //   hljs.highlightBlock(block);
+      // });
 
-      $(".savedQuery").click(function() {
+      $(".savedQuery").on('click', 'a', function() {
         console.log("click on query : " + $(this).find("a").html());
         BDA_REPOSITORY.printStoredQuery($(this).find("a").html());
       });
 
-      $(".previewQuery").hover(function() {
-        $(this).parent("li").find("span.queryView").toggle();
-      }, function() {
-        $(this).parent("li").find("span.queryView").toggle();
+      $(".previewQuery").on('click', function() {
+
+        try {
+
+
+          let block = $(this).parent("li").find("span.queryView").each(function(i, block) {
+            hljs.highlightBlock(block);
+          });
+
+          $('body').bdaAlert({
+            msg: block.html(),
+            width: '900px',
+            options: [{
+              label: 'OK'
+            }]
+          });
+        } catch (e) {
+          console.error(e);
+        }
+
+
       });
 
       $(".deleteQuery")
