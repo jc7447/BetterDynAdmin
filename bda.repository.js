@@ -1591,12 +1591,12 @@
                 //find the item if same id
                 // load the result in the parent section (repo/itemtree/dashscreen)
                 let outputDiv = $this.closest('.rqlResultContainer');
-                let selector = '[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType);
+                let selector = '.idCell[data-id="{0}"]'.format(elem.id);
                 let resultTable = outputDiv.find(selector);
                 // if the result already exists, just scroll to it
                 if (resultTable.length > 0) {
                   resultTable.scrollTo();
-                  resultTable.find('[data-id="{0}"]'.format(elem.id)).flash();
+                  resultTable.find('[data-id="{0}"]'.format(elem.id)).flash(); //flash the whole tab
                 } else {
                   let $property = $this.parent().parent();
                   $property.addClass('loading');
@@ -1764,7 +1764,7 @@
       })
 
       //  update the data
-      let idSelector = '.idCell[data-identifier="id_{0}_{1}"]'.format(id, itemDescriptorName);
+      let idSelector = '.idCell[data-id="{0}"]'.format(id, itemDescriptorName);
       dataTable.find('tr.id').append(tempResult.find(idSelector));
       if (cb) {
         cb();
@@ -1832,11 +1832,14 @@
             let temp = $('<div></div>');
 
             let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, temp);
-            let targetTab = BDA_REPOSITORY.findTabToAppendTo(itemDescriptorName, $outputDiv);
+            //use the itemDescriptor from the result, not the query (ex payment group vs creditCard)
+
+            let resultDescriptorName = _.first(parsed.items).itemDescriptor.name;
+            let targetTab = BDA_REPOSITORY.findTabToAppendTo(resultDescriptorName, $outputDiv);
             if (_.isNil(targetTab) || targetTab.length === 0) {
               temp.children().appendTo($outputDiv);
             } else {
-              BDA_REPOSITORY.appendToDataTable(id, itemDescriptorName, repositoryPath, targetTab, temp);
+              BDA_REPOSITORY.appendToDataTable(id, resultDescriptorName, repositoryPath, targetTab, temp);
               top = targetTab;
             }
 
