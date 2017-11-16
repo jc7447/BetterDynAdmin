@@ -714,8 +714,18 @@ Johann Burkard
       return this;
     }
 
+    $.fn.flash = function(options) {
+      let $this = $(this);
+      this.addClass("flash");
+      setTimeout(function() {
+        $this.removeClass("flash");
+      }, 3000);
+
+      return this;
+    }
 
 
+    // lodash mixin to sort an js object by keys
     _.mixin({
       'sortKeysBy': function(object, comparator) {
 

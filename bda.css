@@ -796,7 +796,7 @@ table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td 
   cursor: pointer;
 }
 
-.newpage{
+.newpage {
   font-style: italic;
 }
 
@@ -813,14 +813,13 @@ table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td 
   flex: auto;
 }
 
-.show-short .value-elem.long, .show-long .value-elem.short, .show-edit .propertyValue,.show-edit .value-elem {
+.show-short .value-elem.long, .show-long .value-elem.short, .show-edit .propertyValue, .show-edit .value-elem {
   display: none;
 }
 
 .property .edit .inline-input {
   width: 100%;
-  height: 100%;
- /* border: 0;*/
+  height: 100%; /* border: 0;*/
   margin: 0;
   padding: 0;
 }
@@ -887,13 +886,12 @@ td.property.loading .actions .passive-loading-icon {
 /* DASH */
 .modal-dialog.modal-lg {
   width: 60%;
-  padding-top:10px;
+  padding-top: 10px;
 }
 
 .fullscreen .modal-dialog.modal-lg {
   width: 100%;
-  padding:10 ;
-
+  padding: 10;
 }
 
 #dashModal .modal-content {
@@ -1196,8 +1194,8 @@ button.cache {
 /* XML DEF */
 #xmlDefAsTable {
   margin-top: 15px;  /* for whatever reason on some pages
-          the whole section is inside an <a> tag
-          on native dyn/admin : need to reset color*/
+            the whole section is inside an <a> tag
+            on native dyn/admin : need to reset color*/
   color: black;
 }
 
@@ -1402,4 +1400,24 @@ ol.itemDescAttributes {
 }
 .open .show-xml-open {
   display: none;
+
+
+
+@keyframes flash {
+  0% {
+    background-color: inherit;
+  }
+
+  10% {
+    background-color: yellow;
+  }
+
+}
+
+.flash {
+ 
+  animation-name: flash;
+  animation-duration: 3000ms;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in-out;
 }

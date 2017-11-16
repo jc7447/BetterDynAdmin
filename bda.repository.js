@@ -1591,10 +1591,12 @@
                 //find the item if same id
                 // load the result in the parent section (repo/itemtree/dashscreen)
                 let outputDiv = $this.closest('.rqlResultContainer');
-                let resultTable = outputDiv.find('[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType));
+                let selector = '[data-identifier="id_{0}_{1}"]'.format(elem.id, property.itemType);
+                let resultTable = outputDiv.find(selector);
                 // if the result already exists, just scroll to it
                 if (resultTable.length > 0) {
                   resultTable.scrollTo();
+                  resultTable.find('[data-id="{0}"]'.format(elem.id)).flash();
                 } else {
                   let $property = $this.parent().parent();
                   $property.addClass('loading');
@@ -1793,6 +1795,8 @@
               let idSelector = '.idCell[data-identifier="id_{0}_{1}"]'.format(id, itemDescriptorName);
               parentTab.find(idSelector).replaceWith(tempResult.find(idSelector));
 
+              parentTab.find('[data-id="{0}"]'.format(id)).flash();
+
               if (cb) {
                 cb();
               }
@@ -1839,6 +1843,7 @@
             BDA_REPOSITORY.reloadSpeedBar($outputDiv);
             if (top) {
               top.scrollTo();
+              top.find('[data-id="{0}"]'.format(id)).flash();
             }
             if (cbSuccess) {
               cbSuccess();
