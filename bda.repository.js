@@ -1220,7 +1220,8 @@
       $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " +
         "<div class='prop_attr prop_attr_green'>D</div> : derived " +
         "<div class='prop_attr prop_attr_blue'>E</div> : export is false," +
-        '&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i> : Link to other Repository');
+        '&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i> : Link to other Repository,' +
+        '&nbsp;<span class="default">grey</span> : default value');
 
       // show all button
       let showAll = $('<button>Show All <i class="fa fa-expand" aria-hidden="true"></i></button>');
@@ -1505,6 +1506,7 @@
 
     buildPropertyValueCell: function(item, property, referencePropertyValue, repository) {
       let propertyValue = item.values[property.name];
+      console.log('buildPropertyValueCell : propertyValue', propertyValue);
       let val;
       try {
         val = propertyValue.value;
@@ -1525,6 +1527,9 @@
       res = $(BDA_REPOSITORY.templates.propertyCell.format(innerVal, item.id, property.name));
       if (long) {
         res.addClass('toggable');
+      }
+      if (propertyValue.isDefault) {
+        res.addClass('default');
       }
 
       //enable local collapse/expand

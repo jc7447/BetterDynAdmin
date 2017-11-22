@@ -875,6 +875,10 @@ td.property .actions {
   margin-left: 4px;
 }
 
+.default {
+  color: #777;
+}
+
 td.property .actions .passive-loading-icon {
   display: none;
 }
