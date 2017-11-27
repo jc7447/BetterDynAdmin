@@ -16,10 +16,10 @@
       },
       layout: {
         hierarchical: {
-          direction: "LR",
+          direction: "UD",
           sortMethod: "directed",
           nodeSpacing: 300,
-          levelSeparation: 250
+          levelSeparation: 100
         }
       },
       edges: {
@@ -31,7 +31,7 @@
       },
       nodes: {
         font: {
-          size: 11
+          size: 16
         },
         shape: "box"
       },
@@ -82,7 +82,7 @@
 
           $elem.find(".show-graph").click(function() {
             // Redset direction
-            BDA_PIPELINE.options.layout.hierarchical.direction = "LR";
+            BDA_PIPELINE.options.layout.hierarchical.direction = "UD";
             BDA_PIPELINE.showPipelineGraph(chainName);
           });
         });
