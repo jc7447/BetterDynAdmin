@@ -1284,3 +1284,13 @@ ol.itemDescAttributes {
 .showActorXml{
   margin-left: 10px;
 }
+
+.show-xml-close {
+  display: none;
+}
+.open .show-xml-close {
+  display: block;
+}
+.open .show-xml-open {
+  display: none;
+}
