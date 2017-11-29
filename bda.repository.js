@@ -1404,6 +1404,18 @@
       });
     },
 
+    showNonEmptyLines: function(resultTable) {
+      resultTable.find('.item-line.hidden').each(function() {
+        let line = $(this);
+        let mustShow = _.some(line.find('.propertyValue').get(),
+          (elem) => !_.isEmpty($(elem).attr('data-raw'))
+        );
+        if (mustShow) {
+          line.removeClass('hidden');
+        }
+      })
+    },
+
     buildResultTable: function(items, renderContext, repo) {
       let res;
       if (!_.isNil(items) && items.length > 0) {
@@ -1453,16 +1465,12 @@
         //for each property, get 
         let index = 0;
         _(itemDescriptor.properties)
-          .filter((property, key) => {
-            try {
-              return !!renderContext[itemDescriptor.name][property.name];
-            } catch (e) {
-              return false;
-            }
-          })
           .each((property) => {
 
-            let line = $('<tr class="item-line {0}" data-property="{1}"></tr>'.format(getEvenOddClass(index), property.name));
+            // hiden lines that have all null values
+            let lineIsVisible = !!renderContext[itemDescriptor.name][property.name]
+
+            let line = $('<tr class="item-line {0} {1}" data-property="{2}"></tr>'.format(getEvenOddClass(index), lineIsVisible ? '' : 'hidden', property.name));
 
             //build property name cell
             // the following flags have been set on the repoItem level :
@@ -1528,7 +1536,7 @@
       if (long) {
         res.addClass('toggable');
       }
-      if (propertyValue.isDefault) {
+      if (propertyValue && propertyValue.isDefault) {
         res.addClass('default');
       }
 
@@ -1547,6 +1555,7 @@
 
       // for id of other items, load sub item on click
       let longCell = res.find('.propertyValue');
+      longCell.attr('data-raw', val);
 
       if (property.isItem) {
 
@@ -1771,6 +1780,7 @@
       //  update the data
       let idSelector = '.idCell[data-id="{0}"]'.format(id, itemDescriptorName);
       dataTable.find('tr.id').append(tempResult.find(idSelector));
+      BDA_REPOSITORY.showNonEmptyLines(dataTable);
       if (cb) {
         cb();
       }
@@ -1801,6 +1811,8 @@
               parentTab.find(idSelector).replaceWith(tempResult.find(idSelector));
 
               parentTab.find('[data-id="{0}"]'.format(id)).flash();
+
+              BDA_REPOSITORY.showNonEmptyLines(parentTab);
 
               if (cb) {
                 cb();
