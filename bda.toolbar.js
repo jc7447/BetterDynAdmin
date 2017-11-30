@@ -11,11 +11,6 @@
         + '<div class="favArrow" id="favArrow{3}"><i class=" up fa fa-arrow-down"></i></div>' //
         + '<div class="favMoreInfo" id="favMoreInfo{3}">' //
         + '<div class="favLogDebug">' //
-        + '<form method="POST" action="{0}" id="logDebugForm{1}">' //
-        + '<input type="hidden" value="loggingDebug" name="propertyName">' //
-        + '<input type="hidden" value="" name="newValue">logDebug<a href="javascript:void(0)" class="logdebug" id ="logDebug{1}">true</a>' //
-        + '&nbsp; | &nbsp;' //
-        + '<a href="javascript:void(0)" class="logdebug" id ="logDebug{1}">false</a>' //
         + '</div>' //
         + '{4}' //
         + '<div class="favDelete" id="delete{1}"><i class="fa fa-trash-o"></i> Delete</div>' //
@@ -312,10 +307,44 @@
             }
           }
 
+          let favInnerElem = $(BDA_TOOLBAR.templates.FAV_ELEM.format(fav.componentPath, fav.componentName, shortName, fav.id, callableHTML, favTags));
+          let debugToggler = $('<div class="toggle-debug">loggingDebug : <span class="debug toggle-on ">true</span> <span class="debug toggle-off">false</span></div>');
+
+          let nucleusPath = fav.componentPath.replace(/\/dyn\/admin\/nucleus/g, '');
+          let setLog = function(value) {
+            BDA_COMPONENT.setProperty('', nucleusPath, 'loggingDebug', value, (value) => {
+              $.notify(
+                "Component {0} set to loggingDebug={1}".format(nucleusPath, value), {
+                  position: "top center",
+                  className: "success"
+                }
+              );
+            }, (jqXHR, textStatus, errorThrown) => {
+              $.notify(
+                "An error occured : {0}".format(errorThrown), {
+                  position: "top center",
+                  className: "error"
+                }
+              );
+            })
+          }
+
+          debugToggler
+            .on('click', '.toggle-on', function() {
+              setLog('true');
+            })
+            .on('click', '.toggle-off', function() {
+              setLog('false');
+            })
+
+          favInnerElem
+            .find('.favLogDebug')
+            .append(debugToggler);
+
           $("<div class='toolbar-elem fav'></div>")
             .css("background-color", colorToCss(colors))
             .css("border", "1px solid " + BDA_TOOLBAR.getBorderColor(colors))
-            .html(BDA_TOOLBAR.templates.FAV_ELEM.format(fav.componentPath, fav.componentName, shortName, fav.id, callableHTML, favTags))
+            .append(favInnerElem)
             .appendTo("#toolbar");
         }
       }

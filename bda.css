@@ -462,6 +462,10 @@ a {
   margin-bottom: 5px;
 }
 
+.debug {
+  cursor: pointer;
+}
+
 .bda-button {
   color: white;
   border: 1px solid #ccc;
