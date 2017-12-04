@@ -765,6 +765,7 @@ table.tablesorter tr.alt-row:hover td {
   border: 1px solid #999;
   font-size: 13px;
   padding: 10px;
+  z-index: 100;
 }
 
 #widget i {
