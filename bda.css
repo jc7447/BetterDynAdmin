@@ -516,6 +516,7 @@ a {
 .favline {
   margin-bottom: 5px;
   display: block;
+  overflow-x: auto;
 }
 
 .favline ul {
@@ -523,7 +524,7 @@ a {
   padding: 0;
   list-style-type: none;
   width: 100%;
-  overflow-x: auto;
+
   white-space: nowrap;
 }
 
