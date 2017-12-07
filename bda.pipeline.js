@@ -58,6 +58,8 @@
         $("#pipelinePopup").fadeOut();
       });
 
+      BDA_PIPELINE.addLinkToXml();
+
       var $pipelineTable = $("h2:contains('Pipeline Chains')").next().attr("id", "pipelineTable");
       $pipelineTable.find("tr:nth-child(odd)").addClass("odd");
       $pipelineTable.find("tr:first").prepend('<th></th>').append("<th>Show XML</th><th>Show graph</th>");
@@ -87,6 +89,13 @@
           });
         });
       });
+    },
+
+    addLinkToXml:function(){
+
+
+      let link = $('<span>, </span><a href="?propertyName=definitionFile">Examine Pipeline Definition</a>');
+      $('h1:contains("Service Info")').before(link);
     },
 
     hidePipelineXml: function(chainName) {
