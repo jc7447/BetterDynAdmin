@@ -77,6 +77,7 @@ try {
     },
 
     this.processRepositoryXmlDef = function(property, callback, componentPath) {
+      console.time('processRepositoryXmlDef');
       if (callback !== undefined) {
         // First check cache value if any
         if (_.isNil(componentPath)) {
@@ -86,8 +87,10 @@ try {
         if (rawXmlDef !== null) {
           logTrace("Getting XML def from cache");
           var xmlDoc = jQuery.parseXML(rawXmlDef);
-          if (callback !== undefined)
+          console.timeEnd('processRepositoryXmlDef');
+          if (callback !== undefined){
             callback($(xmlDoc));
+          }
         }
         // If no cache entry, fetch the XML def in ajax
         else {
@@ -109,14 +112,19 @@ try {
                   logTrace("XML def length : " + rawXmlDef.length);
                   var xmlDoc = jQuery.parseXML(rawXmlDef);
                   storeXmlDef(componentPath, rawXmlDef);
+                  console.timeEnd('processRepositoryXmlDef');
                   callback($(xmlDoc));
                 } catch (err) {
                   logTrace("Unable to parse XML def file !");
+                  console.timeEnd('processRepositoryXmlDef');
                   callback(null);
                   logTrace(err);
                 }
-              } else
+              } else{
+
+                console.timeEnd('processRepositoryXmlDef');
                 callback(null);
+              }
             },
           });
         }
@@ -124,16 +132,21 @@ try {
     };
 
   this.getXmlDef = function(componentPath) {
+    console.time('processRepositoryXmlDef');
     logTrace("Getting XML def for : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
     var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
     if (!xmlDefMetaData)
+        console.timeEnd('processRepositoryXmlDef');
       return null;
     if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp) {
+        console.timeEnd('processRepositoryXmlDef');
       logTrace("Xml def is outdated or from a different component");
       return null;
     }
-    return localStorage.getItem("XMLDefData");
+    let xml = localStorage.getItem("XMLDefData");
+    console.timeEnd('processRepositoryXmlDef');
+    return xml;
   };
 
   this.storeXmlDef = function(componentPath, rawXML) {
