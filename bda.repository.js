@@ -252,7 +252,7 @@
       BDA_REPOSITORY.isRepositoryPage = BDA_REPOSITORY.isRepositoryPageFct();
       BDA_REPOSITORY.hasErrors = BDA_REPOSITORY.hasErrorsFct();
       BDA_REPOSITORY.hasResults = BDA_REPOSITORY.hasResultsFct(BDA_REPOSITORY.hasErrors);
-      console.log("isRepositoryPage : " + BDA_REPOSITORY.isRepositoryPage + " Page has results : " + BDA_REPOSITORY.hasResults + ". Page has errors : " + BDA_REPOSITORY.hasErrors);
+      logTrace("isRepositoryPage : " + BDA_REPOSITORY.isRepositoryPage + " Page has results : " + BDA_REPOSITORY.hasResults + ". Page has errors : " + BDA_REPOSITORY.hasErrors);
       // Setup repository page
       if (BDA_REPOSITORY.isRepositoryPage)
         BDA_REPOSITORY.setupRepositoryPage();
@@ -338,7 +338,7 @@
       $("#storedQueries").css("display", "none");
 
       $("#queriesTab").click(function() {
-        console.log("show stored queries");
+        logTrace("show stored queries");
         $("#descProperties").css("display", "none");
         $("#storedQueries").css("display", "inline-block");
         $(this).addClass("selected");
@@ -346,7 +346,7 @@
       });
 
       $("#propertiesTab").click(function() {
-        console.log("show properties");
+        logTrace("show properties");
         $("#descProperties").css("display", "inline-block");
         $("#storedQueries").css("display", "none");
         $(this).addClass("selected");
@@ -356,7 +356,7 @@
 
       $("#RQLAction").change(function() {
         var action = $(this).val();
-        console.log("Action change : " + action);
+        logTrace("Action change : " + action);
         if (action == "print-item")
           BDA_REPOSITORY.getPrintItemEditor();
         else if (action == "query-items")
@@ -873,7 +873,7 @@
     getRQLQuery: function() {
       var query = "";
       var action = $("#RQLAction").val();
-      console.log("getRQLQuery : " + action);
+      logTrace("getRQLQuery : " + action);
       if (action == "print-item")
         query = BDA_REPOSITORY.getPrintItemQuery();
       else if (action == "query-items")
@@ -1164,7 +1164,7 @@
     },
 
     getRepositoryAsync: function(path, callback) {
-      console.log('getRepositoryAsync', path);
+      logTrace('getRepositoryAsync', path);
       let repository = BDA_REPOSITORY.repositories[path];
       if (_.isNil(repository)) {
         processRepositoryXmlDef("definitionFiles",
@@ -1180,7 +1180,7 @@
     },
 
     getRepository: function($xmlDef, repositoryPath) {
-      console.log('getRepository', repositoryPath);
+      logTrace('getRepository', repositoryPath);
       let repository = BDA_REPOSITORY.repositories[repositoryPath];
       if (_.isNil(repository)) {
         repository = new Repository({
@@ -1261,12 +1261,12 @@
 
       BDA_REPOSITORY.getRepositoryAsync(repositoryPath, (repository) => {
         try {
-          console.log('parseXhrResult', repositoryPath, xhrResult);
+          logTrace('parseXhrResult', repositoryPath, xhrResult);
           var rawXml = $('<div>' + xhrResult + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
           let xmlContent = sanitizeXml(rawXml);
           let result = BDA_REPOSITORY.parseXmlResult(xmlContent, repository, rawXml);
           result.repository = repository;
-          console.log('parseXhrResult result:', result);
+          logTrace('parseXhrResult result:', result);
           callback(result);
         } catch (e) {
           console.error(e);
@@ -1454,7 +1454,7 @@
           copyToClipboard($(this).closest('.property').data('repositoryItem').rawXml);
         })
         idLine.find('.close-elem').on('click', function() {
-          console.log('close-elem', $(this));
+          logTrace('close-elem', $(this));
           BDA_REPOSITORY.closeTab($(this).closest('.property'));
         })
 
@@ -1514,7 +1514,7 @@
 
     buildPropertyValueCell: function(item, property, referencePropertyValue, repository) {
       let propertyValue = item.values[property.name];
-      console.log('buildPropertyValueCell : propertyValue', propertyValue);
+      logTrace('buildPropertyValueCell : propertyValue', propertyValue);
       let val;
       try {
         val = propertyValue.value;
@@ -1738,7 +1738,7 @@
     },
     closeTab: function(idCell, container) {
       try {
-        console.log('closetab', idCell);
+        logTrace('closetab', idCell);
         let tab = idCell.closest('.dataTable');
         tab.find('[data-id="{0}"]'.format(idCell.attr('data-id'))).remove();
         //if last item remove tab
@@ -1758,10 +1758,10 @@
       let dataTables = outputDiv.find('.dataTable[data-descriptor="{0}"]'.format(itemDescriptorName));
       var max = BDA_REPOSITORY.getChunkSize();
       let res;
-      console.log('dataTables', dataTables);
+      logTrace('dataTables', dataTables);
       dataTables.each(function(idx, table) {
         let $table = $(table);
-        console.log('table', $table);
+        logTrace('table', $table);
         if ($table.find('.idCell').length < max) {
           res = $table;
         }
@@ -2031,7 +2031,7 @@
     },
 
     showLoadSubItemAlert: function() {
-      console.log('click on loadable');
+      logTrace('click on loadable');
       var $elm = $(this);
       var id = $elm.attr("data-id");
       var itemDesc = $elm.attr("data-descriptor");
@@ -2187,7 +2187,7 @@
 
       // Ensure that getSubItems is not call more than maxItem times
       if (nbItem >= maxItem) {
-        console.log("max Item (" + maxItem + ") reached, stopping recursion");
+        logTrace("max Item (" + maxItem + ") reached, stopping recursion");
         return;
       }
 
@@ -2288,7 +2288,7 @@
     },
 
     getItemTree: function(id, descriptor, maxItem, outputType, printRepoAttr) {
-      console.log("getItemTree - start");
+      logTrace("getItemTree - start");
       // reset divs
       $("#itemTreeResult").empty();
       $("#itemTreeInfo").empty();
@@ -2320,7 +2320,7 @@
 
     renderItemTreeTab: function(outputType, printRepoAttr, $xmlDef, maxItem) {
       console.timeEnd("retrieveItem");
-      console.log("Render item tree tab : " + outputType);
+      logTrace("Render item tree tab : " + outputType);
 
       //  If the max item is reached before recursion ended, we notify the user
       if (BDA_REPOSITORY.nbItemReceived >= maxItem) {
@@ -2386,7 +2386,7 @@
     },
 
     renderAsTree: function($xmlDef) {
-      console.log("render as tree");
+      logTrace("render as tree");
       console.time('renderAsTree.setup');
       var nodes = new vis.DataSet();
       var edges = new vis.DataSet();
@@ -2447,7 +2447,7 @@
       $("#itemTreeResult").empty()
         .append("<div class='popup_block' id='treePopup'>" + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></i></a></div>" + "<div id='treeLegend'></div>" + "<div class='flexContainer'>" + "<div id='treeInfo'></div>" + "<div id='treeContainer'></div>" + "</div>" + "</div>");
       $("#treePopup .close").click(function() {
-        console.log("click on close");
+        logTrace("click on close");
         $("#treePopup").hide();
       });
 
@@ -2456,8 +2456,8 @@
         $("#treeLegend").append("<div class='legend' style='background-color:" + value + "' id='" + key + "'>" + key + "</div>");
       });
 
-      console.log("Number for nodes : " + nodes.length);
-      console.log("Number for edges : " + edges.length);
+      logTrace("Number for nodes : " + nodes.length);
+      logTrace("Number for edges : " + edges.length);
 
       $("#treePopup").show();
       console.time('renderAsTree.render');
@@ -2492,7 +2492,7 @@
           $("#treeInfo").empty();
           var visId = params.nodes[0];
           var itemId = null;
-          console.log("Click on " + visId);
+          logTrace("Click on " + visId);
           // Find itemId from visID
           for (var id in itemIdToVisId) {
             if (visId === itemIdToVisId[id]) {
@@ -2500,10 +2500,10 @@
               break;
             }
           }
-          console.log("itemId : " + itemId);
-          console.log(BDA_REPOSITORY.itemTree.get(itemId));
+          logTrace("itemId : " + itemId);
+          logTrace(BDA_REPOSITORY.itemTree.get(itemId));
           BDA_REPOSITORY.showXMLAsTab(BDA_REPOSITORY.itemTree.get(itemId), null, $("#treeInfo"), false);
-          console.log($("#treeInfo").html());
+          logTrace($("#treeInfo").html());
           $("#treeInfo").show();
         }
       });
@@ -2511,9 +2511,9 @@
       $(".legend").click(function() {
         // This feature is disabled for now.
         return;
-        console.log("click on legend");
+        logTrace("click on legend");
         var id = $(this).attr('id');
-        console.log(id);
+        logTrace(id);
         var ids = descById.get(id);
         var nodesAndEdgesToHide = {};
         for (var i = 0; i != ids.length; i++) {
@@ -2538,38 +2538,38 @@
     },
 
     findNodesAndEdgesToHide: function(id, network, edges, nodes) {
-      console.log("findNodesAndEdgesToHide for ID : " + id);
+      logTrace("findNodesAndEdgesToHide for ID : " + id);
       var nodesAndEdgesToHide = {};
       nodesAndEdgesToHide.nodes = BDA_REPOSITORY.findOrphanSon(id, network, edges, nodes, [id]);
       nodesAndEdgesToHide.edges = [];
       for (var i = 0; i != nodesAndEdgesToHide.nodes.length; i++) {
         nodesAndEdgesToHide.edges = nodesAndEdgesToHide.edges.concat(network.getConnectedEdges(nodesAndEdgesToHide.nodes[i]));
       }
-      console.log("nodesAndEdgesToHide.nodes : ");
-      console.log(nodesAndEdgesToHide.nodes);
-      console.log("nodesAndEdgesToHide.edges : ");
-      console.log(nodesAndEdgesToHide.edges);
+      logTrace("nodesAndEdgesToHide.nodes : ");
+      logTrace(nodesAndEdgesToHide.nodes);
+      logTrace("nodesAndEdgesToHide.edges : ");
+      logTrace(nodesAndEdgesToHide.edges);
       return nodesAndEdgesToHide;
     },
 
     findOrphanSon: function(id, network, edges, nodes, orphanSons) {
-      console.log("About to find orphan for node : " + id);
+      logTrace("About to find orphan for node : " + id);
       edges.forEach(function(elm) {
-        //console.log(elm);
+        //logTrace(elm);
         if (elm.from == id) {
           var isOrphan = true;
           var connectedEdges = network.getConnectedEdges(elm.to);
 
           for (var i = 0; i != connectedEdges.length; i++) {
             var edge = edges.get(connectedEdges[i]);
-            console.log("connectedEdge - from : " + edge.to + " - " + edge.from);
+            logTrace("connectedEdge - from : " + edge.to + " - " + edge.from);
             if (edge.to == elm.to && edge.from != id) {
               isOrphan = false;
               break;
             }
           }
           if (isOrphan && orphanSons.indexOf(elm.to) === -1) {
-            console.log(elm.to + " is a new orphan son of node : " + id);
+            logTrace(elm.to + " is a new orphan son of node : " + id);
             orphanSons.push(elm.to);
             BDA_REPOSITORY.findOrphanSon(elm.to, network, edges, nodes, orphanSons);
           }
@@ -2580,7 +2580,7 @@
 
 
     createSpeedbar_new: function(resultElem) {
-      console.log('createSpeedbar_new')
+      logTrace('createSpeedbar_new')
       try {
 
         let speedbar = $('<div class="speedbar"><div class="widget"><i class="fa fa-times close"></i><p>Quick links :</p><ul></ul></div></div>');
@@ -2696,7 +2696,7 @@
       // });
 
       $(".savedQuery").on('click', 'a', function() {
-        console.log("click on query : " + $(this).find("a").html());
+        logTrace("click on query : " + $(this).find("a").html());
         BDA_REPOSITORY.printStoredQuery($(this).find("a").html());
       });
 
@@ -2726,7 +2726,7 @@
       $(".deleteQuery")
         .click(function() {
           var index = this.id.replace("deleteQuery", "");
-          console.log("Delete query #" + index);
+          logTrace("Delete query #" + index);
           logTrace(BDA_STORAGE.deleteRQLQuery);
           BDA_STORAGE.deleteRQLQuery(index);
           BDA_REPOSITORY.reloadQueryList();
@@ -2751,7 +2751,7 @@
     },
 
     printStoredQuery: function(name) {
-      console.log("printStoredQuery : " + name);
+      logTrace("printStoredQuery : " + name);
       var rqlQueries = BDA_STORAGE.getStoredRQLQueries();
       logTrace(rqlQueries);
       if (rqlQueries) {
@@ -3059,7 +3059,7 @@
 
       //make the header fixed with css
       $cacheTable.addClass('fixed_headers');
-      console.log('isOldDynamo ' + BDA.isOldDynamo)
+      logTrace('isOldDynamo ' + BDA.isOldDynamo)
       if (BDA.isOldDynamo) {
         $cacheTable.addClass('oldDynamo');
       }
@@ -3216,7 +3216,7 @@
 
   // Jquery plugin creation
   $.fn.bdaRepository = function(theBDA) {
-    console.log('Init plugin {0}'.format('bdaRepository'));
+    logTrace('Init plugin {0}'.format('bdaRepository'));
     //settings = $.extend({}, defaults, options);
     BDA = theBDA;
     BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();

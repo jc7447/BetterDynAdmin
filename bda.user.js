@@ -194,7 +194,7 @@ jQuery(document).ready(function() {
 
         $().bdaScheduler();
 
-        $().initRepositoryExplorer(BDA);
+       // $().initRepositoryExplorer(BDA);
 
         var autocomplete = $.fn.bdaStorage.getBdaStorage().getConfigurationValue('search_autocomplete');
         autocomplete = (autocomplete == true) ? true : false;
