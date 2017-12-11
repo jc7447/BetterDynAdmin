@@ -752,6 +752,42 @@ Johann Burkard
       }
     });
 
+    PerformanceMonitor = function(active){
+      this.active = active;
+      this.values = {};
+    }
+    PerformanceMonitor.prototype.reset = function(){
+      this.values = {};
+    }
+    PerformanceMonitor.prototype.start = function(task){
+      if(this.active){
+
+      let record = this.values[task];
+      if(_.isNil(record)){
+         record = {total:0};
+        this.values[task] = record;
+      }
+      record.start = new Date().getTime();
+     //  console.log('start',task,record.start);
+      }
+    }
+    PerformanceMonitor.prototype.cumul = function(task){
+      if (this.active){
+        let record = this.values[task];
+          if(!!record && !!record.start){
+            let current = new Date().getTime() - record.start;
+            record.total += current;
+         //    console.log('cumul',task,record.start,record.total,current);
+          }
+        }
+    }
+    PerformanceMonitor.prototype.log = function(){
+      console.log('PerformanceMonitor :');
+      _.forEach(this.values,(record,task)=>{
+        console.log('%s - %s',task,record.total);
+      })
+    }
+
   })(jQuery);
 
 

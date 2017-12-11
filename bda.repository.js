@@ -120,9 +120,6 @@
       this.isDefault = true;
     }
     this.isDefault;
-    // if (_.isNil(this.value) && !_.isNil(this.descriptor) && !_.isNil(this.descriptor.defaultValue)) {
-    //   this.value = this.descriptor.defaultValue;
-    // }
     // get attribues from the xml result, not the descriptor
     if (!_.isNil(this.xmlValue)) {
       this.rdonly = this.xmlValue.attr('rdonly');
@@ -140,6 +137,8 @@
     repositories: {},
 
     CELL_MAX_LENGTH: 23,
+
+    PERF_MONITOR :null,
 
     MAP_SEPARATOR: "=",
     LIST_SEPARATOR: ",",
@@ -267,6 +266,9 @@
       // Move RQL editor to the top of the page
 
       console.time('preparePage');
+
+      BDA_REPOSITORY.PERF_MONITOR = new PerformanceMonitor(true);
+      BDA_REPOSITORY.PERF_MONITOR.reset();
 
       $(BDA_REPOSITORY.descriptorTableSelector).attr("id", "descriptorTable");
 
@@ -486,6 +488,7 @@
       $("#itemDescriptor").on("select2-selecting", function(e) {
         BDA_REPOSITORY.showItemPropertyList(e.val);
       });
+
       console.timeEnd('initSelect2');
 
 
@@ -1122,7 +1125,8 @@
 
     //same as getDescriptorAndDefaultValues but using Objects
     buildItemDescriptor: function(itemDescriptorName, $xmlDef, repository) {
-      console.time(itemDescriptorName);
+      BDA_REPOSITORY.PERF_MONITOR.start('buildItemDescriptor');
+    //  console.time(itemDescriptorName);
       var $itemDefinition = $xmlDef.find('item-descriptor[name={0}]'.format(itemDescriptorName));
 
       // first get properties from the parent, if it exists
@@ -1159,7 +1163,8 @@
         xmlDefinition: $itemDefinition,
         properties: propertyDescriptors
       });
-      console.timeEnd(itemDescriptorName);
+    //  console.timeEnd(itemDescriptorName);
+      BDA_REPOSITORY.PERF_MONITOR.cumul('buildItemDescriptor');
       return desc;
     },
 
@@ -1195,6 +1200,7 @@
 
     showXMLAsTab: function(rawXml, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
       let xmlContent = sanitizeXml(rawXml);
+
       console.time('showXMLAsTab_new');
       if (_.isEmpty(repositoryPath)) {
         repositoryPath = getCurrentComponentPath();
@@ -1211,6 +1217,7 @@
       BDA_REPOSITORY.createSpeedbar_new($outputDiv);
       //}
 
+      BDA_REPOSITORY.PERF_MONITOR.log();
       console.timeEnd('showXMLAsTab_new');
       return logs;
     },
@@ -1375,7 +1382,8 @@ console.timeEnd('formatTabResult');
     },
 
     parseXmlAsObjects: function($addItems, repository, rawXmlDoc) {
-      return $addItems.map(function() {
+      BDA_REPOSITORY.PERF_MONITOR.start('parseXmlAsObjects');
+      let res =  $addItems.map(function() {
         var currentItem = $(this);
         var descriptorName = currentItem.attr("item-descriptor");
         var id = currentItem.attr("id");
@@ -1409,6 +1417,8 @@ console.timeEnd('formatTabResult');
         logTrace('repoItem', repositoryItem);
         return repositoryItem;
       });
+      BDA_REPOSITORY.PERF_MONITOR.cumul('parseXmlAsObjects');
+      return res;
     },
 
     showNonEmptyLines: function(resultTable) {
@@ -1457,41 +1467,45 @@ console.timeEnd('formatTabResult');
 
             //build property name cell
             // the following flags have been set on the repoItem level :
+            
+            let propertyNameCell = $('<th>{0}<span class="prop_name"></span></th>'.format(property.name)).appendTo(line);
+
+            let sampleItem = null
+
             if(lineIsVisible){
+              sampleItem = _.find(items, item => !_.isNil(item.values[property.name]));
               index++;
-
-              let propertyNameCell = $('<th>{0}<span class="prop_name"></span></th>'.format(property.name)).appendTo(line);
-
-              let sampleItem = _.find(items, item => !_.isNil(item.values[property.name]));
-
-              if (!_.isNil(sampleItem)) {
-                let sampleValue = sampleItem.values[property.name];
-                if (!!sampleValue.derived) {
-                  propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
-                  line.addClass('derived');
-                }
-                if (!!sampleValue.rdonly) {
-                  propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
-                  line.addClass('rdonly');
-                }
-                if (!!sampleValue.exportable) {
-                  propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
-                  line.addClass('exportable');
-                }
-                if (property.isItem && !property.isItemOfSameRepository) {
-                  propertyNameCell.append('&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i>');
-                  line.addClass('other-repository');
-                }
-              }
-
-              // add all cells
-               //   console.time('build all cells');
-              let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo));
-             // console.timeEnd('build all cells');
-              //console.time('append all cells');
-
-              _.each(cells, cell => cell.appendTo(line));
             }
+
+
+            if (lineIsVisible && !_.isNil(sampleItem)) {
+              let sampleValue = sampleItem.values[property.name];
+              if (!!sampleValue.derived) {
+                propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
+                line.addClass('derived');
+              }
+              if (!!sampleValue.rdonly) {
+                propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
+                line.addClass('rdonly');
+              }
+              if (!!sampleValue.exportable) {
+                propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
+                line.addClass('exportable');
+              }
+              if (property.isItem && !property.isItemOfSameRepository) {
+                propertyNameCell.append('&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i>');
+                line.addClass('other-repository');
+              }
+            }
+
+            // add all cells
+             //   console.time('build all cells');
+            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo,lineIsVisible));
+           // console.timeEnd('build all cells');
+            //console.time('append all cells');
+
+            _.each(cells, cell => cell.appendTo(line));
+            
          //   console.timeEnd('append all cells');
             line.appendTo(tbody);
 
@@ -1547,7 +1561,8 @@ console.timeEnd('formatTabResult');
       return res;
     },
 
-    buildPropertyValueCell: function(item, property, referencePropertyValue, repository) {
+    buildPropertyValueCell: function(item, property, referencePropertyValue, repository, lineIsVisible) {
+       BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell');
   //    console.time('buildPropertyValueCell ' + property.name);
       let propertyValue = item.values[property.name];
       logTrace('buildPropertyValueCell : propertyValue', propertyValue);
@@ -1581,7 +1596,7 @@ console.timeEnd('formatTabResult');
       let longCell = res.find('.propertyValue');
       longCell.attr('data-raw', val);
 
-      if (property.isItem) {
+      if (lineIsVisible && property.isItem) {
 
         BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
 
@@ -1589,14 +1604,16 @@ console.timeEnd('formatTabResult');
         longCell.append(val);
       }
 
-      if (!_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-       BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
+      if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
+        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
       }
+       BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell');
       // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
     },
 
     buildLinkToOtherItem: function(longCell, val, property) {
+      BDA_REPOSITORY.PERF_MONITOR.start('buildLinkToOtherItem');
       // handle map types
       let ids = _(val)
         .split(',')
@@ -1621,7 +1638,8 @@ console.timeEnd('formatTabResult');
 
       _(ids)
         .map(elem => {
-          let cell = $('<span class="clickable_property loadable_property {1}">{0}</span>'.format(elem.id, property.isItemOfSameRepository ? '' : 'newpage')).on('click', function() {
+          let cell = $('<span class="clickable_property loadable_property {1}">{0}</span>'.format(elem.id, property.isItemOfSameRepository ? '' : 'newpage'))
+            .on('click', function() {
 
             if (property.isItemOfSameRepository) {
               let $this = $(this);
@@ -1681,6 +1699,7 @@ console.timeEnd('formatTabResult');
             longCell.append(' , ');
           }
         });
+        BDA_REPOSITORY.PERF_MONITOR.cumul('buildLinkToOtherItem');
     },
 
     addInlineEditForm: function(output, val, property, item, repository) {
@@ -2101,7 +2120,10 @@ console.timeEnd('formatTabResult');
       var xmlContent = $(BDA_REPOSITORY.resultsSelector).next().text().trim();
       // xmlContent = sanitizeXml(xmlContent); //sanitize later
 
+      BDA_REPOSITORY.PERF_MONITOR.reset();
+      BDA_REPOSITORY.PERF_MONITOR.start('processRepositoryXmlDef');
       processRepositoryXmlDef("definitionFiles", function($xmlDef) {
+         BDA_REPOSITORY.PERF_MONITOR.cumul('processRepositoryXmlDef');
         var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, $("#RQLResults"), false);
         BDA_REPOSITORY.showRQLLog(log, false);
         // Move raw xml
