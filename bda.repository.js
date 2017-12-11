@@ -1438,33 +1438,7 @@ console.timeEnd('formatTabResult');
           .each((elem) => {
             elem.appendTo(idLine)
           });
-        idLine.find('.reload-item').on('click', function() {
-          let $this = $(this);
-          let property = $this.closest('.property');
-          let id = property.attr('data-id');
-          let item = property.attr('data-item');
-          let repoPath = property.attr('data-repository');
-          let parentTab = $this.closest('.dataTable');
-          $this.addClass('fa-spin');
-          BDA_REPOSITORY.reloadTab(id, item, repoPath, parentTab, () => {
-            $this.removeClass('fa-spin');
-            $.notify(
-              "Success: Reloaded {0} {1}".format(item, id), {
-                className: "success",
-                position: "top center",
-                autoHideDelay: 3000
-              }
-            );
-
-          });
-        });
-        idLine.find('.copy-xml').on('click', function() {
-          copyToClipboard($(this).closest('.property').data('repositoryItem').rawXml);
-        })
-        idLine.find('.close-elem').on('click', function() {
-          logTrace('close-elem', $(this));
-          BDA_REPOSITORY.closeTab($(this).closest('.property'));
-        })
+       
 
         // let descLineElems = _(items).map((item) => BDA_REPOSITORY.templates.descriptorCell.format(itemDescriptorName, item.id)).join('');
         // let descLine = $('<tr class="descriptor odd"><th>descriptor</th>{0}</tr>'.format(descLineElems)).appendTo(tableHead);
@@ -1479,7 +1453,7 @@ console.timeEnd('formatTabResult');
             // hiden lines that have all null values
             let lineIsVisible = !!renderContext[itemDescriptor.name][property.name]
 
-            let line = $('<tr class="item-line {0} {1}" data-property="{2}"></tr>'.format(getEvenOddClass(index), lineIsVisible ? '' : 'hidden', property.name));
+            let line = $('<tr class="item-line {0} {1}" data-property="{2}"></tr>'.format('', lineIsVisible ? '' : 'hidden', property.name));
 
             //build property name cell
             // the following flags have been set on the repoItem level :
@@ -1523,16 +1497,44 @@ console.timeEnd('formatTabResult');
 
         //enable local collapse/expand
         console.time('bind actions');
-        tbody.find('.actions')
-        .on('click', '.collapse', function() {
+        table
+        .on('click', '.actions .collapse', function() {
           $(this).closest('.property').addClass('show-short').removeClass('show-long');
         })
-        .on('click', '.expand', function() {
+        .on('click', '.actions .expand', function() {
           $(this).closest('.property').removeClass('show-short').addClass('show-long');
         })
-        .on('click', '.start-edit', function() {
+        .on('click', '.actions .start-edit', function() {
           $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
 
+        })
+          .on('click','.id .reload-item', function() {
+            console.log('reloadItem')
+          let $this = $(this);
+          let property = $this.closest('.property');
+          let id = property.attr('data-id');
+          let item = property.attr('data-item');
+          let repoPath = property.attr('data-repository');
+          let parentTab = $this.closest('.dataTable');
+          $this.addClass('fa-spin');
+          BDA_REPOSITORY.reloadTab(id, item, repoPath, parentTab, () => {
+            $this.removeClass('fa-spin');
+            $.notify(
+              "Success: Reloaded {0} {1}".format(item, id), {
+                className: "success",
+                position: "top center",
+                autoHideDelay: 3000
+              }
+            );
+
+          });
+        })
+         .on('click','.id .copy-xml', function() {
+          copyToClipboard($(this).closest('.property').data('repositoryItem').rawXml);
+        })
+         .on('click', '.id .close-elem',function() {
+          logTrace('close-elem', $(this));
+          BDA_REPOSITORY.closeTab($(this).closest('.property'));
         })
         console.timeEnd('bind actions');
 
@@ -1586,7 +1588,7 @@ console.timeEnd('formatTabResult');
       }
 
       if (!_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
+       BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
       }
       // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
