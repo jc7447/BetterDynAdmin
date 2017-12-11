@@ -1216,6 +1216,7 @@
     },
 
     renderResultSection: function(items, repository, $outputDiv, isItemTree) {
+       console.time('renderResultSection');
       // now render the result section
       $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " +
         "<div class='prop_attr prop_attr_green'>D</div> : derived " +
@@ -1254,6 +1255,7 @@
 
 
       BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
+       console.timeEnd('renderResultSection');
 
     },
 
@@ -1276,6 +1278,7 @@
     },
 
     parseXmlResult: function(xmlContent, repository, rawXml) {
+      console.time('parseXmlResult');
       try {
 
         var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
@@ -1284,13 +1287,16 @@
         var $addItems = $xml.find("add-item");
         let items = BDA_REPOSITORY.parseXmlAsObjects($addItems, repository, rawXmlDoc);
         let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
+        console.timeEnd('parseXmlResult');
         return {
           items: items,
           logs: logs
         }
       } catch (e) {
         console.error(e);
+        console.timeEnd('parseXmlResult');
       }
+
     },
     getExecutionLogs: function(xmlContent) {
       var log = $("<xml>" + xmlContent + "</xml>")
@@ -1318,6 +1324,7 @@
     },
 
     formatTabResult: function(repository, repositoryItems, result) {
+      console.time('formatTabResult');
       try {
         let itemsByType = _.groupBy(repositoryItems, repoItem => !_.isNil(repoItem.itemDescriptor) ? repoItem.itemDescriptor.name : null);
         let nbItemDescriptors = _.keys(itemsByType).length;
@@ -1364,7 +1371,7 @@
       } catch (e) {
         console.error(e);
       }
-
+console.timeEnd('formatTabResult');
     },
 
     parseXmlAsObjects: function($addItems, repository, rawXmlDoc) {
@@ -1417,6 +1424,7 @@
     },
 
     buildResultTable: function(items, renderContext, repo) {
+      console.time('buildResultTable')
       let res;
       if (!_.isNil(items) && items.length > 0) {
         let itemDescriptor = items[0].itemDescriptor;
@@ -1464,6 +1472,7 @@
         let tbody = $('<tbody></tbody>').appendTo(table);
         //for each property, get 
         let index = 0;
+        console.time('build all items');
         _(itemDescriptor.properties)
           .each((property) => {
 
@@ -1500,19 +1509,26 @@
             }
 
             // add all cells
+             //   console.time('build all cells');
             let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo));
+           // console.timeEnd('build all cells');
+            //console.time('append all cells');
+
             _.each(cells, cell => cell.appendTo(line));
+         //   console.timeEnd('append all cells');
             line.appendTo(tbody);
             index++;
 
           });
-
+        console.timeEnd('build all items');
         res = table;
       }
+       console.timeEnd('buildResultTable')
       return res;
     },
 
     buildPropertyValueCell: function(item, property, referencePropertyValue, repository) {
+  //    console.time('buildPropertyValueCell ' + property.name);
       let propertyValue = item.values[property.name];
       logTrace('buildPropertyValueCell : propertyValue', propertyValue);
       let val;
@@ -1540,18 +1556,18 @@
         res.addClass('default');
       }
 
-      //enable local collapse/expand
-      res.find('.actions')
-        .on('click', '.collapse', function() {
-          $(this).closest('.property').addClass('show-short').removeClass('show-long');
-        })
-        .on('click', '.expand', function() {
-          $(this).closest('.property').removeClass('show-short').addClass('show-long');
-        })
-        .on('click', '.start-edit', function() {
-          $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
+      // //enable local collapse/expand
+      // res.find('.actions')
+      //   .on('click', '.collapse', function() {
+      //     $(this).closest('.property').addClass('show-short').removeClass('show-long');
+      //   })
+      //   .on('click', '.expand', function() {
+      //     $(this).closest('.property').removeClass('show-short').addClass('show-long');
+      //   })
+      //   .on('click', '.start-edit', function() {
+      //     $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
 
-        })
+      //   })
 
       // for id of other items, load sub item on click
       let longCell = res.find('.propertyValue');
@@ -1559,16 +1575,16 @@
 
       if (property.isItem) {
 
-        BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
+       // BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
 
       } else {
         longCell.append(val);
       }
 
       if (!_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
+     //   BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
       }
-
+      // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
     },
 
