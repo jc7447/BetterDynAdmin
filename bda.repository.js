@@ -1520,6 +1520,22 @@ console.timeEnd('formatTabResult');
             index++;
 
           });
+
+        //enable local collapse/expand
+        console.time('bind actions');
+        tbody.find('.actions')
+        .on('click', '.collapse', function() {
+          $(this).closest('.property').addClass('show-short').removeClass('show-long');
+        })
+        .on('click', '.expand', function() {
+          $(this).closest('.property').removeClass('show-short').addClass('show-long');
+        })
+        .on('click', '.start-edit', function() {
+          $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
+
+        })
+        console.timeEnd('bind actions');
+
         console.timeEnd('build all items');
         res = table;
       }
@@ -1556,18 +1572,6 @@ console.timeEnd('formatTabResult');
         res.addClass('default');
       }
 
-      // //enable local collapse/expand
-      // res.find('.actions')
-      //   .on('click', '.collapse', function() {
-      //     $(this).closest('.property').addClass('show-short').removeClass('show-long');
-      //   })
-      //   .on('click', '.expand', function() {
-      //     $(this).closest('.property').removeClass('show-short').addClass('show-long');
-      //   })
-      //   .on('click', '.start-edit', function() {
-      //     $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
-
-      //   })
 
       // for id of other items, load sub item on click
       let longCell = res.find('.propertyValue');
@@ -1575,14 +1579,14 @@ console.timeEnd('formatTabResult');
 
       if (property.isItem) {
 
-       // BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
+        BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
 
       } else {
         longCell.append(val);
       }
 
       if (!_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-     //   BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
+        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
       }
       // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
