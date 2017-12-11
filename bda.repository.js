@@ -1521,6 +1521,9 @@ console.timeEnd('formatTabResult');
           $(this).closest('.property').removeClass('show-short').addClass('show-long');
         })
         .on('click', '.actions .start-edit', function() {
+
+          // addInlineEditForm(output, val, property, item, repository) 
+
           $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
 
         })
@@ -1604,9 +1607,9 @@ console.timeEnd('formatTabResult');
         longCell.append(val);
       }
 
-      if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
-      }
+      // if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
+      //   BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
+      // }
        BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell');
       // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
@@ -1703,10 +1706,12 @@ console.timeEnd('formatTabResult');
     },
 
     addInlineEditForm: function(output, val, property, item, repository) {
+      BDA_REPOSITORY.PERF_MONITOR.start('addInlineEditForm');
       try {
 
-        let form = $('<form class="edit"><textarea class="inline-input" rows="1"></input></form>');
-        let input = form.find('.inline-input').val(val);
+        let form = $('<form class="edit"></form>');
+        let input = $('<textarea class="inline-input" rows="1"></input>').val(val);
+        input.appendTo(form);
         input.on('blur', function() {
 
           try {
@@ -1776,7 +1781,7 @@ console.timeEnd('formatTabResult');
       } catch (e) {
         console.error(e);
       }
-
+      BDA_REPOSITORY.PERF_MONITOR.cumul('addInlineEditForm');
 
     },
     closeTab: function(idCell, container) {
