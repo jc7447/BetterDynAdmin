@@ -1445,7 +1445,7 @@ console.timeEnd('formatTabResult');
 
         let tbody = $('<tbody></tbody>').appendTo(table);
         //for each property, get 
-        let index = 0;
+        let index = 1;
         console.time('build all items');
         _(itemDescriptor.properties)
           .each((property) => {
@@ -1453,45 +1453,47 @@ console.timeEnd('formatTabResult');
             // hiden lines that have all null values
             let lineIsVisible = !!renderContext[itemDescriptor.name][property.name]
 
-            let line = $('<tr class="item-line {0} {1}" data-property="{2}"></tr>'.format('', lineIsVisible ? '' : 'hidden', property.name));
+            let line = $('<tr class="item-line {0} {1}" data-property="{2}"></tr>'.format(getEvenOddClass(index), lineIsVisible ? '' : 'hidden', property.name));
 
             //build property name cell
             // the following flags have been set on the repoItem level :
+            if(lineIsVisible){
+              index++;
 
-            let propertyNameCell = $('<th>{0}<span class="prop_name"></span></th>'.format(property.name)).appendTo(line);
+              let propertyNameCell = $('<th>{0}<span class="prop_name"></span></th>'.format(property.name)).appendTo(line);
 
-            let sampleItem = _.find(items, item => !_.isNil(item.values[property.name]));
+              let sampleItem = _.find(items, item => !_.isNil(item.values[property.name]));
 
-            if (!_.isNil(sampleItem)) {
-              let sampleValue = sampleItem.values[property.name];
-              if (!!sampleValue.derived) {
-                propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
-                line.addClass('derived');
+              if (!_.isNil(sampleItem)) {
+                let sampleValue = sampleItem.values[property.name];
+                if (!!sampleValue.derived) {
+                  propertyNameCell.append('<div class="prop_attr prop_attr_green">D</div>');
+                  line.addClass('derived');
+                }
+                if (!!sampleValue.rdonly) {
+                  propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
+                  line.addClass('rdonly');
+                }
+                if (!!sampleValue.exportable) {
+                  propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
+                  line.addClass('exportable');
+                }
+                if (property.isItem && !property.isItemOfSameRepository) {
+                  propertyNameCell.append('&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i>');
+                  line.addClass('other-repository');
+                }
               }
-              if (!!sampleValue.rdonly) {
-                propertyNameCell.append('<div class="prop_attr prop_attr_red">R</div>');
-                line.addClass('rdonly');
-              }
-              if (!!sampleValue.exportable) {
-                propertyNameCell.append('<div class="prop_attr prop_attr_blue">E</div>');
-                line.addClass('exportable');
-              }
-              if (property.isItem && !property.isItemOfSameRepository) {
-                propertyNameCell.append('&nbsp;<i class="fa fa-external-link-square" aria-hidden="true"></i>');
-                line.addClass('other-repository');
-              }
+
+              // add all cells
+               //   console.time('build all cells');
+              let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo));
+             // console.timeEnd('build all cells');
+              //console.time('append all cells');
+
+              _.each(cells, cell => cell.appendTo(line));
             }
-
-            // add all cells
-             //   console.time('build all cells');
-            let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo));
-           // console.timeEnd('build all cells');
-            //console.time('append all cells');
-
-            _.each(cells, cell => cell.appendTo(line));
          //   console.timeEnd('append all cells');
             line.appendTo(tbody);
-            index++;
 
           });
 
