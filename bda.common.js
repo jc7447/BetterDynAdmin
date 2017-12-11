@@ -3,6 +3,7 @@
 try {
 
   var isLoggingTrace = false;
+  var isLoggingInfo = true;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -132,20 +133,25 @@ try {
     };
 
   this.getXmlDef = function(componentPath) {
-    console.time('processRepositoryXmlDef');
-    logTrace("Getting XML def for : " + componentPath);
+    console.time('getXmlDef');
+    logInfo("Getting XML def for : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
     var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
-    if (!xmlDefMetaData)
-        console.timeEnd('processRepositoryXmlDef');
+    if (!xmlDefMetaData){
+          console.timeEnd('getXmlDef');
+      logInfo("getXmlDef Xml is null");
       return null;
+      
+    }
     if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp) {
-        console.timeEnd('processRepositoryXmlDef');
-      logTrace("Xml def is outdated or from a different component");
+        console.timeEnd('getXmlDef');
+      logInfo("getXmlDef Xml def is outdated or from a different component");
       return null;
     }
     let xml = localStorage.getItem("XMLDefData");
-    console.timeEnd('processRepositoryXmlDef');
+        console.timeEnd('getXmlDef');
+      logInfo("getXmlDef returning value from storage");
+    console.timeEnd('getXmlDef');
     return xml;
   };
 
@@ -224,7 +230,12 @@ try {
 
   this.logTrace = function() {
     if (isLoggingTrace && window.console != undefined) {
-      console.log.apply(this, arguments);
+      window.console.log.apply(window.console, arguments);
+    }
+  };
+   this.logInfo = function() {
+    if (isLoggingInfo && window.console != undefined) {
+      window.console.log.apply(window.console, arguments);
     }
   };
 
