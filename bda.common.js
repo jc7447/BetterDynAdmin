@@ -764,7 +764,7 @@ Johann Burkard
 
       let record = this.values[task];
       if(_.isNil(record)){
-         record = {total:0};
+         record = {total:0,occurences:0};
         this.values[task] = record;
       }
       record.start = new Date().getTime();
@@ -777,6 +777,7 @@ Johann Burkard
           if(!!record && !!record.start){
             let current = new Date().getTime() - record.start;
             record.total += current;
+            record.occurences++;
          //    console.log('cumul',task,record.start,record.total,current);
           }
         }
@@ -784,7 +785,8 @@ Johann Burkard
     PerformanceMonitor.prototype.log = function(){
       console.log('PerformanceMonitor :');
       _.forEach(this.values,(record,task)=>{
-        console.log('%s - %s',task,record.total);
+        let average = record.total / record.occurences;
+        console.log('%s - total : %s, average : %s, occurences %s',task,record.total, average,record.occurences);
       })
     }
 

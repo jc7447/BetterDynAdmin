@@ -1607,9 +1607,9 @@ console.timeEnd('formatTabResult');
         longCell.append(val);
       }
 
-      // if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-      //   BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
-      // }
+      if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
+        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
+      }
        BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell');
       // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
