@@ -172,7 +172,7 @@
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
-      resultTable: '<table class="dataTable" data-descriptor="{0}"></table>',
+      resultTable: '<table class="dataTable" data-descriptor="{0}" data-repository="{1}"></table>',
       idCell: '<td class="property idCell" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}" data-repository="{2}" >' +
         '<div class="flex-wrapper">' +
         '<div class="value-elem">{0}</div>' +
@@ -1439,7 +1439,7 @@ console.timeEnd('formatTabResult');
       if (!_.isNil(items) && items.length > 0) {
         let itemDescriptor = items[0].itemDescriptor;
         let itemDescriptorName = itemDescriptor ? itemDescriptor.name : '';
-        let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName));
+        let table = $(BDA_REPOSITORY.templates.resultTable.format(itemDescriptorName,repo.path));
         let tableHead = $('<thead></thead>').appendTo(table);
 
         let idLine = $('<tr class="id even"><th>{0}</th></tr>'.format(itemDescriptorName)).appendTo(tableHead);
@@ -1521,10 +1521,40 @@ console.timeEnd('formatTabResult');
           $(this).closest('.property').removeClass('show-short').addClass('show-long');
         })
         .on('click', '.actions .start-edit', function() {
+          logInfo('click on start edit');
+          let $this = $(this);
 
-          // addInlineEditForm(output, val, property, item, repository) 
+          let propertyElem = $this.closest('.property');
+         
 
-          $(this).closest('.property').addClass('show-edit').find('.inline-input').focus();
+          if(_.isNil(propertyElem.attr('data-form-generated')) ){
+
+            try{
+
+              let dataTable = propertyElem.closest('.dataTable');
+              let line = propertyElem.closest('.item-line')
+
+              let itemName = dataTable.attr('data-descriptor');
+              let repositoryPath = dataTable.attr('data-repository');
+
+              let itemId = propertyElem.attr('data-id');
+              let propertyName = propertyElem.attr('data-property');
+
+
+              let val = propertyElem.find('.propertyValue').attr('data-raw');
+
+
+              BDA_REPOSITORY.addInlineEditForm(propertyElem, val, propertyName, itemName,itemId, repositoryPath);
+              propertyElem.attr('data-form-generated',true);
+
+            }catch(e){
+              console.error(e);
+            }
+
+
+          }
+
+          propertyElem.addClass('show-edit').find('.inline-input').focus();
 
         })
           .on('click','.id .reload-item', function() {
@@ -1607,9 +1637,9 @@ console.timeEnd('formatTabResult');
         longCell.append(val);
       }
 
-      if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
-        BDA_REPOSITORY.addInlineEditForm(res, val, property, item, repository);
-      }
+      // if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
+      //   BDA_REPOSITORY.addInlineEditFormFromObjects(res, val, property, item, repository);
+      // }
        BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell');
       // console.timeEnd('buildPropertyValueCell ' + property.name);
       return res;
@@ -1705,8 +1735,13 @@ console.timeEnd('formatTabResult');
         BDA_REPOSITORY.PERF_MONITOR.cumul('buildLinkToOtherItem');
     },
 
-    addInlineEditForm: function(output, val, property, item, repository) {
+    addInlineEditFormFromObjects: function(output, val, property, item, repository) {
+      BDA_REPOSITORY.addInlineEditForm(output,val,property.name,item.id,repository.path);
+    },
+
+    addInlineEditForm: function(output, val, propertyName, itemName,itemId, repositoryPath) {
       BDA_REPOSITORY.PERF_MONITOR.start('addInlineEditForm');
+      logInfo('addInlineEditForm',arguments);
       try {
 
         let form = $('<form class="edit"></form>');
@@ -1721,7 +1756,7 @@ console.timeEnd('formatTabResult');
               input.closest('.property').removeClass('show-edit');
               return; // exit if no change
             }
-            var xmlText = BDA_REPOSITORY.templates.editProperty.format(item.itemDescriptor.name, item.id, property.name, newVal);
+            var xmlText = BDA_REPOSITORY.templates.editProperty.format(itemName, itemId, propertyName, newVal);
             let highlighted = $('<div class="xml"><pre><code></code></pre></div>');
             highlighted.find('code').text(xmlText);
             highlighted.each(function(i, block) {
@@ -1733,14 +1768,14 @@ console.timeEnd('formatTabResult');
               options: [{
                 label: 'Confirm',
                 _callback: function() {
-                  BDA_REPOSITORY.executeQuery('', xmlText, repository.path,
+                  BDA_REPOSITORY.executeQuery('', xmlText, repositoryPath,
                     (result) => {
                       try {
                         var xmlContent = $('<div>' + result + '</div>').find(BDA_REPOSITORY.resultsSelector).next().text().trim();
                         let logs = BDA_REPOSITORY.getExecutionLogs(xmlContent);
 
                         let parentTab = input.closest('.dataTable');
-                        BDA_REPOSITORY.reloadTab(item.id, item.itemDescriptor.name, repository.path, parentTab, () => {
+                        BDA_REPOSITORY.reloadTab(itemId,itemName, repositoryPath, parentTab, () => {
 
                           $.notify(
                             "Success: \n{0}".format(logs), {
