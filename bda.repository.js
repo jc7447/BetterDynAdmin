@@ -1593,7 +1593,7 @@
               innerVal,
               item.id, 
               property.name,
-              long?'toggagble':'',
+              long?'toggable':'',
               (propertyValue && propertyValue.isDefault)?'default':'',
               displayedVal);
 
