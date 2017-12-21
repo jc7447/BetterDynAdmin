@@ -1549,7 +1549,9 @@
 
         buildPropertyValueCell: function(item, property, referencePropertyValue, repository, lineIsVisible) {
             BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell');
-            //    console.time('buildPropertyValueCell ' + property.name);
+
+
+            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.extractValue');
             let propertyValue = item.values[property.name];
             logTrace('buildPropertyValueCell : propertyValue', propertyValue);
             let val;
@@ -1558,7 +1560,10 @@
             } catch (e) {
                 val = '';
             }
+            BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.extractValue');
 
+
+            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.innerVal');
             let innerVal;
             let long = false;
             if (val.length <= BDA_REPOSITORY.CELL_MAX_LENGTH) {
@@ -1568,20 +1573,27 @@
                 let short = val.substr(0, BDA_REPOSITORY.CELL_MAX_LENGTH) + ' ...';
                 innerVal = BDA_REPOSITORY.templates.longPropertyCell.format(short);
             }
+             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.innerVal');
 
+            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.formatCell');
             res = $(BDA_REPOSITORY.templates.propertyCell.format(innerVal, item.id, property.name));
             if (long) {
                 res.addClass('toggable');
-            }
+            } 
             if (propertyValue && propertyValue.isDefault) {
                 res.addClass('default');
             }
+            BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.formatCell');
 
 
+             BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.findLongCell');
             // for id of other items, load sub item on click
             let longCell = res.find('.propertyValue');
             longCell.attr('data-raw', val);
+             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.findLongCell');
 
+
+            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.appendVal');
             if (lineIsVisible && property.isItem) {
 
                 BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
@@ -1589,6 +1601,7 @@
             } else {
                 longCell.append(val);
             }
+            BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.appendVal');
 
             // if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
             //   BDA_REPOSITORY.addInlineEditFormFromObjects(res, val, property, item, repository);
@@ -1657,7 +1670,7 @@
         },
 
         buildLinkToOtherItem: function(longCell, val, property) {
-            BDA_REPOSITORY.PERF_MONITOR.start('buildLinkToOtherItem');
+            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.buildLinkToOtherItem');
             // handle map types
             let ids = _(val)
                 .split(',')
@@ -1743,7 +1756,7 @@
                         longCell.append(' , ');
                     }
                 });
-            BDA_REPOSITORY.PERF_MONITOR.cumul('buildLinkToOtherItem');
+            BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.buildLinkToOtherItem');
         },
 
         addInlineEditFormFromObjects: function(output, val, property, item, repository) {
