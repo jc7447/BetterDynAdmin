@@ -185,7 +185,7 @@
                 '</div>' +
                 '</td>',
             descriptorCell: '<td data-id="{1}">{0}</td>',
-            propertyCell: '<td data-property="{2}" data-id="{1}" class="property show-short"><div class="flex-wrapper">' +
+            propertyCell: '<td data-property="{2}" data-id="{1}" class="property show-short {3} {4}"><div class="flex-wrapper">' +
                 '{0}' +
                 '<span class="actions">' +
                 '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
@@ -194,8 +194,8 @@
                 '<i class="fa fa-spinner fa-spin passive-loading-icon" aria-hidden="true"></i>' +
                 '</span>' +
                 '</div></td>',
-            shortPropertyCell: '<div class="value-elem propertyValue"></div>',
-            longPropertyCell: '<span class="value-elem long propertyValue"></span><span class="value-elem short">{0}</span>',
+            shortPropertyCell: '<div class="value-elem propertyValue" data-raw="{0}">{1}</div>',
+            longPropertyCell: '<span class="value-elem long propertyValue" data-raw="{1}">{2}</span><span class="value-elem short">{0}</span>',
             editProperty: '<update-item item-descriptor="{0}" id="{1}">\n    <set-property name="{2}"><![CDATA[{3}]]></set-property>\n</update-item>'
 
 
@@ -1504,11 +1504,12 @@
 
                         // add all cells
                         //   console.time('build all cells');
-                        let cells = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo, lineIsVisible));
+                        let cellsAsString = _.map(items, item => BDA_REPOSITORY.buildPropertyValueCell(item, property, sampleItem, repo, lineIsVisible));
                         // console.timeEnd('build all cells');
                         //console.time('append all cells');
 
-                        _.each(cells, cell => cell.appendTo(line));
+                        $(cellsAsString.join()).appendTo(line);
+                       // _.each(cells, cell => cell.appendTo(line));
 
                         //   console.timeEnd('append all cells');
                         line.appendTo(tbody);
@@ -1562,53 +1563,55 @@
             }
             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.extractValue');
 
+            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.displayedVal');
+            let displayedVal;
+            if (lineIsVisible && property.isItem) {
+
+                displayedVal = BDA_REPOSITORY.buildLinkToOtherItem( val, property);
+
+            } else {
+                displayedVal = val;
+            }
+               BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.displayedVal');
+
 
             BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.innerVal');
             let innerVal;
             let long = false;
             if (val.length <= BDA_REPOSITORY.CELL_MAX_LENGTH) {
-                innerVal = BDA_REPOSITORY.templates.shortPropertyCell;
+                innerVal = BDA_REPOSITORY.templates.shortPropertyCell.format(val,displayedVal);
             } else {
                 long = true;
                 let short = val.substr(0, BDA_REPOSITORY.CELL_MAX_LENGTH) + ' ...';
-                innerVal = BDA_REPOSITORY.templates.longPropertyCell.format(short);
+                innerVal = BDA_REPOSITORY.templates.longPropertyCell.format(short,val,displayedVal);
             }
-             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.innerVal');
+            BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.innerVal');
+
 
             BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.formatCell');
-            res = $(BDA_REPOSITORY.templates.propertyCell.format(innerVal, item.id, property.name));
-            if (long) {
-                res.addClass('toggable');
-            } 
-            if (propertyValue && propertyValue.isDefault) {
-                res.addClass('default');
-            }
+            let resAsString = BDA_REPOSITORY.templates.propertyCell.format(
+              innerVal,
+              item.id, 
+              property.name,
+              long?'toggagble':'',
+              (propertyValue && propertyValue.isDefault)?'default':'',
+              displayedVal);
+
+          //  res = $(resAsString);
             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.formatCell');
 
 
-             BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.findLongCell');
-            // for id of other items, load sub item on click
-            let longCell = res.find('.propertyValue');
-            longCell.attr('data-raw', val);
-             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.findLongCell');
+           
 
 
-            BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.appendVal');
-            if (lineIsVisible && property.isItem) {
-
-                BDA_REPOSITORY.buildLinkToOtherItem(longCell, val, property);
-
-            } else {
-                longCell.append(val);
-            }
-            BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.appendVal');
+         
 
             // if (lineIsVisible && !_.isNil(referencePropertyValue) && !referencePropertyValue.rdonly && !referencePropertyValue.derived) {
             //   BDA_REPOSITORY.addInlineEditFormFromObjects(res, val, property, item, repository);
             // }
             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell');
             // console.timeEnd('buildPropertyValueCell ' + property.name);
-            return res;
+            return resAsString;
         },
 
         onReload: function(elem) {
@@ -1669,8 +1672,10 @@
             propertyElem.addClass('show-edit').find('.inline-input').focus();
         },
 
-        buildLinkToOtherItem: function(longCell, val, property) {
+        buildLinkToOtherItem: function( val, property) {
             BDA_REPOSITORY.PERF_MONITOR.start('buildPropertyValueCell.buildLinkToOtherItem');
+
+            let res;
             // handle map types
             let ids = _(val)
                 .split(',')
@@ -1749,11 +1754,11 @@
                 })
                 .each((elem, idx) => {
                     if (!_.isNil(elem.key)) {
-                        longCell.append('{0} = '.format(elem.key));
+                        res +='{0} = '.format(elem.key);
                     }
-                    longCell.append(elem.cell)
+                    res +=(elem.cell).html()
                     if (idx < ids.length - 1) {
-                        longCell.append(' , ');
+                        res += ' , ';
                     }
                 });
             BDA_REPOSITORY.PERF_MONITOR.cumul('buildPropertyValueCell.buildLinkToOtherItem');
