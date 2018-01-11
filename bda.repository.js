@@ -280,10 +280,10 @@
       if (BDA_REPOSITORY.hasErrors)
         BDA_REPOSITORY.showRqlErrors();
       if (BDA_REPOSITORY.hasResults && !BDA_REPOSITORY.hasErrors) {
+        // make it async so that the page loads faster
         setTimeout(function() {
-
           BDA_REPOSITORY.showRQLResults();
-        }, 300);
+        }, 100);
       }
 
       BDA_REPOSITORY.initialForm
@@ -2193,16 +2193,29 @@
       // Add 'show raw xml' link
       var html = "<p>" + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>" + "</p>\n";
       html += "<p id='rawXml'></p>";
-      $("#RQLResults").addClass('rqlResultContainer').append(html);
+
+      let resultsBlock = $("#RQLResults");
+
+      resultsBlock.addClass('rqlResultContainer').append(html);
 
       var xmlContent = $(BDA_REPOSITORY.resultsSelector).next().text().trim();
       // xmlContent = sanitizeXml(xmlContent); //sanitize later
 
       BDA_REPOSITORY.PERF_MONITOR.reset();
       BDA_REPOSITORY.PERF_MONITOR.start('processRepositoryXmlDef');
+
+      //build a status bar
+      let statusBar = $('<div class="twbs wrapper"><div class="progress">' +
+        '<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 45%">' +
+        ' <span class="sr-only">45% Complete</span>' +
+        '</div>' +
+        '</div></div>')
+      resultsBlock.append(statusBar);
+
+
       processRepositoryXmlDef("definitionFiles", function($xmlDef) {
         BDA_REPOSITORY.PERF_MONITOR.cumul('processRepositoryXmlDef');
-        var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, $("#RQLResults"), false);
+        var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, resultsBlock, false);
         BDA_REPOSITORY.showRQLLog(log, false);
         // Move raw xml
         $(BDA_REPOSITORY.resultsSelector).next().appendTo("#rawXml");
@@ -2796,7 +2809,7 @@
           if (!storeQuery.hasOwnProperty("repo") || storeQuery.repo == currComponentName) {
             var escapedQuery = $("<div>").text(storeQuery.query).html();
             html += "<li class='savedQuery'>";
-            html += "<a href='javascript:void(0)'>" + storeQuery.name + "</a>";
+            html += "<a class='savedQuery clickable_property' data-query='" + storeQuery.name + "'>" + storeQuery.name + "</a>";
             html += "<span id='previewQuery" + i + "'class='previewQuery'>";
             html += "<i class='fa fa-eye'></i>";
             html += "</span>";
@@ -2819,9 +2832,10 @@
       //   hljs.highlightBlock(block);
       // });
 
-      $(".savedQuery").on('click', 'a', function() {
-        logTrace("click on query : " + $(this).find("a").html());
-        BDA_REPOSITORY.printStoredQuery($(this).find("a").html());
+      $("a.savedQuery").on('click', function() {
+        let queryName = $(this).attr('data-query');
+        logTrace("click on query : " + queryName);
+        BDA_REPOSITORY.printStoredQuery(queryName);
       });
 
       $(".previewQuery").on('click', function() {
