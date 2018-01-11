@@ -172,14 +172,14 @@
       printItem: '<print-item item-descriptor="{0}" id="{1}"/>',
       queryItems: '<query-items item-descriptor="{0}">\n{1}\n</query-items>',
       resultHeader: '<p class="nbResults"> {0} items in {1} descriptor(s)</p>',
-      resultTable: '<table class="dataTable" data-descriptor="{0}" data-repository="{1}"></table>',
+      resultTable: '<table class="dataTable twbs" data-descriptor="{0}" data-repository="{1}"></table>',
       idCell: '<td class="property idCell" data-identifier="id_{0}_{1}" data-id="{0}" data-item="{1}" data-repository="{2}" >' +
         '<div class="flex-wrapper">' +
         '<div class="value-elem">{0}</div>' +
         '<span class="actions">' +
-        '<i class="fa fa-refresh action reload-item" aria-hidden="true"></i>' +
-        '<i class="fa fa-code action copy-xml" aria-hidden="true"></i>' +
-        '<i class="fa fa-close action close-elem" aria-hidden="true"></i>' +
+        '<i class="fa fa-refresh action reload-item" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Refresh this item\'s view"></i>' +
+        '<i class="fa fa-code action copy-xml" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Copy xml to clipboard"></i>' +
+        '<i class="fa fa-close action close-elem" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Close the view for this item"></i>' +
         '</div>' +
         '</span>' +
         '</div>' +
@@ -188,9 +188,9 @@
       propertyCell: '<td data-property="{2}" data-id="{1}" class="property show-short {3} {4}"><div class="flex-wrapper">' +
         '{0}' +
         '<span class="actions">' +
-        '<i class="fa fa-edit action start-edit" aria-hidden="true"></i>' +
-        '<i class="fa fa-compress action collapse" aria-hidden="true"></i>' +
-        '<i class="fa fa-expand action expand" aria-hidden="true"></i>' +
+        '<i class="fa fa-edit action start-edit" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Edit this field"></i>' +
+        '<i class="fa fa-compress action collapse" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Collapse view"></i>' +
+        '<i class="fa fa-expand action expand" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Expand this field"></i>' +
         '<i class="fa fa-spinner fa-spin passive-loading-icon" aria-hidden="true"></i>' +
         '</span>' +
         '</div></td>',
@@ -1542,6 +1542,7 @@
           .on('click', '.loadable_property', function() {
             BDA_REPOSITORY.onClickOnLoadSubItem($(this));
           })
+        table.find('[data-toggle="tooltip"]').tooltip();
         console.timeEnd('bind actions');
 
         console.timeEnd('build all items');
