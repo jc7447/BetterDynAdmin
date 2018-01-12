@@ -3,7 +3,7 @@
 try {
 
   var isLoggingTrace = false;
-  var isLoggingInfo = true;
+  var isLoggingInfo = false;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -89,7 +89,7 @@ try {
           logTrace("Getting XML def from cache");
           var xmlDoc = jQuery.parseXML(rawXmlDef);
           console.timeEnd('processRepositoryXmlDef');
-          if (callback !== undefined){
+          if (callback !== undefined) {
             callback($(xmlDoc));
           }
         }
@@ -121,7 +121,7 @@ try {
                   callback(null);
                   logTrace(err);
                 }
-              } else{
+              } else {
 
                 console.timeEnd('processRepositoryXmlDef');
                 callback(null);
@@ -137,20 +137,20 @@ try {
     logInfo("Getting XML def for : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
     var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
-    if (!xmlDefMetaData){
-          console.timeEnd('getXmlDef');
+    if (!xmlDefMetaData) {
+      console.timeEnd('getXmlDef');
       logInfo("getXmlDef Xml is null");
       return null;
-      
+
     }
     if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp) {
-        console.timeEnd('getXmlDef');
+      console.timeEnd('getXmlDef');
       logInfo("getXmlDef Xml def is outdated or from a different component");
       return null;
     }
     let xml = localStorage.getItem("XMLDefData");
-        console.timeEnd('getXmlDef');
-      logInfo("getXmlDef returning value from storage");
+    console.timeEnd('getXmlDef');
+    logInfo("getXmlDef returning value from storage");
     console.timeEnd('getXmlDef');
     return xml;
   };
@@ -233,7 +233,7 @@ try {
       window.console.log.apply(window.console, arguments);
     }
   };
-   this.logInfo = function() {
+  this.logInfo = function() {
     if (isLoggingInfo && window.console != undefined) {
       window.console.log.apply(window.console, arguments);
     }
@@ -767,37 +767,40 @@ Johann Burkard
       this.active = active;
       this.values = {};
     }
-    PerformanceMonitor.prototype.reset = function(){
+    PerformanceMonitor.prototype.reset = function() {
       this.values = {};
     }
-    PerformanceMonitor.prototype.start = function(task){
-      if(this.active){
+    PerformanceMonitor.prototype.start = function(task) {
+      if (this.active) {
 
-      let record = this.values[task];
-      if(_.isNil(record)){
-         record = {total:0,occurences:0};
-        this.values[task] = record;
-      }
-      record.start = new Date().getTime();
-     //  console.log('start',task,record.start);
-      }
-    }
-    PerformanceMonitor.prototype.cumul = function(task){
-      if (this.active){
         let record = this.values[task];
-          if(!!record && !!record.start){
-            let current = new Date().getTime() - record.start;
-            record.total += current;
-            record.occurences++;
-         //    console.log('cumul',task,record.start,record.total,current);
-          }
+        if (_.isNil(record)) {
+          record = {
+            total: 0,
+            occurences: 0
+          };
+          this.values[task] = record;
         }
+        record.start = new Date().getTime();
+        //  console.log('start',task,record.start);
+      }
     }
-    PerformanceMonitor.prototype.log = function(){
+    PerformanceMonitor.prototype.cumul = function(task) {
+      if (this.active) {
+        let record = this.values[task];
+        if (!!record && !!record.start) {
+          let current = new Date().getTime() - record.start;
+          record.total += current;
+          record.occurences++;
+          //    console.log('cumul',task,record.start,record.total,current);
+        }
+      }
+    }
+    PerformanceMonitor.prototype.log = function() {
       console.log('PerformanceMonitor :');
-      _.forEach(this.values,(record,task)=>{
+      _.forEach(this.values, (record, task) => {
         let average = record.total / record.occurences;
-        console.log('%s - total : %s, average : %s, occurences %s',task,record.total, average,record.occurences);
+        console.log('%s - total : %s, average : %s, occurences %s', task, record.total, average, record.occurences);
       })
     }
 

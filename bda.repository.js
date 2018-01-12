@@ -196,7 +196,12 @@
         '</div></td>',
       shortPropertyCell: '<div class="value-elem propertyValue" data-raw="{0}">{1}</div>',
       longPropertyCell: '<span class="value-elem long propertyValue" data-raw="{1}">{2}</span><span class="value-elem short">{0}</span>',
-      editProperty: '<update-item item-descriptor="{0}" id="{1}">\n    <set-property name="{2}"><![CDATA[{3}]]></set-property>\n</update-item>'
+      editProperty: '<update-item item-descriptor="{0}" id="{1}">\n    <set-property name="{2}"><![CDATA[{3}]]></set-property>\n</update-item>',
+      progressBar: '<div class="twbs wrapper"><div class="progress">' +
+        '<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="min-width: 300px; width: 2%;">' +
+        'Rendering {0}/{1} repository items' +
+        '</div>' +
+        '</div></div>'
 
 
     },
@@ -283,7 +288,7 @@
         // make it async so that the page loads faster
         setTimeout(function() {
           BDA_REPOSITORY.showRQLResults();
-        }, 100);
+        }, 50);
       }
 
       BDA_REPOSITORY.initialForm
@@ -1215,11 +1220,15 @@
       let items = parsedResult.items;
       let logs = parsedResult.logs;
 
+      BDA_REPOSITORY.initProgress(items.length, $outputDiv);
+
       BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv, isItemTree);
 
       //  if (isItemTree) {
       BDA_REPOSITORY.createSpeedbar_new($outputDiv);
       //}
+
+      BDA_REPOSITORY.hideProgressBar($outputDiv);
 
       BDA_REPOSITORY.PERF_MONITOR.log();
       console.timeEnd('showXMLAsTab_new');
@@ -1369,10 +1378,14 @@
 
         //now render each tab
         let firstResult = _.chain(chunks)
-          .map(chunk => BDA_REPOSITORY.buildResultTable(chunk, renderContext, repository))
+          .map(chunk => {
+            let tab = BDA_REPOSITORY.buildResultTable(chunk, renderContext, repository);
+            BDA_REPOSITORY.updateProgress(chunk.length, result);
+            return tab;
+          })
           .filter(table => !_.isNil(table))
           .map(table => {
-            table.appendTo(result)
+            table.appendTo(result);
             return table;
           })
           .head().value();
@@ -1547,6 +1560,8 @@
 
         console.timeEnd('build all items');
         res = table;
+
+
       }
       console.timeEnd('buildResultTable')
       return res;
@@ -1695,7 +1710,6 @@
         .filter(elem => !_.isNil(elem))
         .value();
 
-      console.log('link ids', ids);
 
       _(ids)
         .map(elem => {
@@ -2206,13 +2220,13 @@
       BDA_REPOSITORY.PERF_MONITOR.start('processRepositoryXmlDef');
 
       //build a status bar
-      let statusBar = $('<div class="twbs wrapper"><div class="progress">' +
-        '<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 45%">' +
-        ' <span class="sr-only">45% Complete</span>' +
-        '</div>' +
-        '</div></div>')
+      let statusBar = $(BDA_REPOSITORY.templates.progressBar.format(0, 0));
       resultsBlock.append(statusBar);
+      // BDA_REPOSITORY.initProgress(100, resultsBlock);
 
+      // setTimeout(function() {
+      //   BDA_REPOSITORY.updateProgress(66, resultsBlock);
+      // }, 2000);
 
       processRepositoryXmlDef("definitionFiles", function($xmlDef) {
         BDA_REPOSITORY.PERF_MONITOR.cumul('processRepositoryXmlDef');
@@ -2793,6 +2807,35 @@
         else
           $('.sticky').css('position', 'static');
       });
+    },
+
+    hideProgressBar: function(parent) {
+      logTrace('hideProgressBar', arguments)
+      let bar = $(parent).find('.progress');
+      bar.hide();
+    },
+
+    initProgress: function(total, parent) {
+      logTrace('initProgress', arguments)
+      let wrapper = $(parent).find('.progress');
+      wrapper.show();
+      let bar = wrapper.find('.progress-bar');
+      bar.attr('data-total', total)
+        .attr('data-current', 0)
+        .html('Loading {0} items'.format(total))
+        .width('0%');
+    },
+
+    updateProgress: function(size, parent) {
+      logTrace('updateProgress', arguments)
+      let bar = $(parent).find('.progress-bar');
+      let total = parseInt(bar.attr('data-total'));
+      let current = parseInt(bar.attr('data-current'));
+      current += size;
+      bar.attr('data-current', current)
+      let percentage = Math.floor(current / total * 100);
+      bar.width(percentage + '%')
+        .html('Loading {0}/{1} items'.format(current, total));
     },
 
 
