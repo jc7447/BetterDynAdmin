@@ -1267,11 +1267,6 @@
 
       $outputDiv.append($('<p></p>').append(showAll).append(hideAll));
 
-      if (isItemTree) {
-        $('<button>Show speedbar</button></p>')
-          .on('click', () => $('#speedbar').fadeIn(200))
-          .appendTo($outputDiv);
-      }
 
 
       BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
@@ -2741,7 +2736,8 @@
         })
 
         let list = speedbar.find('ul');
-        resultElem.find(".dataTable").each(function(index) {
+        let dataTable = resultElem.find(".dataTable");
+        dataTable.each(function(index) {
           var $tab = $(this);
           var id = $tab.attr("id");
           var descriptor = $tab.attr('data-descriptor');
@@ -2751,7 +2747,14 @@
           elem.on('click', () => $tab.scrollTo());
           list.append(elem);
         });
+
+        $('<button>Show speedbar</button></p>')
+          .on('click', () => resultElem.find('.speedbar').fadeIn(200))
+          .prependTo(resultElem);
+
         speedbar.prependTo(resultElem);
+
+
 
         let container = $(resultElem);
 
@@ -2766,6 +2769,8 @@
             widget.removeClass('sticky-top-100');
           }
         });
+
+
 
       } catch (e) {
         console.error(e);
