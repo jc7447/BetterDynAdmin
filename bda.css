@@ -111,7 +111,8 @@ a {
 }
 
 .item-line.rdonly td {
-  color: #888;
+  /*color: #888;*/
+  font-style: italic;
 }
 
 .copyLink {
