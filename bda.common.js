@@ -463,7 +463,9 @@ try {
   $.fn.scrollTo = function() {
 
     $(this).get()[0].scrollIntoView({
-      behavior: "smooth"
+      behavior: "smooth",
+      start: "start",
+      inline: "start"
     });
 
   }
@@ -763,7 +765,7 @@ Johann Burkard
       }
     });
 
-    PerformanceMonitor = function(active){
+    PerformanceMonitor = function(active) {
       this.active = active;
       this.values = {};
     }
