@@ -253,6 +253,7 @@
 
     build: function() {
       console.time("bdaRepository");
+      BDA_REPOSITORY.PERF_MONITOR = new PerformanceMonitor(true);
       BDA_REPOSITORY.isRepositoryPage = BDA_REPOSITORY.isRepositoryPageFct();
       BDA_REPOSITORY.hasErrors = BDA_REPOSITORY.hasErrorsFct();
       BDA_REPOSITORY.hasResults = BDA_REPOSITORY.hasResultsFct(BDA_REPOSITORY.hasErrors);
@@ -272,7 +273,6 @@
 
       console.time('preparePage');
 
-      BDA_REPOSITORY.PERF_MONITOR = new PerformanceMonitor(true);
       BDA_REPOSITORY.PERF_MONITOR.reset();
 
       $(BDA_REPOSITORY.descriptorTableSelector).attr("id", "descriptorTable");
