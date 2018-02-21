@@ -33,6 +33,7 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/2.1.2/jquery.scrollTo.min.js
 // custom bootstrap
 // @require lib/bootstrap/js/bootstrap.min.js
 // @require http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.min.js

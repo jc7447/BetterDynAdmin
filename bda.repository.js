@@ -1749,7 +1749,7 @@
           let resultTable = outputDiv.find(selector);
           // if the result already exists, just scroll to it
           if (resultTable.length > 0) {
-            resultTable.scrollTo();
+            $(window).scrollTo(resultTable, 100);
             resultTable.find('[data-id="{0}"]'.format(itemId)).flash(); //flash the whole tab
           } else {
             let $property = $this.parent().parent();
@@ -1993,7 +1993,7 @@
 
             BDA_REPOSITORY.reloadSpeedBar($outputDiv);
             if (top) {
-              top.scrollTo();
+              $(window).scrollTo(top, 100);
               top.find('[data-id="{0}"]'.format(id)).flash();
             }
             if (cbSuccess) {
@@ -2746,7 +2746,7 @@
 
           var nbItem = $tab.find("td").length / $tab.find("tr").length;
           let elem = $("<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<span class='clickable_property'>" + descriptor + "</span> (" + nbItem + ")</li>");
-          elem.on('click', () => $tab.scrollTo());
+          elem.on('click', () => $(window).scrollTo($tab, 100));
           list.append(elem);
         });
 
@@ -2755,12 +2755,7 @@
           .on('click', () => resultElem.find('.speedbar').fadeIn(200));
 
         resultElem.find('#resultToolbar').append(button);
-
-
-
         speedbar.prependTo(resultElem);
-
-
 
         let container = $(resultElem);
 
@@ -3267,7 +3262,7 @@
       var setupDone = false;
       $(window).scroll(function() { // scroll event
         var $window = $(window);
-        var windowTop = $window.scrollTop();
+        var windowTop = $$(window).scrollTop();
         //get the value now because it changes on show/hide/collapse
         var top = $cacheTable.offset().top;
         var bot = top + $cacheTable.height();

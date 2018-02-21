@@ -460,15 +460,15 @@ try {
     this.css('height', value + 'px');
     return this;
   };
-  $.fn.scrollTo = function() {
+  // $.fn.scrollTo = function() {
 
-    $(this).get()[0].scrollIntoView({
-      behavior: "smooth",
-      start: "start",
-      inline: "start"
-    });
+  //   $(this).get()[0].scrollIntoView({
+  //     behavior: "smooth",
+  //     start: "start",
+  //     inline: "start"
+  //   });
 
-  }
+  // }
 
   $.fn.toCSV = function() {
     var data = [];
