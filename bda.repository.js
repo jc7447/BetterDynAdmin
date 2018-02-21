@@ -1749,13 +1749,12 @@
           let resultTable = outputDiv.find(selector);
           // if the result already exists, just scroll to it
           if (resultTable.length > 0) {
-            $(window).scrollTo(resultTable, 100);
+            $(window).scrollTo(resultTable, 500);
             resultTable.find('[data-id="{0}"]'.format(itemId)).flash(); //flash the whole tab
           } else {
-            let $property = $this.parent().parent();
-            $property.addClass('loading');
+            property.addClass('loading');
             let endLoadingFc = () => {
-              $property.removeClass('loading');
+              property.removeClass('loading');
             };
             BDA_REPOSITORY.loadSubItem(itemId, itemType, repositoryPath, outputDiv, null, null, endLoadingFc);
           }
@@ -1993,7 +1992,7 @@
 
             BDA_REPOSITORY.reloadSpeedBar($outputDiv);
             if (top) {
-              $(window).scrollTo(top, 100);
+              $(window).scrollTo(top, 500);
               top.find('[data-id="{0}"]'.format(id)).flash();
             }
             if (cbSuccess) {
@@ -2746,12 +2745,12 @@
 
           var nbItem = $tab.find("td").length / $tab.find("tr").length;
           let elem = $("<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<span class='clickable_property'>" + descriptor + "</span> (" + nbItem + ")</li>");
-          elem.on('click', () => $(window).scrollTo($tab, 100));
+          elem.on('click', () => $(window).scrollTo($tab, 500));
           list.append(elem);
         });
 
 
-        let button = $('<button>Show Quick Links <i class="fa fa-bars" aria-hidden="true"></i></button>')
+        let button = $('<button class="showSpeedbar">Show Quick Links <i class="fa fa-bars" aria-hidden="true"></i></button>')
           .on('click', () => resultElem.find('.speedbar').fadeIn(200));
 
         resultElem.find('#resultToolbar').append(button);
@@ -2781,6 +2780,7 @@
 
     reloadSpeedBar: function(resultElem) {
       resultElem.find('.speedbar').remove();
+      resultElem.find('.showSpeedbar').remove();
       BDA_REPOSITORY.createSpeedbar_new(resultElem);
     },
 
