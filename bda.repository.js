@@ -1265,7 +1265,7 @@
       }).hide();
 
 
-      $outputDiv.append($('<p></p>').append(showAll).append(hideAll));
+      $outputDiv.append($('<p id="resultToolbar"></p>').append(showAll).append(hideAll));
 
 
 
@@ -2730,6 +2730,8 @@
       logTrace('createSpeedbar_new')
       try {
 
+
+
         let speedbar = $('<div class="speedbar"><div class="widget"><i class="fa fa-times close"></i><p>Quick links :</p><ul></ul></div></div>');
         speedbar.find('.close').on('click', () => {
           speedbar.fadeOut(200);
@@ -2748,9 +2750,13 @@
           list.append(elem);
         });
 
-        $('<button>Show speedbar</button></p>')
-          .on('click', () => resultElem.find('.speedbar').fadeIn(200))
-          .prependTo(resultElem);
+
+        let button = $('<button>Show Quick Links <i class="fa fa-bars" aria-hidden="true"></i></button>')
+          .on('click', () => resultElem.find('.speedbar').fadeIn(200));
+
+        resultElem.find('#resultToolbar').append(button);
+
+
 
         speedbar.prependTo(resultElem);
 

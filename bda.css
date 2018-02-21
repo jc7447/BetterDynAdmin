@@ -26,6 +26,10 @@ a {
   margin-bottom: 10px;
 }
 
+#resultToolbar button{
+  margin-right: 3px;
+}
+
 .select2-container.bda-repository .select2-choices .select2-search-field input, .select2-container.bda-repository .select2-choice, .select2-container.bda-repository .select2-choices {
   font-family: "Arial";
   font-size: 13px;
