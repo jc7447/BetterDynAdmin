@@ -285,7 +285,7 @@
       if (BDA_REPOSITORY.hasErrors)
         BDA_REPOSITORY.showRqlErrors();
       if (BDA_REPOSITORY.hasResults && !BDA_REPOSITORY.hasErrors) {
-        // make it async so that the page loads faster
+        // make it async so that the results are rendered after the rest of BDA loads
         setTimeout(function() {
           BDA_REPOSITORY.showRQLResults();
         }, 50);
@@ -456,9 +456,6 @@
         BDA_REPOSITORY.toggleMethods();
       });
 
-      // console.time('setupEditableTable');
-      // BDA_REPOSITORY.setupEditableTable();
-      // console.timeEnd('setupEditableTable');
       console.time('initCodeMirror');
       BDA_REPOSITORY.queryEditor = BDA_REPOSITORY.initCodeMirror(true);
       console.timeEnd('initCodeMirror');
@@ -578,61 +575,6 @@
       return editor;
     },
 
-    setupEditableTable: function() {
-      $('body').on('click', '.dataTable .fa-pencil-square-o', function(item) {
-        var $target = $(item.target).parent();
-        $target.html('<input type="text" value="' + $target.text().replace(/●/g, ' ') + '"/>');
-        var $input = $($target.children()[0]);
-        $input.focus().blur(function(item) {
-          var $target = $(item.target);
-          var $table = $target.parents(".dataTable");
-          var descriptor = $table.attr("data-descriptor");
-          var itemId = $target.parent().attr("data-id");
-          var propertyName = $target.parent().attr("data-property");
-          if (propertyName == "id" || propertyName == "descriptor") {
-            $input.parent().html($input.val());
-            $.notify(
-              "You can't change value of id or descriptor this way.", {
-                position: "top center",
-                className: "error"
-              }
-            );
-            return;
-          }
-          logTrace(itemId + " " + descriptor + " " + $target.val() + " " + propertyName);
-          var query = '<update-item id="' + itemId + '" item-descriptor="' + descriptor + '">\n' + '  <set-property name="' + propertyName + '"><![CDATA[' + $target.val() + ']]>' + '</set-property>\n</update-item>';
-          var initialValue = $input.attr("value");
-          if (confirm('You are about to execute this query : \n' + query)) {
-            jQuery.post(document.location.href, 'xmltext=' + query, function(res) {
-              var $res = $(res);
-              var errorsSelector1 = "Errors:";
-              if ($res.text().indexOf(errorsSelector1) != -1) {
-                var errorMsg = $res.find("code").text().trim();
-                $.notify(
-                  "Error : " + errorMsg, {
-                    position: "top left",
-                    className: "error",
-                    autoHide: true,
-                    autoHideDelay: 15000
-                  }
-                );
-                $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + initialValue); // reset inital value
-              } else {
-                $.notify(
-                  "Value succesfully changed", {
-                    position: "top center",
-                    className: "success"
-                  }
-                );
-              }
-              $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + $input.val());
-            });
-          } else
-            $input.parent().html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + initialValue); // reset inital value
-        });
-      });
-
-    },
 
     addToQueryEditor: function(query) {
       var editor = BDA_REPOSITORY.queryEditor;
@@ -1032,107 +974,6 @@
       return idAsTab;
     },
 
-    renderProperty: function(curProp, propValue, itemId, isItemTree) {
-      var html = "";
-      var td = "<td data-property='" + curProp.name + "' data-id='" + itemId + "'>";
-      if (propValue !== null && propValue !== undefined) {
-        propValue = propValue.replace(/ /g, '●');
-        // Remove "_"
-        if (curProp.name == "descriptor")
-          propValue = propValue.substr(1);
-        // propertyName_id
-        var base_id = curProp.name + "_" + itemId;
-
-        if (curProp.name == "id")
-          html += "<td id='" + base_id + "'>" + propValue + "</td>";
-        // Hide long value
-        else if (propValue.length > 25) {
-          var link_id = "link_" + base_id;
-          var field_id = "text_" + base_id;
-          propValue = "<a class='copyLink' href='javascript:void(0)' title='Show all' id='" + link_id + "' >" + "<span id='" + base_id + "'>" + BDA_REPOSITORY.escapeHTML(propValue.substr(0, 25)) + "..." + "</span></a><textarea class='copyField' id='" + field_id + "' readonly>" + propValue + "</textarea>";
-          html += td + propValue + "</td>";
-        }
-        // Make IDs clickable
-        else if (curProp.isId === true) {
-          propValue = BDA_REPOSITORY.parseRepositoryId(propValue);
-          html += td;
-          for (var b = 0; b != propValue.length; b++) {
-            if (propValue[b] != BDA_REPOSITORY.MAP_SEPARATOR && propValue[b] != BDA_REPOSITORY.LIST_SEPARATOR) {
-              if (isItemTree) // for item tree we create an anchor link
-                html += "<a class='clickable_property' href='#id_" + propValue[b] + "'>" + propValue[b] + "</a>";
-              else
-                html += "<a class='clickable_property loadable_property' data-id='" + propValue[b] + "' data-descriptor='" + curProp.itemDesc + "'>" + propValue[b] + "</a>";
-            } else
-              html += propValue[b];
-          }
-          html += "</td>";
-        }
-        // descriptor, Read only and derived porperty are not editable
-        else if (curProp.name == "descriptor" || curProp.rdonly == "true" || curProp.derived == "true")
-          html += "<td>" + propValue + "</td>";
-        else
-          html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>' + propValue + "</td>";
-      } else
-        html += td + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i></td>';
-
-      return html;
-    },
-
-    renderTab: function(itemDesc, types, datas, tabId, isItemTree) {
-      var html = "";
-      html += "<table class='dataTable' data-descriptor='" + itemDesc.substr(1) + "' ";
-      if (isItemTree)
-        html += "id='" + tabId + "'";
-      html += ">";
-      for (var i = 0; i != types.length; i++) {
-        var curProp = types[i];
-        if (i % 2 === 0)
-          html += "<tr class='even";
-        else
-          html += "<tr class='odd";
-
-        if (curProp.name == "id")
-          html += " id";
-        else if (curProp.name == "descriptor")
-          html += " descriptor";
-
-        html += "'>";
-        html += "<th>" + curProp.name + "<span class='prop_name'>";
-        if (curProp.rdonly == "true")
-          html += "<div class='prop_attr prop_attr_red'>R</div>";
-        if (curProp.derived == "true")
-          html += "<div class='prop_attr prop_attr_green'>D</div>";
-        if (curProp.exportable == "true")
-          html += "<div class='prop_attr prop_attr_blue'>E</div>";
-        html += "</span></th>";
-
-        for (var a = 0; a < datas.length; a++) {
-          var propValue = datas[a][curProp.name];
-          html += BDA_REPOSITORY.renderProperty(curProp, propValue, datas[a].id, isItemTree);
-        }
-        html += "</tr>";
-      }
-      html += "</table>";
-      return html;
-    },
-
-    getDescriptorAndDefaultValues: function(itemDescriptor, $xmlDef, descriptorAndDefaultValues) {
-      descriptorAndDefaultValues[itemDescriptor] = {};
-      var itemDefinition = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "]");
-      var defaultProperties = $xmlDef.find("item-descriptor[name=" + itemDescriptor + "] property[default]");
-      if (itemDefinition !== undefined && itemDefinition.length > 0) {
-        var superType = itemDefinition[0].getAttribute("super-type");
-        defaultProperties = defaultProperties.toArray().concat($xmlDef.find("item-descriptor[name=" + superType + "] property[default]").toArray());
-      }
-      for (var defaultPropertiesIndex = 0; defaultPropertiesIndex < defaultProperties.length; defaultPropertiesIndex++) {
-        var defaultProperty = defaultProperties[defaultPropertiesIndex];
-        var defaultPropertyName = defaultProperty.getAttribute("name");
-        var defaultPropertyValue = defaultProperty.getAttribute("default");
-        descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] = defaultPropertyValue;
-      }
-    },
-
-    //same as getDescriptorAndDefaultValues but using Objects
     buildItemDescriptor: function(itemDescriptorName, $xmlDef, repository) {
       BDA_REPOSITORY.PERF_MONITOR.start('buildItemDescriptor');
       //  console.time(itemDescriptorName);
@@ -1206,9 +1047,14 @@
       return repository;
     },
 
+    sleepFor: function(sleepDuration) {
+      var now = new Date().getTime();
+      while (new Date().getTime() < now + sleepDuration) { /* do nothing */ }
+    },
 
     showXMLAsTab: function(rawXml, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
       let xmlContent = sanitizeXml(rawXml);
+
 
       console.time('showXMLAsTab_new');
       if (_.isEmpty(repositoryPath)) {
@@ -1220,13 +1066,13 @@
       let items = parsedResult.items;
       let logs = parsedResult.logs;
 
+
+
       BDA_REPOSITORY.initProgress(items.length, $outputDiv);
 
       BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv, isItemTree);
 
-      //  if (isItemTree) {
       BDA_REPOSITORY.createSpeedbar_new($outputDiv);
-      //}
 
       BDA_REPOSITORY.hideProgressBar($outputDiv);
 
@@ -2020,145 +1866,7 @@
       )
     },
 
-    oldShowXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree, loadSubItemCb, repositoryPath) {
 
-
-      console.time("oldShowXMLAsTab");
-      var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
-      var $xml = $(xmlDoc);
-      var $addItems = $xml.find("add-item");
-      var types = {};
-      var datas = [];
-      var nbTypes = 0;
-      var typesNames = {};
-
-      var log = $("<xml>" + xmlContent + "</xml>")
-        .children()
-        .remove()
-        .end()
-        .text()
-        .trim();
-
-      var descriptorAndDefaultValues = {};
-      if ($xmlDef != null) {
-        for (var i = 0; i < $addItems.length; i++) {
-          var itemDescriptor = $addItems[i].getAttribute("item-descriptor");
-
-          if (descriptorAndDefaultValues.hasOwnProperty(itemDescriptor) === false) {
-            BDA_REPOSITORY.getDescriptorAndDefaultValues(itemDescriptor, $xmlDef, descriptorAndDefaultValues);
-          }
-          for (var defaultPropertyName in descriptorAndDefaultValues[itemDescriptor]) {
-            var exists = $($addItems[i]).find("[name=" + defaultPropertyName + "]").length;
-            if (exists == 0) {
-              $addItems[i].innerHTML += '<set-property name="' + defaultPropertyName + '"><![CDATA[' + descriptorAndDefaultValues[itemDescriptor][defaultPropertyName] + ']]></set-property>';
-            }
-          }
-        }
-      }
-
-
-      $addItems.each(function() {
-        var curItemDesc = "_" + $(this).attr("item-descriptor");
-        if (!types[curItemDesc])
-          types[curItemDesc] = [];
-        if (!typesNames[curItemDesc])
-          typesNames[curItemDesc] = [];
-        if (!datas[curItemDesc]) {
-          datas[curItemDesc] = [];
-          nbTypes++;
-        }
-        var curData = {};
-
-        $(this).find("set-property").each(function(index) {
-          var $curProp = $(this);
-          curData[$curProp.attr("name")] = $curProp.text();
-          var type = {};
-          type.name = $curProp.attr("name");
-          if ($.inArray(type.name, typesNames[curItemDesc]) == -1) {
-            type.rdonly = $curProp.attr("rdonly");
-            type.derived = $curProp.attr("derived");
-            type.exportable = $curProp.attr("exportable");
-            var typeItemDesc = BDA_REPOSITORY.isTypeId(type.name, curItemDesc.substr(1), $xmlDef);
-            if (typeItemDesc === null)
-              type.isId = false;
-            else {
-              type.isId = true;
-              type.itemDesc = typeItemDesc;
-            }
-            types[curItemDesc].push(type);
-            typesNames[curItemDesc].push(type.name);
-          }
-        });
-        if ($.inArray("descriptor", typesNames[curItemDesc]) == -1) {
-          var typeDescriptor = {};
-          typeDescriptor.name = "descriptor";
-          types[curItemDesc].unshift(typeDescriptor);
-          typesNames[curItemDesc].push("descriptor");
-        }
-        if ($.inArray("id", typesNames[curItemDesc]) == -1) {
-          var typeId = {};
-          typeId.name = "id";
-          types[curItemDesc].unshift(typeId);
-          typesNames[curItemDesc].push("id");
-        }
-        curData.descriptor = curItemDesc;
-        curData.id = $(this).attr("id");
-        datas[curItemDesc].push(curData);
-      });
-      var html = "<p class='nbResults'>" + $addItems.length + " items in " + nbTypes + " descriptor(s)</p>";
-      var splitValue;
-      var splitObj = BDA_STORAGE.getStoredSplitObj();
-      if (splitObj === undefined || splitObj === null || splitObj.activeSplit === true)
-        splitValue = 0;
-      else
-        splitValue = parseInt(splitObj.splitValue);
-      for (var itemDesc in datas) {
-        if (splitValue === 0)
-          splitValue = datas[itemDesc].length;
-        var nbTab = 0;
-        if (datas[itemDesc].length <= splitValue) {
-          html += BDA_REPOSITORY.renderTab(itemDesc, types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
-        } else {
-          while ((splitValue * nbTab) < datas[itemDesc].length) {
-            var start = splitValue * nbTab;
-            var end = start + splitValue;
-            if (end > datas[itemDesc].length)
-              end = datas[itemDesc].length;
-            var subDatas = datas[itemDesc].slice(start, end);
-            html += BDA_REPOSITORY.renderTab(itemDesc, types[itemDesc], subDatas, itemDesc + "_" + nbTab, isItemTree);
-            nbTab++;
-          }
-        }
-      }
-      $outputDiv.append(html);
-      $outputDiv.prepend("<div class='prop_attr prop_attr_red'>R</div> : read-only " + "<div class='prop_attr prop_attr_green'>D</div> : derived " + "<div class='prop_attr prop_attr_blue'>E</div> : export is false");
-
-      if ($(".copyField").length > 0) {
-        // reuse $outputDiv in case we have several results set on the page (RQL query + get item tool)
-        $outputDiv.find("p.nbResults").append("<br><a href='javascript:void(0)' class='showFullTextLink'>Show full text</a>");
-        $outputDiv.find(".showFullTextLink").click(function() {
-          console.time("showFullText");
-          $(".copyField").each(function() {
-            $(this).parent().html($(this).html());
-          });
-          console.timeEnd("showFullText");
-          $(this).hide();
-        });
-      }
-
-      if (_.isNil(loadSubItemCb)) {
-        $outputDiv.find(".loadable_property").click(BDA_REPOSITORY.showLoadSubItemAlert);
-
-      } else {
-        $outputDiv.find(".loadable_property").click(loadSubItemCb);
-      }
-
-      if (isItemTree)
-        BDA_REPOSITORY.createSpeedbar();
-
-      console.timeEnd("oldShowXMLAsTab");
-      return log;
-    },
 
     showLoadSubItemAlert: function() {
       logTrace('click on loadable');
@@ -2252,10 +1960,6 @@
               });
             }
           }
-        });
-
-        $(".copyLink").click(function() {
-          BDA_REPOSITORY.showTextField($(this).attr("id").replace("link_", ""));
         });
       });
     },
@@ -2841,7 +2545,9 @@
       bar.attr('data-current', current)
       let percentage = Math.floor(current / total * 100);
       bar.width(percentage + '%')
-        .html('Loading {0}/{1} items'.format(current, total));
+        .html('Loading {0}/{1} items'.format(current, total))
+        .show();
+      //.redraw();
     },
 
 
