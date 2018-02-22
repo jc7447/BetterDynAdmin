@@ -64,6 +64,15 @@ a {
   margin-top: 10px;
 }
 
+.rqlResultContainer .progress{
+  width: 600px;
+}
+
+.rqlResultContainer .progress-bar{
+  animation: none;
+  min-width: 10px;
+}
+
 #RQLLog {
   overflow-x: scroll;
   overflow-x: hidden;
