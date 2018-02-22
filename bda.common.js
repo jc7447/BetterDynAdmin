@@ -3,7 +3,8 @@
 try {
 
   var isLoggingTrace = false;
-  var isLoggingInfo = false;
+  var isLoggingInfo = true;
+  var isLoggingDebug = true;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -235,6 +236,11 @@ try {
   };
   this.logInfo = function() {
     if (isLoggingInfo && window.console != undefined) {
+      window.console.log.apply(window.console, arguments);
+    }
+  };
+  this.logDebug = function() {
+    if (isLoggingDebug && window.console != undefined) {
       window.console.log.apply(window.console, arguments);
     }
   };
@@ -807,6 +813,17 @@ Johann Burkard
     }
 
   })(jQuery);
+
+  function delayBy(func, delay) {
+    logTrace('delayBy', func, delay);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        let res = func();
+        logTrace('delayBy resolve', res);
+        resolve(res);
+      }, delay);
+    })
+  }
 
 
 } catch (e) {

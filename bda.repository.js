@@ -1070,7 +1070,7 @@
 
       BDA_REPOSITORY.initProgress(items.length, $outputDiv);
 
-      BDA_REPOSITORY.renderResultSection(items, repository, $outputDiv, isItemTree);
+      BDA_REPOSITORY.renderResultSection($outputDiv, items, repository, isItemTree);
 
       BDA_REPOSITORY.createSpeedbar_new($outputDiv);
 
@@ -1081,7 +1081,7 @@
       return logs;
     },
 
-    renderResultSection: function(items, repository, $outputDiv, isItemTree) {
+    renderResultSection: function($outputDiv, items, repository, isItemTree) {
       console.time('renderResultSection');
       // now render the result section
       $outputDiv.append("<div class='prop_attr prop_attr_red'>R</div> : read-only " +
@@ -1115,9 +1115,9 @@
 
 
 
-      BDA_REPOSITORY.formatTabResult(repository, items, $outputDiv);
+      BDA_REPOSITORY.formatTabResult($outputDiv, repository, items);
       console.timeEnd('renderResultSection');
-
+      return $outputDiv;
     },
 
     parseXhrResult: function(xhrResult, repositoryPath, callback) {
@@ -1184,60 +1184,86 @@
       return chunkSize;
     },
 
-    formatTabResult: function(repository, repositoryItems, result) {
-      console.time('formatTabResult');
-      try {
-        let itemsByType = _.groupBy(repositoryItems, repoItem => !_.isNil(repoItem.itemDescriptor) ? repoItem.itemDescriptor.name : null);
-        let nbItemDescriptors = _.keys(itemsByType).length;
-        let res = $(BDA_REPOSITORY.templates.resultHeader.format(repositoryItems.length, nbItemDescriptors))
+    formatTabResult: function(result, repository, repositoryItems) {
 
-        var chunkSize = BDA_REPOSITORY.getChunkSize();
+      return new Promise(function(resolve, reject) {
+        console.time('formatTabResult');
+        try {
+          let itemsByType = _.groupBy(repositoryItems, repoItem => !_.isNil(repoItem.itemDescriptor) ? repoItem.itemDescriptor.name : null);
+          let nbItemDescriptors = _.keys(itemsByType).length;
+          let res = $(BDA_REPOSITORY.templates.resultHeader.format(repositoryItems.length, nbItemDescriptors))
 
-        // for each property, only display it if it'si not empty in one result
-        let renderContext = {}
-        _(itemsByType)
-          .each((items, itemDescName) => {
-            let desc = repository.getItemDescriptor(itemDescName);
-            renderContext[itemDescName] = {};
-            _.each(desc.properties, property => {
+          var chunkSize = BDA_REPOSITORY.getChunkSize();
+
+          // for each property, only display it if it'si not empty in one result
+          let renderContext = {}
+          _(itemsByType)
+            .each((items, itemDescName) => {
+              let desc = repository.getItemDescriptor(itemDescName);
+              renderContext[itemDescName] = {};
+              _.each(desc.properties, property => {
+                try {
+                  renderContext[itemDescName][property.name] = _.some(items, item => item.hasValueFor(property.name));
+
+                } catch (e) {
+                  console.err('error finding render context for: itemDescName,items, property', itemDescName, items, property);
+                }
+              })
+            });
+
+
+          //for each group of item by descriptor, split in chunks of same descriptor and max size 'chunkSize'
+          let chunks = _(itemsByType)
+            .map(group => _.chunk(group, chunkSize)) //split each group
+            .flatMap() //flatten the array of arrays
+            .value();
+
+
+          P.reduce(
+              chunks,
+              function(allRes, currentChunk) {
+                logDebug('inside reduce accumulator fc', allRes, currentChunk)
+                // return delayBy(
+                //   () => {
+                let res = BDA_REPOSITORY.buildResultTable(currentChunk, renderContext, repository);
+                BDA_REPOSITORY.updateProgress(currentChunk.length, result);
+                //   return tab;
+                //   },
+                //   10
+                // ).then(res => {
+                logDebug('res after delay', res)
+                allRes.push(res);
+                // })
+                return allRes;
+              }, []
+            )
+            .tapCatch(console.error.bind(console))
+            .then(resArray => {
+
               try {
-                renderContext[itemDescName][property.name] = _.some(items, item => item.hasValueFor(property.name));
-
+                logDebug('resArray', resArray);
+                let first = _.chain(resArray)
+                  .filter(table => !_.isNil(table))
+                  .map(table => {
+                    table.appendTo(result);
+                    return table;
+                  })
+                  .head().value();
+                logDebug('result : top', first)
+                resolve(first);
               } catch (e) {
-                console.err('error finding render context for: itemDescName,items, property', itemDescName, items, property);
+                console.error(e);
               }
             })
-          });
-
-
-        // for each group of item by descriptor, split in chunks of same descriptor and max size 'chunkSize'
-        let chunks = _(itemsByType)
-          .map(group => _.chunk(group, chunkSize)) //split each group
-          .flatMap() //flatten the array of arrays
-          .value();
-
-
-        //now render each tab
-        let firstResult = _.chain(chunks)
-          .map(chunk => {
-            let tab = BDA_REPOSITORY.buildResultTable(chunk, renderContext, repository);
-            BDA_REPOSITORY.updateProgress(chunk.length, result);
-            return tab;
-          })
-          .filter(table => !_.isNil(table))
-          .map(table => {
-            table.appendTo(result);
-            return table;
-          })
-          .head().value();
-
-        return firstResult;
-
-      } catch (e) {
-        console.error(e);
-      }
-      console.timeEnd('formatTabResult');
+        } catch (e) {
+          console.error(e);
+          reject(e);
+        }
+        console.timeEnd('formatTabResult');
+      })
     },
+
+
 
     parseXmlAsObjects: function($addItems, repository, rawXmlDoc) {
       BDA_REPOSITORY.PERF_MONITOR.start('parseXmlAsObjects');
@@ -1773,26 +1799,29 @@
             try {
 
               let tempResult = $('<div></div>');
-              BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, tempResult);
+              BDA_REPOSITORY.formatTabResult(tempResult, parsed.repository, parsed.items)
+                .then(() => {
+                  let propertySelector = '.property[data-id="{0}"]'.format(id);
+                  tempResult.find(propertySelector).each(function() {
+                    let $this = $(this);
+                    let propertyName = $this.attr('data-property');
+                    parentTab.find(propertySelector + '[data-property="{0}"]'.format(propertyName)).replaceWith(this);
+                  })
 
-              let propertySelector = '.property[data-id="{0}"]'.format(id);
-              tempResult.find(propertySelector).each(function() {
-                let $this = $(this);
-                let propertyName = $this.attr('data-property');
-                parentTab.find(propertySelector + '[data-property="{0}"]'.format(propertyName)).replaceWith(this);
-              })
+                  //  update the data
+                  let idSelector = '.idCell[data-identifier="id_{0}_{1}"]'.format(id, itemDescriptorName);
+                  parentTab.find(idSelector).replaceWith(tempResult.find(idSelector));
 
-              //  update the data
-              let idSelector = '.idCell[data-identifier="id_{0}_{1}"]'.format(id, itemDescriptorName);
-              parentTab.find(idSelector).replaceWith(tempResult.find(idSelector));
+                  parentTab.find('[data-id="{0}"]'.format(id)).flash();
 
-              parentTab.find('[data-id="{0}"]'.format(id)).flash();
+                  BDA_REPOSITORY.showNonEmptyLines(parentTab);
 
-              BDA_REPOSITORY.showNonEmptyLines(parentTab);
+                  if (cb) {
+                    cb();
+                  }
+                })
 
-              if (cb) {
-                cb();
-              }
+
             } catch (e) {
               console.error(e);
             }
@@ -1824,29 +1853,31 @@
 
             let temp = $('<div></div>');
 
-            let top = BDA_REPOSITORY.formatTabResult(parsed.repository, parsed.items, temp);
-            //use the itemDescriptor from the result, not the query (ex payment group vs creditCard)
+            BDA_REPOSITORY.formatTabResult(temp, parsed.repository, parsed.items)
+              .then(top => {
+                logDebug('loadSubItem res : ', top);
+                //use the itemDescriptor from the result, not the query (ex payment group vs creditCard)
+                let resultDescriptorName = _.first(parsed.items).itemDescriptor.name;
+                let targetTab = BDA_REPOSITORY.findTabToAppendTo(resultDescriptorName, $outputDiv);
+                if (_.isNil(targetTab) || targetTab.length === 0) {
+                  temp.children().appendTo($outputDiv);
+                } else {
+                  BDA_REPOSITORY.appendToDataTable(id, resultDescriptorName, repositoryPath, targetTab, temp);
+                  top = targetTab;
+                }
 
-            let resultDescriptorName = _.first(parsed.items).itemDescriptor.name;
-            let targetTab = BDA_REPOSITORY.findTabToAppendTo(resultDescriptorName, $outputDiv);
-            if (_.isNil(targetTab) || targetTab.length === 0) {
-              temp.children().appendTo($outputDiv);
-            } else {
-              BDA_REPOSITORY.appendToDataTable(id, resultDescriptorName, repositoryPath, targetTab, temp);
-              top = targetTab;
-            }
-
-            BDA_REPOSITORY.reloadSpeedBar($outputDiv);
-            if (top) {
-              $(window).scrollTo(top, 500);
-              top.find('[data-id="{0}"]'.format(id)).flash();
-            }
-            if (cbSuccess) {
-              cbSuccess();
-            }
-            if (cbEnd) {
-              cbEnd();
-            }
+                BDA_REPOSITORY.reloadSpeedBar($outputDiv);
+                if (top) {
+                  $(window).scrollTo(top, 500);
+                  top.find('[data-id="{0}"]'.format(id)).flash();
+                }
+                if (cbSuccess) {
+                  cbSuccess();
+                }
+                if (cbEnd) {
+                  cbEnd();
+                }
+              })
           });
         },
         function(jqXHR, textStatus, errorThrown) {
@@ -1932,6 +1963,7 @@
 
       processRepositoryXmlDef("definitionFiles", function($xmlDef) {
         BDA_REPOSITORY.PERF_MONITOR.cumul('processRepositoryXmlDef');
+
         var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, resultsBlock, false);
         BDA_REPOSITORY.showRQLLog(log, false);
         // Move raw xml
