@@ -4,7 +4,7 @@ try {
 
   var isLoggingTrace = false;
   var isLoggingInfo = true;
-  var isLoggingDebug = true;
+  var isLoggingDebug = false;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----

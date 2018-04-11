@@ -131,6 +131,47 @@
     this.value = xmlValue.text();
     this.isDefault = false;
   }
+
+
+
+  var SpeedbarScrollSpyManager = function() {
+    logTrace('create SpeedbarScrollSpyManager')
+    this.speedbars = {};
+    this.scrolling = false;
+
+  }
+
+  SpeedbarScrollSpyManager.prototype.add = function(name, bar) {
+    this.speedbars[name] = bar;
+  }
+
+  SpeedbarScrollSpyManager.prototype.adjustSpeedbars = function() {
+    logTrace('adjustSpeedbars')
+    _.forEach(this.speedbars, (bar, name) => {
+      // this.logTrace('adjustSpeedbars : %s', name);
+      bar.update();
+    })
+  }
+
+  // use the manager to centralize the scroll event and throttle the adjusments
+  SpeedbarScrollSpyManager.prototype.start = function() {
+    logTrace('SpeedbarScrollSpyManager start')
+    $(window).on('scroll', () => {
+      this.scrolling = true;
+    })
+
+    setInterval(() => {
+      if (this.scrolling) {
+
+        this.adjustSpeedbars()
+
+        this.scrolling = false;
+      }
+    }, 300)
+  }
+
+
+
   "use scrict";
   var BDA_REPOSITORY = {
 
@@ -259,9 +300,12 @@
       BDA_REPOSITORY.hasResults = BDA_REPOSITORY.hasResultsFct(BDA_REPOSITORY.hasErrors);
       logTrace("isRepositoryPage : " + BDA_REPOSITORY.isRepositoryPage + " Page has results : " + BDA_REPOSITORY.hasResults + ". Page has errors : " + BDA_REPOSITORY.hasErrors);
       // Setup repository page
-      if (BDA_REPOSITORY.isRepositoryPage)
+      if (BDA_REPOSITORY.isRepositoryPage) {
         BDA_REPOSITORY.setupRepositoryPage();
-      console.timeEnd("bdaRepository");
+        console.timeEnd("bdaRepository");
+      }
+
+
     },
 
     isRepositoryPageFct: function() {
@@ -280,16 +324,25 @@
       //save the native form in variable before adding more forms with the showRQLResults methods (inline forms)
       BDA_REPOSITORY.initialForm = $("form:eq(1)");
 
+
       $("<div id='RQLEditor'></div>").insertBefore("h2:first");
       $("<div id='RQLResults'></div>").insertBefore("#RQLEditor");
-      if (BDA_REPOSITORY.hasErrors)
+
+      if (BDA_REPOSITORY.hasErrors) {
         BDA_REPOSITORY.showRqlErrors();
-      if (BDA_REPOSITORY.hasResults && !BDA_REPOSITORY.hasErrors) {
-        // make it async so that the results are rendered after the rest of BDA loads
-        setTimeout(function() {
-          BDA_REPOSITORY.showRQLResults();
-        }, 50);
       }
+      try {
+
+        BDA_REPOSITORY.SCROLL_MANAGER = new SpeedbarScrollSpyManager();
+        BDA_REPOSITORY.SCROLL_MANAGER.start();
+      } catch (e) {
+        console.error(e);
+      }
+
+      if (BDA_REPOSITORY.hasResults && !BDA_REPOSITORY.hasErrors) {
+        BDA_REPOSITORY.showRQLResults();
+      }
+
 
       BDA_REPOSITORY.initialForm
         .appendTo("#RQLEditor")
@@ -1112,12 +1165,13 @@
 
       $outputDiv.append($('<p id="resultToolbar"></p>').append(showAll).append(hideAll));
 
+
       BDA_REPOSITORY.formatTabResult($outputDiv, repository, items)
         .then(() => {
           BDA_REPOSITORY.createSpeedbar_new($outputDiv);
           BDA_REPOSITORY.hideProgressBar($outputDiv);
-
         });
+
       console.timeEnd('renderResultSection');
       return $outputDiv;
     },
@@ -1513,7 +1567,7 @@
     },
 
     onReload: function(elem) {
-      console.log('reloadItem')
+      logTrace('reloadItem')
       let $this = $(elem);
       let property = $this.closest('.property');
       let id = property.attr('data-id');
@@ -1980,6 +2034,7 @@
         BDA_REPOSITORY.PERF_MONITOR.cumul('processRepositoryXmlDef');
 
         var log = BDA_REPOSITORY.showXMLAsTab(xmlContent, $xmlDef, resultsBlock, false);
+
         BDA_REPOSITORY.showRQLLog(log, false);
         // Move raw xml
         $(BDA_REPOSITORY.resultsSelector).next().appendTo("#rawXml");
@@ -2477,10 +2532,10 @@
 
 
     createSpeedbar_new: function(resultElem) {
-      logTrace('createSpeedbar_new')
+      logDebug('createSpeedbar_new')
+
+
       try {
-
-
 
         let speedbar = $('<div class="speedbar"><div class="widget"><i class="fa fa-times close"></i><p>Quick links :</p><ul></ul></div></div>');
         speedbar.find('.close').on('click', () => {
@@ -2507,19 +2562,41 @@
         resultElem.find('#resultToolbar').append(button);
         speedbar.prependTo(resultElem);
 
-        let container = $(resultElem);
+        try {
 
-        let widget = speedbar.find('.widget');
-        let initialTop = container.offset().top;
-        var initialBot = initialTop + container.height();
-        $(window).scroll(function() {
-          var windowTop = $(window).scrollTop();
-          if (initialTop < windowTop && initialBot > windowTop) {
-            widget.addClass('sticky-top-100');
-          } else {
-            widget.removeClass('sticky-top-100');
+
+
+          let container = resultElem;
+
+          let widget = speedbar.find('.widget');
+          let initialTop = container.offset().top;
+          var initialBot = initialTop + container.height();
+
+          let updateBar = function() {
+            logTrace('on scroll')
+            try {
+
+              logDebug('on scroll  : ', initialTop, initialBot);
+              var windowTop = $(window).scrollTop();
+              if (initialTop < windowTop && initialBot > windowTop) {
+                widget.addClass('sticky-top-100');
+              } else {
+                widget.removeClass('sticky-top-100');
+              }
+            } catch (err) {
+              console.error(err);
+            }
           }
-        });
+
+
+          BDA_REPOSITORY.SCROLL_MANAGER.add(resultElem.attr('id'), {
+            update: updateBar
+          });
+
+
+        } catch (e) {
+          console.error(e)
+        }
 
 
 
@@ -2535,36 +2612,6 @@
       BDA_REPOSITORY.createSpeedbar_new(resultElem);
     },
 
-    createSpeedbar: function() {
-      var speedBarHtml = "<a class='close' href='javascript:void(0)'><i class='fa fa-times'></i></a><p>Quick links :</p><ul>";
-      $("#itemTreeResult .dataTable").each(function(index) {
-        var $tab = $(this);
-        var id = $tab.attr("id");
-        var name = id;
-        if (id.indexOf("_") != -1) {
-          var tab = id.split("_");
-          name = tab[1];
-        }
-        var nbItem = $tab.find("td").length / $tab.find("tr").length;
-        speedBarHtml += "<li><i class='fa fa-arrow-right'></i>&nbsp;&nbsp;<a href='#" + id + "'>" + name.trim() + " (" + nbItem + ")</a></li>";
-      });
-      speedBarHtml += "</ul>";
-      $("#itemTreeInfo").append("<div id='speedbar'><div id='widget' class='sticky'>" + speedBarHtml + "</div></div>");
-      $('#speedbar .close').click(function() {
-        $("#speedbar").fadeOut(200);
-      });
-      var stickyTop = $('.sticky').offset().top;
-      $(window).scroll(function() { // scroll event
-        var windowTop = $(window).scrollTop();
-        if (stickyTop < windowTop)
-          $('.sticky').css({
-            position: 'fixed',
-            top: 100
-          });
-        else
-          $('.sticky').css('position', 'static');
-      });
-    },
 
     hideProgressBar: function(parent) {
       logTrace('hideProgressBar', arguments)
@@ -2593,7 +2640,7 @@
         current += size;
         bar.attr('data-current', current)
         let percentage = Math.floor(current / total * 100);
-        console.log('progres percentage %s', percentage);
+        logTrace('progres percentage %s', percentage);
         bar.width(percentage + '%')
 
           .html('Loading {0}/{1} items'.format(current, total))
