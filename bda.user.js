@@ -37,6 +37,7 @@
 // @resource visCSS https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.css
 // @updateUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
+// @require http://cdn.jsdelivr.net/g/filesaver.js
 // ==/UserScript==
 
 var BDA = {
@@ -424,6 +425,14 @@ var BDA = {
       else
         $("#rawXmlLink").html("hide raw XML");
     },
+
+    exportXMLToFile : function ()
+    {
+      var rawXml = document.getElementById("rawXml").value;
+      var blob = new Blob([userInput], { type: "text/xml;charset=utf-8" });
+      saveAs(blob, "bdaExport.xml");
+    },
+
 
     getDescriptorList : function()
     {
@@ -896,7 +905,8 @@ var BDA = {
       console.log("Start showRQLResults");
       // Add 'show raw xml' link
       var html = "<p>"
-                + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>"
+                + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a> <br>"
+                + "<a href='javascript:void(0)' id='exportXMLToFile'>Export raw xml</a>"
                 + "</p>\n";
       html += "<p id='rawXml'></p>";
       $("#RQLResults").append(html);
@@ -936,6 +946,10 @@ var BDA = {
             });
           }
         }
+      });
+
+      $("#exportXMLToFile").click(function() {
+        BDA.exportXMLToFile();
       });
 
       $(".copyLink").click(function() {
