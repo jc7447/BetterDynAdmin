@@ -1,4 +1,8 @@
-#itemTreeId{
+tr.even td {
+  background-color: #FFF;
+}
+
+#itemTreeId {
   width: 100px;
 }
 
@@ -10,18 +14,26 @@ a {
   text-decoration: none
 }
 
+.fa-pencil-square-o {
+  cursor: pointer;
+}
+
 #RQLToolbar {
   margin-bottom: 10px;
-
 }
-.select2-container .select2-choices .select2-search-field input, .select2-container .select2-choice, .select2-container .select2-choices {
+
+.select2-container .select2-choices .select2-search-field input,
+.select2-container .select2-choice,
+.select2-container .select2-choices {
   font-family: "Arial";
   font-size: 13px;
   color: black;
 }
 
-.select2-chosen, .select2-choice > span:first-child, .select2-container .select2-choices .select2-search-field input {
-    padding: 4px 6px;
+.select2-chosen,
+.select2-choice > span:first-child,
+.select2-container .select2-choices .select2-search-field input {
+  padding: 4px 6px;
 }
 
 #select2-drop {
@@ -32,8 +44,9 @@ a {
   height: 24px;
 }
 
-.select2-container .select2-choice .select2-arrow b, .select2-container .select2-choice div b {
-    background-position: 0 0;
+.select2-container .select2-choice .select2-arrow b,
+.select2-container .select2-choice div b {
+  background-position: 0 0;
 }
 
 .select2-results {
@@ -52,22 +65,26 @@ a {
   overflow-x: scroll;
   overflow-x: hidden;
   max-height: 100px;
-  padding : 5px;
+  padding: 5px;
   border: 1px dashed #CCC;
-   width:800px;
-   white-space: pre-wrap;
-   font-family: monospace;
+  width: 800px;
+  white-space: pre-wrap;
+  font-family: monospace;
 }
+
 #rawXml {
   display: none;
-  margin : 0px;
-  padding : 0px;
+  margin: 0px;
+  padding: 0px;
 }
 
 .dataTable {
   font-size: 80%;
   margin: 5px;
-  border: 1px solid #CCCCCC
+  border: 1px solid #CCCCCC;
+  z-index: 10;
+  position: relative;
+  background-color: #FFF;
 }
 
 .prop_name {
@@ -104,7 +121,8 @@ a {
   display: none;
 }
 
-.dataTable td, .dataTable th {
+.dataTable td,
+.dataTable th {
   padding: 3px;
 }
 
@@ -133,7 +151,7 @@ a {
 #RQLText .CodeMirror {
   border: 1px solid #aaa;
   height: 250px;
-  width:800px;
+  width: 800px;
   cursor: text;
 }
 
@@ -167,17 +185,16 @@ a {
   border: 1px solid #dcdcdc;
   padding: 5px;
   font-size: 14px;
-  margin-right : 20px;
+  margin-right: 20px;
 }
 
-#repoToolbar
-{
+#repoToolbar {
   margin-bottom: 20px;
 }
 
 .btn-toolbar:hover {
-  color : black;
-  }
+  color: black;
+}
 
 .red {
   color: #880000;
@@ -196,10 +213,44 @@ a {
   font-weight: bold;
 }
 
-#descProperties {
-  display: none;
+#tabs {
+  display: inline-block;
   vertical-align: top;
   margin-left: 5px;
+}
+
+#tabs i {
+  font-size: 80%;
+}
+
+#navbar {
+  list-style-type: none;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+#navbar li {
+  float: left;
+  background-color: #ddd;
+  color: #000;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #bbb;
+  border-bottom: none;
+}
+
+#navbar li.selected {
+  background-color: #fff;
+}
+
+#descProperties {
+  display: none;
+  border: 1px solid #bbb;
+  max-width: 600px;
+  max-height: 224px;
+  overflow-x: auto;
 }
 
 #descProperties tbody tr:nth-child(odd) {
@@ -217,16 +268,11 @@ a {
   padding: 5px 0px 0px 0px;
 }
 
-.scrollableTab {
-  max-width: 600px;
-  max-height: 230px;
-  overflow-x: auto;
-  border: 1px solid #CCC;
-}
-
 #storedQueries {
   display: inline-block;
   vertical-align: top;
+  border: 1px solid #bbb;
+  min-width: 350px;
 }
 
 .error {
@@ -237,121 +283,133 @@ a {
   margin: 5px;
 }
 
-.deleteQuery {
+.queryView {
   display: none;
+}
+
+.previewQuery {
   margin-top: 5px;
   margin-left: 10px;
   cursor: pointer;
 }
 
-#bdaBug {
-  position: absolute;
-  top: 0px;
-  right: 30px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #00486c;
-  border-top: none;
-  background-color: #007bb8;
-  padding: 3px;
+.deleteQuery {
+  margin-top: 5px;
+  margin-left: 10px;
+  cursor: pointer;
 }
 
-#bdaBug p, #bdaBackup p , #whatsnew p{
-  margin: 0;
-}
-
-.bugArrow, .backupArrow {
+.menuArrow {
   text-align: center;
   cursor: pointer;
-  padding-top: 2px;
+  padding-top: 5px;
 }
 
-.bugArrow img, .backupArrow img {
+.menuArrow img {
   width: 15px;
   height: 8px;
 }
 
-#bdaBugPanel {
+/** MENU **/
+#menuBar {
   position: absolute;
-  top: 34px;
+  top: 0px;
   right: 30px;
-  width: 250px;
+}
+
+.menu {
+  height: 32px;
+  font-size: 11px;
+  color: white;
+  border: 1px solid #00486c;
+  background-color: #007bb8;
+  border-top: none;
+  padding: 3px;
+  text-align: center;
+  float: right;
+  margin-top: 0px;
+  margin-right: 3px;
+}
+
+.menu p {
+  margin: 0;
+}
+
+.menuPanel {
+  position: absolute;
+  top: 39px;
+  right: 33px;
+  width: 296px;
   font-size: 11px;
   color: white;
   border: 1px solid #00486c;
   border-top: none;
-  background-color: #007bb8;
   padding: 3px;
   display: none;
 }
 
-#bdaBugPanel a {
+.menuPanel a {
   text-decoration: underline;
   color: white;
+}
+
+.menuPanel textarea {
+  width: 100%;
+}
+
+#bdaBug {
+  background-color: #007bb8;
+}
+
+#bdaBugPanel {
+  background-color: #007bb8;
+}
+
+#bdaBackup {
+  background-color: #007bb8;
+}
+
+#bdaBackupPanel {
+  background-color: #007bb8;
+}
+
+#bdaSearch {
+  background-color: #007bb8;
+}
+
+#bdaSearch input {
+  margin-top: 1px;
+  height: 20px;
+}
+
+#whatsnew {
+  background-color: #62A03E;
+  border-color: #44702B;
+}
+
+#whatsnewPanel {
+  border-color: #44702B;
+  background-color: #62A03E;
+}
+
+#bdaConfig {
+  background-color: #007bb8;
+}
+
+#bdaConfigPanel {
+  background-color: #007bb8;
 }
 
 #history {
   clear: both;
 }
 
-#bdaBackup {
-  position: absolute;
-  top: 0px;
-  right: 153px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #8F0000;
-  border-top: none;
-  background-color: #CC0000;
-  padding: 3px;
-}
-
-#whatsnew {
-  position: absolute;
-  top: 0px;
-  right: 233px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #8F0000;
-  border-top: none;
-  background-color: #CC0000;
-  padding: 3px;
-}
-
-#bdaData {
-  width: 100%;
-}
-
-#bdaBackupPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
-  width: 285px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #8F0000;
-  border-top: none;
-  background-color: #CC0000;
-  padding: 3px;
-  display: none;
-}
-
-#whatsnewPanel {
-  position: absolute;
-  top: 34px;
-  right: 30px;
-  width: 285px;
-  font-size: 11px;
-  color: white;
-  border: 1px solid #8F0000;
-  border-top: none;
-  background-color: #CC0000;
-  padding: 3px;
-  display: none;
-}
-
 #toolbar {
   padding: 5px;
+}
+
+.toolbar-elem {
+  float: left;
 }
 
 .newFav {
@@ -360,15 +418,115 @@ a {
   height: 54px;
   width: 50px;
   text-align: center;
-  float: left;
   margin: 4px;
   line-height: 48px;
   cursor: pointer;
 }
 
+.favFilter {
+  border: 1px dashed #AAAAAA;
+  height: 54px;
+  width: 50px;
+  margin: 4px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 20px;
+  margin: 4px;
+  line-height: 48px;
+}
+
+#favFilter {
+  margin-top: 15px;
+}
+
+.fav-chevron {
+  line-height: 48px;
+}
+
+#favTagList {
+  clear: left;
+  margin-left: 5px;
+  margin-top: 3px;
+}
+
 #addComponent {
   color: #AAAAAA;
   text-decoration: none;
+}
+
+#favSetTags {
+  margin-bottom: 5px;
+}
+
+.bda-button {
+  color: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 12px;
+  padding: 0px 6px 0px 0px;
+  cursor: pointer;
+}
+
+.bda-button label,
+.bda-button input,
+.bda-button button {
+  vertical-align: middle;
+}
+
+.bda-button-icon {
+  height: 22px;
+  width: 22px;
+  padding: 0px 0px 0px 0px;
+  vertical-align: middle;
+}
+
+.bda-button-clipboard {
+  margin-left: 10px;
+  padding: 3px;
+  color: black;
+  vertical-align: middle;
+  border-radius: 5px;
+}
+
+.tag-filter-button {
+  color: black;
+}
+
+.tag-filter {
+  cursor: pointer;
+}
+
+.tag-filter label {
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.favline {
+  margin-bottom: 5px;
+  display: block;
+}
+
+.favline ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.favline div {
+  display: inline-block;
+}
+
+.favline li {
+  display: inline-block;
+  list-style: none; /* pour enlever les puces sur IE7 */
+  margin: 2px;
+}
+
+.newtags {
+  width: 85%;
 }
 
 .fav {
@@ -377,11 +535,10 @@ a {
   margin: 4px;
   padding: 2px;
   color: white;
-  float: left;
 }
 
 .fav a {
-  color:white;
+  color: white;
 }
 
 .favLink {
@@ -389,7 +546,8 @@ a {
   line-height: 16px;
 }
 
-.favLink a, .logdebug {
+.favLink a,
+.logdebug {
   color: white;
   text-decoration: none;
 }
@@ -415,7 +573,7 @@ a {
 .favTitle {
   font-size: 14px;
   font-weight: bold;
-  margin-bottom: 5px;;
+  margin-bottom: 5px;
   text-align: center;
 }
 
@@ -428,6 +586,11 @@ a {
 
 .favDelete {
   cursor: pointer;
+}
+
+.fav-button {
+  cursor: pointer;
+  margin-right: 5px;
 }
 
 .favLogDebug form {
@@ -444,38 +607,35 @@ a {
   font-size: 13px;
 }
 
-#oracleATGbrand
-{
+#oracleATGbrand {
   width: 120px;
   cursor: pointer;
 }
 
-#xmlHighlight
-{
+#xmlHighlight {
   margin-bottom: 0px;
 }
 
-#rawXml pre
-{
-  margin : 0;
+#rawXml pre {
+  margin: 0;
 }
 
-#sqltext
-{
+#sqltext {
   display: block;
 }
-#curDataSourceName
-{
+
+#curDataSourceName {
   font-weight: bold;
 }
 
 #sqlResult {
   border-collapse: collapse;
   width: 100%;
-  border : 1px solid #ccc;
+  border: 1px solid #ccc;
 }
 
-#sqlResult td, #sqlResult th {
+#sqlResult td,
+#sqlResult th {
   text-align: center;
   border-right: 1px solid #ccc;
   background: none;
@@ -485,12 +645,12 @@ a {
   background-color: #F0F0F6;
 }
 
-
 /* Extra selectors needed to override the default styling */
 table.tablesorter tbody tr.normal-row td {
   background: #fff;
   color: #3d3d3d;
 }
+
 table.tablesorter tbody tr.alt-row td {
   background: #EAF2FA;
   color: #3d3d3d;
@@ -498,79 +658,86 @@ table.tablesorter tbody tr.alt-row td {
 
 table.tablesorter tr.normal-row:hover td,
 table.tablesorter tr.alt-row:hover td {
-    background-color: #eee;
+  background-color: #eee;
 }
 
 .clickable:hover {
-  color : #d14;
+  color: #d14;
   text-decoration: underline;
 }
 
 .popup_block {
-   background: #fff none repeat scroll 0 0;
-   border: 5px solid #ddd;
-   box-shadow: 0 0 5px #000;
-   display: none;
-   font-size: 0.9em;
-   padding: 10px;
-   position: fixed;
-   left: 50%;
-   transform: translate(-50%, 0);
-   z-index:1;
-   height: 400px;
-   width: 700px;
-   top : 30px;
+  background: #fff none repeat scroll 0 0;
+  border: 5px solid #ddd;
+  box-shadow: 0 0 5px #000;
+  display: none;
+  font-size: 0.9em;
+  padding: 10px;
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 1;
+  height: 400px;
+  width: 700px;
+  top: 30px;
 }
 
 #pipelinePopup {
-   height: 600px;
-   width: 90%;
-   font-size: 14px;
+  height: 600px;
+  width: 90%;
+  font-size: 14px;
 }
 
 #pipelineTable {
-	font-size: 14px;
+  font-size: 14px;
 }
 
 .popup_title {
-  margin-top : 0;
+  margin-top: 0;
 }
 
 #addComponentToolbarPopupContent {
-  height:71%;
-  overflow:auto;
+  height: 58%;
+  overflow: auto;
 }
 
-.close, #submitComponent {
+.close,
+#submitComponent {
   float: right;
-  color : black;
+  color: black;
 }
 
-#methods, #vars {
-  float:left; 
+.fav-submit-button {
+  float: right;
+  color: black;
+}
+
+#methods,
+#vars {
+  float: left;
   width: 50%;
 }
 
-#methods li, #vars li{
-  list-style-position:inside;
+#methods li,
+#vars li {
+  list-style-position: inside;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
 }
 
 #speedbar {
-  float:right;
-  width:210px;
+  float: right;
+  width: 210px;
   margin-right: 100px;
-  margin-top : 100px;
+  margin-top: 100px;
 }
 
 #speedbar #widget {
-  width:240px;
-  border :1px solid #999;
+  width: 240px;
+  border: 1px solid #999;
   font-size: 13px;
-  padding : 10px;
+  padding: 10px;
 }
 
 #widget i {
@@ -585,17 +752,509 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 #widget p {
-  margin-top : 0;
+  margin-top: 0;
 }
 
 #widget li {
-  margin-top : 5px;
+  margin-top: 5px;
 }
 
 .link {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 #pipelineTable pre {
-	margin : 0;
+  margin: 0;
+}
+
+.clickable_property {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* DASH */
+.modal-dialog.modal-lg {
+  width: 60%;
+}
+
+.fullscreen .modal-dialog.modal-lg {
+  width: 95%;
+}
+
+#dashModal .modal-content {
+}
+
+#dashModal .modal-footer .tab-pane {
+  text-align: left;
+}
+
+#dashInput {
+  font-family: monospace;
+}
+
+#dashForm {
+  font-family: monospace;
+}
+
+#dashForm .tt-hint {
+  color: #ccc;
+}
+
+#dashForm .form-group {
+  margin-bottom: 0;
+}
+
+#dashEditorForm {
+  font-size: 14px;
+}
+
+#dashEditor {
+  resize: none; /* min-height: 100px; */
+}
+
+#dashScreen {
+  font-family: monospace;
+  overflow-y: auto;
+  max-height: 250px;
+  height: 250px;
+  margin-bottom: 15px;
+}
+
+.fullscreen #dashScreen {
+  margin-bottom: 0;
+  height: 100%;
+  max-height: 100%;
+}
+
+#dashScreen .alert {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+
+#dashScreen pre {
+  background-color: inherit;
+  font-family: inherit;
+  border: 0;
+  color: inherit;
+}
+
+#dashScreen .dl-horizontal dt {
+  width: 80px;
+}
+
+#dashScreen .dl-horizontal dd {
+  margin-left: 90px;
+}
+
+.typeahead.dropdown-menu {
+  text-align: left;
+}
+
+#dashModal textarea.form-control {
+  height: inherit;
+}
+
+#dashModal panel {
+  background-color: white;
+}
+
+table.table {
+  background-color: white;
+}
+
+/* Override dyn/admin style */
+.table th {
+  background-color: inherit;
+  border-style: inherit;
+}
+
+#dashModal .alert .btn-group {
+  float: right;
+  opacity: 0.8;
+}
+
+#dashModal .alert button.btn {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+#dashModal .alert button.btn:hover,
+#dashModal .alert button.btn:focus {
+  opacity: 1;
+}
+
+.printItem {
+  margin-top: 15px;
+}
+
+#dashModal .modal-footer  .panel {
+  margin-bottom: 0;
+}
+
+#dashSaveForm {
+  margin-bottom: 0;
+}
+
+.no-padding {
+  padding: 0 !important;
+}
+
+#bdaDashMenuElem .menuArrow {
+  padding-top: 2px;
+}
+
+kbd {
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #fff;
+  background-color: #333;
+  border-radius: 3px;
+  -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .25);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .25);
+}
+
+#dashModal .modal-footer {
+  margin-top: 0;
+  border-top: 0;
+  padding: 5px 20px 5px;
+}
+
+#dashModal .modal-body {
+  padding-bottom: 0;
+}
+
+/* recopy bootstrap without wrapper*/
+.modal-backdrop.fade {
+  opacity: 0;
+  filter: alpha(opacity=0);
+}
+
+.fade.in {
+  opacity: 1;
+}
+
+.modal-backdrop.in {
+  opacity: .5;
+  filter: alpha(opacity=50);
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1030;
+  background-color: #000;
+}
+
+.fade {
+  opacity: 0;
+  -webkit-transition: opacity .15s linear;
+  transition: opacity .15s linear;
+}
+
+#dashTips {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.footer-right {
+  cursor: pointer;
+}
+
+.footer-right a {
+  border: 1px solid transparent;
+}
+
+/** CACHE STATS **/
+table.cache {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.cache tr.cache-subheader {
+  cursor: pointer;
+}
+
+.cache td,
+.cache th {
+  padding: 6px;
+}
+
+.cache td,
+.cache th {
+  border: 1px solid #ddd;
+}
+
+button.cache {
+  cursor: pointer;
+}
+
+.fixed_headers {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.fixed_headers thead {
+  width: 100%;
+}
+
+.fixed_headers thead th {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.fixed_headers th,
+.fixed_headers td {
+  width: 4%;
+}
+
+.fixed_headers.oldDynamo th,
+.fixed_headers.oldDynamo td {
+  width: 5.3%;
+}
+
+/*.fixed_headers .sticky-top thead {
+  display: block;
+}
+.fixed_headers .sticky-top tbody {
+  display: block;
+
+}*/
+.sticky-top {
+  position: fixed;
+  top: 0;
+}
+
+.scroller {
+  scroll-snap-type: proximity;
+}
+
+.snap {
+  scroll-snap-align: start none;
+  scroll-snap-padding: 25px 0 0 0;
+}
+
+/*.old_ie_wrapper {
+  overflow-x: hidden;
+  overflow-y: auto;
+  tbody { height: auto; }
+}*/
+
+/* SCHEDULER */
+
+#timeline-wrapper {
+  margin-bottom: 20px;
+}
+
+.twbs caption {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  color: #777;
+  text-align: left;
+}
+
+/* XML DEF */
+#xmlDefAsTable {
+  margin-top: 15px;
+  /* for whatever reason on some pages
+  the whole section is inside an <a> tag
+  on native dyn/admin : need to reset color*/
+  color: black;
+}
+
+.item-descriptor-heading,
+.table-def {
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+#xmlDefAsTable .item-panel .panel-heading {
+  background-color: #dff0d8;
+}
+
+.subtableHeader {
+  background-color: #f5f5f5;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.item-panel .panel-heading {
+  padding: 10px;
+}
+
+/* Remove pading top/bot */
+.item-panel .panel-body {
+  padding: 0 15px;
+}
+
+.item-panel .row > [class^="col-"] {
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.table-def [class^="col-"] {
+  text-transform: none;
+  background-color: #d9edf7;
+}
+
+.item-panel .highlight {
+  background-color: yellow;
+}
+
+.item-panel .property:hover {
+  background-color: #f5f5f5;
+}
+
+#quickNavLinks {
+  margin-top: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#xmlDefQuickNav .btn.sorted{
+  background-color: #dff0d8;
+}
+
+#xmlDefQuickNav h3.panel-title {
+  padding-top: 4px;
+}
+
+#definitionsContainer {
+  max-width: inherit;
+}
+
+#quickNavLinks .nav > li > a {
+  padding: 5px 15px
+}
+
+#xmlDefSearchBox {
+  font-size: 0.9em;
+}
+
+ol.itemDescAttributes {
+  text-transform: none;
+  margin: 0;
+  padding: 0;
+  font-weight: 500;
+}
+
+.itemDescAttributes > li {
+  display: inline-block;
+  padding-right: 5px;
+}
+
+.itemDescAttributes > li + li:before {
+  content: "/\00a0";
+  padding: 0 5px;
+  color: #cccccc;
+}
+
+.attr-value {
+  font-weight: 600;
+}
+
+.table-name {
+  font-weight: 600;
+  text-transform: none;
+}
+
+.property-type,
+.enum,
+.derivation {
+  text-decoration: underline;
+}
+
+.data-type,
+.component-data-type {
+  text-transform: capitalize;
+}
+
+.row.subtableHeader .col-lg-05{
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 8px;
+  text-align: center;
+}
+
+#xmlDefAsTable .tooltip-inner {
+  max-width: inherit;
+}
+
+#xmlDefAsTable  .popover ul {
+  padding-left: 10px;
+}
+
+#xmlDefAsTable .popover{
+  max-width: inherit;
+  width: 600px;
+  width: intrinsic;           /* Safari/WebKit uses a non-standard name */
+  width: -moz-max-content;    /* Firefox/Gecko */
+  width: -webkit-max-content; /* Chrome */
+}
+
+/*
+.item-panel [class^="col-"] {
+    background-color: rgba(86,61,124,.15);
+    border: 1px solid rgba(86,61,124,.2);
+}
+*/
+
+/** AUTOCOMPLETE **/
+
+#searchField {
+  width: 300px;
+}
+
+/** extend grid system**/
+
+/** 0.5 **/
+.twbs .col-xs-05,
+.twbs .col-sm-05,
+.twbs .col-md-05,
+.twbs .col-lg-05 {
+  width: 4.166666665%;
+  position: relative;
+  min-height: 1px;
+  padding-left: 15px;
+  padding-right: 15px;
+  float: left;
+}
+.notifyjs-bootstrap-base {
+  font-size: 12px;
+}
+
+.legend {
+  display : inline-block;
+  color : white;
+  border-radius : 5px;
+  font-size : 11px;
+  padding : 3px;
+  margin : 5px;
+}
+
+#treePopup {
+  height: 90%;
+  width: 95%;
+  overflow: hidden;
+}
+
+.flexContainer {
+  display:flex;
+  height: 100%;
+}
+
+#treeInfo {
+  display:none;
+  float:left;
+}
+
+#treeContainer  {
+  height: 100%;
+  flex : 1;
 }
