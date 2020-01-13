@@ -1798,7 +1798,7 @@
     exportXMLToFile : function ()
     {
       var rawXml = document.getElementById("rawXml").value;
-      var blob = new Blob([userInput], { type: "text/xml;charset=utf-8" });
+      var blob = new Blob([rawXml], { type: "text/xml;charset=utf-8" });
       saveAs(blob, "bdaExport.xml");
     },
 
