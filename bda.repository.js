@@ -1129,6 +1129,7 @@
       logTrace("Start showRQLResults");
       // Add 'show raw xml' link
       var html = "<p>" + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>" + "</p>\n";
+      html += "<a href='javascript:void(0)' id='exportXMLToFile'>Export raw xml</a>\n";
       html += "<p id='rawXml'></p>";
       $("#RQLResults").append(html);
 
@@ -1164,6 +1165,10 @@
               });
             }
           }
+        });
+
+        $("#exportXMLToFile").click(function() {
+          BDA_REPOSITORY.exportXMLToFile();
         });
 
         $(".copyLink").click(function() {
@@ -1788,6 +1793,13 @@
         $("#rawXmlLink").html("show raw XML");
       else
         $("#rawXmlLink").html("hide raw XML");
+    },
+
+    exportXMLToFile : function ()
+    {
+      var rawXml = document.getElementById("rawXml").value;
+      var blob = new Blob([userInput], { type: "text/xml;charset=utf-8" });
+      saveAs(blob, "bdaExport.xml");
     },
 
     // simply handles an ajax call to a repository and parse the result

@@ -1,4 +1,4 @@
-﻿﻿// ==UserScript==
+﻿// ==UserScript==
 // @name         Better Dynamo Administration
 // @namespace    BetterDynAdmin
 // @include      */dyn/admin/*
@@ -69,6 +69,7 @@
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
 // @require bda.scheduler.js
+// @require http://cdn.jsdelivr.net/g/filesaver.js
 
 // @updateUrl http://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
