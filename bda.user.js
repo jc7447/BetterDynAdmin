@@ -33,6 +33,9 @@
 // @require https://cdnjs.cloudflare.com/ajax/libs/vis/4.15.0/vis.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js
 // @require https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js
+// @require https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/2.1.2/jquery.scrollTo.min.js
+// @require https://cdn.jsdelivr.net/bluebird/latest/bluebird.min.js
+
 // custom bootstrap
 // @require lib/bootstrap/js/bootstrap.min.js
 // @require http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.min.js
@@ -70,6 +73,7 @@
 // @require parser/bda.dash.parser.js
 // @require bda.dash.js
 // @require bda.scheduler.js
+// @require bda.repo-explorer.js
 
 // @updateUrl http://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
 // @downloadUrl https://raw.githubusercontent.com/jc7447/bda/master/bda.user.js
@@ -192,6 +196,8 @@ jQuery(document).ready(function() {
         $().initDASH(BDA);
 
         $().bdaScheduler();
+
+       // $().initRepositoryExplorer(BDA);
 
         var autocomplete = $.fn.bdaStorage.getBdaStorage().getConfigurationValue('search_autocomplete');
         autocomplete = (autocomplete == true) ? true : false;

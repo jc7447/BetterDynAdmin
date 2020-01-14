@@ -3,6 +3,8 @@
 try {
 
   var isLoggingTrace = false;
+  var isLoggingInfo = true;
+  var isLoggingDebug = false;
   var xmlDefinitionCacheTimeout = 1200; // 20min
 
   // ----- Standard Javascript override -----
@@ -76,19 +78,25 @@ try {
       return tags;
     },
 
-    this.processRepositoryXmlDef = function(property, callback) {
+    this.processRepositoryXmlDef = function(property, callback, componentPath) {
+      console.time('processRepositoryXmlDef');
       if (callback !== undefined) {
         // First check cache value if any
-        var rawXmlDef = getXmlDef(getCurrentComponentPath());
+        if (_.isNil(componentPath)) {
+          componentPath = getCurrentComponentPath();
+        }
+        var rawXmlDef = getXmlDef(componentPath);
         if (rawXmlDef !== null) {
           logTrace("Getting XML def from cache");
           var xmlDoc = jQuery.parseXML(rawXmlDef);
-          if (callback !== undefined)
+          console.timeEnd('processRepositoryXmlDef');
+          if (callback !== undefined) {
             callback($(xmlDoc));
+          }
         }
         // If no cache entry, fetch the XML def in ajax
         else {
-          var url = location.protocol + '//' + location.host + location.pathname + "?propertyName=" + property;
+          var url = location.protocol + '//' + location.host + '/dyn/admin/nucleus' + componentPath + "?propertyName=" + property;
           logTrace(url);
           jQuery.ajax({
             url: url,
@@ -105,15 +113,20 @@ try {
                 try {
                   logTrace("XML def length : " + rawXmlDef.length);
                   var xmlDoc = jQuery.parseXML(rawXmlDef);
-                  storeXmlDef(getCurrentComponentPath(), rawXmlDef);
+                  storeXmlDef(componentPath, rawXmlDef);
+                  console.timeEnd('processRepositoryXmlDef');
                   callback($(xmlDoc));
                 } catch (err) {
                   logTrace("Unable to parse XML def file !");
+                  console.timeEnd('processRepositoryXmlDef');
                   callback(null);
                   logTrace(err);
                 }
-              } else
+              } else {
+
+                console.timeEnd('processRepositoryXmlDef');
                 callback(null);
+              }
             },
           });
         }
@@ -121,16 +134,26 @@ try {
     };
 
   this.getXmlDef = function(componentPath) {
-    logTrace("Getting XML def for : " + componentPath);
+    console.time('getXmlDef');
+    logInfo("Getting XML def for : " + componentPath);
     var timestamp = Math.floor(Date.now() / 1000);
     var xmlDefMetaData = JSON.parse(localStorage.getItem("XMLDefMetaData"));
-    if (!xmlDefMetaData)
+    if (!xmlDefMetaData) {
+      console.timeEnd('getXmlDef');
+      logInfo("getXmlDef Xml is null");
       return null;
+
+    }
     if (xmlDefMetaData.componentPath != componentPath || (xmlDefMetaData.timestamp + xmlDefinitionCacheTimeout) < timestamp) {
-      logTrace("Xml def is outdated or from a different component");
+      console.timeEnd('getXmlDef');
+      logInfo("getXmlDef Xml def is outdated or from a different component");
       return null;
     }
-    return localStorage.getItem("XMLDefData");
+    let xml = localStorage.getItem("XMLDefData");
+    console.timeEnd('getXmlDef');
+    logInfo("getXmlDef returning value from storage");
+    console.timeEnd('getXmlDef');
+    return xml;
   };
 
   this.storeXmlDef = function(componentPath, rawXML) {
@@ -207,8 +230,18 @@ try {
   };
 
   this.logTrace = function() {
-    if (isLoggingTrace) {
-      logTrace.apply(this, arguments);
+    if (isLoggingTrace && window.console != undefined) {
+      window.console.log.apply(window.console, arguments);
+    }
+  };
+  this.logInfo = function() {
+    if (isLoggingInfo && window.console != undefined) {
+      window.console.log.apply(window.console, arguments);
+    }
+  };
+  this.logDebug = function() {
+    if (isLoggingDebug && window.console != undefined) {
+      window.console.log.apply(window.console, arguments);
     }
   };
 
@@ -433,6 +466,15 @@ try {
     this.css('height', value + 'px');
     return this;
   };
+  // $.fn.scrollTo = function() {
+
+  //   $(this).get()[0].scrollIntoView({
+  //     behavior: "smooth",
+  //     start: "start",
+  //     inline: "start"
+  //   });
+
+  // }
 
   $.fn.toCSV = function() {
     var data = [];
@@ -521,6 +563,10 @@ try {
     } else {
       return local >= remote;
     }
+  }
+
+  function getEvenOddClass(i) {
+    return (i % 2 === 0) ? 'even' : 'odd';
   }
 
 
@@ -700,7 +746,84 @@ Johann Burkard
       return this;
     }
 
+    $.fn.flash = function(options) {
+      let $this = $(this);
+      this.addClass("flash");
+      setTimeout(function() {
+        $this.removeClass("flash");
+      }, 3000);
+
+      return this;
+    }
+
+
+    // lodash mixin to sort an js object by keys
+    _.mixin({
+      'sortKeysBy': function(object, comparator) {
+
+        const keys = Object.keys(object)
+        const sortedKeys = _.sortBy(keys, comparator)
+
+        return _.fromPairs(
+          _.map(sortedKeys, key => [key, object[key]])
+        )
+
+      }
+    });
+
+    PerformanceMonitor = function(active) {
+      this.active = active;
+      this.values = {};
+    }
+    PerformanceMonitor.prototype.reset = function() {
+      this.values = {};
+    }
+    PerformanceMonitor.prototype.start = function(task) {
+      if (this.active) {
+
+        let record = this.values[task];
+        if (_.isNil(record)) {
+          record = {
+            total: 0,
+            occurences: 0
+          };
+          this.values[task] = record;
+        }
+        record.start = new Date().getTime();
+        //  console.log('start',task,record.start);
+      }
+    }
+    PerformanceMonitor.prototype.cumul = function(task) {
+      if (this.active) {
+        let record = this.values[task];
+        if (!!record && !!record.start) {
+          let current = new Date().getTime() - record.start;
+          record.total += current;
+          record.occurences++;
+          //    console.log('cumul',task,record.start,record.total,current);
+        }
+      }
+    }
+    PerformanceMonitor.prototype.log = function() {
+      console.log('PerformanceMonitor :');
+      _.forEach(this.values, (record, task) => {
+        let average = record.total / record.occurences;
+        console.log('%s - total : %s, average : %s, occurences %s', task, record.total, average, record.occurences);
+      })
+    }
+
   })(jQuery);
+
+  function delayBy(func, delay) {
+    logTrace('delayBy', func, delay);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        let res = func();
+        logTrace('delayBy resolve', res);
+        resolve(res);
+      }, delay);
+    })
+  }
 
 
 } catch (e) {

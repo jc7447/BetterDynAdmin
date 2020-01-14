@@ -5,10 +5,11 @@ jQuery(document).ready(function() {
 
     var BDA;
     var BDA_STORAGE;
+    var BDA_REPOSITORY;
     var BDA_DASH = {
 
       devMode: false,
-      version: 0.8,
+      version: 0.9,
 
       settings: {
         domain: "",
@@ -22,7 +23,7 @@ jQuery(document).ready(function() {
       $footer: null,
 
       modalHeight: 200,
-      modalHeightRatio: 0.9,
+      modalHeightRatio: 0.98,
       //
       initialized: false,
 
@@ -78,10 +79,6 @@ jQuery(document).ready(function() {
           '</div>' +
           '<div class="col-sm-5">' +
           '<div class="btn-group" role="group" >' +
-          /*'<button type="button" id="dashLoadScript" class="btn btn-primary" title="load">' +
-          '<i class="fa fa-folder-open" />&nbsp;' +
-          '</i>' +
-          '</button>' +*/
           '<button type="button" id="dashDeleteScript" class="btn btn-primary" title="delete">' +
           '<i class="fa fa-trash-o" />&nbsp;' +
           '</i>' +
@@ -117,12 +114,13 @@ jQuery(document).ready(function() {
           '</div>' +
           '</div>' +
           '<div id="dashFooter" class="modal-footer">' +
-          '<ul class="nav nav-pills">' +
+          '<ul id="dashNav" class="nav nav-pills">' +
           '<li role="presentation" class="active"><a id="dashConsoleButton" href="#dash-console-tab" aria-controls="console" role="tab" data-toggle="tab" data-fs-mode="false">Console</a></li>' +
           '<li role="presentation"><a id="dashEditorButton"  href="#dash-editor-tab" aria-controls="editor" role="tab" data-toggle="tab"  data-fs-mode="true">Editor</a></li>' +
           '<li role="presentation" class="pull-right footer-right" ><a id="dashClearScreen" class="btn-default"   role="tab" aria-controls="clearScreen" >Clear Screen <i class="fa fa-ban" ></i></a></li>' +
+
           '</ul>' +
-          '<div id="dashTips" class="text-muted"></div>' +
+          '<div id="dashTips" class="tips text-muted"></div>' +
           '</div>' +
           '</div>' +
           '</div>' +
@@ -141,6 +139,8 @@ jQuery(document).ready(function() {
           '<p class="dash_feeback_line">$&gt;&nbsp;<span class="cmd"></span></p>' +
           '<p class="dash_log_line">{2}</p>' +
           '<p class="dash_return_line">{0}</p>' +
+          '<p class="dash_help_line"><br/> Type <em>help</em> for more information.</p>' +
+          '<div class="dash_return_line objectResult"></div>' +
           '</div>',
         systemResponse: '<div class="dash_screen_sys_res alert alert-{1} alert-dismissible" role="alert" >' +
           '<div class="btn-group" role="group">' +
@@ -174,7 +174,7 @@ jQuery(document).ready(function() {
           'All your base are belong to us.'
         ],
         menuElem: '<div id="bdaDashMenuElem" class="menu" title="ctrl+alt+T"><p>Dash</p><div class="menuArrow"><i class="fa fa-terminal" /></div></div>',
-        errMsg: '<strong>{0}</strong> : {1}<br/> Type <em>help</em> for more information.',
+        errMsg: '<strong>{0}</strong> : {1}',
         tableTemplate: '<table class="table"><tr><th>{0}</th><th>{1}</th></tr>{2}</table>',
         rowTemplate: '<tr><td>{0}</td><td>{1}</td></tr>',
         printItemTemplate: '<div class="panel panel-default printItem"><div class="panel-heading">Printing item with id: {0}</div>{1}</div>',
@@ -403,26 +403,8 @@ jQuery(document).ready(function() {
               params.itemDesc,
               params.id,
               params.repo,
-              function($xmlDoc) {
-                try {
-                  var res = "";
-                  var items = []
-                  if (!isNull($xmlDoc)) {
-                    var $itemXml;
-                    $xmlDoc.find('add-item').each(function() {
-                      $itemXml = $(this);
-                      items.push(convertAddItemToPlainObject($itemXml));
-                    })
-                    callback(items);
-                  } else {
-                    throw {
-                      name: "Not Found",
-                      message: "No value"
-                    }
-                  }
-                } catch (e) {
-                  errCallback(e);
-                }
+              function(result) {
+                $().getBdaRepository().parseXhrResult(result, params.repo, callback);
               },
               function(jqXHR, textStatus, errorThrown) {
                 errCallback({
@@ -432,14 +414,7 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: function(params, retval) {
-            var res = "";
-            for (var i = 0; i < retval.length; i++) {
-              var item = retval[i];
-              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-            }
-            return res;
-          }
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(retval, cb)
         },
 
         //print @OR order p92133231
@@ -466,26 +441,8 @@ jQuery(document).ready(function() {
               params.itemDesc,
               params.query,
               params.repo,
-              function($xmlDoc) {
-                try {
-                  var res = "";
-                  var items = []
-                  if (!isNull($xmlDoc)) {
-                    var $itemXml;
-                    $xmlDoc.find('add-item').each(function() {
-                      $itemXml = $(this);
-                      items.push(convertAddItemToPlainObject($itemXml));
-                    })
-                    callback(items);
-                  } else {
-                    throw {
-                      name: "Not Found",
-                      message: "No value"
-                    }
-                  }
-                } catch (e) {
-                  errCallback(e);
-                }
+              function(result) {
+                $().getBdaRepository().parseXhrResult(result, params.repo, callback);
               },
               function(jqXHR, textStatus, errorThrown) {
                 errCallback({
@@ -495,14 +452,7 @@ jQuery(document).ready(function() {
               }
             );
           },
-          responseToString: function(params, retval) {
-            var res = "";
-            for (var i = 0; i < retval.length; i++) {
-              var item = retval[i];
-              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-            }
-            return res;
-          }
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(retval, cb)
         },
 
 
@@ -575,26 +525,8 @@ jQuery(document).ready(function() {
               BDA_DASH.settings.domain,
               xmlText,
               repo,
-              function($xmlDoc, head) {
-                try {
-                  var res = head.join('') + "\n";
-                  if (!isNull($xmlDoc)) {
-                    var $itemXml;
-                    var items = [];
-                    $xmlDoc.find('add-item').each(function() {
-                      $itemXml = $(this);
-                      items.push(convertAddItemToPlainObject($itemXml));
-                    })
-                    callback(items);
-                  } else {
-                    throw {
-                      name: "Not Found",
-                      message: "No value"
-                    }
-                  }
-                } catch (e) {
-                  errCallback(e);
-                }
+              function(result) {
+                $().getBdaRepository().parseXhrResult(result, params.repo, callback);
               },
               function(jqXHR, textStatus, errorThrown) {
                 errCallback({
@@ -605,14 +537,8 @@ jQuery(document).ready(function() {
             );
 
           },
-          responseToString: function(params, retval) {
-            var res = "";
-            for (var i = 0; i < retval.length; i++) {
-              var item = retval[i];
-              res += BDA_DASH.templates.printItemTemplate.format(item.id, buildSimpleTable(item, BDA_DASH.templates.tableTemplate, BDA_DASH.templates.rowTemplate));
-            }
-            return res;
-          }
+          responseToString: (params, retval, cb) => BDA_DASH.displayRqlResult(retval, cb)
+
 
         },
 
@@ -1033,20 +959,8 @@ jQuery(document).ready(function() {
         //change the screen size to keep the modal same size
         logTrace('bind tab change events');
         //init size
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        BDA_DASH.bindTabChangeResize($('a[data-toggle="tab"]'));
 
-          var $target = $(e.target);
-          var fsMode = $target.attr('data-fs-mode') == "true";
-
-          BDA_DASH.toggleFullScreen(fsMode);
-
-          // BDA_DASH.updateScreenHeight(); //done bt toggleFS
-          //save latest tab
-          var tId = $target.attr('id');
-          BDA_STORAGE.storeConfiguration('dashDefaultTab', tId);
-
-          $('.tab-pane.active .main-input').focus();
-        });
         //resize dash on window resize
         $(window).resize(function() {
           if (BDA_DASH.$modalContent.is(":visible")) {
@@ -1066,18 +980,6 @@ jQuery(document).ready(function() {
           BDA_DASH.saveScreenState();
         });
 
-        $('#dashFullScreen').on('click', function() {
-          BDA_DASH.toggleFullScreen();
-        });
-
-        /*     BDA_DASH.$input.keydown(function(e) {
-               if (e.which == 38 && e.shiftKey) {
-                 BDA_DASH.moveInHistory(true);
-               }
-               if (e.which == 40 && e.shiftKey) {
-                 BDA_DASH.moveInHistory(false);
-               }
-             });*/
         logTrace('bind clear');
         $('#dashCleanInput').on('click', function(e) {
           e.preventDefault();
@@ -1152,9 +1054,28 @@ jQuery(document).ready(function() {
           }
         });
 
-        // BDA_DASH.handleInput('help -k'); //skip history
         BDA_DASH.restoreScreenState();
+
+        console.log('trigger dash build done')
+        $('body').trigger('bda.dash.build.done');
+
         console.timeEnd("dashBuild");
+      },
+
+      bindTabChangeResize: function($elem) {
+        $elem.on('shown.bs.tab', function(e) {
+          var $target = $(e.target);
+          var fsMode = $target.attr('data-fs-mode') == "true";
+          var cols = $target.attr('data-cols');
+
+          BDA_DASH.toggleFullScreen(fsMode, cols);
+
+          //save latest tab
+          var tId = $target.attr('id');
+          BDA_STORAGE.storeConfiguration('dashDefaultTab', tId);
+
+          $('.tab-pane.active .main-input').focus();
+        });
       },
 
       submitSaveScriptForm: function() {
@@ -1499,37 +1420,7 @@ jQuery(document).ready(function() {
           });
 
 
-          $('.dash-autocomplete').textcomplete([{ // tech companies
-            id: 'commands',
-            match: /\b(\w{1,})$/, //1 letter or more
-            search: function(term, callback) {
-              logTrace('search %s', term)
-              BDA_DASH.suggestionEngine.search(term, callback, callback);
-            },
-            index: 1,
-            cache: true,
-            replace: function(data) {
-              logTrace('replace %s', data.value);
-              return data.value + ' ';
-            },
-            template: function(data, term) {
-              var pattern = data.pattern;
-              if (isNull(pattern)) {
-                pattern = '';
-              }
-              return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
-            },
-            context: function(text) {
-              if (!isNull(text)) {
-                var lines = text.split('\n');
-                if (lines.length > 0) {
-                  var ret = lines[lines.length - 1];
-                  return ret;
-                }
-              }
-              return "";
-            }
-          }, {
+          $('.dash-autocomplete').textcomplete([{
             id: 'comprefs',
             match: /@(t|th|thi|this|([A-Z][A-Z0-9#]*))?$/, //@ and 0 letter or more or 'this'
             search: function(term, callback) {
@@ -1564,6 +1455,36 @@ jQuery(document).ready(function() {
             },
             template: function(data, term) {
               return '<strong>${0}&nbsp</strong>:&nbsp{1}'.format(data.value, data.preview);
+            }
+          }, {
+            id: 'commands',
+            match: /\b([^@]{1,})$/, //1 letter or more
+            search: function(term, callback) {
+              logTrace('search %s', term)
+              BDA_DASH.suggestionEngine.search(term, callback, callback);
+            },
+            index: 1,
+            cache: true,
+            replace: function(data) {
+              logTrace('replace %s', data.value);
+              return data.value + ' ';
+            },
+            template: function(data, term) {
+              var pattern = data.pattern;
+              if (isNull(pattern)) {
+                pattern = '';
+              }
+              return '<strong>{0}</strong>&nbsp{1}'.format(data.value, pattern);
+            },
+            context: function(text) {
+              if (!isNull(text)) {
+                var lines = text.split('\n');
+                if (lines.length > 0) {
+                  var ret = lines[lines.length - 1];
+                  return ret;
+                }
+              }
+              return "";
             }
           }, {
             id: 'xml',
@@ -1717,10 +1638,14 @@ jQuery(document).ready(function() {
                 if (isNull(fct.responseToString)) {
                   textResult = JSON.stringify(result);
                 } else {
-                  textResult = fct.responseToString(parsedParams, result);
+                  textResult = fct.responseToString(parsedParams, result, (asyncTextRes, asyncJqueryRes) => {
+                    BDA_DASH.handleOutput(stringCmd, parsedParams, result, asyncTextRes, "success", asyncJqueryRes);
+                  });
                 }
               }
-              BDA_DASH.handleOutput(stringCmd, parsedParams, result, textResult, "success");
+              if (!_.isNil(textResult)) {
+                BDA_DASH.handleOutput(stringCmd, parsedParams, result, textResult, "success");
+              }
             },
             function(err) {
               BDA_DASH.handleError(stringCmd, err);
@@ -1754,10 +1679,10 @@ jQuery(document).ready(function() {
       },
 
       //end method, should be always called at the end of a shell function
-      handleOutput: function(cmd, params, result, textResult, level) {
+      handleOutput: function(cmd, params, result, textResult, level, jqueryResult) {
 
         //save the result
-        logTrace('handleOutput ' + textResult);
+        logTrace('handleOutput ' + textResult, jqueryResult);
         logTrace(params);
         if (!isNull(result) && !isNull(params) && !isNull(params.output)) {
           BDA_DASH.saveOutput(result, params.output);
@@ -1778,6 +1703,7 @@ jQuery(document).ready(function() {
 
         var msgClass = BDA_DASH.styles[level];
         var $entry = $(BDA_DASH.templates.screenLine.format(textResult, msgClass, logMsg));
+        $entry.find('.objectResult').append(jqueryResult);
         $entry.find('.cmd').text(cmd);
         $entry.attr('data-command', cmd);
 
@@ -2243,17 +2169,28 @@ jQuery(document).ready(function() {
 
       },
 
-      toggleFullScreen: function(on) {
+      toggleFullScreen: function(on, cols) {
         if (isNull(on)) {
           var fs = BDA_DASH.$modal.attr('data-fullscreen');
           on = (fs == "true");
         }
+        if (_.isNil(cols)) {
+          cols = on ? '2' : '1';
+        }
         if (on) {
           BDA_DASH.$modal.attr('data-fullscreen', true).addClass('fullscreen');
-          $('.dashcol').removeClass('col-lg-12').addClass('col-lg-6');
         } else {
           BDA_DASH.$modal.attr('data-fullscreen', false).removeClass('fullscreen');
-          $('.dashcol').removeClass('col-lg-6').addClass('col-lg-12');
+        }
+
+        switch (cols) {
+          case '2':
+            $('.dashcol').removeClass('col-lg-12').addClass('col-lg-6');
+            break;
+          case '1':
+          default:
+            $('.dashcol').removeClass('col-lg-6').addClass('col-lg-12');
+
         }
         //update modal size
         BDA_DASH.updateScreenHeight();
@@ -2279,6 +2216,13 @@ jQuery(document).ready(function() {
         if (BDA_DASH.progress.total > 1) {
           $bar.parent().fadeIn();
         }
+      },
+
+
+      displayRqlResult: function(result, cb) {
+        var $res = $('<div class="rqlResultContainer"></div>');
+        $().getBdaRepository().renderResultSection(result.items, result.repository, $res);
+        cb('<pre>{0}</pre>'.format(result.logs), $res);
       },
 
       updateProgress: function() {
@@ -2333,6 +2277,7 @@ jQuery(document).ready(function() {
       logTrace('Init plugin {0}'.format('DASH'));
       BDA = pBDA;
       BDA_STORAGE = $.fn.bdaStorage.getBdaStorage();
+      BDA_REPOSITORY = $.fn.getBdaRepository();
 
 
       if ($().bdaAddMenuElem) {
@@ -2345,6 +2290,9 @@ jQuery(document).ready(function() {
 
     $.fn.openDash = function() {
       BDA_DASH.openDash();
+    }
+    $.fn.getDash = function() {
+      return BDA_DASH;
     }
 
     logTrace('bda.dash.js end');

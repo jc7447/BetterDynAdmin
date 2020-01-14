@@ -1,4 +1,4 @@
-.hidden{
+.hidden {
   display: none;
 }
 
@@ -26,34 +26,33 @@ a {
   margin-bottom: 10px;
 }
 
-.select2-container .select2-choices .select2-search-field input,
-.select2-container .select2-choice,
-.select2-container .select2-choices {
+#resultToolbar button{
+  margin-right: 3px;
+}
+
+.select2-container.bda-repository .select2-choices .select2-search-field input, .select2-container.bda-repository .select2-choice, .select2-container.bda-repository .select2-choices {
   font-family: "Arial";
   font-size: 13px;
   color: black;
 }
 
-.select2-chosen,
-.select2-choice > span:first-child,
-.select2-container .select2-choices .select2-search-field input {
+.bda-repository .select2-chosen, .bda-repository .select2-choice > span:first-child, .select2-container.bda-repository .select2-choices .select2-search-field input {
   padding: 4px 6px;
 }
 
-#select2-drop {
+#select2-drop.bda-repository {
   font-size: 13px;
 }
 
-.select2-container .select2-choice {
+.select2-container.bda-repository .select2-choice {
   height: 24px;
 }
 
-.select2-container .select2-choice .select2-arrow b,
-.select2-container .select2-choice div b {
+.select2-container.bda-repository .select2-choice .select2-arrow b, .select2-container.bda-repository .select2-choice div b {
   background-position: 0 0;
 }
 
-.select2-results {
+.bda-repository .select2-results {
   max-height: 220px;
 }
 
@@ -63,6 +62,15 @@ a {
 
 #RQLResults {
   margin-top: 10px;
+}
+
+.rqlResultContainer .progress{
+  width: 600px;
+}
+
+.rqlResultContainer .progress-bar{
+  animation: none;
+  min-width: 10px;
 }
 
 #RQLLog {
@@ -115,6 +123,11 @@ a {
   background-color: green;
 }
 
+.item-line.rdonly td {
+  /*color: #888;*/
+  font-style: italic;
+}
+
 .copyLink {
   text-decoration: none;
   color: #00214a;
@@ -125,8 +138,7 @@ a {
   display: none;
 }
 
-.dataTable td,
-.dataTable th {
+.dataTable td, .dataTable th {
   padding: 3px;
 }
 
@@ -475,9 +487,7 @@ a {
   cursor: pointer;
 }
 
-.bda-button label,
-.bda-button input,
-.bda-button button {
+.bda-button label, .bda-button input, .bda-button button {
   vertical-align: middle;
 }
 
@@ -559,8 +569,7 @@ a {
   line-height: 16px;
 }
 
-.favLink a,
-.logdebug {
+.favLink a, .logdebug {
   color: white;
   text-decoration: none;
 }
@@ -597,12 +606,12 @@ a {
   text-align: left;
 }
 
-.favDelete, .favEdit{
+.favDelete, .favEdit {
   cursor: pointer;
   display: inline-block;
 }
 
-.favEdit{
+.favEdit {
   margin-left: 5px;
 }
 
@@ -652,8 +661,7 @@ a {
   border: 1px solid #ccc;
 }
 
-#sqlResult td,
-#sqlResult th {
+#sqlResult td, #sqlResult th {
   text-align: center;
   border-right: 1px solid #ccc;
   background: none;
@@ -674,8 +682,7 @@ table.tablesorter tbody tr.alt-row td {
   color: #3d3d3d;
 }
 
-table.tablesorter tr.normal-row:hover td,
-table.tablesorter tr.alt-row:hover td {
+table.tablesorter tr.normal-row:hover td, table.tablesorter tr.alt-row:hover td {
   background-color: #eee;
 }
 
@@ -710,7 +717,7 @@ table.tablesorter tr.alt-row:hover td {
   font-size: 14px;
 }
 
-.popup_title, .popup_title_update{
+.popup_title, .popup_title_update {
   margin-top: 0;
   display: none;
 }
@@ -728,10 +735,10 @@ table.tablesorter tr.alt-row:hover td {
   overflow: auto;
 }
 
-.close,
-#submitComponent {
+.close, #submitComponent {
   float: right;
   color: black;
+  cursor: pointer;
 }
 
 .fav-submit-button {
@@ -739,51 +746,50 @@ table.tablesorter tr.alt-row:hover td {
   color: black;
 }
 
-#methods,
-#vars {
+#methods, #vars {
   float: left;
   width: 50%;
 }
 
-#methods li,
-#vars li {
+#methods li, #vars li {
   list-style-position: inside;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#speedbar {
+.speedbar {
   float: right;
   width: 210px;
   margin-right: 100px;
   margin-top: 100px;
 }
 
-#speedbar #widget {
+.speedbar .widget {
   width: 240px;
   border: 1px solid #999;
   font-size: 13px;
   padding: 10px;
   z-index: 100;
+  background-color: white;
 }
 
-#widget i {
+.widget i {
   font-size: 11px;
 }
 
-#widget ul {
+.widget ul {
   list-style-type: none;
   padding-inline-start: 0px;
   margin-block-end: 0;
   margin-block-start: 0;
 }
 
-#widget p {
+.widget p {
   margin-top: 0;
 }
 
-#widget li {
+.widget li {
   margin-top: 5px;
 }
 
@@ -795,18 +801,115 @@ table.tablesorter tr.alt-row:hover td {
   margin: 0;
 }
 
+.action {
+  cursor: pointer;
+}
+
 .clickable_property {
   text-decoration: underline;
   cursor: pointer;
 }
 
+.newpage {
+  font-style: italic;
+}
+
+.show-edit .start-edit, .derived .start-edit, .rdonly .start-edit {
+  display: none;
+}
+
+.show-edit .actions {
+  display: none;
+}
+
+.property .value-elem {
+  display: inline-block;
+  flex: auto;
+}
+
+.show-short .value-elem.long, .show-long .value-elem.short, .show-edit .propertyValue, .show-edit .value-elem {
+  display: none;
+}
+
+.property .edit .inline-input {
+  width: 100%;
+  height: 100%; /* border: 0;*/
+  margin: 0;
+  padding: 0;
+}
+
+.property .edit {
+  display: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.property.show-edit .edit {
+  display: inline-block;
+}
+
+.property.show-edit .actions {
+  display: none;
+}
+
+.expand, .collapse {
+  display: none;
+}
+
+.toggable.show-short .expand {
+  display: inline-block;
+}
+
+.toggable.show-long .collapse {
+  display: inline-block;
+}
+
+.start-edit {
+  display: inline-block;
+}
+
+td.property {
+  white-space: nowrap;
+}
+
+td.property .actions {
+  display: inline-block;
+  margin-left: 8px;
+  float: right;
+}
+
+.flex-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.actions i {
+  margin-left: 4px;
+}
+
+.default {
+  color: #777;
+}
+
+td.property .actions .passive-loading-icon {
+  display: none;
+}
+
+td.property.loading .actions .passive-loading-icon {
+  display: table-cell;
+}
+
 /* DASH */
 .modal-dialog.modal-lg {
   width: 60%;
+  padding-top: 10px;
 }
 
 .fullscreen .modal-dialog.modal-lg {
-  width: 95%;
+  width: 100%;
+  padding: 10;
 }
 
 #dashModal .modal-content {
@@ -849,7 +952,6 @@ table.tablesorter tr.alt-row:hover td {
 }
 
 .fullscreen #dashScreen {
-  margin-bottom: 0;
   height: 100%;
   max-height: 100%;
 }
@@ -907,9 +1009,12 @@ table.table {
   opacity: 0.8;
 }
 
-#dashModal .alert button.btn:hover,
-#dashModal .alert button.btn:focus {
+#dashModal .alert button.btn:hover, #dashModal .alert button.btn:focus {
   opacity: 1;
+}
+
+#dashModal {
+  font-size: 0.9em;
 }
 
 .printItem {
@@ -930,6 +1035,18 @@ table.table {
 
 #bdaDashMenuElem .menuArrow {
   padding-top: 2px;
+}
+
+.dash_screen_line {
+  font-size: 14px;
+}
+
+.dash_help_line {
+  display: none;
+}
+
+.alert-danger .dash_help_line {
+  display: block;
 }
 
 kbd {
@@ -986,6 +1103,7 @@ kbd {
 #dashTips {
   margin-top: 10px;
   margin-bottom: 5px;
+  font-size: 0.7em;
 }
 
 .footer-right {
@@ -994,6 +1112,10 @@ kbd {
 
 .footer-right a {
   border: 1px solid transparent;
+}
+
+.dash_return_line {
+  margin-top: 0.5em;
 }
 
 /** CACHE STATS **/
@@ -1006,13 +1128,11 @@ table.cache {
   cursor: pointer;
 }
 
-.cache td,
-.cache th {
+.cache td, .cache th {
   padding: 6px;
 }
 
-.cache td,
-.cache th {
+.cache td, .cache th {
   border: 1px solid #ddd;
 }
 
@@ -1036,13 +1156,11 @@ button.cache {
   overflow: hidden;
 }
 
-.fixed_headers th,
-.fixed_headers td {
+.fixed_headers th, .fixed_headers td {
   width: 4%;
 }
 
-.fixed_headers.oldDynamo th,
-.fixed_headers.oldDynamo td {
+.fixed_headers.oldDynamo th, .fixed_headers.oldDynamo td {
   width: 5.3%;
 }
 
@@ -1056,6 +1174,11 @@ button.cache {
 .sticky-top {
   position: fixed;
   top: 0;
+}
+
+.sticky-top-100 {
+  position: fixed;
+  top: 100;
 }
 
 .scroller {
@@ -1088,15 +1211,13 @@ button.cache {
 
 /* XML DEF */
 #xmlDefAsTable {
-  margin-top: 15px;
-  /* for whatever reason on some pages
-  the whole section is inside an <a> tag
-  on native dyn/admin : need to reset color*/
+  margin-top: 15px;  /* for whatever reason on some pages
+            the whole section is inside an <a> tag
+            on native dyn/admin : need to reset color*/
   color: black;
 }
 
-.item-descriptor-heading,
-.table-def {
+.item-descriptor-heading, .table-def {
   text-transform: capitalize;
   cursor: pointer;
 }
@@ -1145,7 +1266,7 @@ button.cache {
   overflow-x: hidden;
 }
 
-#xmlDefQuickNav .btn.sorted{
+#xmlDefQuickNav .btn.sorted {
   background-color: #dff0d8;
 }
 
@@ -1192,18 +1313,15 @@ ol.itemDescAttributes {
   text-transform: none;
 }
 
-.property-type,
-.enum,
-.derivation {
+.property-type, .enum, .derivation {
   text-decoration: underline;
 }
 
-.data-type,
-.component-data-type {
+.data-type, .component-data-type {
   text-transform: capitalize;
 }
 
-.row.subtableHeader .col-lg-05{
+.row.subtableHeader .col-lg-05 {
   padding-left: 0;
   padding-right: 0;
   font-size: 8px;
@@ -1218,7 +1336,7 @@ ol.itemDescAttributes {
   padding-left: 10px;
 }
 
-#xmlDefAsTable .popover{
+#xmlDefAsTable .popover {
   max-width: inherit;
   width: 600px;
   width: intrinsic;           /* Safari/WebKit uses a non-standard name */
@@ -1242,10 +1360,7 @@ ol.itemDescAttributes {
 /** extend grid system**/
 
 /** 0.5 **/
-.twbs .col-xs-05,
-.twbs .col-sm-05,
-.twbs .col-md-05,
-.twbs .col-lg-05 {
+.twbs .col-xs-05, .twbs .col-sm-05, .twbs .col-md-05, .twbs .col-lg-05 {
   width: 4.166666665%;
   position: relative;
   min-height: 1px;
@@ -1253,17 +1368,18 @@ ol.itemDescAttributes {
   padding-right: 15px;
   float: left;
 }
+
 .notifyjs-bootstrap-base {
   font-size: 12px;
 }
 
 .legend {
-  display : inline-block;
-  color : white;
-  border-radius : 5px;
-  font-size : 11px;
-  padding : 3px;
-  margin : 5px;
+  display: inline-block;
+  color: white;
+  border-radius: 5px;
+  font-size: 11px;
+  padding: 3px;
+  margin: 5px;
 }
 
 #treePopup {
@@ -1273,30 +1389,54 @@ ol.itemDescAttributes {
 }
 
 .flexContainer {
-  display:flex;
+  display: flex;
   height: 100%;
 }
 
 #treeInfo {
-  display:none;
-  float:left;
+  display: none;
+  float: left;
 }
 
-#treeContainer  {
+#treeContainer {
   height: 100%;
-  flex : 1;
+  flex: 1;
 }
 
-.showActorXml{
+.showActorXml {
   margin-left: 10px;
 }
 
 .show-xml-close {
   display: none;
+  }
+.bottom-panel {
+  margin-top: 10px;
 }
 .open .show-xml-close {
   display: block;
 }
 .open .show-xml-open {
   display: none;
+
+
+
+@keyframes flash {
+  0% {
+    background-color: inherit;
+  }
+
+  10% {
+    background-color: yellow;
+  }
+
 }
+
+.flash {
+ 
+  animation-name: flash;
+  animation-duration: 3000ms;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in-out;
+}
+

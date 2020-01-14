@@ -361,31 +361,31 @@
         BDA_XML_DEF.$ITEMS = $container.find('.panel');
         var searchTimeOut;
 
-        $('.item-descriptor-heading').on('click', function() {
-          var $this = $(this);
-          var target = $this.attr('data-target');
-          if ($this.hasClass('open')) {
-            $this.removeClass('open').addClass('closed');
-            $('#item_' + target).find('.panel-body .row').hide();
-          } else {
-            $this.removeClass('closed').addClass('open');
-            $('#item_' + target).find('.panel-body .row').show();
-          }
-        });
+//         $('.item-descriptor-heading').on('click', function() {
+//           var $this = $(this);
+//           var target = $this.attr('data-target');
+//           if ($this.hasClass('open')) {
+//             $this.removeClass('open').addClass('closed');
+//             $('#item_' + target).find('.panel-body .row').hide();
+//           } else {
+//             $this.removeClass('closed').addClass('open');
+//             $('#item_' + target).find('.panel-body .row').show();
+//           }
+//         });
 
-        $('.table-def').on('click', function() {
-          var $this = $(this);
-          var id = $this.attr('id');
-          if ($this.hasClass('open')) {
-            $this.removeClass('open').addClass('closed');
-            $('.row[data-table=' + id + ']').hide();
+//         $('.table-def').on('click', function() {
+//           var $this = $(this);
+//           var id = $this.attr('id');
+//           if ($this.hasClass('open')) {
+//             $this.removeClass('open').addClass('closed');
+//             $('.row[data-table=' + id + ']').hide();
 
-          } else {
-            $this.removeClass('closed').addClass('open');
-            $('.row[data-table=' + id + ']').show();
+//           } else {
+//             $this.removeClass('closed').addClass('open');
+//             $('.row[data-table=' + id + ']').show();
 
-          }
-        });
+//           }
+//         });
 
         $row.prepend(BDA_XML_DEF.buildQuickNav());
 
