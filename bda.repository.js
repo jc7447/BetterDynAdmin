@@ -1401,8 +1401,12 @@
       if (outputType !== "HTMLtab" && outputType != "tree") {
         logTrace("Render copy button");
         $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
+        $("#itemTreeInfo").append("<input type='button' id='itemTreeExportButton' value='Export result to file'></input>");
         $('#itemTreeCopyButton').click(function() {
           copyToClipboard($('#itemTreeResult').text());
+        });
+        $('#itemTreeExportButton').click(function() {
+          BDA_REPOSITORY.exportItemTreeXMLToFile();
         });
       }
       if (outputType == "addItem") {
@@ -1805,6 +1809,18 @@
       var blob = new Blob([rawXmlCodeToSave], { type: "text/xml;charset=utf-8" });
       var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
       saveAs(blob, currComponentName + "_export.xml");
+    },
+
+    exportItemTreeXMLToFile: function () {
+      const rawXmlCodeNode = document.evaluate('//*[@id="itemTreeResult"]/pre', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const rawXmlCodeToSave =  rawXmlCodeNode.innerHTML
+                  .trim()
+                  .replace(/&lt;/g, "<")
+                  .replace(/&gt;/g, ">")
+                  .replace("&nbsp;", "");
+      var blob = new Blob([rawXmlCodeToSave], { type: "text/xml;charset=utf-8" });
+      var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
+      saveAs(blob, currComponentName + "_tree_export.xml");
     },
 
     // simply handles an ajax call to a repository and parse the result
