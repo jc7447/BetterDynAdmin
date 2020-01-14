@@ -1795,10 +1795,18 @@
         $("#rawXmlLink").html("hide raw XML");
     },
 
-    exportXMLToFile : function ()
-    {
-      var rawXml = document.getElementById("rawXml").value;
-      var blob = new Blob([rawXml], { type: "text/xml;charset=utf-8" });
+    exportXMLToFile: function () {
+      const rawXmlCodeNode = document.evaluate('//*[@id="rawXml"]/pre/code', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      let rawXmlCodeToSave = rawXmlCodeNode.innerHTML;
+      rawXmlCodeToSave = rawXmlCodeToSave.replace("&lt;", "<");
+      rawXmlCodeToSave = rawXmlCodeToSave.replace("&gt;", ">");
+      let search = '&lt;';
+      let replaceWith = '<';
+      rawXmlCodeToSave = rawXmlCodeToSave.split(search).join(replaceWith);
+      search = '&gt;';
+      replaceWith = '>';
+      rawXmlCodeToSave = rawXmlCodeToSave.split(search).join(replaceWith);
+      var blob = new Blob([rawXmlCodeToSave], { type: "text/xml;charset=utf-8" });
       saveAs(blob, "bdaExport.xml");
     },
 
