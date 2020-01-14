@@ -1797,17 +1797,14 @@
 
     exportXMLToFile: function () {
       const rawXmlCodeNode = document.evaluate('//*[@id="rawXml"]/pre/code', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-      let rawXmlCodeToSave = rawXmlCodeNode.innerHTML;
-      rawXmlCodeToSave = rawXmlCodeToSave.replace("&lt;", "<");
-      rawXmlCodeToSave = rawXmlCodeToSave.replace("&gt;", ">");
-      let search = '&lt;';
-      let replaceWith = '<';
-      rawXmlCodeToSave = rawXmlCodeToSave.split(search).join(replaceWith);
-      search = '&gt;';
-      replaceWith = '>';
-      rawXmlCodeToSave = rawXmlCodeToSave.split(search).join(replaceWith);
+      const rawXmlCodeToSave =  rawXmlCodeNode.innerHTML
+                  .trim()
+                  .replace(/&lt;/g, "<")
+                  .replace(/&gt;/g, ">")
+                  .replace("&nbsp;", "");
       var blob = new Blob([rawXmlCodeToSave], { type: "text/xml;charset=utf-8" });
-      saveAs(blob, "bdaExport.xml");
+      var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
+      saveAs(blob, currComponentName + "_export.xml");
     },
 
     // simply handles an ajax call to a repository and parse the result
