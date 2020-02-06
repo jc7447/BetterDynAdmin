@@ -941,6 +941,55 @@
       return html;
     },
 
+    exportAsCSVAction: function () {
+      const csvData = $("#csvTable").text();
+      var blob = new Blob([csvData], { type: "text/csv;charset=utf-8" });
+      var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
+      saveAs(blob, currComponentName + "_export.csv");
+    },
+
+    exportAsCSV: function (itemDesc, types, datas, tabId, isItemTree) {
+      let html = "<div id='csvTable' style='display: none'>";
+      var data = [];
+      var line;
+
+      let repoDef = [];
+      repoDef.push(getCurrentComponentPath() + ':' + itemDesc.substr(1));
+      repoDef.push('');
+      repoDef.push('TIMEFORMAT=M/d/yyyy h:mm a');
+      repoDef.push('LOCALE=en_US');
+      data.push(repoDef);
+      let props = [];
+      for (var i = 0; i != types.length; i++) {
+        var curProp = types[i];
+        var line = [];
+        line.push(curProp.name);
+        props.push(line);
+      }
+      data.push(props);
+
+      for (var a = 0; a < datas.length; a++) {
+        props = [];
+        for (var i = 0; i != types.length; i++) {
+          var curProp = types[i];
+          var propValue = datas[a][curProp.name];
+          var itemProperties = [];
+          itemProperties.push('"' + propValue + '"');
+          props.push(itemProperties);
+        }
+        data.push(props);
+      }
+
+      var linesText = [];
+      for (var i = 0; i < data.length; i++) {
+        linesText.push(data[i].join(','))
+      }
+
+      var csv = linesText.join('\n');
+      html += csv + "</div>";
+      return html;
+    },
+
     showXMLAsTab: function(xmlContent, $xmlDef, $outputDiv, isItemTree) {
       console.time("renderTab");
       var xmlDoc = $.parseXML("<xml>" + xmlContent + "</xml>");
@@ -1048,6 +1097,7 @@
         var nbTab = 0;
         if (datas[itemDesc].length <= splitValue) {
           html += BDA_REPOSITORY.renderTab(itemDesc, types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
+          html += BDA_REPOSITORY.exportAsCSV(itemDesc, types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
         } else {
           while ((splitValue * nbTab) < datas[itemDesc].length) {
             var start = splitValue * nbTab;
@@ -1056,6 +1106,7 @@
               end = datas[itemDesc].length;
             var subDatas = datas[itemDesc].slice(start, end);
             html += BDA_REPOSITORY.renderTab(itemDesc, types[itemDesc], subDatas, itemDesc + "_" + nbTab, isItemTree);
+            html += BDA_REPOSITORY.exportAsCSV(itemDesc, types[itemDesc], datas[itemDesc], itemDesc.substr(1), isItemTree);
             nbTab++;
           }
         }
@@ -1124,11 +1175,12 @@
       if (error)
         $("#RQLLog").addClass("error");
     },
-
     showRQLResults: function() {
       logTrace("Start showRQLResults");
       // Add 'show raw xml' link
       var html = "<p>" + "<a href='javascript:void(0)' id='rawXmlLink'>Show raw xml</a>" + "</p>\n";
+      html += "<p><a href='javascript:void(0)' id='exportXMLToFile'>Export raw xml</a></p>\n";
+      html += "<a href='javascript:void(0)' id='exportAsCSVAction'>Export results to csv</a>";
       html += "<p id='rawXml'></p>";
       $("#RQLResults").append(html);
 
@@ -1165,6 +1217,15 @@
             }
           }
         });
+
+        $("#exportXMLToFile").click(function() {
+          BDA_REPOSITORY.exportXMLToFile();
+        });
+
+        $("#exportAsCSVAction").click(function() {
+          BDA_REPOSITORY.exportAsCSVAction();
+        });
+
 
         $(".copyLink").click(function() {
           BDA_REPOSITORY.showTextField($(this).attr("id").replace("link_", ""));
@@ -1396,8 +1457,12 @@
       if (outputType !== "HTMLtab" && outputType != "tree") {
         logTrace("Render copy button");
         $("#itemTreeInfo").append("<input type='button' id='itemTreeCopyButton' value='Copy result to clipboard'></input>");
+        $("#itemTreeInfo").append("<input type='button' id='itemTreeExportButton' value='Export result to file'></input>");
         $('#itemTreeCopyButton').click(function() {
           copyToClipboard($('#itemTreeResult').text());
+        });
+        $('#itemTreeExportButton').click(function() {
+          BDA_REPOSITORY.exportItemTreeXMLToFile();
         });
       }
       if (outputType == "addItem") {
@@ -1788,6 +1853,30 @@
         $("#rawXmlLink").html("show raw XML");
       else
         $("#rawXmlLink").html("hide raw XML");
+    },
+
+    exportXMLToFile: function () {
+      const rawXmlCodeNode = document.evaluate('//*[@id="rawXml"]/pre/code', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const rawXmlCodeToSave =  rawXmlCodeNode.innerHTML
+                  .trim()
+                  .replace(/&lt;/g, "<")
+                  .replace(/&gt;/g, ">")
+                  .replace("&nbsp;", "");
+      var blob = new Blob([rawXmlCodeToSave], { type: "text/xml;charset=utf-8" });
+      var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
+      saveAs(blob, currComponentName + "_export.xml");
+    },
+
+    exportItemTreeXMLToFile: function () {
+      const rawXmlCodeNode = document.evaluate('//*[@id="itemTreeResult"]/pre', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const rawXmlCodeToSave =  rawXmlCodeNode.innerHTML
+                  .trim()
+                  .replace(/&lt;/g, "<")
+                  .replace(/&gt;/g, ">")
+                  .replace("&nbsp;", "");
+      var blob = new Blob([rawXmlCodeToSave], { type: "text/xml;charset=utf-8" });
+      var currComponentName = getComponentNameFromPath(getCurrentComponentPath());
+      saveAs(blob, currComponentName + "_tree_export.xml");
     },
 
     // simply handles an ajax call to a repository and parse the result
