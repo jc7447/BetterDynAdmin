@@ -5,7 +5,7 @@
     $pipelineDef : null,
     network : null,
     options : {
-               width : "100%",
+               width : "500%",
                height: "550px",
                interaction : {
                   zoomView : true,
@@ -59,8 +59,8 @@
       $("h2:contains('Pipeline Chains')").append("<div class='popup_block' id='pipelinePopup'>"
                                                  + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></div>"
                                                  + "<div><h3></h3></div></i></a>"
+                                                 + "<button id='savePipelineAsImage'>Download as Image</button> <br>"
                                                  + "<button id='schemeOrientation'>Switch orientation <i class='fa fa-retweet'></button>"
-                                                 + "<button id='savePipelineAsImage'>Download Pipeline <i class='fa fa-retweet'></button>"
                                                  + "<div id='pipelineScheme'></div></div>");
       $("#pipelinePopup .close").click(function() {
         $("#pipelinePopup").fadeOut();
@@ -133,7 +133,13 @@
       $("#pipelinePopup").show();
       var container = document.getElementById('pipelineScheme');
       var data = BDA_PIPELINE.createNodesAndEdges(chainName);
-
+      if (data.nodes.length > 0 && data.nodes.length < 10) {
+        BDA_PIPELINE.options.width = "100%";
+      } else if (data.nodes.length > 10 && data.nodes.length < 20) {
+        BDA_PIPELINE.options.width = "200%";
+      } else if (data.nodes.length > 20) {
+        BDA_PIPELINE.options.width = "600%";
+      }
       BDA_PIPELINE.drawGraph(container, data);
 
       $('#schemeOrientation').unbind( "click" );
@@ -150,7 +156,8 @@
 
       $('#savePipelineAsImage').unbind( "click" );
       $('#savePipelineAsImage').click(function(){
-        let canvasImage = canvas.toDataURL('image/png');
+        var canvas = document.querySelector('canvas');
+        let canvasImage = canvas.toDataURL('image/png', 1.0);
         // this can be used to download any image from webpage to local disk
           let xhr = new XMLHttpRequest();
           xhr.responseType = 'blob';
