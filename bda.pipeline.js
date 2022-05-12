@@ -60,6 +60,7 @@
                                                  + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></div>"
                                                  + "<div><h3></h3></div></i></a>"
                                                  + "<button id='schemeOrientation'>Switch orientation <i class='fa fa-retweet'></button>"
+                                                 + "<button id='savePipelineAsImage'>Download Pipeline <i class='fa fa-retweet'></button>"
                                                  + "<div id='pipelineScheme'></div></div>");
       $("#pipelinePopup .close").click(function() {
         $("#pipelinePopup").fadeOut();
@@ -146,6 +147,26 @@
         logTrace("Swith orientation, new : " + BDA_PIPELINE.options.layout.hierarchical.direction);
         BDA_PIPELINE.drawGraph(container, data);
       });
+
+      $('#savePipelineAsImage').unbind( "click" );
+      $('#savePipelineAsImage').click(function(){
+        let canvasImage = canvas.toDataURL('image/png');
+        // this can be used to download any image from webpage to local disk
+          let xhr = new XMLHttpRequest();
+          xhr.responseType = 'blob';
+          xhr.onload = function () {
+              let a = document.createElement('a');
+              a.href = window.URL.createObjectURL(xhr.response);
+              a.download = 'image_name.png';
+              a.style.display = 'none';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+            };
+            xhr.open('GET', canvasImage); // This is to download the canvas Image
+            xhr.send();
+      });
+
     },
 
     drawGraph : function(container, data)
