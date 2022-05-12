@@ -5,7 +5,7 @@
     $pipelineDef : null,
     network : null,
     options : {
-               width : "500%",
+               width : "100%",
                height: "550px",
                interaction : {
                   zoomView : true,
@@ -59,7 +59,7 @@
       $("h2:contains('Pipeline Chains')").append("<div class='popup_block' id='pipelinePopup'>"
                                                  + "<div><a href='javascript:void(0)' class='close'><i class='fa fa-times'></div>"
                                                  + "<div><h3></h3></div></i></a>"
-                                                 + "<button id='savePipelineAsImage'>Download as Image</button> <br>"
+                                                 + "<button id='savePipelineAsImage'>Download as Image</button>"
                                                  + "<button id='schemeOrientation'>Switch orientation <i class='fa fa-retweet'></button>"
                                                  + "<div id='pipelineScheme'></div></div>");
       $("#pipelinePopup .close").click(function() {
